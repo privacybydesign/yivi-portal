@@ -1,0 +1,28 @@
+{% extends "portal/portal.html" %}
+{% load i18n django_bootstrap5 static %}
+
+
+{% block main %}
+    <div class="container pb-5">
+        <div class="py-5">
+            <img class="d-block mb-4" src="{% static "img/yivi-logo.webp" %}" alt="" height="128">
+        </div>
+        {% bootstrap_messages %}
+        <h2>Yivi Portal</h2>
+        <p class="lead">
+            Register your organization in the Yivi Portal.
+        </p>
+    </div>
+    <div class="container pb-5">
+        <div class="d-flex justify-content-center">
+            <a class="btn btn-primary mx-auto" href="{% url "schememanager:login" %}">
+                Login
+            </a>
+            <a class="btn btn-primary mx-auto" href="{% url "schememanager:registration" %}">
+                Register a new organization
+            </a>
+        </div>
+
+    </div>
+{% endblock %}
+

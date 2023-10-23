@@ -1,0 +1,45 @@
+{% extends "portal/portal.html" %}
+{% load django_bootstrap5 %}
+
+{% block content %}
+    <div class="container mt-5">
+        <h1 class="text-center mb-4">{{ organization.name }}</h1>
+        <div class="col-12 col-lg-8 mx-auto">
+            <ul class="nav nav-tabs justify-content-center">
+                <li class="nav-item">
+                    {% url 'schememanager:organization-portal' organization.slug as url %}
+                    <a class="nav-link{% if request.path == url %} active{% endif %}" href="{{ url }}">Organization details</a>
+                </li>
+                <li class="nav-item">
+                    {% url 'schememanager:organization-admins' organization.slug as url %}
+                    <a class="nav-link{% if request.path == url %} active{% endif %}" href="{{ url }}">Admins</a>
+                </li>
+            </ul>
+            <div class="mt-4">
+                <ul class="list-group">
+                    {% for admin in admins %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            {{ admin.email }}
+                            <form method="post">
+                                {% csrf_token %}
+                                <input type="hidden" name="email" value="{{ admin.email }}">
+                                <input type="hidden" name="action" value="remove">
+                                {% if admin.email == request.session.yivi_email %}
+                                    <button type="submit" class="btn btn-sm btn-secondary" {% if admins.count == 1 %}disabled{% endif %}>Leave</button>
+                                {% else %}
+                                    <button type="submit" class="btn btn-sm btn-danger" {% if admins.count == 1 %}disabled{% endif %}>Remove</button>
+                                {% endif %}
+                            </form>
+                        </li>
+                    {% endfor %}
+                </ul>
+                <form method="post" class="form">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="add">
+                    {% bootstrap_button button_type="submit" content="Add" as button %}
+                    {% bootstrap_field add_admin_form.email show_label=False addon_after=button addon_after_class=None wrapper_class='input-group my-3'%}
+                </form>
+            </div>
+        </div>
+    </div>
+{% endblock %}

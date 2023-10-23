@@ -1,0 +1,21 @@
+version: "3.6"
+
+services:
+  yivi:
+    container_name: yivi-portal-yivi
+    image: ghcr.io/privacybydesign/irma:edge
+    command: >
+      server -v --requestors '{"yivi-portal": {"auth_method": "token", "key": "${YIVI_TOKEN}"}}' --production --no-email --url https://${VIRTUAL_HOST} --port 80
+    restart: always
+    volumes:
+      - ./config.yml:/config.yml
+    networks:
+      - web
+    environment:
+      YIVI_TOKEN: ${YIVI_TOKEN}
+      VIRTUAL_HOST: yivi.jobdoesburg.dev
+      LETSENCRYPT_HOST: yivi.jobdoesburg.dev
+
+networks:
+    web:
+        external: true

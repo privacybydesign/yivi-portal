@@ -1,0 +1,22 @@
+{% extends "portal/portal.html" %}
+{% load django_bootstrap5 %}
+
+{% block content %}
+    <div class="container mt-5">
+        <h1 class="text-center mb-5">Organizations you have access to:</h1>
+        <div class="col-12 col-lg-6 mx-auto">
+            <ul class="list-group">
+                {% for org in organizations %}
+                    <a class="list-group-item list-group-item-action" href="{% url "schememanager:organization-portal" org.slug %}">{{ org.name }}</a>
+                {% empty %}
+                    <div class="alert alert-light" role="alert">
+                        You have no access to any organization.
+                    </div>
+                {% endfor %}
+            </ul>
+            <div class="d-flex mt-3 justify-content-center">
+                <a href="{% url "schememanager:registration" %}" class="btn btn-primary flex-grow-1">Register new organization</a>
+            </div>
+        </div>
+    </div>
+{% endblock %}

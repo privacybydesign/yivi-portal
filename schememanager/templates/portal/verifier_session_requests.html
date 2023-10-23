@@ -1,0 +1,72 @@
+{% extends "portal/portal.html" %}
+{% load django_bootstrap5 %}
+
+{% block content %}
+    <div class="container mt-5">
+        <h1 class="text-center mb-4">{{ organization.name }}</h1>
+        <div class="col-12 col-lg-8 mx-auto">
+            <ul class="nav nav-tabs justify-content-center">
+                <li class="nav-item">
+                    {% url 'schememanager:verifier-portal' organization.slug as url %}
+                    <a class="nav-link{% if request.path == url %} active{% endif %}" href="{{ url }}">Verifier</a>
+                </li>
+                <li class="nav-item">
+                    {% url 'schememanager:verifier-hostnames' organization.slug as url %}
+                    <a class="nav-link{% if request.path == url %} active{% endif %}" href="{{ url }}">Hostnames</a>
+                </li>
+                <li class="nav-item">
+                    {% url 'schememanager:verifier-session-requests' organization.slug as url %}
+                    <a class="nav-link{% if request.path == url %} active{% endif %}" href="{{ url }}">Requests</a>
+                </li>
+            </ul>
+            <div class="mt-4">
+                <div class="accordion" id="session-requests">
+                    {% for session_request in session_requests %}
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-{{ forloop.counter }}" aria-expanded="true" aria-controls="collapse-{{ forloop.counter }}">
+                                    {{ session_request.condiscon }}
+                                </button>
+                            </h2>
+                            <div id="collapse-{{ forloop.counter }}" class="accordion-collapse collapse" data-bs-parent="#session-requests">
+                                <div class="accordion-body">
+                                    <form method="post">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="session_request" value="{{ session_request.id }}">
+                                        <input type="hidden" name="action" value="update">
+                                        {% for attribute in session_request.attributes.all %}
+                                            <div class="input-group mb-3">
+                                                <label class="form-label mb-1" for="reason-en-{{ attribute.attribute_id }}">Reason for requesting <code class="user-select-all">{{ attribute.attribute_id }}</code></label>
+                                                    <div class="input-group mb-1">
+                                                        <span class="input-group-text" id="{{ attribute.attribute_id }}-en">EN</span>
+                                                        <input type="text" class="form-control" aria-label="{{ attribute.attribute_id }}" aria-describedby="{{ attribute.attribute_id }}-en" name="reason-en-{{ attribute.attribute_id }}" value="{{ attribute.reason_en }}">
+                                                    </div>
+                                                    <div class="input-group mb-1">
+                                                        <span class="input-group-text" id="{{ attribute.attribute_id }}-nl">NL</span>
+                                                        <input type="text" class="form-control" aria-label="{{ attribute.attribute_id }}" aria-describedby="{{ attribute.attribute_id }}-nl" name="reason-nl-{{ attribute.attribute_id }}" value="{{ attribute.reason_nl }}">
+                                                    </div>
+                                            </div>
+                                        {% endfor %}
+                                        {% bootstrap_button button_type="submit" content="Save" %}
+                                    </form>
+                                        <form method="post">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="session_request" value="{{ session_request.id }}">
+                                            <input type="hidden" name="action" value="remove">
+                                            <button type="submit" class="btn btn-danger mt-2">Remove session request</button>
+                                        </form>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+                <form method="post" class="form">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="add">
+                    {% bootstrap_button button_type="submit" content="Add" as button %}
+                    {% bootstrap_field add_session_request_form.condiscon show_label=False addon_after=button addon_after_class=None wrapper_class='my-3'%}
+                </form>
+            </div>
+        </div>
+    </div>
+{% endblock %}

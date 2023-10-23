@@ -1,0 +1,28 @@
+{% extends "portal/portal.html" %}
+{% load django_bootstrap5 %}
+
+{% block content %}
+    <div class="container mt-5">
+        <h1 class="text-center mb-4">{{ organization.name }}</h1>
+        <div class="col-12 col-lg-8 mx-auto">
+            <ul class="nav nav-tabs justify-content-center">
+                <li class="nav-item">
+                    {% url 'schememanager:organization-portal' organization.slug as url %}
+                    <a class="nav-link{% if request.path == url %} active{% endif %}" href="{{ url }}">Organization details</a>
+                </li>
+                <li class="nav-item">
+                    {% url 'schememanager:organization-admins' organization.slug as url %}
+                    <a class="nav-link{% if request.path == url %} active{% endif %}" href="{{ url }}">Admins</a>
+                </li>
+            </ul>
+            <div class="row mt-4">
+                <form method="post" class="form">
+                    {% csrf_token %}
+                    {% bootstrap_form form %}
+                    {% bootstrap_button button_type="submit" content="Update" %}
+                    {% bootstrap_button button_type="reset" content="Reset" %}
+                </form>
+            </div>
+        </div>
+    </div>
+{% endblock %}

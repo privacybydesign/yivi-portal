@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% load i18n django_bootstrap5 static %}
+
+{% block extra_head %}
+    <script src="{% static "js/yivi.js" %}" type="text/javascript"></script>
+{% endblock %}
+
+
+{% block main %}
+    <div class="position-absolute h-100 w-100 d-flex justify-content-center align-items-center pb-5">
+        <div class="modal-content" id="yivi-web-form"></div>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+    {{ yivi_request|json_script:"yivi_request" }}
+    <script>
+        const yiviWeb = yivi.newWeb({
+            debugging: true,
+            element:   '#yivi-web-form',
+            session: {
+                url: '{% url "yivi_auth:start" %}',
+                start: {
+                    url: o => `${o.url}`,
+                    method: 'POST',
+                    headers: {
+                        "X-CSRFToken": CSRF_TOKEN,
+                        "Accept": 'application/json',
+                        "Content-Type": 'application/json',
+                        "Original-Path": window.location.pathname,
+                    },
+                    body: document.getElementById('yivi_request').textContent,
+                },
+                result: {
+                    url: (o, {sessionPtr, sessionToken}) => `{% url "yivi_auth:result" "$sessionToken" %}`.replace('$sessionToken', sessionToken),
+                    method: 'GET',
+                    headers: {
+                        "X-CSRFToken": CSRF_TOKEN,
+                    },
+                }
+          }
+        });
+        yiviWeb.start().then(() => {
+            {% if next_url %}
+            window.location.href = '{{ next_url }}';
+            {% else %}
+            window.location.reload();
+            {% endif %}
+        });
+    </script>
+{% endblock %}
