@@ -4,9 +4,9 @@ from .base import *  # noqa
 
 SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY")
 
-DEBUG = True
+DEBUG = False
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS").split(",")
 
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases

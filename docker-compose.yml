@@ -50,6 +50,7 @@ services:
       POSTGRES_HOST: database
       POSTGRES_PORT: 5432
       DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY}
+      DJANGO_ALLOWED_HOSTS: portal.yivi.jobdoesburg.dev
       YIVI_SERVER_TOKEN: ${YIVI_SERVER_TOKEN}
       YIVI_SERVER_HOSTNAME: https://yivi.jobdoesburg.dev
       VIRTUAL_HOST: portal.yivi.jobdoesburg.dev
