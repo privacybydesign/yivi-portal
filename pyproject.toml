@@ -17,7 +17,16 @@ pillow = "^10.1.0"
 django-bootstrap5 = "^23.3"
 requests = "^2.31.0"
 djangorestframework = "^3.14.0"
+fqdn = "^1.5.1"
+django-cron = "^0.6.0"
+django-imagekit = "^5.0.0"
 
+[tool.poetry.group.prod]
+optional = true
+
+[tool.poetry.group.prod.dependencies]
+uwsgi = "^2.0.23"
+psycopg2-binary = "^2.9.1"
 
 [build-system]
 requires = ["poetry-core"]

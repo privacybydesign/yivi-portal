@@ -1,0 +1,137 @@
+{% extends "verifier/verifier.html" %}
+{% load django_bootstrap5 %}
+
+{% block content %}
+    <div class="mt-4">
+        {% if verifier.status == "draft" or verifier.status == "rejected"%}
+            <div class="alert {% if verifier.status == "draft" %}alert-secondary{% else %}alert-danger{% endif %}" role="alert">
+                {% if verifier.status == "draft" %}
+                    <h4 class="alert-heading">Ready for review</h4>
+                    <hr>
+                    <p>
+                        When you are ready to publish your scheme, you can mark it as ready for publication.
+                        {% if verifier.scheme.production %}
+                        This will send it to the administrator for review.
+                        {% endif %}
+                    </p>
+                    {% if verifier.scheme.production %}
+                        <p>
+                            After the scheme is accepted, it will be published and available for use.
+                        </p>
+                    {% endif %}
+                {% else %}
+                    <h4 class="alert-heading">Rejected</h4>
+                    <hr>
+                    <p>
+                        Your registration has been rejected with the following remarks:<br>
+                        <pre>{{ verifier.rejection_remarks }}</pre>
+                    </p>
+                    <hr>
+                    <p>
+                        You can make changes to your registration and mark it as ready for review again.
+                    </p>
+                {% endif %}
+                {% if not verifier.validate_for_publication %}
+                    <form method="post">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="ready_for_review">
+                        {% if verifier.scheme.production %}
+                            <input type="submit" class="btn btn-primary" value="Mark ready for review">
+                        {% else %}
+                            <input type="submit" class="btn btn-primary" value="Mark ready for publication">
+                        {% endif %}
+                    </form>
+                {% else %}
+                    <p>
+                        <strong>Before you can mark this scheme as ready for publication, you must fix the following errors:</strong>
+                    </p>
+                    <ul>
+                        {% for field, error in verifier.validate_for_publication.items %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+            </div>
+
+        {% elif verifier.status == "review" %}
+            <div class="alert alert-warning" role="alert">
+                <h4 class="alert-heading">Under review</h4>
+                <hr>
+                <p>Your registration will now be reviewed. Click the button below to mark it as draft again and make changes.</p>
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="mark_draft">
+                    <input type="submit" class="btn btn-secondary" value="Mark as draft">
+                </form>
+            </div>
+        {% elif verifier.status == "accepted" %}
+            <div class="alert alert-info" role="alert">
+                <h4 class="alert-heading"><i class="bi bi-patch-check-fill me-2"></i>Accepted</h4>
+                <hr>
+                <p>Your registration was accepted and will be published soon.</p>
+                <p>If you want to make changes to your registration, click the button below to mark it as draft again. This wil <strong>not</strong> prevent the approved scheme from being published in the meantime.</p>
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="mark_draft">
+                    <input type="submit" class="btn btn-secondary" value="Make changes">
+                </form>
+            </div>
+        {% elif verifier.status == "published" %}
+            <div class="alert alert-success" role="alert">
+                <h4 class="alert-heading"><i class="bi bi-globe me-2"></i>Published</h4>
+                <hr>
+                <p>Your registration has been published and is now available for use.</p>
+                <p>If you want to make changes to your registration, click the button below to mark it as draft again.</p>
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="mark_draft">
+                    <input type="submit" class="btn btn-secondary" value="Make changes">
+                </form>
+            </div>
+        {% elif verifier.status == "invalidated" %}
+            <div class="alert alert-danger" role="alert">
+                <h4 class="alert-heading"><i class="bi bi-exclamation-circle-fill me-2"></i>Invalidated</h4>
+                <hr>
+                <p>
+                    Your currently published registration became invalid, probably because one of your hostnames didn't pass DNS verification.
+                    Make sure to resolve the issue, either by resolving the problem with your DNS records (which will resolve the problem automatically), or by updating your registration in the scheme, to prevent your scheme from being unpublished.
+                </p>
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="mark_draft">
+                    <input type="submit" class="btn btn-secondary" value="Change scheme registration">
+                </form>
+            </div>
+        {% endif %}
+    </div>
+    <div>
+        {% if verifier.new_scheme_data != verifier.published_scheme_data and verifier.new_scheme_data != verifier.approved_scheme_data %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h4><i class="bi bi-pencil-square me-2"></i>New scheme data</h4>
+            </div>
+            <div class="card-body flex-grow-1">
+                <pre class="mb-0 user-select-all"><code>{{ verifier.new_scheme_data_json }}</code></pre>
+            </div>
+        </div>
+        {% endif %}
+        {% if verifier.approved_scheme_data != verifier.published_scheme_data %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h4><i class="bi bi-patch-check-fill me-2"></i>Approved scheme data</h4>
+            </div>
+            <div class="card-body flex-grow-1">
+                <pre class="mb-0 user-select-all"><code>{{ verifier.approved_scheme_data_json }}</code></pre>
+            </div>
+        </div>
+        {% endif %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h4><i class="bi bi-globe me-2"></i>Currently published</h4>
+            </div>
+            <div class="card-body flex-grow-1">
+                <pre class="mb-0 user-select-all"><code>{{ verifier.published_scheme_data_json }}</code></pre>
+            </div>
+        </div>
+    </div>
+{% endblock %}

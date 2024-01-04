@@ -1,0 +1,83 @@
+{% extends "verifier/verifier.html" %}
+{% load django_bootstrap5 %}
+
+{% block content %}
+    <div class="mt-4">
+        <p>
+            The following information will be registered in the scheme and displayed towards users.
+        </p>
+        <form method="post" class="form" enctype="multipart/form-data">
+            {% csrf_token %}
+
+            {% bootstrap_field form.scheme %}
+            {% bootstrap_field form.slug %}
+
+            <div class="input-group mb-3">
+                <label class="form-label mb-1" for="{{ form.name_en.name }}">Name:</label>
+                    <div class="input-group mb-1">
+                        <span class="input-group-text" id="label-{{ form.name_en.name }}">EN</span>
+                        <input type="text" class="form-control{% if form.is_bound %} {% if not form.name_en.errors %}is-valid{% else %}is-invalid{% endif %}{% endif %}" aria-label="label-{{ form.name_en.name }}" aria-describedby="label-{{ form.name_en.name }}" name="{{ form.name_en.name }}" value="{{ form.name_en.value|default_if_none:"" }}" placeholder="{{ organization.legal_name }}" {% if not object.can_be_edited %}disabled{% endif %}>
+                    </div>
+                    {% if form.name_en.errors %}
+                        <ul class="list-unstyled text-danger my-0">
+                            {% for error in form.name_en.errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                    <div class="input-group mb-1">
+                        <span class="input-group-text" id="label-{{ form.name_nl.name }}">NL</span>
+                        <input type="text" class="form-control{% if form.is_bound %} {% if not form.name_nl.errors %}is-valid{% else %}is-invalid{% endif %}{% endif %}" aria-label="label-{{ form.name_nl.name }}" aria-describedby="label-{{ form.name_nl.name }}" name="{{ form.name_nl.name }}" value="{{ form.name_nl.value|default_if_none:"" }}" placeholder="{{ organization.legal_name }}" {% if not object.can_be_edited %}disabled{% endif %}>
+                    </div>
+                    {% if form.name_nl.errors %}
+                        <ul class="list-unstyled text-danger my-0">
+                            {% for error in form.name_en.errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+            </div>
+
+        <div class="mb-3">
+            <label class="form-label" for="{{ form.logo.name }}">{{ form.logo.label }}</label>
+            {% if verifier.logo %}
+                <div class="row d-flex align-items-center mb-3">
+                    <div class="col-auto">
+                        <img src="{{ verifier.logo.url }}" alt="logo" class="img-fluid" style="max-height: 100px">
+                    </div>
+                    <div class="col-auto">
+                        <div class="form-check">
+                            <input type="checkbox" name="logo-clear" id="logo-clear_id" class="form-check-input" {% if not object.can_be_edited %}disabled{% endif %}>
+                            <label for="logo-clear_id" class="form-check-label">Delete logo</label>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+            <div class="input-group mb-1">
+                <input type="file" name="logo" accept="image/*" class="form-control{% if form.is_bound %} {% if not form.logo.errors %}is-valid{% else %}is-invalid{% endif %}{% endif %}" id="{{ form.logo.name }}" {% if form.fields.logo.disabled %} disabled{% endif %} {% if form.fields.logo.disabled %} disabled{% endif %}>
+            </div>
+            {% if form.logo.errors %}
+                <ul class="list-unstyled text-danger my-0">
+                    {% for error in form.logo.errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+            {% if form.logo.help_text %}
+                <div class="form-text">{{ form.logo.help_text }}</div>
+            {% endif %}
+        </div>
+
+            {% if verifier %}
+                {% if verifier.can_be_edited %}
+                    {% bootstrap_button button_type="submit" content="Update" %}
+                {% endif %}
+            {% else %}
+                {% bootstrap_button button_type="submit" content="Register as verifier" %}
+            {% endif %}
+            {% if not verifier or verifier.can_be_edited %}
+                {% bootstrap_button button_type="reset" content="Reset" %}
+            {% endif %}
+        </form>
+    </div>
+{% endblock %}

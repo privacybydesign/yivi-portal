@@ -17,6 +17,9 @@ class YiviSessionProxyStartView(APIView):
         except YiviException as e:
             return Response(status=e.http_status, data=e.msg)
 
+        if response is None:
+            raise RuntimeError("Yivi server did not return a response.")
+
         # Store the Yivi session token in the Django session
         yivi_session_token = response["token"]
         yivi_sessions = request.session.get("yivi_sessions", []) or []

@@ -1,0 +1,19 @@
+/* Progress bar arrows */
+.progress-bar-arrows {
+    background: unset;
+    --progress-bar-arrow-width: 18px;
+    height: 30px;
+}
+.progress-bar-arrows .progress-bar {
+    width: 100%;
+    clip-path: polygon(0% 0%, calc(100% - var(--progress-bar-arrow-width)) 0%, 100% 50%, calc(100% - var(--progress-bar-arrow-width)) 100%, 0% 100%, var(--progress-bar-arrow-width) 50%);
+    margin-left: calc(-1 * var(--progress-bar-arrow-width));
+}
+.progress-bar-arrows .progress-bar:first-child {
+    clip-path: polygon(0% 0%, calc(100% - var(--progress-bar-arrow-width)) 0%, 100% 50%, calc(100% - var(--progress-bar-arrow-width)) 100%, 0% 100%);
+    margin-left: 0;
+}
+.progress-bar-arrows .progress-bar:last-child {
+    clip-path: polygon(100% 0%, 0% 0%, var(--progress-bar-arrow-width) 50%, 0% 100%, 100% 100%);
+}
+

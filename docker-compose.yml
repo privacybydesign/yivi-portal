@@ -5,17 +5,63 @@ services:
     container_name: yivi-portal-yivi
     image: ghcr.io/privacybydesign/irma:edge
     command: >
-      server -v --requestors '{"yivi-portal": {"auth_method": "token", "key": "${YIVI_TOKEN}"}}' --production --no-email --url https://${VIRTUAL_HOST} --port 80
-    restart: always
-    volumes:
-      - ./config.yml:/config.yml
-    networks:
-      - web
+      server -v --requestors '{"yivi-portal": {"auth_method": "token", "key": "${YIVI_SERVER_TOKEN}"}}' --production --no-email --url https://${VIRTUAL_HOST} --port 80
+    restart: unless-stopped
+#    networks:
+#      - web
     environment:
-      YIVI_TOKEN: ${YIVI_TOKEN}
+      YIVI_SERVER_TOKEN: ${YIVI_SERVER_TOKEN}
       VIRTUAL_HOST: yivi.jobdoesburg.dev
       LETSENCRYPT_HOST: yivi.jobdoesburg.dev
 
+  database:
+    image: postgres:13.3-alpine
+    container_name: yivi-portal-db
+    restart: unless-stopped
+#    networks:
+#      - web
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "${POSTGRES_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  yivi-portal:
+    build: .
+    container_name: yivi-portal
+    restart: unless-stopped
+    ports:
+      - 8000:8000
+#    networks:
+#      - web
+    depends_on:
+      - database
+      - yivi
+    volumes:
+      - assets:/app/assets
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_HOST: database
+      POSTGRES_PORT: 5432
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY}
+      YIVI_SERVER_TOKEN: ${YIVI_SERVER_TOKEN}
+      YIVI_SERVER_HOSTNAME: https://yivi.jobdoesburg.dev
+      VIRTUAL_HOST: portal.yivi.jobdoesburg.dev
+      VIRTUAL_PORT: 8000
+      LETSENCRYPT_HOST: portal.yivi.jobdoesburg.dev
+
 networks:
-    web:
-        external: true
+  web:
+    external: true
+
+volumes:
+  postgres-data:
+  assets:

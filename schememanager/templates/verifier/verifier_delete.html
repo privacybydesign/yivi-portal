@@ -1,0 +1,21 @@
+{% extends "verifier/verifier.html" %}
+{% load django_bootstrap5 %}
+
+{% block content %}
+    <div class="mt-4">
+        <p class="text-center">
+            Are you sure you want to delete this verifier registration? This action cannot be undone.
+        </p>
+        <p class="text-center">
+            Type <strong>delete {{ verifier.full_id }}</strong> below to confirm.
+        </p>
+        <form method="post" class="form text-center col-12 col-lg-8 mx-auto">
+            {% csrf_token %}
+            <div class="input-group">
+                <input type="text" class="form-control" aria-label="label-delete" aria-describedby="label-delete" name="confirm_delete" placeholder="delete {{ verifier.full_id }}">
+                <button class="btn btn-primary" type="submit">Delete</button>
+            </div>
+        </form>
+    </div>
+
+{% endblock %}

@@ -1,0 +1,14 @@
+{% extends "organization/organization.html" %}
+{% load django_bootstrap5 %}
+
+{% block content %}
+    <div class="mt-4">
+        <form method="post" class="form">
+            {% csrf_token %}
+            {% bootstrap_form form %}
+            {% bootstrap_button button_type="submit" content="Update" %}
+            {% bootstrap_button button_type="reset" content="Reset" %}
+        </form>
+    </div>
+{% endblock %}
+

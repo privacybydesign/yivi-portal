@@ -1,6 +1,6 @@
 # Django Yivi auth
 
-A Django app to allow users to authenticate with Yivi.
+A Django app to allow users to authenticate with Yivi, using the [proxy flow](https://github.com/privacybydesign/yivi-frontend-packages#talking-to-irma-server-through-a-proxy) (so not using the [signed request flow](https://github.com/privacybydesign/yivi-frontend-packages#talking-to-irma-server-directly-with-signed-request) with JWTs).
 
 ## Installation
 

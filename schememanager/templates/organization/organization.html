@@ -1,0 +1,33 @@
+{% extends "portal.html" %}
+{% load django_bootstrap5 %}
+
+{% block page %}
+    <div class="container mt-4">
+        <div class="col-12 col-lg-8 mx-auto mb-4">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url "schememanager:organization-list" %}" class="link-secondary">Organizations</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">{{ organization }}</li>
+                </ol>
+            </nav>
+        </div>
+        <h1 class="text-center mb-4">{{ organization.name }}</h1>
+        <div class="col-12 col-lg-8 mx-auto">
+            <ul class="nav nav-tabs justify-content-center">
+                <li class="nav-item">
+                    {% url 'schememanager:organization-portal' organization.slug as url %}
+                    <a class="nav-link{% if request.path == url %} active{% endif %}" href="{{ url }}"><i class="bi bi-info-square-fill me-2"></i>Legal</a>
+                </li>
+                <li class="nav-item">
+                    {% url 'schememanager:organization-billing' organization.slug as url %}
+                    <a class="nav-link{% if request.path == url %} active{% endif %}" href="{{ url }}"><i class="bi bi-cash-coin me-2"></i>Billing</a>
+                </li>
+                <li class="nav-item">
+                    {% url 'schememanager:organization-admins' organization.slug as url %}
+                    <a class="nav-link{% if request.path == url %} active{% endif %}" href="{{ url }}"><i class="bi bi-people-fill me-2"></i>Admins</a>
+                </li>
+            </ul>
+            {% block content %}{% endblock %}
+        </div>
+    </div>
+{% endblock %}

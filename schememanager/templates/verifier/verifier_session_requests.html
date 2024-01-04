@@ -1,0 +1,95 @@
+{% extends "verifier/verifier.html" %}
+{% load django_bootstrap5 %}
+
+{% block content %}
+    <div class="mt-4">
+        <div class="accordion" id="session-requests">
+            <p>
+                Register the attributes you want to request via Yivi. You should register the attributes you want to request in condiscon format, as used by the Yivi server as well.
+                Only provide the names of the attributes, not any specific values.
+            </p>
+            <p>
+                For each requested attribute, you should provide a reason why you need the attribute (and why the attribute is minimal). This reason will be shown to the user when they are asked to approve the request.
+            </p>
+            {% if session_requests %}
+                <p>You have the following sessions registered:</p>
+                {% for session_request in session_requests %}
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-{{ forloop.counter }}" aria-expanded="true" aria-controls="collapse-{{ forloop.counter }}">
+                                <span>
+                                    <code>{{ session_request.condiscon_json }}</code>
+                                    {% if session_request.context_description_en %}<br><i class="bi bi-dash-lg me-2"></i>{{ session_request.context_description_en }}{% endif %}
+                                </span>
+                            </button>
+                        </h2>
+                        <div id="collapse-{{ forloop.counter }}" class="accordion-collapse collapse" data-bs-parent="#session-requests">
+                            <div class="accordion-body">
+                                <div class="mb-3">
+                                    <label for="condiscon" class="form-label">Condiscon</label>
+                                    <textarea class="form-control user-select-all" id="condiscon" rows="3" style="font-family: monospace" disabled>{{ session_request.condiscon_json }}</textarea>
+                                </div>
+                                <hr>
+                                <form method="post">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="session_request" value="{{ session_request.id }}">
+                                    <input type="hidden" name="action" value="update">
+
+                                    <div class="input-group mb-3">
+                                        <label class="form-label mb-1" for="context-en">In what context do you request this session?</label>
+                                        <div class="input-group mb-1">
+                                            <span class="input-group-text" id="context-en">EN</span>
+                                            <input type="text" class="form-control" aria-label="context" aria-describedby="context-en" name="context-en" value="{{ session_request.context_description_en|default_if_none:"" }}" {% if not object.can_be_edited %}disabled{% endif %}>
+                                        </div>
+                                        <div class="input-group mb-1">
+                                            <span class="input-group-text" id="context-nl">NL</span>
+                                            <input type="text" class="form-control" aria-label="context" aria-describedby="context-nl" name="context-nl" value="{{ session_request.context_description_nl|default_if_none:"" }}" {% if not object.can_be_edited %}disabled{% endif %}>
+                                        </div>
+                                        <div class="form-text">For example: "Subscribe to newsletter"</div>
+                                    </div>
+                                    <hr>
+                                    {% for attribute in session_request.attributes.all %}
+                                        <div class="input-group mb-3">
+                                            <label class="form-label mb-1" for="reason-en-{{ attribute.attribute_id }}">Reason why requesting <code class="user-select-all">{{ attribute.attribute_id }}</code> is necessary:</label>
+                                            <div class="input-group mb-1">
+                                                <span class="input-group-text" id="{{ attribute.attribute_id }}-en">EN</span>
+                                                <input type="text" class="form-control" aria-label="{{ attribute.attribute_id }}" aria-describedby="{{ attribute.attribute_id }}-en" name="reason-en-{{ attribute.attribute_id }}" value="{{ attribute.reason_en|default_if_none:"" }}" {% if not object.can_be_edited %}disabled{% endif %}>
+                                            </div>
+                                            <div class="input-group mb-1">
+                                                <span class="input-group-text" id="{{ attribute.attribute_id }}-nl">NL</span>
+                                                <input type="text" class="form-control" aria-label="{{ attribute.attribute_id }}" aria-describedby="{{ attribute.attribute_id }}-nl" name="reason-nl-{{ attribute.attribute_id }}" value="{{ attribute.reason_nl|default_if_none:"" }}" {% if not object.can_be_edited %}disabled{% endif %}>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                    {% if object.can_be_edited %}
+                                        {% bootstrap_button button_type="submit" content="Save" %}
+                                    {% else %}
+                                        {% bootstrap_button button_type="submit" content="Save" disabled=True %}
+                                    {% endif %}
+                                </form>
+                                <form method="post">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="session_request" value="{{ session_request.id }}">
+                                    <input type="hidden" name="action" value="remove">
+                                    <button type="submit" class="btn btn-danger mt-2" {% if not object.can_be_edited %}disabled{% endif %}>Remove session request</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                You have no session requests registered.
+            {% endif %}
+        </div>
+        <form method="post" class="form">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="add">
+            {% if object.can_be_edited %}
+                {% bootstrap_button button_type="submit" content="Add" as button %}
+            {% else %}
+                {% bootstrap_button button_type="submit" content="Add" disabled=True as button %}
+            {% endif %}
+            {% bootstrap_field add_session_request_form.condiscon show_label=False addon_after=button addon_after_class=None wrapper_class='my-3' disabled=True %}
+        </form>
+    </div>
+{% endblock %}

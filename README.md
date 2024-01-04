@@ -61,7 +61,7 @@ For a _demo_ scheme, the status can be one of the following:
 
 For a _production_ scheme, the status can be one of the following:
 - `draft`: the verifier or issuer is still working on their registration, and it is not yet ready for review.
-- `ready`: the verifier or issuer has finished their registration and is ready for review by the scheme manager.
+- `ready`: the verifier or issuer has finished their registration and is **under review** by the scheme manager.
 - `approved`: the registration has been approved by the scheme manager and is ready to be published in the scheme.
 - `rejected`: the registration has been rejected by the scheme manager and the verifier or issuer should make changes to their registration.
 - `published`: the registration has been published in the scheme.
@@ -88,16 +88,20 @@ If the DNS TXT record is not valid anymore, the hostname will be removed from th
 
 #### Disclosure request registration
 Verifiers can register the disclosure requests they want to perform by submitting the [_condiscon_](https://irma.app/docs/condiscon/) of the disclosure request.
-For each attribute in the _condiscon_, the verifier should specify the reason why they want to request the attribute.
+For each attribute in the _condiscon_, the verifier should list the reason why they want to request the attribute (explanation for purpose binding) in both Dutch and English.
+These explanations should clarify that indeed, the disclosure request is minimal.
 
 ### Issuer portal
 For future work. The Yivi Portal can also be used to register issuers and their credentials (and public keys).
 
 ### Billing
-For future work.
+> **For future work**
+> 
+> Verifiers should be able to classify themselves as a `small` / `medium` / `large` verifier in the portal (based on number of verifications per month).
+> This classification is used to determine the billing of the verifier.
 
 ### Logging
-For future work. Perhaps, the Yivi app should stochastically log disclosure sessions to the Yivi Portal, so that the portal can monitor the usage of the scheme.
+For future work. Perhaps, the Yivi app should stochastically log disclosure sessions to the Yivi Portal, so that the portal can monitor the usage of the scheme and determine if verifiers are properly classified (see billing).
 
 ## Technical specifications
 The Yivi Portal is written in Python 3.11 and uses [the Django framework](https://www.djangoproject.com).

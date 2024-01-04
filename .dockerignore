@@ -1,0 +1,9 @@
+db.sqlite3
+docker-compose.yml
+.gitignore
+.DS_Store
+.idea
+README.md
+.env
+Dockerfile
+/assets
