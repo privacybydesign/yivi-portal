@@ -7,8 +7,8 @@ services:
     command: >
       server -v --requestors '{"yivi-portal": {"auth_method": "token", "key": "${YIVI_SERVER_TOKEN}"}}' --production --no-email --url https://${VIRTUAL_HOST} --port 80
     restart: unless-stopped
-#    networks:
-#      - web
+    networks:
+      - web
     environment:
       YIVI_SERVER_TOKEN: ${YIVI_SERVER_TOKEN}
       VIRTUAL_HOST: yivi.jobdoesburg.dev
@@ -18,8 +18,8 @@ services:
     image: postgres:13.3-alpine
     container_name: yivi-portal-db
     restart: unless-stopped
-#    networks:
-#      - web
+    networks:
+      - web
     volumes:
       - postgres-data:/var/lib/postgresql/data
     environment:
@@ -36,10 +36,8 @@ services:
     build: .
     container_name: yivi-portal
     restart: unless-stopped
-    ports:
-      - 8000:8000
-#    networks:
-#      - web
+    networks:
+      - web
     depends_on:
       - database
       - yivi
