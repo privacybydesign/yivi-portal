@@ -5,7 +5,7 @@ services:
     container_name: yivi-portal-yivi
     image: ghcr.io/privacybydesign/irma:edge
     command: >
-      server -v --requestors '{"yivi-portal": {"auth_method": "token", "key": "${YIVI_SERVER_TOKEN}"}}' --production --no-email --url https:/yivi.jobdoesburg.dev --port 80
+      server -v --requestors '{"yivi-portal": {"auth_method": "token", "key": "${YIVI_SERVER_TOKEN}"}}' --production --no-email --url https://yivi.jobdoesburg.dev --port 80
     restart: unless-stopped
     networks:
       - web
