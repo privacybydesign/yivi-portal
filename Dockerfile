@@ -25,12 +25,6 @@ COPY . /app
 
 ENV DJANGO_SETTINGS_MODULE yivi_portal.settings.production
 
-# Set up a cron job to run the cron tasks every 5 minutes (though this needs a different entrypoint to actually run, because cron is not running by default)
-RUN echo "*/5 * * * * /usr/local/bin/python /app/manage.py runcrons >> /var/log/cron.log 2>&1" > /etc/cron.d/cron-schedule
-RUN chmod 0644 /etc/cron.d/cron-schedule
-RUN crontab /etc/cron.d/cron-schedule
-RUN touch /var/log/cron.log
-
 ENV DJANGO_STATIC_ROOT /app/static
 ENV DJANGO_MEDIA_ROOT /app/media
 
@@ -46,7 +40,6 @@ RUN chown -R nobody:nogroup $DJANGO_MEDIA_ROOT
 
 # Expose port 8000 to the outside world
 EXPOSE 8000
-
 
 # Command to run uWSGI
 CMD ["/bin/sh", "/app/entrypoint.sh"]
