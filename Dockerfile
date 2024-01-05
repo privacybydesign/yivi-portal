@@ -31,6 +31,9 @@ ENV DJANGO_MEDIA_ROOT /app/media
 RUN mkdir -p $DJANGO_STATIC_ROOT
 RUN mkdir -p $DJANGO_MEDIA_ROOT
 
+ENV DJANGO_STATIC_URL /static/
+ENV DJANGO_MEDIA_URL /media/
+
 RUN python manage.py collectstatic --noinput
 
 RUN chown -R nobody:nogroup $DJANGO_MEDIA_ROOT
@@ -38,8 +41,6 @@ RUN chown -R nobody:nogroup $DJANGO_MEDIA_ROOT
 # Expose port 8000 to the outside world
 EXPOSE 8000
 
-ENV DJANGO_STATIC_URL /static/
-ENV DJANGO_MEDIA_URL /media/
 
 # Command to run uWSGI
 CMD ["sh", "/app/start.sh"]

@@ -178,6 +178,7 @@ Additionally, the following environment variables can be set:
 
 #### Docker-compose
 An example docker-compose file is provided to run the Yivi Portal in production.
+The docker-compose file is configured to build the Docker image from the Dockerfile in the repository on the host machine.
 
 This file expects a [nginx reverse proxy](https://hub.docker.com/r/nginxproxy/nginx-proxy) to be running on the host machine, which proxies the requests to the Yivi Portal, based on the `VIRTUAL_HOST` environment variable, and automatically requests and renews TLS certificates using [Let's Encrypt](https://letsencrypt.org).
 
