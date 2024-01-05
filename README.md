@@ -197,7 +197,7 @@ The docker-compose file starts 3 services:
 - `yivi-portal-yivi`: the Yivi server that is used by the portal for Yivi sessions
 - `yivi-portal-cron`: a service that runs the same image as the `yivi-portal` service, but with the `/bin/sh /app/entrypoint_cron.sh` entrypoint, which makes the cronjobs run in a different container.
 
-The nginx reverse proxy should be providing the `web` network in Docker, which the Yivi Portal and Yivi server connect to.
+The nginx reverse proxy should be connected to the (externally defined) `web` network in Docker, which the Yivi Portal and Yivi server connect to as well.
 Additionally, there is an internal `db` network, which is used by the Yivi Portal and the Yivi server to connect to the database.
 
 The database data and the media files are stored in a Docker volumes `postgres-data` and `portal-media`.
