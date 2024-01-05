@@ -29,6 +29,3 @@ MEDIA_URL = "assets/"
 
 STATIC_ROOT = BASE_DIR / "static"
 MEDIA_ROOT = BASE_DIR / "assets"
-
-YIVI_SERVER_HOSTNAME = "https://yivi.jobdoesburg.dev"
-YIVI_SERVER_TOKEN = "test-yivi-token-1234"

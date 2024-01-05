@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -95,3 +96,6 @@ CRON_CLASSES = [
 ]
 
 DJANGO_CRON_DELETE_LOGS_OLDER_THAN = 7
+
+YIVI_SERVER_URL = os.environ.get("YIVI_SERVER_URL")
+YIVI_SERVER_TOKEN = os.environ.get("YIVI_SERVER_TOKEN")

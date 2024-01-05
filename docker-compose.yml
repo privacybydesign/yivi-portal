@@ -19,7 +19,7 @@ services:
     container_name: yivi-portal-db
     restart: unless-stopped
     networks:
-      - web
+      - db
     volumes:
       - postgres-data:/var/lib/postgresql/data
     environment:
@@ -38,11 +38,12 @@ services:
     restart: unless-stopped
     networks:
       - web
+      - db
     depends_on:
       - database
       - yivi
     volumes:
-      - assets:/app/assets
+      - portal-media:/app/media
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -51,8 +52,8 @@ services:
       POSTGRES_PORT: 5432
       DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY}
       DJANGO_ALLOWED_HOSTS: portal.yivi.jobdoesburg.dev
+      YIVI_SERVER_URL: https://yivi.jobdoesburg.dev
       YIVI_SERVER_TOKEN: ${YIVI_SERVER_TOKEN}
-      YIVI_SERVER_HOSTNAME: https://yivi.jobdoesburg.dev
       VIRTUAL_HOST: portal.yivi.jobdoesburg.dev
       VIRTUAL_PORT: 8000
       LETSENCRYPT_HOST: portal.yivi.jobdoesburg.dev
@@ -60,7 +61,8 @@ services:
 networks:
   web:
     external: true
+  db:
 
 volumes:
   postgres-data:
-  assets:
+  portal-media:

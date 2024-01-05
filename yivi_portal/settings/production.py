@@ -1,5 +1,3 @@
-import os
-
 from .base import *  # noqa
 
 SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY")
@@ -30,6 +28,3 @@ MEDIA_URL = os.environ.get("DJANGO_MEDIA_URL")
 
 STATIC_ROOT = os.environ.get("DJANGO_STATIC_ROOT")
 MEDIA_ROOT = os.environ.get("DJANGO_MEDIA_ROOT")
-
-YIVI_SERVER_HOSTNAME = os.environ.get("YIVI_SERVER_HOSTNAME")
-YIVI_SERVER_TOKEN = os.environ.get("YIVI_SERVER_TOKEN")

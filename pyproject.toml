@@ -21,8 +21,8 @@ fqdn = "^1.5.1"
 django-cron = "^0.6.0"
 django-imagekit = "^5.0.0"
 
-[tool.poetry.group.prod]
-optional = true
+[tool.poetry.group.dev.dependencies]
+black = "^23.12.1"
 
 [tool.poetry.group.prod.dependencies]
 uwsgi = "^2.0.23"

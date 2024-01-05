@@ -10,7 +10,7 @@ class YiviSessionProxyStartView(APIView):
     def post(self, request, **kwargs):
         """Start a Yivi session as proxy to the Yivi server."""
         yivi_server = YiviServer(
-            settings.YIVI_SERVER_HOSTNAME, token=settings.YIVI_SERVER_TOKEN
+            settings.YIVI_SERVER_URL, token=settings.YIVI_SERVER_TOKEN
         )
         try:
             response = yivi_server.start_session(request.data)
@@ -40,7 +40,7 @@ class YiviSessionProxyResultView(APIView):
     def get(self, request, token, **kwargs):
         """Get the result of a Yivi session as proxy to the Yivi server."""
         yivi_server = YiviServer(
-            settings.YIVI_SERVER_HOSTNAME, token=settings.YIVI_SERVER_TOKEN
+            settings.YIVI_SERVER_URL, token=settings.YIVI_SERVER_TOKEN
         )
 
         # Retrieve the original Yivi session from the Django session
