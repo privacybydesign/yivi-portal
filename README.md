@@ -144,11 +144,15 @@ It copies the source code into the image and sets the `yivi_portal.settings.prod
 The `DJANGO_STATIC_ROOT` and `DJANGO_MEDIA_ROOT` environment variables are set to `/app/static` and `/app/media` respectively during the build.
 During build, the static files are collected to the `DJANGO_STATIC_ROOT` directory, which is served by the webserver.
 
+The Docker images also prepares a cronjob to run the background tasks periodically, using [django-cron](https://django-cron.readthedocs.io/en/latest/installation.html).
+However, the cronjob is not started by default.
+This should be done by running the image with the `/bin/sh /app/entrypoint_sh` command, instead of the default command (`/bin/sh /app/entrypoint.sh` that runs the webserver).
+
 ##### Webserver
 The Docker images uses [uWSGI](https://uwsgi-docs.readthedocs.io/en/latest/) as the webserver.
-The uWSGI configuration is set in the `start.sh` script, which is the default command of the Docker image.
+The uWSGI configuration is set in the `entrypoint.sh` script, which is the default command of the Docker image.
 
-During startup, the `start.sh` script first runs the migrations.
+During startup, the `entrypoint.sh` script first runs the migrations.
 The uWSGI configuration uses the `yivi_portal.wsgi` module as the WSGI module and to serve the static files from the `DJANGO_STATIC_ROOT` directory (which is set to `/app/static` during build) and the media files from the `DJANGO_MEDIA_ROOT` directory (which is set to `/app/media` during build).
 This is done at the `DJANGO_STATIC_URL` and `DJANGO_MEDIA_URL` respectively, which are set to `/static/` and `/media/` during build by default, but can be overridden by setting the `DJANGO_STATIC_URL` and `DJANGO_MEDIA_URL` environment variables for runtime.
 The webserver is exposed internally on port `8000` and runs with 4 workers and 2 threads (by the user `nobody` in the `nogroup` group).
@@ -176,6 +180,11 @@ Additionally, the following environment variables can be set:
 - `DJANGO_STATIC_URL`: the URL where the static files are served from (default: `/static/`)
 - `DJANGO_MEDIA_URL`: the URL where the media files are served from (default: `/media/`)
 
+##### Cron jobs
+Background tasks are run periodically with [django-cron](https://django-cron.readthedocs.io/en/latest/installation.html).
+This is achieved by running `python manage.py runcrons` every 5 minutes, which will launch `django-cron` cronjobs with a resolution of 5 minutes.
+
+
 #### Docker-compose
 An example docker-compose file is provided to run the Yivi Portal in production.
 The docker-compose file is configured to build the Docker image from the Dockerfile in the repository on the host machine.
@@ -186,6 +195,7 @@ The docker-compose file starts 3 services:
 - `yivi-portal`: the Yivi Portal itself
 - `yivi-portal-db`: the PostgreSQL database that is used by the portal
 - `yivi-portal-yivi`: the Yivi server that is used by the portal for Yivi sessions
+- `yivi-portal-cron`: a service that runs the same image as the `yivi-portal` service, but with the `/bin/sh /app/entrypoint_cron.sh` entrypoint, which makes the cronjobs run in a different container.
 
 The nginx reverse proxy should be providing the `web` network in Docker, which the Yivi Portal and Yivi server connect to.
 Additionally, there is an internal `db` network, which is used by the Yivi Portal and the Yivi server to connect to the database.
@@ -205,12 +215,22 @@ DJANGO_SECRET_KEY=secret-key
 ```
 
 ##### Useful commands
-Run the following command to create an admin user:
-```bash
-docker-compose exec yivi-portal python manage.py createsuperuser --email <email> --username <username> --noinput
-```
-Note that a user must re-login before the admin interface is available.
+- To start the docker-compose file, run:
+   ```bash
+   docker-compose up -d --build
+   ```
+   (The `-d` flag runs the containers in the background, the `--build` flag rebuilds the images, which does not happen automatically when the source code changes.)
 
+- To create an admin user:
+   ```bash
+   docker-compose exec yivi-portal python manage.py createsuperuser --email <email> --username <username> --noinput
+   ```
+   Note that a user must re-login before the admin interface is available.
+
+- To run the cronjobs manually, forcefully:
+   ```bash
+   docker-compose exec yivi-portal-cron python manage.py runcrons --force
+   ```
 
 ## More information
 The Yivi Portal is built as based on recommendations in the [master thesis of Job Doesburg](https://jobdoesburg.nl/docs/Measures_against_over_asking_in_SSI_and_the_Yivi_ecosystem.pdf).
