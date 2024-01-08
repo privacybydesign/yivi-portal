@@ -52,7 +52,10 @@
                     {% endfor %}
                     <hr class="dropdown-divider">
                     <span class="text-muted disabled dropdown-item">{{ request.session.yivi_email }}</span>
-                    <a class="dropdown-item" href="{% url 'admin:logout' %}">Log out</a>
+                    <form action="{% url 'schememanager:logout' %}" method="post">
+                        {% csrf_token %}
+                        <button class="dropdown-item" type="submit">Log out</button>
+                    </form>
                     {% if request.user.is_authenticated and request.user.is_staff %}
                         <hr class="dropdown-divider">
                         {% if verifier %}

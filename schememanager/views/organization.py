@@ -3,6 +3,7 @@ from django.core.exceptions import PermissionDenied
 from django.dispatch import receiver
 from django.shortcuts import redirect
 from django.urls import reverse
+from django.utils.http import urlencode
 from django.views.generic import (
     TemplateView,
     DetailView,
@@ -155,7 +156,10 @@ class OrganizationListView(ListView):
 
     def dispatch(self, request, *args, **kwargs):
         if "yivi_email" not in request.session:
-            return redirect("schememanager:login")  # TODO add request.path as next-url
+            url = reverse("schememanager:login")
+            if request.method == "GET":
+                url += "?" + urlencode({"next": request.path})
+            return redirect(url)
         return super().dispatch(request, *args, **kwargs)
 
     def get_queryset(self):
@@ -170,7 +174,10 @@ class SingleOrganizationPortalView(DetailView):
 
     def dispatch(self, request, *args, **kwargs):
         if "yivi_email" not in request.session:
-            return redirect("schememanager:login")  # TODO add next-url
+            url = reverse("schememanager:login")
+            if request.method == "GET":
+                url += "?" + urlencode({"next": request.path})
+            return redirect(url)
         if (
             not self.get_object()
             .admins.filter(email=request.session["yivi_email"])

@@ -4,6 +4,7 @@ from django.db import IntegrityError
 from django.shortcuts import redirect, get_object_or_404
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.http import urlencode
 from django.views.generic import (
     DetailView,
     UpdateView,
@@ -29,7 +30,10 @@ class VerifierListView(ListView):
 
     def dispatch(self, request, *args, **kwargs):
         if "yivi_email" not in request.session:
-            return redirect("schememanager:login")  # TODO add request.path as next-url
+            url = reverse("schememanager:login")
+            if request.method == "GET":
+                url += "?" + urlencode({"next": request.path})
+            return redirect(url)
         if (
             not get_object_or_404(Organization, slug=self.kwargs["org_slug"])
             .admins.filter(email=request.session["yivi_email"])
@@ -82,7 +86,10 @@ class VerifierPortalView(DetailView):
 
     def dispatch(self, request, *args, **kwargs):
         if "yivi_email" not in request.session:
-            return redirect("schememanager:login")  # TODO add next-url
+            url = reverse("schememanager:login")
+            if request.method == "GET":
+                url += "?" + urlencode({"next": request.path})
+            return redirect(url)
         if (
             not self.get_object()
             .organization.admins.filter(email=request.session["yivi_email"])

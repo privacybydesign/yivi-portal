@@ -11,6 +11,7 @@ app_name = "schememanager"
 urlpatterns = [
     path("", IndexView.as_view(), name="index"),
     path("login/", LoginView.as_view(), name="login"),
+    path("logout/", LogoutView.as_view(), name="logout"),
     path("register/", RegistrationView.as_view(), name="registration"),
     path("portal/", OrganizationListView.as_view(), name="organization-list"),
     path(

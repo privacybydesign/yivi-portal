@@ -1,9 +1,10 @@
-from django.contrib.auth import get_user_model, login
+from django.contrib.auth import get_user_model, login, logout
 from django.dispatch import receiver
 from django.shortcuts import redirect
-from django.urls import reverse
+from django.urls import reverse, reverse_lazy
 from django.views.generic import (
     TemplateView,
+    RedirectView,
 )
 
 from yivi_auth.signals import yivi_session_done
@@ -17,12 +18,18 @@ class LoginView(TemplateView):
         "disclose": [[["pbdf.sidn-pbdf.email.email"]]],
     }
 
+    success_url = reverse_lazy("schememanager:organization-list")
+
+    def get_success_url(self):
+        next_url = self.request.GET.get("next")
+        if next_url and next_url.startswith("/"):
+            return next_url
+        return self.success_url
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["yivi_request"] = self.yivi_request
-        context["next_url"] = self.request.GET.get("next", None) or reverse(
-            "schememanager:organization-list"
-        )
+        context["next_url"] = self.get_success_url()
         return context
 
     def dispatch(self, request, *args, **kwargs):
@@ -30,7 +37,7 @@ class LoginView(TemplateView):
         if request.user.is_authenticated and request.user.is_staff:
             return redirect("admin:index")
         if request.session.get("yivi_email", None):
-            return redirect("schememanager:portal")
+            return redirect("schememanager:index")
         return super().dispatch(request, *args, **kwargs)
 
     @staticmethod
@@ -63,11 +70,13 @@ class LoginView(TemplateView):
         LoginView.yivi_email_disclosure_login(request, yivi_email)
 
 
-class LogoutView(TemplateView):
-    template_name = "logout.html"
+class LogoutView(RedirectView):
+    pattern_name = "schememanager:index"
 
     def dispatch(self, request, *args, **kwargs):
         """Redirect after logout."""
-        if request.user.is_authenticated:
+        if request.session["yivi_email"]:
             del self.request.session["yivi_email"]
+        if request.user.is_authenticated:
+            logout(request)
         return super().dispatch(request, *args, **kwargs)
