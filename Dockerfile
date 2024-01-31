@@ -38,8 +38,6 @@ RUN python manage.py collectstatic --noinput
 
 RUN chown -R nobody:nogroup $DJANGO_MEDIA_ROOT
 
-# Expose port 8000 to the outside world
-EXPOSE 8000
+EXPOSE 80
 
-# Command to run uWSGI
 CMD ["/bin/sh", "/app/entrypoint.sh"]
