@@ -1,6 +1,10 @@
 {% extends "portal.html" %}
 {% load django_bootstrap5 %}
 
+{% block title %}
+    {{ verifier.full_id }} - {{ block.super }}
+{% endblock %}
+
 {% block page %}
     <div class="container mt-4">
         <div class="col-12 col-lg-8 mx-auto mb-4">
@@ -16,7 +20,7 @@
         <div class="col-12 col-lg-8 mx-auto">
             <h1 class="mb-2 d-flex justify-content-center align-items-center">
                 {% if verifier.logo %}
-                    <img alt="{{ verifier.display_name }} logo" src="{{ verifier.logo.url }}" class="img-fluid d-inline rounded me-2" style="max-height: 1em">
+                    <img alt="{{ verifier.display_name }} logo" src="{{ verifier.logo.url }}" class="img-fluid d-inline rounded-circle me-3" style="max-height: 1em">
                 {% endif %}
                 {{ verifier.display_name }}
             </h1>
@@ -24,20 +28,35 @@
                 <code class="user-select-all">{{ verifier.full_id }}</code><br>
                 <span class="text-muted">Legal entity: {{ verifier.organization }}</span>
             </p>
-            <div class="progress progress-bar-arrows mb-4">
-                {% if verifier.status == "rejected" %}
-                    <div class="progress-bar bg-danger" role="progressbar"><span><i class="bi bi-pencil me-2"></i>Rejected</span></div>
-                {% else %}
-                    <div class="progress-bar bg-secondary{% if verifier.status != "draft" %} opacity-25{% endif %}" role="progressbar"><span><i class="bi bi-pencil me-2"></i>Draft</span></div>
-                {% endif %}
-                {% if verifier.scheme.production %}
-                <div class="progress-bar bg-warning{% if verifier.status != "review" %} opacity-25{% endif %}" role="progressbar"><span><i class="bi bi-spellcheck me-2"></i>Review</span></div>
-                {% endif %}
-                <div class="progress-bar bg-primary{% if verifier.status != "accepted" %} opacity-25{% endif %}" role="progressbar"><span><i class="bi bi-check-circle me-2"></i>{% if verifier.scheme.production %}Accepted{% else %}Ready{% endif %}</span></div>
-                {% if verifier.status == "invalidated" %}
-                    <div class="progress-bar bg-danger" role="progressbar"><span><i class="bi bi-exclamation-circle-fill me-2"></i>Invalidated</span></div>
-                {% else %}
-                    <div class="progress-bar bg-success{% if verifier.status != "published" %} opacity-25{% endif %}" role="progressbar"><span><i class="bi bi-globe me-2"></i>Published</span></div>
+            <div class="mb-4">
+                <div class="progress progress-bar-arrows">
+                    {% if verifier.status == "rejected" %}
+                        <div class="progress-bar bg-danger" role="progressbar"><span><i class="bi bi-pencil me-2"></i>Rejected</span></div>
+                    {% else %}
+                        <div class="progress-bar bg-secondary{% if verifier.status != "draft" %} opacity-25{% endif %}" role="progressbar"><span><i class="bi bi-pencil me-2"></i>Draft</span></div>
+                    {% endif %}
+                    {% if verifier.scheme.production %}
+                    <div class="progress-bar bg-warning{% if verifier.status != "review" %} opacity-25{% endif %}" role="progressbar"><span><i class="bi bi-spellcheck me-2"></i>Review</span></div>
+                    {% endif %}
+                    <div class="progress-bar bg-primary{% if verifier.status != "accepted" %} opacity-25{% endif %}" role="progressbar"><span><i class="bi bi-check-circle me-2"></i>{% if verifier.scheme.production %}Accepted{% else %}Ready{% endif %}</span></div>
+                    {% if verifier.status == "invalidated" %}
+                        <div class="progress-bar bg-danger" role="progressbar"><span><i class="bi bi-exclamation-circle-fill me-2"></i>Invalidated</span></div>
+                    {% else %}
+                        <div class="progress-bar bg-success{% if verifier.status != "published" %} opacity-25{% endif %}" role="progressbar"><span><i class="bi bi-globe me-2"></i>Published</span></div>
+                    {% endif %}
+                </div>
+                {% if not object.can_be_edited %}
+                    <div class="mt-1">
+                        <small class="text-muted text-center">
+                            <form action="{% url 'schememanager:verifier-status' organization.slug verifier.scheme.id verifier.slug %}" method="post">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="mark_draft">
+                                You currently cannot make changes to this verifier. To make changes, you need to
+                                <input type="submit" class="btn btn-link btn-sm link-secondary p-0 align-baseline" value="mark it as draft">
+                                again.
+                            </form>
+                        </small>
+                    </div>
                 {% endif %}
             </div>
             <ul class="nav nav-tabs justify-content-center">

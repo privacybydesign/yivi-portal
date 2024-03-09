@@ -1,11 +1,15 @@
 {% extends "base.html" %}
 {% load i18n django_bootstrap5 static startswith %}
 
+{% block title %}
+    {% if organization %}{{ organization }} - {% endif %}{{ block.super }}
+{% endblock %}
+
 {% block header %}
 <nav class="navbar navbar-expand-md bg-body py-3">
     <div class="container">
         <a class="navbar-brand d-flex align-items-center" href="{% url 'schememanager:index' %}">
-            <img src="{% static 'img/yivi-logo.webp' %}" alt="Yivi Portal" height="30" class="d-inline-block align-text-top me-2">
+            <img src="{% static 'img/yivi-logo.svg' %}" alt="Yivi Portal" height="30" class="d-inline-block align-text-top me-2">
             <span>Portal</span>
         </a>
         <button class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#main-nav"><span class="visually-hidden">Toggle navigation</span><span class="navbar-toggler-icon"></span></button>
@@ -84,7 +88,7 @@
 {% block footer %}
     <div class="container text-muted text-center my-3">
         <p>
-            <img src="{% static 'img/yivi-logo.webp' %}" alt="Yivi Portal" height="30" class="d-inline-block align-text-top me-2">
+            <img src="{% static 'img/yivi-logo.svg' %}" alt="Yivi Portal" height="30" class="d-inline-block align-text-top me-2">
         </p>
     </div>
 {% endblock %}

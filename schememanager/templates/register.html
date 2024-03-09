@@ -4,3 +4,22 @@
 {% block title %}
     Register - {{ block.super }}
 {% endblock %}
+
+{% block content %}
+    <div class="container mt-5">
+        <div class="col-12 col-lg-6 mx-auto">
+            <h1 class="text-center">Register</h1>
+            <p class="lead text-center">
+                To register a new organization, a valid KvK credential of the organization must be disclosed.
+                This can only be done by a KvK registered authorized representative of the organization.
+                If you are not a KvK authorized representative, please contact the authorized representative of your organization.
+            </p>
+            <p class="lead text-center">
+                After initial registration, the authorized representative will be able to give other users access to the organization by specifying their email address.
+            </p>
+            <p class="lead text-center">
+                If your organization is not registered at the KvK or you are not a KvK authorized representative, you should contact <a href="mailto:info@privacybydesign.foundation">info@privacybydesign.foundation</a> for further assistance.
+            </p>
+        </div>
+    </div>
+{% endblock %}

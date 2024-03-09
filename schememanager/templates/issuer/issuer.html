@@ -1,1 +1,11 @@
 {% extends "portal.html" %}
+{% load django_bootstrap5 %}
+
+{% block page %}
+    <div class="container mt-4">
+        <div class="col-12 col-lg-8 mx-auto mt-5">
+            <h3>Issuer registrations are currently not managed via Yivi Portal</h3>
+            <p>Credentials can be managed via the <a href="https://github.com/privacybydesign/pbdf-schememanager" target="_blank"><code>pbdf-schememanager</code></a> and <a href="https://github.com/privacybydesign/irma-demo-schememanager" target="_blank"><code>irma-demo-schememanager</code></a> GitHub repositories.</p>
+        </div>
+    </div>
+{% endblock %}

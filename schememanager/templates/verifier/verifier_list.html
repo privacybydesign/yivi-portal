@@ -15,7 +15,7 @@
         <h1 class="text-center mb-3">{{ organization.name }}</h1>
         <div class="col-12 col-lg-8 mx-auto">
             {% if verifiers %}
-                <p class="text-center">Your organization is registered in the following requestor schemes:</p>
+                <p class="text-center lead">The following verifiers are registered for your organization:</p>
                     {% regroup verifiers|dictsort:"scheme.id"|dictsortreversed:"scheme.production" by scheme as verifier_list %}
                     {% for scheme in verifier_list %}
                         <div class="card mb-3">
@@ -29,7 +29,7 @@
                                 {% for verifier in scheme.list %}
                                     <a class="list-group-item d-flex justify-content-between align-items-center list-group-item-action py-3" href="{% url "schememanager:verifier-status" organization.slug verifier.scheme.id verifier.slug %}">
                                         {% if verifier.logo %}
-                                            <img alt="{{ verifier.display_name }} logo" class="rounded me-3" height="64" width="64" src="{{ verifier.logo.url }}"><br>
+                                            <img alt="{{ verifier.display_name }} logo" class="rounded-circle me-3" height="64" width="64" src="{{ verifier.logo.url }}"><br>
                                         {% endif %}
                                         <div class="d-flex flex-column w-100">
                                             <span class="mb-2">
@@ -60,7 +60,7 @@
                     {% endfor %}
             {% endif %}
             {% if schemes %}
-                <h5 class="text-center mt-5">Register your organization as verifier in a scheme:</h5>
+                <p class="text-center lead mt-5">Register a new verifier in a scheme:</p>
                 <form action="{% url "schememanager:verifier-list" organization.slug %}" method="post">
                     {% csrf_token %}
                     <input type="hidden" name="action" value="register">

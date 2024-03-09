@@ -1,8 +1,12 @@
+import logging
+
 import dns.resolver
 from django.utils import timezone
 from dns.resolver import Resolver
 
 from schememanager.models.verifier import VerifierHostname
+
+logger = logging.getLogger()
 
 
 def verify_dns(hostname: str, challenge: str) -> bool:
@@ -32,6 +36,7 @@ def verify_new_dns(hostname: VerifierHostname) -> bool:
         hostname.dns_challenge_verified_at = timezone.now()
         hostname.dns_challenge_invalidated_at = None
         hostname.save()
+        logger.info(f"DNS challenge for {hostname.hostname} verified")
         return True
 
     return False
@@ -49,6 +54,7 @@ def verify_existing_dns(hostname: VerifierHostname) -> bool:
         hostname.dns_challenge_verified = False
         hostname.dns_challenge_invalidated_at = timezone.now()
         hostname.save()
+        logger.info(f"DNS challenge for {hostname.hostname} invalidated")
         return False
 
     return True

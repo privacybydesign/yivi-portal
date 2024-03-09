@@ -6,7 +6,7 @@ from django.utils import timezone
 from schememanager.models.scheme import Scheme
 from schememanager.models.verifier import Verifier
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger()
 
 
 def fetch_requestor_scheme(scheme: Scheme, create_verifiers: bool = False):

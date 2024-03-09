@@ -1,8 +1,12 @@
+import logging
+from datetime import datetime, timedelta
+
 from django.contrib import messages
 from django.core.exceptions import PermissionDenied
 from django.dispatch import receiver
 from django.shortcuts import redirect
 from django.urls import reverse
+from django.utils import timezone
 from django.utils.http import urlencode
 from django.views.generic import (
     TemplateView,
@@ -16,6 +20,8 @@ from schememanager.models.organization import Organization, OrganizationAdmin, K
 from schememanager.views.login import LoginView
 
 from yivi_auth.signals import yivi_session_done
+
+logger = logging.getLogger()
 
 
 class RegistrationView(TemplateView):
@@ -40,8 +46,14 @@ class RegistrationView(TemplateView):
                     "pbdf.signicat.kvkTradeRegister.specialLegalSituation",
                     "pbdf.signicat.kvkTradeRegister.restrictionInLegalAction",
                     "pbdf.signicat.kvkTradeRegister.foreignLegalStatus",
-                    "pbdf.signicat.kvkTradeRegister.hasRestriction",
-                    "pbdf.signicat.kvkTradeRegister.isAuthorized",
+                    {
+                        "type": "pbdf.signicat.kvkTradeRegister.hasRestriction",
+                        "value": "Nee",
+                    },
+                    {
+                        "type": "pbdf.signicat.kvkTradeRegister.isAuthorized",
+                        "value": "Ja",
+                    },
                     "pbdf.signicat.kvkTradeRegister.reason",
                     "pbdf.signicat.kvkTradeRegister.referenceMoment",
                 ]
@@ -74,11 +86,19 @@ class RegistrationView(TemplateView):
             "Organization with kvk number %s was created and you were added as an admin."
             % kvk_entry.kvk_number,
         )
+        logger.info(
+            f"Organization {organization} was registered by {yivi_email} based on KVK credential."
+        )
+        return organization
 
     @staticmethod
     def reregistration_of_organization(request, organization, kvk_entry, yivi_email):
         """Update an existing organization based on the KVK entry that was disclosed."""
         organization.update_from_kvk_entry(kvk_entry)
+
+        logger.info(
+            f"Organization {organization} was updated by {yivi_email} based on KVK credential."
+        )
 
         if OrganizationAdmin.objects.filter(
             organization=organization, email=yivi_email
@@ -96,6 +116,9 @@ class RegistrationView(TemplateView):
                 request,
                 "Organization with kvk number %s already exists. You were added as an admin."
                 % kvk_entry.kvk_number,
+            )
+            logger.info(
+                f"New admin {yivi_email} was added to organization {organization} after presenting KVK credential"
             )
 
     @staticmethod
@@ -131,6 +154,18 @@ class RegistrationView(TemplateView):
             reference_moment=result["disclosed"][0][17]["rawvalue"],
         )
 
+        reference_moment = timezone.datetime.fromisoformat(kvk_entry.reference_moment)
+
+        if reference_moment.date() < timezone.now().date() - timedelta(days=365):
+            # Only allow KVK entries from the last year
+            messages.error(
+                request,
+                "The KVK entry is more than a year old. Please request a more recent KVK credential first.",
+            )
+            return redirect("schememanager:index")
+
+        # TODO maybe perform some more checks on the KVK entry: is the organization still active, etc.
+
         try:
             organization = Organization.objects.get(
                 legal_registration_number=kvk_entry.kvk_number
@@ -140,7 +175,9 @@ class RegistrationView(TemplateView):
                 f"Multiple organizations found for kvk number {kvk_entry.kvk_number}. This should not happen."
             )
         except Organization.DoesNotExist:
-            RegistrationView.register_new_organization(request, kvk_entry, yivi_email)
+            organization = RegistrationView.register_new_organization(
+                request, kvk_entry, yivi_email
+            )
         else:
             # TODO: actually, we should not allow this. Reregistration should be a separate flow (in which we ask
             #  disclosure of a specific legal number credential!)
@@ -194,6 +231,9 @@ class OrganizationLegalPortalView(UpdateView, SingleOrganizationPortalView):
     def form_valid(self, form):
         form.save()
         messages.success(self.request, "Your organization has been updated.")
+        logger.info(
+            f"Organization {self.get_object()} legal info was updated by {self.request.session['yivi_email']}."
+        )
         return super().form_valid(form)
 
     def get_success_url(self):
@@ -207,6 +247,9 @@ class OrganizationBillingPortalView(UpdateView, SingleOrganizationPortalView):
     def form_valid(self, form):
         form.save()
         messages.success(self.request, "Your organization has been updated.")
+        logger.info(
+            f"Organization {self.get_object()} billing info was updated by {self.request.session['yivi_email']}."
+        )
         return super().form_valid(form)
 
     def get_success_url(self):
@@ -241,6 +284,9 @@ class OrganizationAdminsView(SingleOrganizationPortalView):
                 self.request,
                 "%s was added as an admin of your organization." % instance.email,
             )
+            logger.info(
+                f"Admin {instance.email} was added to organization {self.get_object()} by {self.request.session['yivi_email']}."
+            )
         return redirect(self.get_success_url())
 
     def remove_admin(self, email):
@@ -257,10 +303,16 @@ class OrganizationAdminsView(SingleOrganizationPortalView):
                 messages.success(
                     self.request, "You have successfully left the organization."
                 )
+                logger.info(
+                    f"Admin {admin.email} left organization {self.get_object()}."
+                )
                 return redirect("schememanager:organization-list")
 
             messages.success(
                 self.request, "%s was removed from your organization." % admin.email
+            )
+            logger.info(
+                f"Admin {admin.email} was removed from organization {self.get_object()} by {self.request.session['yivi_email']}."
             )
         return redirect(self.get_success_url())
 

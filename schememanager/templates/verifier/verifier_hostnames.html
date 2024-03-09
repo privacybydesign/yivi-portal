@@ -4,7 +4,7 @@
 {% block content %}
     <div class="mt-4">
         <p>
-            Yivi servers with the following hostnames will be registered as belonging to your organization.
+            Yivi servers with the following hostnames will be considered as belonging to your organization.
             Users will see your organization's name when they communicate with one of these Yivi servers.
         </p>
         <p>
@@ -31,8 +31,7 @@
                                 <p>This hostname is verified.</p>
                             {% endif %}
                             <ul>
-                                <li><strong>Zone</strong>: <code class="user-select-all">{{ hostname.hostname }}</code></li>
-                                <li><strong>Name</strong>: <code class="user-select-all">@</code> (or leave blank)</li>
+                                <li><strong>Name</strong>: <code class="user-select-all">{{ hostname.hostname }}</code></li>
                                 <li><strong>Type</strong>: <code class="user-select-all">TXT</code></li>
                                 <li><strong>TTL</strong>: <code class="user-select-all">3600</code> (1 hour)</li>
                                 <li><strong>Value</strong>: <code class="user-select-all">{{ hostname.dns_challenge }}</code></li>

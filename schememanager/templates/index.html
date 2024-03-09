@@ -5,16 +5,17 @@
 {% block main %}
     <div class="container pb-5">
         <div class="d-flex justify-content-center py-5">
-            <img class="d-block mb-4" src="{% static "img/yivi-logo.webp" %}" alt="" height="128">
+            <img class="d-block mb-4" src="{% static "img/yivi-logo.svg" %}" alt="" height="128">
         </div>
         {% bootstrap_messages %}
         <div class="text-center">
-            <h2>Yivi Portal</h2>
+            <h1>Yivi Portal</h1>
             <p class="lead">
-                Register your organization in the Yivi Portal.
+                Become a trusted party in the Yivi ecosystem.<br>
+                Register yourself as verifier in the <strong>Privacy by Design Foundation</strong> scheme.
             </p>
         </div>
-        <div class="col-12 col-md-4 mx-auto d-grid gap-2">
+        <div class="col-12 col-md-4 mx-auto d-grid gap-2 mt-5">
             {% if request.session.yivi_email %}
                 {% if accessible_organizations.count == 1 %}
                     <a class="btn btn-primary" href="{% url "schememanager:organization-portal" accessible_organizations.0.slug %}">

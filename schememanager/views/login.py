@@ -1,13 +1,17 @@
+import logging
+
 from django.contrib.auth import get_user_model, login, logout
 from django.dispatch import receiver
 from django.shortcuts import redirect
-from django.urls import reverse, reverse_lazy
+from django.urls import reverse_lazy
 from django.views.generic import (
     TemplateView,
     RedirectView,
 )
 
 from yivi_auth.signals import yivi_session_done
+
+logger = logging.getLogger()
 
 
 class LoginView(TemplateView):
@@ -45,6 +49,8 @@ class LoginView(TemplateView):
         """Log the user in based on the Yivi email disclosure."""
         request.session["yivi_email"] = email
 
+        logger.info(f"User with email {email} logged in via Yivi.")
+
         user_model = get_user_model()
         try:
             user = user_model.objects.filter(email=email).get()
@@ -77,6 +83,9 @@ class LogoutView(RedirectView):
         """Redirect after logout."""
         if request.session["yivi_email"]:
             del self.request.session["yivi_email"]
+
+            logger.info(f"User with email {request.user.email} logged out.")
+
         if request.user.is_authenticated:
             logout(request)
         return super().dispatch(request, *args, **kwargs)

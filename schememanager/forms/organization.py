@@ -1,15 +1,26 @@
-from django.forms import ModelForm
+import json
+
+from django.forms import ModelForm, widgets, CharField
 
 from schememanager.models.organization import Organization, OrganizationAdmin
 
 
+class CommaSeparatedListWidget(widgets.Textarea):
+    def render(self, name, value, attrs=None, **kwargs):
+        if value:
+            value = "\n".join(value)
+        return super().render(name, value, attrs=attrs)
+
+
 class OrganizationLegalForm(ModelForm):
+    legal_trade_names = CharField(widget=CommaSeparatedListWidget)
+
     class Meta:
         model = Organization
         fields = [
             "legal_registration_number",
             "legal_name",
-            "legal_trade_names",  # TODO: display this in a better way
+            "legal_trade_names",
             "legal_email",
             "legal_address",
             "legal_reference_moment",

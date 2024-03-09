@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "portal.html" %}
 {% load i18n django_bootstrap5 static %}
 
 {% block extra_head %}
@@ -6,8 +6,9 @@
 {% endblock %}
 
 
-{% block main %}
-    <div class="position-absolute h-100 w-100 d-flex justify-content-center align-items-center pb-5">
+{% block page %}
+    {% block content %} {% endblock %}
+    <div class="d-flex justify-content-center align-items-center p-5">
         <div class="modal-content" id="yivi-web-form"></div>
     </div>
 {% endblock %}

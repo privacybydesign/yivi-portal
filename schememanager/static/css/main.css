@@ -17,3 +17,6 @@
     clip-path: polygon(100% 0%, 0% 0%, var(--progress-bar-arrow-width) 50%, 0% 100%, 100% 100%);
 }
 
+.rounded-circle {
+    border-radius: 50%;
+}
