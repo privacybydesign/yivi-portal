@@ -14,10 +14,9 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
-    - name: Build the Docker image
-      run: docker build . --file Dockerfile --tag yivi-portal:$(date +%s)
-    - name: Push the Docker image
-      uses: docker/build-push-action@v3
+    - uses: docker/setup-buildx-action@v3
+    - uses: docker/build-push-action@v5
       with:
-        push: true
-        tags: ghcr.io/JobDoesburg/yivi-portal:latest
+        context: .
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
