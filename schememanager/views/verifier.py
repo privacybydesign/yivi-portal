@@ -1,6 +1,8 @@
 import logging
 
 from django.contrib import messages
+from django.contrib.admin.models import ADDITION, CHANGE, LogEntry
+from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import PermissionDenied, ValidationError, BadRequest
 from django.db import IntegrityError
 from django.shortcuts import redirect, get_object_or_404
@@ -22,7 +24,20 @@ from schememanager.models.verifier import Verifier
 logger = logging.getLogger()
 
 
-class VerifierListView(ListView):
+class YiviEmailAuthMixin:
+    """Mixin to check if the user is logged in"""
+
+    def dispatch(self, request, *args, **kwargs):
+        if "yivi_email" not in request.session:
+            url = reverse("schememanager:login")
+            if request.method == "GET":
+                url += "?" + urlencode({"next": request.path})
+            return redirect(url)
+
+        return super().dispatch(request, *args, **kwargs)
+
+
+class VerifierListView(YiviEmailAuthMixin, ListView):
     template_name = "verifier/verifier_list.html"
     model = Verifier
     context_object_name = "verifiers"
@@ -32,32 +47,14 @@ class VerifierListView(ListView):
         context["schemes"] = Scheme.objects.filter(scheme_type=Scheme.REQUESTOR)
         return context
 
-    def dispatch(self, request, *args, **kwargs):
-        # If the user is not logged in, redirect to the login page
-        if "yivi_email" not in request.session:
-            url = reverse("schememanager:login")
-            if request.method == "GET":
-                url += "?" + urlencode({"next": request.path})
-            return redirect(url)
-
-        # If user does not have permission to view this page, raise PermissionDenied
-        if (
-            not self.get_organization()
-            .admins.filter(email=request.session["yivi_email"])
-            .exists()
-        ):
-            raise PermissionDenied()
-
-        return super().dispatch(request, *args, **kwargs)
-
-    def get_organization(self):
-        return get_object_or_404(Organization, slug=self.kwargs["org_slug"])
-
     def get_queryset(self):
-        return self.get_organization().verifier_registrations.all()
+        return (
+            super()
+            .get_queryset()
+            .filter(organization__admins__email=self.request.session["yivi_email"])
+        )
 
-    def register(self, scheme, slug):
-        organization = self.get_organization()
+    def register(self, scheme, slug, organization):
         try:
             verifier = Verifier(
                 scheme=scheme,
@@ -67,7 +64,7 @@ class VerifierListView(ListView):
             verifier.full_clean()
             verifier.save()
             logger.info(
-                f"Verifier {verifier.full_id} was registered by {self.request.session['yivi_email']}."
+                f"Verifier {verifier.full_id} was registered by {self.request.session.get('yivi_email')}."
             )
         except (ValidationError, IntegrityError):
             # Something went wrong creating the verifier
@@ -80,7 +77,6 @@ class VerifierListView(ListView):
 
         return redirect(
             "schememanager:verifier-portal",
-            org_slug=verifier.organization.slug,
             scheme=verifier.scheme.id,
             verifier_slug=verifier.slug,
         )
@@ -89,41 +85,33 @@ class VerifierListView(ListView):
         if request.POST.get("action") == "register":
             # A POST request with a slug is used to register a new verifier
             scheme = get_object_or_404(Scheme, id=request.POST.get("scheme"))
+            org = get_object_or_404(Organization, id=request.POST.get("org"))
+            if not org.admins.filter(email=request.session["yivi_email"]).exists():
+                raise PermissionDenied()
             slug = request.POST.get("slug")
-            return self.register(scheme, slug)
+            return self.register(scheme, slug, org)
         else:
             raise BadRequest("Invalid action")
 
 
-class VerifierPortalView(DetailView):
+class VerifierPortalView(YiviEmailAuthMixin, DetailView):
     model = Verifier
     context_object_name = "verifier"
 
-    def dispatch(self, request, *args, **kwargs):
-        # If the user is not logged in, redirect to the login page
-        if "yivi_email" not in request.session:
-            url = reverse("schememanager:login")
-            if request.method == "GET":
-                url += "?" + urlencode({"next": request.path})
-            return redirect(url)
-
-        # If user does not have permission to view this page, raise PermissionDenied
-        if (
-            not self.get_object()
-            .organization.admins.filter(email=request.session["yivi_email"])
-            .exists()
-        ):
-            raise PermissionDenied()
-
-        return super().dispatch(request, *args, **kwargs)
-
     def get_object(self, queryset=None):
-        return get_object_or_404(
+        obj = get_object_or_404(
             Verifier,
             scheme=self.kwargs["scheme"],
             slug=self.kwargs["verifier_slug"],
-            organization__slug=self.kwargs["org_slug"],
         )
+        if not obj.organization:
+            raise PermissionDenied()
+
+        if not obj.organization.admins.filter(
+            email=self.request.session.get("yivi_email")
+        ).exists():
+            raise PermissionDenied()
+        return obj
 
 
 class VerifierDetailView(UpdateView, VerifierPortalView):
@@ -131,19 +119,17 @@ class VerifierDetailView(UpdateView, VerifierPortalView):
     form_class = VerifierForm
 
     def form_valid(self, form):
-        form.save(commit=False)
-        form.instance.organization = get_object_or_404(
-            Organization, slug=self.kwargs["org_slug"]
-        )
-        form.save()
+        instance = form.save()
         messages.success(self.request, "Your verifier has been updated.")
-        logger.info(
-            f"Verifier {form.instance.full_id} was updated by {self.request.session['yivi_email']}."
-        )
-        return super().form_valid(form)
 
-    def get_success_url(self):
-        return self.request.path
+        logger.info(
+            f"Verifier {form.instance.full_id} was updated by {self.request.session.get('yivi_email')}: {form.changed_data}."
+        )
+        return redirect(
+            "schememanager:verifier-portal",
+            scheme=instance.scheme.id,
+            verifier_slug=instance.slug,
+        )
 
 
 class VerifierHostnamesView(VerifierPortalView):
@@ -158,7 +144,7 @@ class VerifierHostnamesView(VerifierPortalView):
     def dispatch(self, request, *args, **kwargs):
         if not self.get_object():
             messages.error(self.request, "You must first register as a verifier.")
-            return redirect("schememanager:verifier-list", org_slug=kwargs["org_slug"])
+            return redirect("schememanager:verifier-list")
         return super().dispatch(request, *args, **kwargs)
 
     def add_hostname(self, hostname):
@@ -180,7 +166,7 @@ class VerifierHostnamesView(VerifierPortalView):
             form.instance.verifier = self.get_object()
             instance = form.save()
             logger.info(
-                f"Hostname {instance.hostname} was added to verifier {instance.verifier} by {self.request.session['yivi_email']}."
+                f"Hostname {instance.hostname} was added to verifier {instance.verifier} by {self.request.session.get('yivi_email')}."
             )
             if instance.dns_challenge_verified:
                 messages.success(
@@ -205,7 +191,7 @@ class VerifierHostnamesView(VerifierPortalView):
         self.get_object().hostnames.get(hostname=hostname).delete()
         messages.success(self.request, "%s was removed as hostname." % hostname)
         logger.info(
-            f"Hostname {hostname} was removed from verifier {self.get_object().full_id} by {self.request.session['yivi_email']}."
+            f"Hostname {hostname} was removed from verifier {self.get_object().full_id} by {self.request.session.get('yivi_email')}."
         )
         return redirect(self.get_success_url())
 
@@ -237,7 +223,7 @@ class VerifierSessionRequestsView(VerifierPortalView):
     def dispatch(self, request, *args, **kwargs):
         if not self.get_object():
             messages.error(self.request, "You must first register as a verifier.")
-            return redirect("schememanager:verifier-list", org_slug=kwargs["org_slug"])
+            return redirect("schememanager:verifier-list")
         return super().dispatch(request, *args, **kwargs)
 
     def add_session_request(self, condiscon):
@@ -259,7 +245,7 @@ class VerifierSessionRequestsView(VerifierPortalView):
         form.save()
         messages.info(self.request, "Session request was added.")
         logger.info(
-            f"Session request {form.instance.condiscon} was added to verifier {form.instance.verifier.full_id} by {self.request.session['yivi_email']}."
+            f"Session request {form.instance.condiscon} was added to verifier {form.instance.verifier.full_id} by {self.request.session.get('yivi_email')}."
         )
         return redirect(self.get_success_url())
 
@@ -282,7 +268,7 @@ class VerifierSessionRequestsView(VerifierPortalView):
 
         messages.success(self.request, "Session request was updated.")
         logger.info(
-            f"Session request {session_request.condiscon} was updated by {self.request.session['yivi_email']}."
+            f"Session request {session_request.condiscon} was updated by {self.request.session.get('yivi_email')}."
         )
 
         return redirect(self.get_success_url())
@@ -291,7 +277,7 @@ class VerifierSessionRequestsView(VerifierPortalView):
         self.get_object().session_requests.get(id=session_request_id).delete()
         messages.success(self.request, "Session request was removed.")
         logger.info(
-            f"Session request {session_request_id} was removed from verifier {self.get_object().full_id} by {self.request.session['yivi_email']}."
+            f"Session request {session_request_id} was removed from verifier {self.get_object().full_id} by {self.request.session.get('yivi_email')}."
         )
         return redirect(self.get_success_url())
 
@@ -338,18 +324,16 @@ class VerifierStatusView(VerifierPortalView):
                 self.request, "Your registration is ready to be published."
             )
             logger.info(
-                f"Verifier {obj.full_id} was marked as ready by {self.request.session['yivi_email']}."
+                f"Verifier {obj.full_id} was marked as ready by {self.request.session.get('yivi_email')}."
             )
             return redirect(self.get_success_url())
 
         if obj.approved_scheme_data == obj.new_scheme_data:
             obj.reviewed_accepted = True
             obj.save()
-            messages.info(
-                self.request, "Your registration didn't change after it was approved."
-            )
+            messages.info(self.request, "Your registration didn't change.")
             logger.info(
-                f"Verifier {obj.full_id} was marked as ready for review by {self.request.session['yivi_email']} without changes."
+                f"Verifier {obj.full_id} was marked as ready for review by {self.request.session.get('yivi_email')} without changes."
             )
         else:
             obj.reviewed_accepted = None
@@ -357,7 +341,7 @@ class VerifierStatusView(VerifierPortalView):
             obj.save()
             messages.success(self.request, "Your registration will be reviewed.")
             logger.info(
-                f"Verifier {obj.full_id} was marked as ready for review by {self.request.session['yivi_email']}."
+                f"Verifier {obj.full_id} was marked as ready for review by {self.request.session.get('yivi_email')}."
             )
         return redirect(self.get_success_url())
 
@@ -369,7 +353,7 @@ class VerifierStatusView(VerifierPortalView):
         obj.save()
         messages.success(self.request, "Your registration is now a draft.")
         logger.info(
-            f"Verifier {obj.full_id} was marked as draft by {self.request.session['yivi_email']}."
+            f"Verifier {obj.full_id} was marked as draft by {self.request.session.get('yivi_email')}."
         )
         return redirect(self.get_success_url())
 
@@ -393,12 +377,9 @@ class VerifierDeleteView(DeleteView, VerifierPortalView):
             messages.error(self.request, "Invalid confirmation")
             return redirect(request.path)
         logger.info(
-            f"Verifier {self.get_object().full_id} was deleted by {self.request.session['yivi_email']}."
+            f"Verifier {self.get_object().full_id} was deleted by {self.request.session.get('yivi_email')}."
         )
         return super().post(request, *args, **kwargs)
 
     def get_success_url(self):
-        return reverse(
-            "schememanager:verifier-list",
-            kwargs={"org_slug": self.kwargs["org_slug"]},
-        )
+        return reverse("schememanager:verifier-list")

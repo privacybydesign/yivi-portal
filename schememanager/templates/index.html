@@ -2,12 +2,11 @@
 {% load i18n django_bootstrap5 static %}
 
 
-{% block main %}
+{% block page %}
     <div class="container pb-5">
         <div class="d-flex justify-content-center py-5">
             <img class="d-block mb-4" src="{% static "img/yivi-logo.svg" %}" alt="" height="128">
         </div>
-        {% bootstrap_messages %}
         <div class="text-center">
             <h1>Yivi Portal</h1>
             <p class="lead">
@@ -17,18 +16,12 @@
         </div>
         <div class="col-12 col-md-4 mx-auto d-grid gap-2 mt-5">
             {% if request.session.yivi_email %}
-                {% if accessible_organizations.count == 1 %}
-                    <a class="btn btn-primary" href="{% url "schememanager:organization-portal" accessible_organizations.0.slug %}">
-                        Organization ({{ accessible_organizations.0.name }})
-                    </a>
-                    <a class="btn btn-primary" href="{% url "schememanager:verifier-list" accessible_organizations.0.slug %}">
-                        Verifiers ({{ accessible_organizations.0.name }})
-                    </a>
-                {% else %}
-                    <a class="btn btn-primary" href="{% url "schememanager:organization-list" %}">
-                        Select your organization...
-                    </a>
-                {% endif %}
+                <a class="btn btn-primary" href="{% url "schememanager:organization-list" %}">
+                    Manage organization...
+                </a>
+                <a class="btn btn-primary" href="{% url "schememanager:verifier-list" %}">
+                    Manage verifier...
+                </a>
             {% else %}
                 <a class="btn btn-primary" href="{% url "schememanager:login" %}">
                     Login
@@ -38,9 +31,6 @@
                 Register a new organization
             </a>
         </div>
-    </div>
-    <div class="container pb-5">
-
     </div>
 {% endblock %}
 

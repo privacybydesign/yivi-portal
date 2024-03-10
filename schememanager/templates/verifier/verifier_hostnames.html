@@ -4,7 +4,7 @@
 {% block content %}
     <div class="mt-4">
         <p>
-            Yivi servers with the following hostnames will be considered as belonging to your organization.
+            Yivi servers with the following hostnames will be considered as belonging to this verifier.
             Users will see your organization's name when they communicate with one of these Yivi servers.
         </p>
         <p>
@@ -18,13 +18,19 @@
                             <span style="font-family: monospace">{{ hostname.hostname }}</span>
                             {% if hostname.dns_challenge_verified %}
                                 <span class="badge bg-success rounded-pill mx-2">verified</span>
-                            {% else %}
+                            {% elif not hostname.manually_verified %}
                                 <span class="badge bg-warning rounded-pill mx-2">pending</span>
                             {% endif %}
                         </button>
                     </h2>
                     <div id="collapse-{{ forloop.counter }}" class="accordion-collapse collapse" data-bs-parent="#hostnames">
                         <div class="accordion-body">
+                            {% if hostname.manually_verified %}
+                                <p>
+                                    <strong>This hostname is manually verified by an administrator. DNS verification is not required (but preferred).</strong>
+                                </p>
+                                <hr>
+                            {% endif %}
                             {% if not hostname.dns_challenge_verified %}
                                 <p>To prove ownership of the domain, you must add a verification code as a DNS TXT record at your domain registrar.</p>
                             {% else %}
@@ -42,10 +48,12 @@
                                     Note that it may take up to 24 hours for DNS changes to cascade.
                                 </p>
                             {% endif %}
-                            <p>
-                                You will need to keep the DNS record in place for as long as you want to use this hostname.
-                                If you remove the DNS record, the hostname will become unverified and will stop working.
-                            </p>
+                            {% if not hostname.manually_verified %}
+                                <p>
+                                    You will need to keep the DNS record in place for as long as you want to use this hostname.
+                                    If you remove the DNS record, the hostname will become unverified and will stop working.
+                                </p>
+                            {% endif %}
                             <form method="post">
                                 {% csrf_token %}
                                 <input type="hidden" name="hostname" value="{{ hostname.hostname }}">

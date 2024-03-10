@@ -68,6 +68,8 @@ class Verifier(models.Model):
         Organization,
         on_delete=models.PROTECT,
         related_name="verifier_registrations",
+        null=True,  # This should be temporary for the migration, TODO remove
+        blank=False,
     )
     scheme = models.ForeignKey(
         Scheme,
@@ -224,13 +226,11 @@ class Verifier(models.Model):
 
     @property
     def published(self):
-        if (
+        if self.published_scheme_data and (
             self.approved_scheme_data == self.published_scheme_data
-            and self.new_scheme_data == self.approved_scheme_data
-            and not self.unverified_hostnames.exists()
-            or self.new_scheme_data == self.published_scheme_data
-            and self.approved_scheme_data is None
-            and not self.unverified_hostnames.exists()
+            and self.new_scheme_data == self.published_scheme_data
+            or not self.approved_scheme_data
+            and self.new_scheme_data == self.published_scheme_data
         ):
             return True
         return False
@@ -254,6 +254,12 @@ class Verifier(models.Model):
             errors["name_en"] = "No English name has been provided"
         if not self.logo:
             errors["logo"] = "No logo has been uploaded"
+
+        if (
+            not self.pk
+        ):  # If the verifier is not saved yet, we can't validate it further
+            return
+
         if not self.hostnames.exists():
             errors["hostnames"] = "No hostnames have been provided"
         if self.unverified_hostnames.exists():
@@ -270,13 +276,14 @@ class Verifier(models.Model):
                 "session_requests"
             ] = "Not all session requests have a context description provided"
 
-        unspecified_attributes = self.session_requests.filter(
-            Q(attributes__reason_en="") | Q(attributes__reason_nl="")
-        )
-        if unspecified_attributes.exists():
-            errors[
-                "session_requests_attrs"
-            ] = "Not all attributes have a reason for requesting provided"
+        if settings.USE_SESSION_REQUEST_REGISTRATION:
+            unspecified_attributes = self.session_requests.filter(
+                Q(attributes__reason_en="") | Q(attributes__reason_nl="")
+            )
+            if unspecified_attributes.exists():
+                errors[
+                    "session_requests_attrs"
+                ] = "Not all attributes have a reason for requesting provided"
 
         return errors
 
@@ -288,7 +295,9 @@ class Verifier(models.Model):
     def unverified_hostnames(self):
         if not self.id:
             return VerifierHostname.objects.none()
-        return self.hostnames.filter(dns_challenge_verified=False)
+        return self.hostnames.filter(
+            dns_challenge_verified=False, manually_verified=False
+        )
 
     @property
     def logo_name(self):
@@ -297,16 +306,20 @@ class Verifier(models.Model):
 
     @property
     def new_scheme_data(self):
-        return {
+        scheme = {
             "id": self.full_id,
             "name": {
                 "en": self.name_en,
                 "nl": self.name_nl,
             },
             "logo": self.logo_name if self.logo else None,
-            "hostnames": [hostname.hostname for hostname in self.hostnames.all()],
+            "hostnames": [hostname.hostname for hostname in self.hostnames.all()]
+            if self.pk
+            else [],
             "scheme": self.scheme.id,
-            "requests": [
+        }
+        if settings.USE_SESSION_REQUEST_REGISTRATION:
+            scheme["requests"] = [
                 {
                     "condiscon": session.condiscon,
                     "context": {
@@ -322,8 +335,8 @@ class Verifier(models.Model):
                     },
                 }
                 for session in self.session_requests.all()
-            ],
-        }
+            ]
+        return scheme
 
     @property
     def new_scheme_data_json(self):
@@ -369,7 +382,7 @@ class Verifier(models.Model):
     def get_absolute_url(self):
         return reverse(
             "schememanager:verifier-portal",
-            args=[self.organization.slug, self.scheme.id, self.slug],
+            args=[self.scheme.id, self.slug],
         )
 
 
@@ -392,6 +405,8 @@ class VerifierHostname(models.Model):
     dns_challenge_verified = models.BooleanField(default=False)
     dns_challenge_verified_at = models.DateTimeField(null=True, blank=True)
     dns_challenge_invalidated_at = models.DateTimeField(null=True, blank=True)
+
+    manually_verified = models.BooleanField(default=False)
 
     def save(self, *args, **kwargs):
         if (

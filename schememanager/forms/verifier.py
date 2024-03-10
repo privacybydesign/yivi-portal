@@ -17,6 +17,7 @@ class VerifierForm(ModelForm):
         fields = [
             "scheme",
             "slug",
+            "organization",
             "name_en",
             "name_nl",
             "logo",
@@ -27,6 +28,7 @@ class VerifierForm(ModelForm):
         self.fields["scheme"].disabled = True
         self.fields["scheme"].widget.attrs["style"] = "font-family: monospace"
         self.fields["slug"].widget.attrs["style"] = "font-family: monospace"
+        self.fields["organization"].disabled = True
         self.fields[
             "logo"
         ].help_text = (

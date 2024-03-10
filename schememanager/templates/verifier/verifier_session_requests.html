@@ -4,6 +4,9 @@
 {% block content %}
     <div class="mt-4">
         <div class="accordion" id="session-requests">
+            {% if not settings.USE_SESSION_REQUEST_REGISTRATION %}
+                {% bootstrap_alert "Session request registration is in beta." alert_type="warning" dismissible=False %}
+            {% endif %}
             <p>
                 Register the attributes you want to request via Yivi. You should register the attributes you want to request in condiscon format, as used by the Yivi server as well.
                 Only provide the names of the attributes, not any specific values.

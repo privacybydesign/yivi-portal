@@ -1,5 +1,5 @@
 import logging
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 from django.contrib import messages
 from django.core.exceptions import PermissionDenied
@@ -232,7 +232,7 @@ class OrganizationLegalPortalView(UpdateView, SingleOrganizationPortalView):
         form.save()
         messages.success(self.request, "Your organization has been updated.")
         logger.info(
-            f"Organization {self.get_object()} legal info was updated by {self.request.session['yivi_email']}."
+            f"Organization {self.get_object()} legal info was updated by {self.request.session['yivi_email']}: {form.changed_data}."
         )
         return super().form_valid(form)
 
@@ -248,7 +248,7 @@ class OrganizationBillingPortalView(UpdateView, SingleOrganizationPortalView):
         form.save()
         messages.success(self.request, "Your organization has been updated.")
         logger.info(
-            f"Organization {self.get_object()} billing info was updated by {self.request.session['yivi_email']}."
+            f"Organization {self.get_object()} billing info was updated by {self.request.session['yivi_email']}: {form.changed_data}."
         )
         return super().form_valid(form)
 

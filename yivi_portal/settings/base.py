@@ -47,6 +47,7 @@ TEMPLATES = [
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
                 "schememanager.context_processors.organizations",
+                "schememanager.context_processors.settings",
             ],
         },
     },
@@ -124,3 +125,6 @@ LOGGING = {
         },
     },
 }
+
+# SPECIFIC SETTINGS FOR THE SCHEME MANAGER
+USE_SESSION_REQUEST_REGISTRATION = False

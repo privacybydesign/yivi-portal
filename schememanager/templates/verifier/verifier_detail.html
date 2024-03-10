@@ -11,12 +11,13 @@
 
             {% bootstrap_field form.scheme %}
             {% bootstrap_field form.slug %}
+            {% bootstrap_field form.organization %}
 
             <div class="input-group mb-3">
-                <label class="form-label mb-1" for="{{ form.name_en.name }}">Name:</label>
+                <label class="form-label mb-1" for="{{ form.name_en.name }}">Display name:</label>
                     <div class="input-group mb-1">
                         <span class="input-group-text" id="label-{{ form.name_en.name }}">EN</span>
-                        <input type="text" class="form-control{% if form.is_bound %} {% if not form.name_en.errors %}is-valid{% else %}is-invalid{% endif %}{% endif %}" aria-label="label-{{ form.name_en.name }}" aria-describedby="label-{{ form.name_en.name }}" name="{{ form.name_en.name }}" value="{{ form.name_en.value|default_if_none:"" }}" placeholder="{{ organization.legal_name }}" {% if not object.can_be_edited %}disabled{% endif %}>
+                        <input type="text" class="form-control{% if form.is_bound %} {% if not form.name_en.errors %}is-valid{% else %}is-invalid{% endif %}{% endif %}" aria-label="label-{{ form.name_en.name }}" aria-describedby="label-{{ form.name_en.name }}" name="{{ form.name_en.name }}" value="{{ form.name_en.value|default_if_none:"" }}" placeholder="{{ verifier.organization.legal_name }}" {% if not object.can_be_edited %}disabled{% endif %}>
                     </div>
                     {% if form.name_en.errors %}
                         <ul class="list-unstyled text-danger my-0">
@@ -27,7 +28,7 @@
                     {% endif %}
                     <div class="input-group mb-1">
                         <span class="input-group-text" id="label-{{ form.name_nl.name }}">NL</span>
-                        <input type="text" class="form-control{% if form.is_bound %} {% if not form.name_nl.errors %}is-valid{% else %}is-invalid{% endif %}{% endif %}" aria-label="label-{{ form.name_nl.name }}" aria-describedby="label-{{ form.name_nl.name }}" name="{{ form.name_nl.name }}" value="{{ form.name_nl.value|default_if_none:"" }}" placeholder="{{ organization.legal_name }}" {% if not object.can_be_edited %}disabled{% endif %}>
+                        <input type="text" class="form-control{% if form.is_bound %} {% if not form.name_nl.errors %}is-valid{% else %}is-invalid{% endif %}{% endif %}" aria-label="label-{{ form.name_nl.name }}" aria-describedby="label-{{ form.name_nl.name }}" name="{{ form.name_nl.name }}" value="{{ form.name_nl.value|default_if_none:"" }}" placeholder="{{ verifier.organization.legal_name }}" {% if not object.can_be_edited %}disabled{% endif %}>
                     </div>
                     {% if form.name_nl.errors %}
                         <ul class="list-unstyled text-danger my-0">

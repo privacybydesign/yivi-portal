@@ -1,6 +1,8 @@
 import logging
+import os
 
 import requests
+from django.conf import settings
 from django.utils import timezone
 
 from schememanager.models.scheme import Scheme
@@ -31,15 +33,40 @@ def fetch_requestor_scheme(scheme: Scheme, create_verifiers: bool = False):
 
     for requestor in requestors_json:
         slug = requestor["id"].split(".")[1]
-        if create_verifiers:
-            raise NotImplementedError("Creating verifiers is not yet implemented")
-            # TODO: this is not implemented yet because it would create orphaned verifiers without an organization
-            #  (because we don't have the legal info in the requestor scheme)
-        else:
-            try:
-                verifier = scheme.verifier_set.get(slug=slug)
-            except Verifier.DoesNotExist:
+        try:
+            verifier = scheme.verifier_set.get(slug=slug)
+        except Verifier.DoesNotExist:
+            if not create_verifiers:
                 continue
+
+            verifier = Verifier.objects.create(
+                scheme=scheme,
+                slug=slug,
+                name_en=requestor["name"]["en"],
+                name_nl=requestor["name"]["nl"],
+                published_scheme_data=requestor,
+                published_at=timestamp,
+                ready=True,
+            )
+
+            if "logo" in requestor:
+                filename = requestor["logo"] + ".png"
+                logo_url = scheme.url + "/assets/" + filename
+                logo = requests.get(logo_url)
+
+                if logo.status_code == 200:
+                    filepath = os.path.join(settings.MEDIA_ROOT, filename)
+                    with open(filepath, "wb") as f:
+                        for chunk in logo.iter_content(1024):
+                            f.write(chunk)
+                    verifier.logo = filename
+                    verifier.approved_logo = filename
+                    verifier.save()
+                else:
+                    logger.warning(f"Could not fetch logo for {verifier.slug}")
+
+            for host in requestor["hostnames"]:
+                verifier.hostnames.create(hostname=host, manually_verified=True)
 
         verifier.published_scheme_data = requestor
         verifier.published_at = timestamp

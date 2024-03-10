@@ -15,42 +15,26 @@
         <button class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#main-nav"><span class="visually-hidden">Toggle navigation</span><span class="navbar-toggler-icon"></span></button>
         <div id="main-nav" class="collapse navbar-collapse">
             <ul class="navbar-nav me-auto">
-                {% if organization %}
-                    <li class="nav-item">
-                        {% url 'schememanager:organization-portal' organization.slug as url %}
-                        {% url 'schememanager:verifier-list' organization.slug as verifier_url %}
-                        <a class="nav-link{% if request.path == url or request.path|startswith:url and not request.path|startswith:verifier_url %} active{% endif %}" href="{{ url }}">Organization</a>
-                    </li>
-                    <li class="nav-item">
-                        {% url 'schememanager:verifier-list' organization.slug as url %}
-                        <a class="nav-link{% if url and request.path|startswith:url %} active{% endif %}" href="{{ url }}">Verifier</a></li>
-                    <li class="nav-item">
-                        {% url 'schememanager:issuer-list' organization.slug as url %}
-                        <a class="nav-link{% if url and request.path|startswith:url %} active{% endif %}" href="{{ url }}">Issuer</a>
-                    </li>
-                {% endif %}
+                <li class="nav-item">
+                    {% url 'schememanager:organization-list' as url %}
+                    <a class="nav-link{% if url and request.path|startswith:url %} active{% endif %}" href="{{ url }}">Organizations</a>
+                </li>
+                <li class="nav-item">
+                    {% url 'schememanager:verifier-list' as url %}
+                    <a class="nav-link{% if url and request.path|startswith:url %} active{% endif %}" href="{{ url }}">Verifiers</a></li>
+                <li class="nav-item">
+                    {% url 'schememanager:issuer-list' as url %}
+                    <a class="nav-link{% if url and request.path|startswith:url %} active{% endif %}" href="{{ url }}">Issuers</a>
+                </li>
             </ul>
             {% if request.session.yivi_email %}
             <div class="dropdown">
-                {% if organization %}
-                    <a class="btn dropdown-toggle" aria-expanded="false" data-bs-toggle="dropdown">{{ organization.name }}</a>
-                {% else %}
-                    {% if accessible_organizations.count > 1 %}
-                        <a class="btn dropdown-toggle" aria-expanded="false" data-bs-toggle="dropdown">Select organization</a>
-                    {% else %}
-                        <a class="btn dropdown-toggle" aria-expanded="false" data-bs-toggle="dropdown">{{ accessible_organizations.0.name }}</a>
-                    {% endif %}
-                {% endif %}
+                <a class="btn dropdown-toggle" aria-expanded="false" data-bs-toggle="dropdown">{{ request.session.yivi_email }}</a>
                 <div class="dropdown-menu">
                     <span class="text-muted disabled dropdown-item">Your organizations:</span>
                     {% for org in accessible_organizations %}
-                        {% with view_name=request.resolver_match.view_name %}
-                            {% url view_name org.slug as url %}
-                            {% if not url %}
-                                {% url "schememanager:verifier-list" org.slug as url %}
-                            {% endif %}
+                        {% url "schememanager:organization-portal" org.slug as url %}
                         <a class="dropdown-item" href="{{ url }}">{{ org.name }}</a>
-                        {% endwith %}
                     {% empty %}
                         <span class="text-muted disabled dropdown-item">None</span>
                     {% endfor %}
@@ -88,7 +72,10 @@
 {% block footer %}
     <div class="container text-muted text-center my-3">
         <p>
-            <img src="{% static 'img/yivi-logo.svg' %}" alt="Yivi Portal" height="30" class="d-inline-block align-text-top me-2">
-        </p>
+            <small>
+                &copy; {% now 'Y' %} <a href="https://privacybydesign.foundation" target="_blank" class="link-secondary">Privacy by Design Foundation</a> &middot;
+                <a href="https://privacybydesign.foundation/privacy-policy/" target="_blank" class="link-secondary">Privacy</a> &middot;
+                <a href="https://privacybydesign.foundation/contact/" target="_blank" class="link-secondary">Contact</a>
+            </small>
     </div>
 {% endblock %}

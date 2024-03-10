@@ -7,27 +7,25 @@
 
 {% block page %}
     <div class="container mt-4">
-        <div class="col-12 col-lg-8 mx-auto mb-4">
+        <div class="col-12 col-lg-8 mx-auto mb-5">
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="{% url "schememanager:organization-list" %}" class="link-secondary">Organizations</a></li>
-                    <li class="breadcrumb-item"><a href="{% url "schememanager:organization-portal" organization.slug %}" class="link-secondary">{{ organization }}</a></li>
-                    <li class="breadcrumb-item"><a href="{% url "schememanager:verifier-list" organization.slug %}" class="link-secondary">Verifier</a></li>
+                    <li class="breadcrumb-item"><a href="{% url "schememanager:verifier-list" %}" class="link-secondary">Verifiers</a></li>
                     <li class="breadcrumb-item active" aria-current="page"><code class="text-muted">{{ verifier.full_id }}</code></li>
                 </ol>
             </nav>
         </div>
+        <h1 class="mb-2 d-flex justify-content-center align-items-center">
+            {% if verifier.logo %}
+                <img alt="{{ verifier.display_name }} logo" src="{{ verifier.logo.url }}" class="img-fluid d-inline rounded-circle me-3" style="max-height: 1em">
+            {% endif %}
+            {{ verifier.display_name }}
+        </h1>
+        <p class="text-center mb-5">
+            <code class="user-select-all">{{ verifier.full_id }}</code><br>
+            <span class="text-muted">Legal entity: {{ verifier.organization }}</span>
+        </p>
         <div class="col-12 col-lg-8 mx-auto">
-            <h1 class="mb-2 d-flex justify-content-center align-items-center">
-                {% if verifier.logo %}
-                    <img alt="{{ verifier.display_name }} logo" src="{{ verifier.logo.url }}" class="img-fluid d-inline rounded-circle me-3" style="max-height: 1em">
-                {% endif %}
-                {{ verifier.display_name }}
-            </h1>
-            <p class="text-center mb-4">
-                <code class="user-select-all">{{ verifier.full_id }}</code><br>
-                <span class="text-muted">Legal entity: {{ verifier.organization }}</span>
-            </p>
             <div class="mb-4">
                 <div class="progress progress-bar-arrows">
                     {% if verifier.status == "rejected" %}
@@ -48,7 +46,7 @@
                 {% if not object.can_be_edited %}
                     <div class="mt-1">
                         <small class="text-muted text-center">
-                            <form action="{% url 'schememanager:verifier-status' organization.slug verifier.scheme.id verifier.slug %}" method="post">
+                            <form action="{% url 'schememanager:verifier-status' verifier.scheme.id verifier.slug %}" method="post">
                                 {% csrf_token %}
                                 <input type="hidden" name="action" value="mark_draft">
                                 You currently cannot make changes to this verifier. To make changes, you need to
@@ -61,23 +59,25 @@
             </div>
             <ul class="nav nav-tabs justify-content-center">
                 <li class="nav-item">
-                    {% url 'schememanager:verifier-status' organization.slug verifier.scheme.id verifier.slug as url %}
+                    {% url 'schememanager:verifier-status' verifier.scheme.id verifier.slug as url %}
                     <a class="nav-link{% if request.path == url %} active{% endif %}" href="{{ url }}"><i class="bi bi-globe me-2"></i>Review & publishing</a>
                 </li>
                 <li class="nav-item">
-                    {% url 'schememanager:verifier-portal' organization.slug verifier.scheme.id verifier.slug as url %}
+                    {% url 'schememanager:verifier-portal' verifier.scheme.id verifier.slug as url %}
                     <a class="nav-link{% if request.path == url %} active{% endif %}" href="{{ url }}"><i class="bi bi-info-circle me-2"></i>Details</a>
                 </li>
                 <li class="nav-item">
-                    {% url 'schememanager:verifier-hostnames' organization.slug verifier.scheme.id verifier.slug as url %}
+                    {% url 'schememanager:verifier-hostnames' verifier.scheme.id verifier.slug as url %}
                     <a class="nav-link{% if request.path == url %} active{% endif %}" href="{{ url }}"><i class="bi bi-pc-horizontal me-2"></i>Infrastructure</a>
                 </li>
+                {% if settings.USE_SESSION_REQUEST_REGISTRATION %}
                 <li class="nav-item">
-                    {% url 'schememanager:verifier-session-requests' organization.slug verifier.scheme.id verifier.slug as url %}
+                    {% url 'schememanager:verifier-session-requests' verifier.scheme.id verifier.slug as url %}
                     <a class="nav-link{% if request.path == url %} active{% endif %}" href="{{ url }}"><i class="bi bi-patch-question-fill me-2"></i>Requests</a>
                 </li>
+                {% endif %}
                 <li class="nav-item">
-                    {% url 'schememanager:verifier-delete' organization.slug verifier.scheme.id verifier.slug as url %}
+                    {% url 'schememanager:verifier-delete' verifier.scheme.id verifier.slug as url %}
                     <a class="nav-link{% if request.path == url %} active{% endif %}" href="{{ url }}"><i class="bi bi-database-x me-2"></i>Delete</a>
                 </li>
             </ul>

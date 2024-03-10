@@ -1,5 +1,5 @@
-from schememanager.views.organization import SingleOrganizationPortalView
+from django.views.generic import TemplateView
 
 
-class IssuerPortalView(SingleOrganizationPortalView):
+class IssuerPortalView(TemplateView):
     template_name = "issuer/issuer.html"

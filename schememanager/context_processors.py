@@ -1,16 +1,15 @@
+from django import conf
+
 from schememanager.models.organization import Organization
 
 
 def organizations(request):
     accessible = Organization.objects.filter(
         admins__email=request.session.get("yivi_email", None)
-    )
+    ).order_by("legal_name")
 
-    try:
-        organization = Organization.objects.get(
-            slug=request.resolver_match.kwargs.get("org_slug", None)
-        )
-    except Organization.DoesNotExist:
-        organization = None
+    return {"accessible_organizations": accessible}
 
-    return {"accessible_organizations": accessible, "organization": organization}
+
+def settings(request):
+    return {"settings": conf.settings}
