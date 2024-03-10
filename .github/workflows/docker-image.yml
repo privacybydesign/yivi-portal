@@ -21,5 +21,3 @@ jobs:
       with:
         push: true
         tags: ghcr.io/JobDoesburg/yivi-portal:latest
-        username: ${{ secrets.GITHUB_USERNAME }}
-        password: ${{ secrets.GITHUB_TOKEN }}
