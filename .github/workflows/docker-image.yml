@@ -20,3 +20,5 @@ jobs:
         context: .
         cache-from: type=gha
         cache-to: type=gha,mode=max
+        push: true
+        tags: ghcr.io/<{GITHUB_REPOSITORY}>:<{GITHUB_WORKFLOW_SHA}>, ghcr.io/<{GITHUB_REPOSITORY}>:latest
