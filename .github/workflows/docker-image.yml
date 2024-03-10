@@ -21,4 +21,4 @@ jobs:
         cache-from: type=gha
         cache-to: type=gha,mode=max
         push: true
-        tags: ghcr.io/${{ github.repository }}:${{ github.workflow_sha }}, ghcr.io/${{ github.repository }}:latest
+        tags: ghcr.io/jobdoesburg/yivi-portal:${{ github.workflow_sha }}, ghcr.io/jobdoesburg/yivi-portal:latest
