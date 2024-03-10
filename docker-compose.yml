@@ -33,7 +33,7 @@ services:
       retries: 5
 
   yivi-portal:
-    build: .
+    image: ghcr.io/jobdoesburg/yivi-portal:latest
     container_name: yivi-portal
     restart: unless-stopped
     networks:
@@ -64,7 +64,7 @@ services:
       retries: 3
 
   yivi-portal-cron:
-    build: .
+    image: ghcr.io/jobdoesburg/yivi-portal:latest
     container_name: yivi-portal-cron
     entrypoint: ["/bin/sh", "/app/entrypoint_cron.sh"]
     restart: unless-stopped
