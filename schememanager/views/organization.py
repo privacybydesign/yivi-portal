@@ -50,10 +50,7 @@ class RegistrationView(TemplateView):
                         "type": "pbdf.signicat.kvkTradeRegister.hasRestriction",
                         "value": "Nee",
                     },
-                    {
-                        "type": "pbdf.signicat.kvkTradeRegister.isAuthorized",
-                        "value": "Ja",
-                    },
+                    "pbdf.signicat.kvkTradeRegister.isAuthorized",
                     "pbdf.signicat.kvkTradeRegister.reason",
                     "pbdf.signicat.kvkTradeRegister.referenceMoment",
                 ]
