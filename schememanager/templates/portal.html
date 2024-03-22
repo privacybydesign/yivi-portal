@@ -36,7 +36,7 @@
                         {% url "schememanager:organization-portal" org.slug as url %}
                         <a class="dropdown-item" href="{{ url }}">{{ org.name }}</a>
                     {% empty %}
-                        <span class="text-muted disabled dropdown-item">None</span>
+                        <span class="text-muted disabled dropdown-item">-</span>
                     {% endfor %}
                     <hr class="dropdown-divider">
                     <span class="text-muted disabled dropdown-item">{{ request.session.yivi_email }}</span>

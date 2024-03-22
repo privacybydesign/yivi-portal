@@ -46,10 +46,7 @@ class RegistrationView(TemplateView):
                     "pbdf.signicat.kvkTradeRegister.specialLegalSituation",
                     "pbdf.signicat.kvkTradeRegister.restrictionInLegalAction",
                     "pbdf.signicat.kvkTradeRegister.foreignLegalStatus",
-                    {
-                        "type": "pbdf.signicat.kvkTradeRegister.hasRestriction",
-                        "value": "Nee",
-                    },
+                    "pbdf.signicat.kvkTradeRegister.hasRestriction",
                     "pbdf.signicat.kvkTradeRegister.isAuthorized",
                     "pbdf.signicat.kvkTradeRegister.reason",
                     "pbdf.signicat.kvkTradeRegister.referenceMoment",
@@ -151,7 +148,22 @@ class RegistrationView(TemplateView):
             reference_moment=result["disclosed"][0][17]["rawvalue"],
         )
 
-        reference_moment = timezone.datetime.fromisoformat(kvk_entry.reference_moment)
+        try:
+            reference_moment = timezone.datetime.fromisoformat(
+                kvk_entry.reference_moment
+            )
+        except ValueError:
+            # Sometimes the reference moment is in a different format
+            try:
+                reference_moment = timezone.datetime.strptime(
+                    kvk_entry.reference_moment, "%Y%m%d%H%M%S%f"
+                )
+            except ValueError:
+                messages.error(
+                    request,
+                    "The KVK entry could not be processed due to an invalid reference moment.",
+                )
+                return redirect("schememanager:index")
 
         if reference_moment.date() < timezone.now().date() - timedelta(days=365):
             # Only allow KVK entries from the last year
@@ -160,6 +172,22 @@ class RegistrationView(TemplateView):
                 "The KVK entry is more than a year old. Please request a more recent KVK credential first.",
             )
             return redirect("schememanager:index")
+
+        if kvk_entry.is_authorized == "Nee":
+            # Only allow authorized organizations
+            messages.error(
+                request,
+                "You are not authorized for this organization.",
+            )
+            return redirect("schememanager:index")
+
+        if kvk_entry.has_restriction == "Ja":
+            # Only allow organizations without restrictions
+            messages.warning(
+                request,
+                "You are authorized with restriction. You can proceed, but manual approval is required to complete "
+                "the registration.",
+            )
 
         # TODO maybe perform some more checks on the KVK entry: is the organization still active, etc.
 
