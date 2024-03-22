@@ -10,6 +10,14 @@
             <p class="lead text-center">You have not registered any verifiers yet</p>
         {% endif %}
         <div class="col-12 col-lg-8 mx-auto mt-5">
+            <div class="alert alert-info" role="alert">
+                <h4 class="alert-heading">Billing</h4>
+                <span>
+                    Your organization will be charged an annual service fee for every registered verifier (not including the demo scheme).
+                    Currently, this fee is not fixed but varies per organization, based on (among others) expected usage.
+                    You will be contacted by email to make further arrangements when you request approval for a verifier to be published.
+                </span>
+            </div>
             {% if verifiers %}
                 {% regroup verifiers|dictsort:"scheme.id"|dictsortreversed:"scheme.production" by scheme as verifier_list %}
                 {% for scheme in verifier_list %}
