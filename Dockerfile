@@ -1,8 +1,8 @@
 FROM python:3.11-slim
 
 # Set environment variables
-ENV PYTHONDONTWRITEBYTECODE 1
-ENV PYTHONUNBUFFERED 1
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
 
 # Install system dependencies
 RUN apt-get update \
@@ -17,22 +17,23 @@ COPY pyproject.toml poetry.lock /app/
 
 # Install project dependencies
 RUN pip install poetry \
-    && poetry config virtualenvs.create false \
-    && poetry install --with prod --no-interaction --no-ansi
+    && poetry config virtualenvs.create false
 
 # Copy the current directory contents into the container at /app
 COPY . /app
 
-ENV DJANGO_SETTINGS_MODULE yivi_portal.settings.production
+RUN poetry install --with prod --no-interaction --no-ansi
 
-ENV DJANGO_STATIC_ROOT /app/static
-ENV DJANGO_MEDIA_ROOT /app/media
+ENV DJANGO_SETTINGS_MODULE=yivi_portal.settings.production
+
+ENV DJANGO_STATIC_ROOT=/app/static
+ENV DJANGO_MEDIA_ROOT=/app/media
 
 RUN mkdir -p $DJANGO_STATIC_ROOT
 RUN mkdir -p $DJANGO_MEDIA_ROOT
 
-ENV DJANGO_STATIC_URL /static/
-ENV DJANGO_MEDIA_URL /media/
+ENV DJANGO_STATIC_URL=/static/
+ENV DJANGO_MEDIA_URL=/media/
 
 RUN python manage.py collectstatic --noinput
 
