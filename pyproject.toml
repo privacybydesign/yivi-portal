@@ -3,7 +3,6 @@ name = "yivi-portal"
 version = "0.1.0"
 description = ""
 authors = ["Job Doesburg <job.doesburg@gmail.com>"]
-readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.11"
