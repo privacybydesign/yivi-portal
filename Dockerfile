@@ -39,6 +39,6 @@ RUN python manage.py collectstatic --noinput
 
 RUN chown -R nobody:nogroup $DJANGO_MEDIA_ROOT
 
-EXPOSE 8000
+EXPOSE 8080
 
 CMD ["/bin/sh", "/app/entrypoint.sh"]
