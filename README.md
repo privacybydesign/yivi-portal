@@ -110,26 +110,18 @@ For the actual Yivi authentication, the portal communicates with a Yivi server t
 
 ### Development
 1. Clone the repository
-2. Make sure you have [Python 3.11](https://www.python.org/downloads/) installed. 
-3. Make sure you have [Poetry](https://python-poetry.org) installed.
-4. Install the dependencies with Poetry: 
-    ```bash
-    poetry install
-    ```
-5. Run the migrations:
-    ```bash
-    poetry run python manage.py migrate
-    ```
-6. Create an admin user:
-    ```bash
-    poetry run python manage.py createsuperuser --email <email> --username <username> --noinput
-    ```
+2. Make sure you have installed [Docker](https://docker.com)
+3. Start the containers with:
+   ```bash
+   docker compose up
+   ```
+4. Open a shell in the application container and create an admin user:
+   ```bash
+   docker compose exec -it yivi-portal /bin/sh
+   python manage.py createsuperuser --email <email> --username <username> --noinput
+   ```
    We don't set up a password here, because we want to use Yivi authentication.
    If you want to use a password as fallback (to use Django admin login flow), that is possible as well.
-7. Run the development server:
-    ```bash
-    poetry run python manage.py runserver
-    ```
 
 **Make sure to use the `yivi_portal.settings.development` settings module when running the development server.**
 
