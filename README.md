@@ -147,7 +147,7 @@ Also, a Yivi server should be available somewhere, for which the URL should be c
 
 ### Deployment
 
-For production deployment, the Dockerfile and docker-compose file can be used.
+For production deployment, the Dockerfile can be used.
 
 #### Docker image
 
