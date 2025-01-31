@@ -1,4 +1,12 @@
 services:
+  demo-schemes:
+    container_name: yivi-portal-demo-schemes
+    image: ghcr.io/privacybydesign/irma:edge
+    command: >
+      scheme download /schemes https://schemes.staging.yivi.app/pbdf-staging
+    volumes:
+      - ./downloads/schemes:/schemes
+
   yivi:
     container_name: yivi-portal-yivi
     image: ghcr.io/privacybydesign/irma:edge
@@ -9,8 +17,11 @@ services:
       - web
     ports:
       - 8080:8080
+    volumes:
+      - ./downloads/schemes:/schemes
     environment:
       YIVI_SERVER_TOKEN: ${YIVI_SERVER_TOKEN}
+      IRMASERVER_SCHEMES_PATH: /schemes
 
   database:
     image: postgres:13.3-alpine
