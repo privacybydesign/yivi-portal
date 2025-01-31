@@ -1,5 +1,6 @@
 import logging
 
+from django.conf import settings
 from django.contrib.auth import get_user_model, login, logout
 from django.dispatch import receiver
 from django.shortcuts import redirect
@@ -19,7 +20,7 @@ class LoginView(TemplateView):
 
     yivi_request = {
         "@context": "https://irma.app/ld/request/disclosure/v2",
-        "disclose": [[["pbdf.sidn-pbdf.email.email"]]],
+        "disclose": settings.EMAIL_DISCLOSURE,
     }
 
     success_url = reverse_lazy("schememanager:organization-list")

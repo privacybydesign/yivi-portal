@@ -1,5 +1,6 @@
 import json
 
+from django.conf import settings
 from django import forms
 from django.forms import ModelForm
 from fqdn import FQDN
@@ -79,7 +80,7 @@ class VerifierSessionRequestAddForm(ModelForm):
         self.fields["condiscon"].widget.attrs["placeholder"] = json.dumps(
             {
                 "@context": "https://irma.app/ld/request/disclosure/v2",
-                "disclose": [[["pbdf.sidn-pbdf.email.email"]]],
+                "disclose": settings.EMAIL_DISCLOSURE,
             }
         )
 
