@@ -9,67 +9,48 @@ export default function Home() {
         <Image
           className="dark:invert"
           src="/yivi-logo.svg"
-          alt="Next.js logo"
+          alt="Yivi logo"
           width={180}
           height={38}
           priority
         />
+        <h1 className="text-2xl sm:text-4xl font-bold text-center sm:text-left">
+          Welcome to the Yivi Portal
+        </h1>
+        <p className="text-sm sm:text-base text-center sm:text-left">
+          This is the Yivi portal where organizations can work together to create a secure and trusted ecosystem. Join us as a verifier, issuer, and become part of the Yivi ecosystem.
+        </p>
         <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
           <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              app/page.tsx
-            </code>
-            .
+            <strong>Become a Verifier:</strong> Verify the authenticity of credentials and ensure trust within the ecosystem.
           </li>
-          <li>Save and see your changes instantly.</li>
+          <li className="mb-2">
+            <strong>Become an Issuer:</strong> Issue credentials to users and organizations, contributing to a secure and reliable network.
+          </li>
+          <li className="mb-2">
+            <strong>Join the Yivi Ecosystem:</strong> Collaborate with other organizations to build a robust and trusted environment.
+          </li>
         </ol>
 
         <div className="flex gap-4 items-center flex-col sm:flex-row">
           <a
             className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
+            href="/login"
             target="_blank"
             rel="noopener noreferrer"
           >
-            Deploy now
+            Get started
           </a>
           <a
             className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
+            href="https://docs.yivi.app"
             target="_blank"
             rel="noopener noreferrer"
           >
-            Read our docs
+            Learn More
           </a>
         </div>
       </main>
-      {/* <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Go to nextjs.org →
-        </a>
-      </footer> */}
     </div>
   );
 }
