@@ -85,8 +85,6 @@ class LogoutView(RedirectView):
         if request.session["yivi_email"]:
             del self.request.session["yivi_email"]
 
-            logger.info(f"User with email {request.user.email} logged out.")
-
         if request.user.is_authenticated:
             logout(request)
         return super().dispatch(request, *args, **kwargs)
