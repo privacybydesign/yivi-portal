@@ -29,3 +29,39 @@ MEDIA_URL = "assets/"
 
 STATIC_ROOT = BASE_DIR / "static"
 MEDIA_ROOT = BASE_DIR / "assets"
+
+EMAIL_DISCLOSURE = [
+    [
+        [ "irma-demo.sidn-pbdf.email.email" ]
+    ]
+]
+
+KVK_DISCLOSURE = [
+    [
+        [
+            "irma-demo.kvk.official.kvkNumber",
+            "irma-demo.kvk.official.name",
+            "irma-demo.kvk.official.tradeNames",
+            "irma-demo.kvk.official.typeOwner",
+            "irma-demo.kvk.official.legalEntity",
+            "irma-demo.kvk.official.officeAddress",
+            "irma-demo.kvk.official.emailAddress",
+            "irma-demo.kvk.official.officePhone",
+            "irma-demo.kvk.official.registrationStart",
+            "irma-demo.kvk.official.dateDeregistration",
+            "irma-demo.kvk.official.registrationEnd",
+            "irma-demo.kvk.official.specialLegalSituation",
+            "irma-demo.kvk.official.restrictionInLegalAction",
+            "irma-demo.kvk.official.foreignLegalStatus",
+            "irma-demo.kvk.official.hasRestriction",
+            "irma-demo.kvk.official.isAuthorized",
+            "irma-demo.kvk.official.reason",
+            "irma-demo.kvk.official.referenceMoment",
+        ]
+    ],
+    [
+        [
+            "irma-demo.sidn-pbdf.email.email"
+        ]
+    ],
+]

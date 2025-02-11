@@ -1,6 +1,7 @@
 import logging
 from datetime import timedelta
 
+from django.conf import settings
 from django.contrib import messages
 from django.core.exceptions import PermissionDenied
 from django.dispatch import receiver
@@ -29,35 +30,7 @@ class RegistrationView(TemplateView):
 
     yivi_request = {
         "@context": "https://irma.app/ld/request/disclosure/v2",
-        "disclose": [
-            [
-                [
-                    "pbdf.signicat.kvkTradeRegister.kvkNumber",
-                    "pbdf.signicat.kvkTradeRegister.name",
-                    "pbdf.signicat.kvkTradeRegister.tradeNames",
-                    "pbdf.signicat.kvkTradeRegister.typeOwner",
-                    "pbdf.signicat.kvkTradeRegister.legalEntity",
-                    "pbdf.signicat.kvkTradeRegister.address",
-                    "pbdf.signicat.kvkTradeRegister.emailAddress",
-                    "pbdf.signicat.kvkTradeRegister.phone",
-                    "pbdf.signicat.kvkTradeRegister.registrationStart",
-                    "pbdf.signicat.kvkTradeRegister.dateDeregistration",
-                    "pbdf.signicat.kvkTradeRegister.registrationEnd",
-                    "pbdf.signicat.kvkTradeRegister.specialLegalSituation",
-                    "pbdf.signicat.kvkTradeRegister.restrictionInLegalAction",
-                    "pbdf.signicat.kvkTradeRegister.foreignLegalStatus",
-                    "pbdf.signicat.kvkTradeRegister.hasRestriction",
-                    "pbdf.signicat.kvkTradeRegister.isAuthorized",
-                    "pbdf.signicat.kvkTradeRegister.reason",
-                    "pbdf.signicat.kvkTradeRegister.referenceMoment",
-                ]
-            ],
-            [
-                [
-                    "pbdf.sidn-pbdf.email.email",
-                ]
-            ],
-        ],
+        "disclose": settings.KVK_DISCLOSURE
     }
 
     def get_context_data(self, **kwargs):

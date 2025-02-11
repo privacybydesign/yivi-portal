@@ -9,8 +9,11 @@ services:
       - web
     ports:
       - 8080:8080
+    volumes:
+      - ./downloads/schemes:/schemes
     environment:
       YIVI_SERVER_TOKEN: ${YIVI_SERVER_TOKEN}
+      IRMASERVER_SCHEMES_PATH: /schemes
 
   database:
     image: postgres:13.3-alpine
