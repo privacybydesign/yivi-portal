@@ -1,12 +1,4 @@
 services:
-  demo-schemes:
-    container_name: yivi-portal-demo-schemes
-    image: ghcr.io/privacybydesign/irma:edge
-    command: >
-      scheme download /schemes https://schemes.staging.yivi.app/pbdf-staging
-    volumes:
-      - ./downloads/schemes:/schemes
-
   yivi:
     container_name: yivi-portal-yivi
     image: ghcr.io/privacybydesign/irma:edge

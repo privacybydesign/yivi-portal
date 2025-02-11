@@ -32,7 +32,7 @@ MEDIA_ROOT = BASE_DIR / "assets"
 
 EMAIL_DISCLOSURE = [
     [
-        [ "pbdf-staging.sidn-pbdf.email.email" ]
+        [ "irma-demo.sidn-pbdf.email.email" ]
     ]
 ]
 
@@ -61,7 +61,7 @@ KVK_DISCLOSURE = [
     ],
     [
         [
-            "pbdf-staging.sidn-pbdf.email.email"
+            "irma-demo.sidn-pbdf.email.email"
         ]
     ],
 ]
