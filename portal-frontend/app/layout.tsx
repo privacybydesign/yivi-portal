@@ -39,11 +39,11 @@ export default function RootLayout({
             </div>
             
             <nav className="hidden md:flex gap-6">
-              <Link href="/organizations" className="hover:text-blue-600">
-                Organizations
-              </Link>
               <Link href="/login" className="hover:text-blue-600">
                 Login
+              </Link>
+              <Link href="/organizations" className="hover:text-blue-600">
+                Organizations
               </Link>
               <Link href="/contact" className="hover:text-blue-600">
                 Contact
