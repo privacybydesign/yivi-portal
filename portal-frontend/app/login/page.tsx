@@ -18,16 +18,16 @@ export default function Login() {
     import("@privacybydesign/yivi-frontend").then((yivi: any) => {
       const web = yivi.newWeb({
         debugging: false,            // Enable to get helpful output in the browser console
-        element: '#yivi-web-form', // Which DOM element to render to
-        language: 'en',             // Language to use
+        element:   '#yivi-web-form', // Which DOM element to render to
+      
         // Back-end options
         session: {
-          url: 'https://is.staging.yivi.app',
-
+          // Point this to your controller:
+          url: 'http://localhost:8000/auth',
+      
           start: {
-            method: 'POST',
+            url: (o: any) => `${o.url}/session/`,
             headers: { 'Content-Type': 'application/json' },
-            // TODO: This should be a singed request comming from our REST API.
             body: JSON.stringify({
               '@context': 'https://irma.app/ld/request/disclosure/v2',
               'disclose': [
@@ -36,13 +36,19 @@ export default function Login() {
                   ['pbdf.sidn-pbdf.email.email'],
                 ]
               ]
-            })
+            }),
+            method: 'POST'
+          },
+          result: {
+            url: (o: any, {sessionPtr, sessionToken}) => `${o.url}/session/${sessionToken}/result`,
+            method: 'GET'
           }
         }
       });
       web.start()
-        .then(() => {
-          alert('fine');
+        .then((result: any) => {
+          console.log(result)
+          setEmail(result.disclosed[0][0].rawvalue);
         })
         .catch((err: any) => {
           alert(err);
@@ -64,6 +70,7 @@ export default function Login() {
       <div className="flex grow p-6 justify-center items-center">
         <div id="yivi-web-form">
         </div>
+        {email}
       </div>
     </div>
   );

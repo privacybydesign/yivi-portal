@@ -42,7 +42,7 @@ class RegistrationRestView(APIView):
     )
     def post(self, request):
         """Handle KVK disclosure registration request."""
-        serializer = RegistrationRequestSerializer(data=request.data)
+        serializer = RegistrationSerializer(data=request.data)
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
