@@ -1,18 +1,10 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { useEffect, useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { useRouter } from "next/navigation";
-import { Label } from "@/components/ui/label";
-import { warnOptionHasBeenDeprecated } from "next/dist/server/config";
 
 export default function Login() {
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  const router = useRouter();
 
   useEffect(() => {
     import("@privacybydesign/yivi-frontend").then((yivi: any) => {
@@ -40,7 +32,7 @@ export default function Login() {
             method: 'POST'
           },
           result: {
-            url: (o: any, {sessionPtr, sessionToken}) => `${o.url}/session/${sessionToken}/result`,
+            url: (o: any, { sessionToken}: any) => `${o.url}/session/${sessionToken}/result`,
             method: 'GET'
           }
         }
@@ -55,15 +47,6 @@ export default function Login() {
         });
     });
   }, []);
-
-  const handleLogin = async () => {
-    // Replace with actual authentication logic
-    if (email === "admin@example.com" && password === "password") {
-      router.push("/dashboard");
-    } else {
-      setError("Invalid credentials. Please try again.");
-    }
-  };
 
   return (
     <div className="flex justify-center items-center">

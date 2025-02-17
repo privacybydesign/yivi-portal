@@ -5,7 +5,6 @@ import "./globals.css";
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -23,7 +22,6 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   const [isOpen, setIsOpen] = useState(false);
-  const router = useRouter();
 
   return (
     <html lang="en">

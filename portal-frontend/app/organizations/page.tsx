@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
+import Image from "next/image";
 
 const organizations = [
   {
@@ -58,7 +59,7 @@ export default function Organizations() {
           {organizations.map((org, index) => (
             <TableRow key={index}>
               <TableCell>
-                <img src={org.logo} alt={`${org.name} logo`} className="h-10 w-10" />
+                <Image src={org.logo} alt={`${org.name} logo`} className="h-10 w-10"></Image>
               </TableCell>
               <TableCell className="font-medium">
                 <Link href={`/organizations/${org.id}`} className="hover:text-blue-600">
