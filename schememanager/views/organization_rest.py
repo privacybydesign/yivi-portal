@@ -3,19 +3,51 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.utils import timezone
 from datetime import timedelta
+from rest_framework import serializers
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
 from schememanager.models.organization import Organization, OrganizationAdmin, KvkEntry
 from schememanager.forms.organization import OrganizationAdminForm
 
+class KvkEntrySerializer(serializers.Serializer):
+    kvk_number = serializers.CharField(max_length=20)
+    name = serializers.CharField(max_length=200)
+    trade_names = serializers.CharField(max_length=200)
+    type_owner = serializers.CharField(max_length=100)
+    legal_entity = serializers.CharField(max_length=100)
+    address = serializers.CharField(max_length=300)
+    email = serializers.EmailField()
+    phone = serializers.CharField(max_length=20)
+    registration_start = serializers.CharField(max_length=20)
+    date_deregistration = serializers.CharField(max_length=20, required=False, allow_blank=True)
+    registration_end = serializers.CharField(max_length=20, required=False, allow_blank=True)
+    special_legal_situation = serializers.CharField(max_length=200, required=False, allow_blank=True)
+    restriction_in_legal_action = serializers.CharField(max_length=200, required=False, allow_blank=True)
+    foreign_legal_status = serializers.CharField(max_length=200, required=False, allow_blank=True)
+    has_restriction = serializers.CharField(max_length=50, required=False, allow_blank=True)
+    is_authorized = serializers.CharField(max_length=50, required=False, allow_blank=True)
+    reason = serializers.CharField(max_length=500, required=False, allow_blank=True)
+    reference_moment = serializers.CharField(max_length=50)
+
+class RegistrationSerializer(serializers.Serializer):
+    kvk_data = KvkEntrySerializer()
+    yivi_email = serializers.EmailField()
 
 class RegistrationRestView(APIView):
     """REST API View for handling organization registration and re-registration based on KVK disclosure."""
 
+    @swagger_auto_schema(
+        request_body=RegistrationSerializer,
+        responses={200: "Success"}
+    )
     def post(self, request):
         """Handle KVK disclosure registration request."""
-        data = request.data  
+        serializer = RegistrationRequestSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-        kvk_data = data.get("kvk_entry")
-        yivi_email = data.get("yivi_email")
+        kvk_data = serializer.validated_data.get("kvk_data")
+        yivi_email = serializer.validated_data.get("yivi_email")
 
         if not kvk_data or not yivi_email:
             return Response({"error": "KVK entry and email are required."}, status=status.HTTP_400_BAD_REQUEST)

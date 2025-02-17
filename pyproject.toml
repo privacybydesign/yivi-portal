@@ -19,6 +19,7 @@ djangorestframework = "^3.14.0"
 fqdn = "^1.5.1"
 django-cron = "^0.6.0"
 django-imagekit = "^5.0.0"
+drf-yasg = "^1.21.8"
 
 [tool.poetry.group.dev.dependencies]
 black = "^23.12.1"
