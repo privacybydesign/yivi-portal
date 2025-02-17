@@ -10,9 +10,11 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import Link from "next/link";
 
 const organizations = [
   {
+    id: "nijmegen",
     name: "Gemeente Nijmegen",
     logo: "/logos/nijmegen.jpg",
     domain: "nijmegen.nl",
@@ -20,6 +22,7 @@ const organizations = [
     verifier: { status: "Inactive", color: "red" },
   },
   {
+    id: "pubhubs",
     name: "PubHubs",
     domain: "pubhubs.net",
     logo: "/logos/pubhubs.png",
@@ -27,6 +30,7 @@ const organizations = [
     verifier: { status: "Active", color: "green" },
   },
   {
+    id: "minvws",
     name: "Ministerie van Volksgezondheid Welzijn en Sport",
     domain: "orgc.org",
     logo: "/logos/minvws.jpg",
@@ -38,40 +42,44 @@ const organizations = [
 export default function Organizations() {
   return (
     <div className="container mx-auto px-4 py-10 text-left">
-        <h1 className="text-3xl font-bold mb-4">Organizations</h1>
-        <Table>
-          <TableCaption>Organizations using Yivi.</TableCaption>
-          <TableHeader>
-            <TableRow>
+      <h1 className="text-3xl font-bold mb-4">Organizations</h1>
+      <Table>
+        <TableCaption>Organizations using Yivi.</TableCaption>
+        <TableHeader>
+          <TableRow>
             <TableHead>Logo</TableHead>
-              <TableHead>Name</TableHead>
-              <TableHead>Domain</TableHead>
-              <TableHead>Issuer</TableHead>
-              <TableHead>Verifier</TableHead>
+            <TableHead>Name</TableHead>
+            <TableHead>Domain</TableHead>
+            <TableHead>Issuer</TableHead>
+            <TableHead>Verifier</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {organizations.map((org, index) => (
+            <TableRow key={index}>
+              <TableCell>
+                <img src={org.logo} alt={`${org.name} logo`} className="h-10 w-10" />
+              </TableCell>
+              <TableCell className="font-medium">
+                <Link href={`/organizations/${org.id}`} className="hover:text-blue-600">
+                  {org.name}
+                </Link>
+              </TableCell>
+              <TableCell>{org.domain}</TableCell>
+              <TableCell>
+                <Badge className={`text-white`}>
+                  {org.issuer.status}
+                </Badge>
+              </TableCell>
+              <TableCell>
+                <Badge className={`text-white`}>
+                  {org.verifier.status}
+                </Badge>
+              </TableCell>
             </TableRow>
-          </TableHeader>
-          <TableBody>
-            {organizations.map((org, index) => (
-              <TableRow key={index}>
-                <TableCell>
-                  <img src={org.logo} alt={`${org.name} logo`} className="h-10 w-10" />
-                </TableCell>
-                <TableCell className="font-medium">{org.name}</TableCell>
-                <TableCell>{org.domain}</TableCell>
-                <TableCell>
-                  <Badge className={`text-white`}>
-                    {org.issuer.status}
-                  </Badge>
-                </TableCell>
-                <TableCell>
-                  <Badge className={`text-white`}>
-                    {org.verifier.status}
-                  </Badge>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+          ))}
+        </TableBody>
+      </Table>
     </div>
   );
 }

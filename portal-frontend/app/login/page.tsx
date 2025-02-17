@@ -22,12 +22,12 @@ export default function Login() {
         language: 'en',             // Language to use
         // Back-end options
         session: {
-          // Point this to your IRMA server:
           url: 'https://is.staging.yivi.app',
 
           start: {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
+            // TODO: This should be a singed request comming from our REST API.
             body: JSON.stringify({
               '@context': 'https://irma.app/ld/request/disclosure/v2',
               'disclose': [
