@@ -5,14 +5,24 @@ from schememanager.views.issuer import *
 from schememanager.views.login import *
 from schememanager.views.organization import *
 from schememanager.views.verifier import *
+from schememanager.views.login_rest import *
+from schememanager.views.logout_rest import *
+from schememanager.views.organization_rest import *
+
 
 app_name = "schememanager"
 
 urlpatterns = [
-    path("", IndexView.as_view(), name="index"),
+    # path("", IndexView.as_view(), name="index"), 
     path("login/", LoginView.as_view(), name="login"),
+    path("login-rest/", LoginRestView.as_view(), name="login-rest"),
+
+
     path("logout/", LogoutView.as_view(), name="logout"),
+    path("logout-rest/", LogoutRestView.as_view(), name="logout-rest"),
     path("register/", RegistrationView.as_view(), name="registration"),
+    path("register-rest/", RegistrationRestView.as_view(), name="registration-rest"),
+
     path("portal/orgs/", OrganizationListView.as_view(), name="organization-list"),
     path(
         "portal/orgs/<slug:org_slug>/",
@@ -64,4 +74,7 @@ urlpatterns = [
         IssuerPortalView.as_view(),
         name="issuer-list",
     ),
+    path(
+        ""
+    )
 ]
