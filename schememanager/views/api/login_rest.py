@@ -3,8 +3,9 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.contrib.auth import get_user_model, login
 from django.contrib.sessions.models import Session
-import logging 
-from rest_framework_simplejwt.tokens import RefreshToken
+import logging
+from django.views.generic import TemplateView
+# from rest_framework_simplejwt.tokens import RefreshToken
 
 logger = logging.getLogger()
 

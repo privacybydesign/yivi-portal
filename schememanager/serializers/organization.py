@@ -37,3 +37,26 @@ class OrganizationAdminSerializer(serializers.ModelSerializer):
         fields = [
             "email",
         ]
+class KvkEntrySerializer(serializers.Serializer):
+    kvk_number = serializers.CharField(max_length=20)
+    name = serializers.CharField(max_length=200)
+    trade_names = serializers.CharField(max_length=200)
+    type_owner = serializers.CharField(max_length=100)
+    legal_entity = serializers.CharField(max_length=100)
+    address = serializers.CharField(max_length=300)
+    email = serializers.EmailField()
+    phone = serializers.CharField(max_length=20)
+    registration_start = serializers.CharField(max_length=20)
+    date_deregistration = serializers.CharField(max_length=20, required=False, allow_blank=True)
+    registration_end = serializers.CharField(max_length=20, required=False, allow_blank=True)
+    special_legal_situation = serializers.CharField(max_length=200, required=False, allow_blank=True)
+    restriction_in_legal_action = serializers.CharField(max_length=200, required=False, allow_blank=True)
+    foreign_legal_status = serializers.CharField(max_length=200, required=False, allow_blank=True)
+    has_restriction = serializers.CharField(max_length=50, required=False, allow_blank=True)
+    is_authorized = serializers.CharField(max_length=50, required=False, allow_blank=True)
+    reason = serializers.CharField(max_length=500, required=False, allow_blank=True)
+    reference_moment = serializers.CharField(max_length=50)
+
+class RegistrationSerializer(serializers.Serializer):
+    kvk_data = KvkEntrySerializer()
+    yivi_email = serializers.EmailField()
