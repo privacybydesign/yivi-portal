@@ -15,7 +15,7 @@ export default function Login() {
         // Back-end options
         session: {
           // Point this to your controller:
-          url: 'http://localhost:8000/auth/v1',
+          url: 'http://localhost:8000/v1',
       
           start: {
             url: (o: any) => `${o.url}/session/`,
