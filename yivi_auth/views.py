@@ -52,9 +52,9 @@ class YiviSessionProxyResultView(APIView):
 
         try:
             yivi_session_result = yivi_server.session_result(token)
+            if yivi_session_result is None:
+                return Response(status=400, data="Invalid Yivi session token.")
         except YiviException as e:
             return Response(status=e.http_status, data=e.msg)
 
-        # If the Yivi session is done, trigger a signal to notify the application
-        if yivi_session_result.get("status") == "DONE":
-            return Response(data=yivi_session_result)
+        return Response(data=yivi_session_result)
