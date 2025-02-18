@@ -2,6 +2,7 @@ from django.urls import path
 
 from schememanager.views.index import IndexView
 from schememanager.views.trust_model import *
+from schememanager.views.organizations import *
 
 from django.urls import re_path
 from rest_framework import permissions
@@ -28,5 +29,5 @@ urlpatterns = [
 
     path("", IndexView.as_view(), name="index"),
     path("v1/trust-models", TrustModelRestView.as_view(), name="trust-models"),
-
+    path("v1/organizations", OrganizationsRestView.as_view(), name="organizations"),
 ]
