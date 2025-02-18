@@ -5,14 +5,37 @@ from schememanager.views.issuer import *
 from schememanager.views.login import *
 from schememanager.views.organization import *
 from schememanager.views.verifier import *
+<<<<<<< HEAD
 from schememanager.views.login_rest import *
 from schememanager.views.logout_rest import *
 from schememanager.views.organization_rest import *
 
+=======
+# from schememanager.views.login_rest import *
+# from schememanager.views.logout_rest import *
+from schememanager.views.organization_rest import *
+
+from django.urls import re_path
+from rest_framework import permissions
+from drf_yasg.views import get_schema_view
+from drf_yasg import openapi
+
+>>>>>>> react-spa
 
 app_name = "schememanager"
 
+schema_view = get_schema_view(
+   openapi.Info(
+      title="Yivi API",
+      default_version='v1',
+      description="Yivi API"
+   ),
+   public=True,
+   permission_classes=(permissions.AllowAny,),
+)
+
 urlpatterns = [
+<<<<<<< HEAD
     # path("", IndexView.as_view(), name="index"), 
     path("login/", LoginView.as_view(), name="login"),
     path("login-rest/", LoginRestView.as_view(), name="login-rest"),
@@ -20,6 +43,19 @@ urlpatterns = [
 
     path("logout/", LogoutView.as_view(), name="logout"),
     path("logout-rest/", LogoutRestView.as_view(), name="logout-rest"),
+=======
+    path('swagger<format>/', schema_view.without_ui(cache_timeout=0), name='schema-json'),
+    path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
+    path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
+
+    path("", IndexView.as_view(), name="index"),
+    path("login/", LoginView.as_view(), name="login"),
+    # path("login-rest/", LoginRestView.as_view(), name="login-rest"),
+
+
+    path("logout/", LogoutView.as_view(), name="logout"),
+    # path("logout-rest/", LogoutRestView.as_view(), name="logout-rest"),
+>>>>>>> react-spa
     path("register/", RegistrationView.as_view(), name="registration"),
     path("register-rest/", RegistrationRestView.as_view(), name="registration-rest"),
 
@@ -73,8 +109,11 @@ urlpatterns = [
         "portal/issuers/",
         IssuerPortalView.as_view(),
         name="issuer-list",
+<<<<<<< HEAD
     ),
     path(
         ""
+=======
+>>>>>>> react-spa
     )
 ]
