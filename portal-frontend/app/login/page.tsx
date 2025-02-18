@@ -15,7 +15,7 @@ export default function Login() {
         // Back-end options
         session: {
           // Point this to your controller:
-          url: 'http://localhost:8000/auth',
+          url: 'http://localhost:8000/auth/v1',
       
           start: {
             url: (o: any) => `${o.url}/session/`,
@@ -32,15 +32,14 @@ export default function Login() {
             method: 'POST'
           },
           result: {
-            url: (o: any, { sessionToken}: any) => `${o.url}/session/${sessionToken}/result`,
+            url: (o: any, { sessionToken}: any) => `${o.url}/token/${sessionToken}`,
             method: 'GET'
           }
         }
       });
       web.start()
         .then((result: any) => {
-          console.log(result)
-          setEmail(result.disclosed[0][0].rawvalue);
+          console.log(result.access)
         })
         .catch((err: any) => {
           alert(err);
