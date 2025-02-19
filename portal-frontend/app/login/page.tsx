@@ -3,14 +3,18 @@
 
 import useStore from "@/store";
 import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 export default function Login() {
   const accessToken = useStore((state) => state.accessToken);
   const setAccessToken = useStore((state) => state.setAccessToken)
+  const router = useRouter();
+
+  let web: any = null;
 
   useEffect(() => {
     import("@privacybydesign/yivi-frontend").then((yivi: any) => {
-      const web = yivi.newWeb({
+      web = yivi.newWeb({
         debugging: false,            // Enable to get helpful output in the browser console
         element:   '#yivi-web-form', // Which DOM element to render to
       
@@ -41,8 +45,9 @@ export default function Login() {
       });
       web.start()
         .then((result: any) => {
-          console.log(result.access)
-          setAccessToken(result.access)
+          console.log(result.access);
+          setAccessToken(result.access);
+          router.push('/organizations');
         })
         .catch((err: any) => {
           alert(err);
