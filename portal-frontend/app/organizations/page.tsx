@@ -14,6 +14,7 @@ import Link from "next/link";
 import Image from "next/image";
 import axiosInstance from "@/lib/axiosInstance";
 import { useEffect, useState } from "react";
+import { Organization } from "@/store";
 
 const organizations = [
   {
@@ -43,7 +44,7 @@ const organizations = [
 ];
 
 export default function Organizations() {
-  const [organizations, setOrganizations] = useState([]);
+  const [organizations, setOrganizations] = useState<Organization[]>([]);
 
   useEffect(() => {
     axiosInstance.get('v1/organizations') // Replace with your API endpoint

@@ -26,6 +26,11 @@ export default function RootLayout({
   const setAccessToken = useStore((state) => state.setAccessToken)
   const [isOpen, setIsOpen] = useState(false);
 
+  const handleLogout = () => {
+    setAccessToken("");
+    // Add any additional logout logic here
+  };
+
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
@@ -40,21 +45,20 @@ export default function RootLayout({
             </div>
 
             <nav className="hidden md:flex gap-6">
+              <Link href="/organizations" className="hover:text-blue-600">
+                Organizations
+              </Link>
               {email ? (
-                <Link href="/profile" className="hover:text-blue-600">
-                  {email}
-                </Link>
+                  <div className="flex items-center gap-4">
+                  <span>{email}</span>
+                  <button onClick={handleLogout} className="hover:text-blue-600">
+                    Logout
+                  </button>
+                </div>
               ) : <Link href="/login" className="hover:text-blue-600">
                 Login
               </Link>
               }
-
-              <Link href="/organizations" className="hover:text-blue-600">
-                Organizations
-              </Link>
-              <Link href="/contact" className="hover:text-blue-600">
-                Contact
-              </Link>
             </nav>
 
             <div className="md:hidden">
