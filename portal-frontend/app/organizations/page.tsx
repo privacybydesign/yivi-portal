@@ -12,6 +12,8 @@ import {
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 import Image from "next/image";
+import axiosInstance from "@/lib/axiosInstance";
+import { useEffect, useState } from "react";
 
 const organizations = [
   {
@@ -41,6 +43,18 @@ const organizations = [
 ];
 
 export default function Organizations() {
+  const [organizations, setOrganizations] = useState([]);
+
+  useEffect(() => {
+    axiosInstance.get('v1/organizations') // Replace with your API endpoint
+      .then(response => {
+        setOrganizations(response.data);
+      })
+      .catch(error => {
+        console.error('Error fetching data:', error);
+      });
+  }, []);
+
   return (
     <div className="container mx-auto px-4 py-10 text-left">
       <h1 className="text-3xl font-bold mb-4">Organizations</h1>
@@ -69,12 +83,12 @@ export default function Organizations() {
               <TableCell>{org.domain}</TableCell>
               <TableCell>
                 <Badge className={`text-white`}>
-                  {org.issuer.status}
+                  {org.status}
                 </Badge>
               </TableCell>
               <TableCell>
                 <Badge className={`text-white`}>
-                  {org.verifier.status}
+                  {org.status}
                 </Badge>
               </TableCell>
             </TableRow>

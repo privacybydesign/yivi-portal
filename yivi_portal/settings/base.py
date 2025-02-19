@@ -12,6 +12,9 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
+    "DEFAULT_PERMISSION_CLASSES": [
+        "rest_framework.permissions.IsAuthenticated",  # Restrict access to authenticated users
+    ],
 }
 
 SIMPLE_JWT = {
@@ -36,7 +39,6 @@ INSTALLED_APPS = [
     "django_bootstrap5",
     "django_cron",
     "imagekit",
-    "yivi_auth.apps.YiviAuthConfig",
     "schememanager.apps.SchememanagerConfig",
     "yivi_portal",
 ]

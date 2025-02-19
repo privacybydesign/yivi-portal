@@ -1,10 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useEffect, useState } from "react";
+import useStore from "@/store";
+import { useEffect } from "react";
 
 export default function Login() {
-  const [email, setEmail] = useState("");
+  const accessToken = useStore((state) => state.accessToken);
+  const setAccessToken = useStore((state) => state.setAccessToken)
 
   useEffect(() => {
     import("@privacybydesign/yivi-frontend").then((yivi: any) => {
@@ -40,6 +42,7 @@ export default function Login() {
       web.start()
         .then((result: any) => {
           console.log(result.access)
+          setAccessToken(result.access)
         })
         .catch((err: any) => {
           alert(err);
@@ -52,7 +55,7 @@ export default function Login() {
       <div className="flex grow p-6 justify-center items-center">
         <div id="yivi-web-form">
         </div>
-        {email}
+        {accessToken}
       </div>
     </div>
   );

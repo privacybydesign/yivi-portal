@@ -1,6 +1,7 @@
 from django.conf import settings
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.permissions import AllowAny
 import logging
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
@@ -9,7 +10,6 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
-from yivi_auth import signals
 from yivi_auth.models.user import User
 from yivi_auth.yivi import YiviServer, YiviException
 
@@ -28,7 +28,8 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         return token
 
 class YiviSessionProxyStartView(APIView):
-
+    permission_classes = [AllowAny]
+    
     @swagger_auto_schema(
         request_body=openapi.Schema(
             type=openapi.TYPE_OBJECT,
@@ -57,6 +58,8 @@ class YiviSessionProxyStartView(APIView):
 
 
 class YiviSessionProxyResultView(APIView):
+    permission_classes = [AllowAny]
+    
     @swagger_auto_schema(
         responses={200: "Success", 400: "Invalid Yivi session token."}
     )

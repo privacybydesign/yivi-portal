@@ -5,6 +5,7 @@ import "./globals.css";
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import useStore from "@/store";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -21,6 +22,8 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const email = useStore((state) => state.email);
+  const setAccessToken = useStore((state) => state.setAccessToken)
   const [isOpen, setIsOpen] = useState(false);
 
   return (
@@ -29,17 +32,23 @@ export default function RootLayout({
         <header className="bg-white shadow-md">
           <div className="container mx-auto flex justify-between items-center p-4">
             <Image src="/yivi-logo.svg" alt="Yivi Logo" height={30} width={54} />
-            
+
             <div className="flex-1 pl-4">
               <Link href="/" className="text-xl">
                 Portal
               </Link>
             </div>
-            
+
             <nav className="hidden md:flex gap-6">
-              <Link href="/login" className="hover:text-blue-600">
+              {email ? (
+                <Link href="/profile" className="hover:text-blue-600">
+                  {email}
+                </Link>
+              ) : <Link href="/login" className="hover:text-blue-600">
                 Login
               </Link>
+              }
+
               <Link href="/organizations" className="hover:text-blue-600">
                 Organizations
               </Link>

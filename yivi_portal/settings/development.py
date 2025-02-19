@@ -26,6 +26,23 @@ DATABASES = {
     }
 }
 
+SWAGGER_SETTINGS = {
+    "LOGIN_URL": None,  # Disable Django login button
+    "USE_SESSION_AUTH": False,  # Disable session authentication
+    "SECURITY_DEFINITIONS": {
+        "Bearer": {
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header",
+            "description": "Enter the token as: Bearer <token>"
+        }
+    },
+    "DEFAULT_SECURITY": [
+        {"Bearer": []}  # Apply Bearer auth globally
+    ],
+    "PERSIST_AUTH": True,  # Keep token saved in Swagger UI
+}
+
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
@@ -41,32 +58,3 @@ EMAIL_DISCLOSURE = [
     ]
 ]
 
-KVK_DISCLOSURE = [
-    [
-        [
-            "irma-demo.kvk.official.kvkNumber",
-            "irma-demo.kvk.official.name",
-            "irma-demo.kvk.official.tradeNames",
-            "irma-demo.kvk.official.typeOwner",
-            "irma-demo.kvk.official.legalEntity",
-            "irma-demo.kvk.official.officeAddress",
-            "irma-demo.kvk.official.emailAddress",
-            "irma-demo.kvk.official.officePhone",
-            "irma-demo.kvk.official.registrationStart",
-            "irma-demo.kvk.official.dateDeregistration",
-            "irma-demo.kvk.official.registrationEnd",
-            "irma-demo.kvk.official.specialLegalSituation",
-            "irma-demo.kvk.official.restrictionInLegalAction",
-            "irma-demo.kvk.official.foreignLegalStatus",
-            "irma-demo.kvk.official.hasRestriction",
-            "irma-demo.kvk.official.isAuthorized",
-            "irma-demo.kvk.official.reason",
-            "irma-demo.kvk.official.referenceMoment",
-        ]
-    ],
-    [
-        [
-            "irma-demo.sidn-pbdf.email.email"
-        ]
-    ],
-]

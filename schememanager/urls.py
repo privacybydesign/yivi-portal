@@ -1,6 +1,5 @@
 from django.urls import path
 
-from schememanager.views.index import IndexView
 from schememanager.views.trust_model import *
 from schememanager.views.organizations import *
 
@@ -27,7 +26,6 @@ urlpatterns = [
     path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
     path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
 
-    path("", IndexView.as_view(), name="index"),
     path("v1/trust-models", TrustModelRestView.as_view(), name="trust-models"),
     path("v1/organizations", OrganizationsRestView.as_view(), name="organizations"),
 ]
