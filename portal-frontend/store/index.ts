@@ -32,7 +32,7 @@ interface StateStore {
     accessToken: string | null
     email: string | null
     role: string | null
-    setAccessToken: (accessToken: string) => void
+    setAccessToken: (accessToken: string | null) => void
 }
 
 const useStore = create<StateStore>((set, get) => {
@@ -58,18 +58,19 @@ const useStore = create<StateStore>((set, get) => {
         accessToken: isTokenExpired ? null : savedAccessToken,
         email: initialEmail,
         role: initialRole,
-        setAccessToken: (accessToken: string | null) => {
-            if (accessToken) {
-                const decoded = jwtDecode<AuthToken>(accessToken);
+        setAccessToken: (newToken: string | null) => {
+            console.log(newToken);
+            if (newToken) {
+                const decoded = jwtDecode<AuthToken>(newToken);
                 decoded.email && set({ email: decoded.email });
                 decoded.role && set({ role: decoded.role });
-                localStorage.setItem('accessToken', accessToken);
+                localStorage.setItem('accessToken', newToken);
             } else {
                 set({ email: null });
                 set({ role: null });
                 localStorage.removeItem('accessToken');
             }
-            set({ accessToken });
+            set({ accessToken: newToken });
         },
     };
 });
