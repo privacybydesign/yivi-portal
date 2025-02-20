@@ -24,8 +24,6 @@ COPY . /app
 
 RUN poetry install --with prod --no-interaction --no-ansi
 
-ENV DJANGO_SETTINGS_MODULE=yivi_portal.settings.production
-
 ENV DJANGO_STATIC_ROOT=/app/static
 ENV DJANGO_MEDIA_ROOT=/app/media
 

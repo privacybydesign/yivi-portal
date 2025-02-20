@@ -1,144 +1,82 @@
 from django.contrib import admin
-from django.utils.safestring import mark_safe
-
-from schememanager.models.organization import OrganizationAdmin, Organization
-from schememanager.models.scheme import Scheme
-from schememanager.models.verifier import (
-    VerifierHostname,
-    VerifierSessionRequest,
-    Verifier,
+from schememanager.models.models import (
+    Organization, TrustModel, YiviTrustModelEnv, ApplicationStatus,
+    RelyingPartyHostname, Condiscon, AttestationProvider, Credential,
+    CredentialAttribute, CondisconAttribute, RelyingParty, User
 )
 
-
-class OrganizationAdminInline(admin.StackedInline):
-    model = OrganizationAdmin
-    extra = 0
-
-
+# Organization Admin
 @admin.register(Organization)
 class OrganizationAdmin(admin.ModelAdmin):
-    inlines = [OrganizationAdminInline]
+    list_display = ('name_en', 'registration_number', 'created_at', 'last_updated_at')
+    search_fields = ('name_en', 'name_nl', 'registration_number')
+    list_filter = ('created_at', 'last_updated_at')
+    prepopulated_fields = {'slug': ('name_en',)}
+    readonly_fields = ('created_at', 'last_updated_at')
 
+# TrustModel Admin
+@admin.register(TrustModel)
+class TrustModelAdmin(admin.ModelAdmin):
+    list_display = ('name', 'eudi_compliant')
+    search_fields = ('name',)
+    list_filter = ('eudi_compliant',)
 
-@admin.register(Scheme)
-class VerifierSchemeAdmin(admin.ModelAdmin):
-    pass
+# YiviTrustModelEnv Admin
+@admin.register(YiviTrustModelEnv)
+class YiviTrustModelEnvAdmin(admin.ModelAdmin):
+    list_display = ('trust_model', 'environment', 'timestamp_server', 'keyshare_server')
+    search_fields = ('trust_model__name', 'environment', 'timestamp_server')
+    list_filter = ('environment',)
 
+# ApplicationStatus Admin
+@admin.register(ApplicationStatus)
+class ApplicationStatusAdmin(admin.ModelAdmin):
+    list_display = ('id', 'ready', 'reviewed_accepted', 'published_at')
+    list_filter = ('ready', 'reviewed_accepted', 'published_at')
+    readonly_fields = ('created_at', 'last_updated_at')
 
-class VerifierHostnameInline(admin.StackedInline):
-    model = VerifierHostname
-    extra = 0
-    classes = ["collapse"]
+# RelyingPartyHostname Admin
+@admin.register(RelyingPartyHostname)
+class RelyingPartyHostnameAdmin(admin.ModelAdmin):
+    list_display = ('hostname', 'dns_challenge_verified', 'manually_verified')
+    list_filter = ('dns_challenge_verified', 'manually_verified')
+    search_fields = ('hostname',)
 
-    readonly_fields = (
-        "dns_challenge",
-        "dns_challenge_created_at",
-        "dns_challenge_verified",
-        "dns_challenge_verified_at",
-        "dns_challenge_invalidated_at",
-    )
+# Condiscon Admin
+@admin.register(Condiscon)
+class CondisconAdmin(admin.ModelAdmin):
+    list_display = ('context_description_en', 'context_description_nl')
+    search_fields = ('context_description_en', 'context_description_nl')
 
+# AttestationProvider Admin
+@admin.register(AttestationProvider)
+class AttestationProviderAdmin(admin.ModelAdmin):
+    list_display = ('organization', 'yivi_tme', 'status', 'version')
+    search_fields = ('organization__name_en', 'version')
+    list_filter = ('status',)
 
-class VerifierSessionRequestInline(admin.StackedInline):
-    model = VerifierSessionRequest
-    extra = 0
-    classes = ["collapse"]
+# Inline model for Credential Attributes
+class CredentialAttributeInline(admin.TabularInline):
+    model = CredentialAttribute
+    extra = 1  
+    
+# Credential Admin
+@admin.register(Credential)
+class CredentialAdmin(admin.ModelAdmin):
+    list_display = ('name_en', 'attestation_provider', 'credential_tag')
+    search_fields = ('name_en', 'credential_tag')
+    inlines = [CredentialAttributeInline] 
 
+# Relying Party Admin
+@admin.register(RelyingParty)
+class RelyingPartyAdmin(admin.ModelAdmin):
+    list_display = ('organization', 'yivi_tme', 'hostname', 'condiscon')
+    search_fields = ('organization__name_en', 'hostname__hostname')
+    list_filter = ('yivi_tme',)
 
-@admin.register(Verifier)
-class VerifierAdmin(admin.ModelAdmin):
-    list_filter = (
-        "scheme",
-        "ready",
-        "reviewed_accepted",
-        "scheme__production",
-    )
-    list_display = (
-        "scheme",
-        "slug",
-        "name_en",
-        "name_nl",
-        "ready",
-        "reviewed_accepted",
-        "status",
-    )
-    list_display_links = ("scheme", "slug")
-
-    inlines = [VerifierHostnameInline, VerifierSessionRequestInline]
-
-    fieldsets = (
-        (
-            "Review",
-            {
-                "fields": (
-                    "status",
-                    "new_scheme_data_html",
-                    "reviewed_accepted",
-                    "rejection_remarks",
-                    "approved_scheme_data_html",
-                    "published_scheme_data_html",
-                ),
-            },
-        ),
-        (
-            "Info",
-            {
-                "classes": ("collapse",),
-                "fields": (
-                    "created_at",
-                    "last_updated_at",
-                    "ready",
-                    "ready_at",
-                    "reviewed_at",
-                    "published_at",
-                ),
-            },
-        ),
-        (
-            "Verifier details",
-            {
-                "classes": ("collapse",),
-                "fields": (
-                    "organization",
-                    "scheme",
-                    "slug",
-                    "name_en",
-                    "name_nl",
-                    "logo",
-                ),
-            },
-        ),
-    )
-    readonly_fields = [
-        "status",
-        "new_scheme_data_html",
-        "approved_scheme_data_html",
-        "published_scheme_data_html",
-        "created_at",
-        "last_updated_at",
-        "ready",
-        "ready_at",
-        "reviewed_at",
-        "published_at",
-    ]
-
-    def new_scheme_data_html(self, obj):
-        return (
-            mark_safe("<pre>" + obj.new_scheme_data_json + "\n\n" + "</pre>")
-            if obj.new_scheme_data_json
-            else ""
-        )
-
-    def approved_scheme_data_html(self, obj):
-        return (
-            mark_safe("<pre>" + obj.approved_scheme_data_json + "\n\n" + "</pre>")
-            if obj.approved_scheme_data_json
-            else ""
-        )
-
-    def published_scheme_data_html(self, obj):
-        return (
-            mark_safe("<pre>" + obj.published_scheme_data_json + "\n\n" + "</pre>")
-            if obj.published_scheme_data_json
-            else ""
-        )
+# User Admin
+@admin.register(User)
+class UserAdmin(admin.ModelAdmin):
+    list_display = ('organization', 'role')
+    search_fields = ('organization__name_en', 'role')
+    list_filter = ('role',)

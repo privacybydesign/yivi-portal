@@ -68,8 +68,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
-                "schememanager.context_processors.organizations",
-                "schememanager.context_processors.settings",
+
             ],
         },
     },
@@ -113,11 +112,11 @@ USE_TZ = True
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-CRON_CLASSES = [
-    "schememanager.crons.NewDNSVerification",
-    "schememanager.crons.ExistingDNSVerification",
-    "schememanager.crons.FetchPublishedSchemes",
-]
+# CRON_CLASSES = [
+#     "schememanager.crons.NewDNSVerification",
+#     "schememanager.crons.ExistingDNSVerification",
+#     "schememanager.crons.FetchPublishedSchemes",
+# ]
 
 DJANGO_CRON_DELETE_LOGS_OLDER_THAN = 7
 
