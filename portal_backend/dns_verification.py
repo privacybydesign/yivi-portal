@@ -4,7 +4,7 @@
 # from django.utils import timezone
 # from dns.resolver import Resolver
 
-# from schememanager.models.verifier import VerifierHostname
+# from portal_backend.models.verifier import VerifierHostname
 
 # logger = logging.getLogger()
 

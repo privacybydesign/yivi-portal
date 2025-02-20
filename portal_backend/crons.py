@@ -1,19 +1,19 @@
 # from django_cron import CronJobBase, Schedule
 
-# from schememanager.dns_verification import (
+# from portal_backend.dns_verification import (
 #     verify_new_dns,
 #     verify_existing_dns,
 # )
-# from schememanager.models.scheme import Scheme
-# from schememanager.models.verifier import VerifierHostname
-# from schememanager.published_check import fetch_requestor_scheme
+# from portal_backend.models.scheme import Scheme
+# from portal_backend.models.verifier import VerifierHostname
+# from portal_backend.published_check import fetch_requestor_scheme
 
 
 # class NewDNSVerification(CronJobBase):
 #     RUN_EVERY_MINS = 5
 
 #     schedule = Schedule(run_every_mins=RUN_EVERY_MINS)
-#     code = "schememanager.new_dns_verification"
+#     code = "portal_backend.new_dns_verification"
 
 #     def do(self):
 #         for hostname in VerifierHostname.objects.filter(dns_challenge_verified=False):
@@ -25,7 +25,7 @@
 
 #     schedule = Schedule(run_at_times=RUN_AT_TIMES)
 
-#     code = "schememanager.existing_dns_verification"
+#     code = "portal_backend.existing_dns_verification"
 
 #     def do(self):
 #         for hostname in VerifierHostname.objects.filter(dns_challenge_verified=True):
@@ -37,7 +37,7 @@
 
 #     schedule = Schedule(run_at_times=RUN_AT_TIMES)
 
-#     code = "schememanager.fetch_published_schemes"
+#     code = "portal_backend.fetch_published_schemes"
 
 #     def do(self):
 #         for scheme in Scheme.objects.filter(scheme_type=Scheme.REQUESTOR):

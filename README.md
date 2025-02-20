@@ -5,9 +5,9 @@ Verifiers and issuers can register themselves in the Yivi scheme via the portal 
 
 Specifically, Yivi Portal should make it easy to manage the schemes that are currently managed in the following repositories:
 
-- [pbdf](https://github.com/privacybydesign/pbdf-schememanager)
+- [pbdf](https://github.com/privacybydesign/pbdf-portal_backend)
 - [pbdf-requestors](https://github.com/privacybydesign/pbdf-requestors)
-- [irma-demo](https://github.com/privacybydesign/irma-demo-schememanager)
+- [irma-demo](https://github.com/privacybydesign/irma-demo-portal_backend)
 - [irma-demo-requestors](https://github.com/privacybydesign/irma-demo-requestors)
 
 > Yivi is formerly called IRMA and is currently being rebranded. As such, some of the documentation still refers to IRMA.

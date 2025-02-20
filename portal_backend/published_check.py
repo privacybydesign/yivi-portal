@@ -5,8 +5,8 @@
 # from django.conf import settings
 # from django.utils import timezone
 
-# from schememanager.models.scheme import Scheme
-# from schememanager.models.verifier import Verifier
+# from portal_backend.models.scheme import Scheme
+# from portal_backend.models.verifier import Verifier
 
 # logger = logging.getLogger()
 

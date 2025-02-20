@@ -1,5 +1,5 @@
 from django.contrib import admin
-from schememanager.models.models import (
+from portal_backend.models.models import (
     Organization, TrustModel, YiviTrustModelEnv, ApplicationStatus,
     RelyingPartyHostname, Condiscon, AttestationProvider, Credential,
     CredentialAttribute, CondisconAttribute, RelyingParty, User

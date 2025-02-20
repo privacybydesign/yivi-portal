@@ -1,7 +1,7 @@
 from django.urls import path
 
-from schememanager.views.trust_model import *
-from schememanager.views.organizations import *
+from portal_backend.views.trust_model import *
+from portal_backend.views.organizations import *
 
 from django.urls import re_path
 from rest_framework import permissions
@@ -9,7 +9,7 @@ from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
 
 
-app_name = "schememanager"
+app_name = "portal_backend"
 
 schema_view = get_schema_view(
    openapi.Info(

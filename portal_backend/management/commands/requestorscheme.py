@@ -2,8 +2,8 @@
 
 # from django.core.management.base import BaseCommand
 
-# from schememanager.models.scheme import Scheme
-# from schememanager.models.verifier import Verifier
+# from portal_backend.models.scheme import Scheme
+# from portal_backend.models.verifier import Verifier
 
 
 # class Command(BaseCommand):

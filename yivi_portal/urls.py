@@ -8,6 +8,6 @@ urlpatterns = [
 
     path("admin/logout/", RedirectView.as_view(url="/logout", query_string=True)),
     path("admin/", admin.site.urls),
-    path("", include("schememanager.urls")),
+    path("", include("portal_backend.urls")),
     path("", include("yivi_auth.urls")),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -40,7 +40,7 @@ INSTALLED_APPS = [
     "django_bootstrap5",
     "django_cron",
     "imagekit",
-    "schememanager.apps.SchememanagerConfig",
+    "portal_backend.apps.SchememanagerConfig",
     "yivi_portal",
 ]
 
@@ -113,9 +113,9 @@ USE_TZ = True
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # CRON_CLASSES = [
-#     "schememanager.crons.NewDNSVerification",
-#     "schememanager.crons.ExistingDNSVerification",
-#     "schememanager.crons.FetchPublishedSchemes",
+#     "portal_backend.crons.NewDNSVerification",
+#     "portal_backend.crons.ExistingDNSVerification",
+#     "portal_backend.crons.FetchPublishedSchemes",
 # ]
 
 DJANGO_CRON_DELETE_LOGS_OLDER_THAN = 7
