@@ -1,5 +1,5 @@
 from django.db import models
-from django.core.validators import URLValidator
+from django.core.validators import URLValidator, RegexValidator
 import uuid
 
 class Organization(models.Model):
@@ -9,11 +9,13 @@ class Organization(models.Model):
     slug = models.SlugField(unique=True)
     registration_number = models.CharField(max_length=100)
     address = models.TextField()
-    trade_names = models.JSONField()
+    is_verified = models.BooleanField(default=False)
+    verified_at = models.DateTimeField(auto_now_add=True)
+    trade_names = models.JSONField(default=list)
     logo = models.ImageField(upload_to='organization/logos/')
-    approved_logo = models.ImageField(upload_to='organization/approved_logos/')
     created_at = models.DateTimeField(auto_now_add=True)
     last_updated_at = models.DateTimeField(auto_now=True)
+
 
     def __str__(self):
         return self.name_en
@@ -27,8 +29,13 @@ class TrustModel(models.Model):
         return self.name
 
 class YiviTrustModelEnv(models.Model):
+    ENV_CHOICES = [
+        ('production', 'Production'),
+        ('development', 'Development'),
+        ('Demo', 'Demo'),
+    ]
     trust_model = models.ForeignKey(TrustModel, on_delete=models.CASCADE, related_name='environments')
-    environment = models.CharField(max_length=50)
+    environment = models.CharField(max_length=50, choices=ENV_CHOICES)
     timestamp_server = models.CharField(max_length=255)
     keyshare_server = models.CharField(max_length=255)
     keyshare_website = models.CharField(max_length=255)
@@ -60,7 +67,16 @@ class ApplicationStatus(models.Model):
         return f"Status {self.id} - Ready: {self.ready}"
 
 class RelyingPartyHostname(models.Model):
-    hostname = models.CharField(max_length=255, unique=True)
+    DOMAIN_REGEX = r'^(?!-)[A-Za-z0-9-]{1,63}(?<!-)(\.[A-Za-z]{2,6})+$'
+    hostname = models.CharField(
+        max_length=255,
+        unique=True,
+        validators=[RegexValidator(
+            regex=DOMAIN_REGEX,
+            message="Enter a valid domain (e.g., example.com).",
+            code="invalid_domain"
+        )]
+    )
     dns_challenge = models.CharField(max_length=255)
     dns_challenge_created_at = models.DateTimeField()
     dns_challenge_verified = models.BooleanField(default=False)
@@ -78,7 +94,7 @@ class Condiscon(models.Model):
     context_description_nl = models.CharField(max_length=255)
 
     def __str__(self):
-        return self.condiscon
+        return str(self.condiscon)
 
 
 class AttestationProvider(models.Model):
@@ -88,7 +104,7 @@ class AttestationProvider(models.Model):
     version = models.CharField(max_length=50)
     shortname_en = models.CharField(max_length=100)
     shortname_nl = models.CharField(max_length=100)
-    contact_url = models.URLField()
+    contact_email = models.EmailField(max_length=255, unique=True)
     base_url = models.URLField()
 
     def __str__(self):

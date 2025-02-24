@@ -2,6 +2,7 @@ from django.urls import path
 
 from portal_backend.views.trust_model import *
 from portal_backend.views.organizations import *
+from portal_backend.views.orgs import *
 
 from django.urls import re_path
 from rest_framework import permissions
@@ -25,7 +26,7 @@ urlpatterns = [
     path('swagger<format>/', schema_view.without_ui(cache_timeout=0), name='schema-json'),
     path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
     path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
-
     path("v1/trust-models", TrustModelRestView.as_view(), name="trust-models"),
-    path("v1/organizations", OrganizationsRestView.as_view(), name="organizations"),
+    path("v1/organizations", OrganizationListAPIView.as_view(), name="organizations"),
+    path("v1/organizations/<uuid:pk>", OrganizationDetailAPIView.as_view(), name="organization-detail"),
 ]
