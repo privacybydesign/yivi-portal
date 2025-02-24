@@ -2,11 +2,42 @@ from rest_framework import serializers
 from .models import *
 
 class OrganizationSerializer(serializers.ModelSerializer):
+    is_RP = serializers.SerializerMethodField()
+    is_AP = serializers.SerializerMethodField()
+    trust_model = serializers.SerializerMethodField()
     class Meta:
         model = Organization
-        fields = '__all__'
-        read_only_fields = ('is_verified',)
+        fields = [
+            'id', 'name_en', 'name_nl', 'slug',
+            'registration_number', 'address', 'is_verified',
+            'verified_at', 'trade_names', 'logo', 'created_at', 'last_updated_at',
+            'is_RP', 'is_AP', 'trust_model']
+        read_only_fields = ('is_verified')
 
+    def get_is_RP(self, obj):
+        return RelyingParty.objects.filter(
+            organization=obj,
+            status__reviewed_accepted=True
+        ).exists()
+    
+    def get_is_AP(self, obj):
+        return AttestationProvider.objects.filter(
+            organization=obj,
+            status__reviewed_accepted=True
+        ).exists()
+    
+    def get_trust_model(self, obj):
+        # check for trust model in AP
+        ap = AttestationProvider.objects.filter(organization=obj).first()
+        if ap and ap.yivi_tme and ap.yivi_tme.trust_model:
+            return ap.yivi_tme.trust_model.name
+        
+        # check for trust model in RP
+        rp = RelyingParty.objects.filter(organization=obj).first()
+        if rp and rp.yivi_tme and rp.yivi_tme.trust_model:
+            return rp.yivi_tme.trust_model.name
+        
+        return None
 
 class TrustModelSerializer(serializers.ModelSerializer):
     class Meta:
