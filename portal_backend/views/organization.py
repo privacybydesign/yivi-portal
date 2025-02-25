@@ -45,7 +45,7 @@ class OrganizationDetailAPIView(APIView):
         responses={200: "Success"}
     )
     def get(self, request, pk):
-        """Get organization by id"""
+        """Get organization by uuid"""
         org = Organization.objects.get(pk=pk)
         serializer = OrganizationSerializer(org)
         return Response(serializer.data)

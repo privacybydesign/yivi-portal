@@ -12,7 +12,7 @@ class OrganizationSerializer(serializers.ModelSerializer):
             'registration_number', 'address', 'is_verified',
             'verified_at', 'trade_names', 'logo', 'created_at', 'last_updated_at',
             'is_RP', 'is_AP', 'trust_model']
-        read_only_fields = ('is_verified')
+        read_only_fields = ['is_verified']
 
     def get_is_RP(self, obj):
         return RelyingParty.objects.filter(
@@ -42,7 +42,7 @@ class OrganizationSerializer(serializers.ModelSerializer):
 class TrustModelSerializer(serializers.ModelSerializer):
     class Meta:
         model = TrustModel
-        fields = '__all__'
+        fields = ['id', 'name', 'description', 'eudi_compliant'] #TODO add environment
 
 class YiviTrustModelSerializer(serializers.ModelSerializer):
     class Meta:
@@ -65,6 +65,9 @@ class CondisconSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class AttestationProviderSerializer(serializers.ModelSerializer):
+    yivi_tme = serializers.CharField(source='yivi_tme.environment' , read_only=True)
+    organization = serializers.CharField(source='organization.name_en', read_only=True)
+    status = serializers.BooleanField(source='status.reviewed_accepted', read_only=True)
     class Meta:
         model = AttestationProvider
         fields = '__all__'
@@ -85,6 +88,11 @@ class CondisconAttributeSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class RelyingPartySerializer(serializers.ModelSerializer):
+    yivi_tme = serializers.CharField(source='yivi_tme.environment' , read_only=True)
+    organization = serializers.CharField(source='organization.name_en', read_only=True)
+    status = serializers.BooleanField(source='status.reviewed_accepted', read_only=True)
+    hostname = serializers.CharField(source='hostname.hostname', read_only=True)
+    condiscon = serializers.JSONField(source='condiscon.condiscon', read_only=True)
     class Meta:
         model = RelyingParty
         fields = '__all__'
