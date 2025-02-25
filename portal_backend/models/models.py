@@ -159,7 +159,7 @@ class User(models.Model):
         ('admin', 'Admin'),
         ('maintainer', 'Maintainer'),
     ]
-    
+    email = models.EmailField(max_length=255, unique=True , null=False)
     organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='users')
     role = models.CharField(max_length=20, choices=ROLE_CHOICES)
 
