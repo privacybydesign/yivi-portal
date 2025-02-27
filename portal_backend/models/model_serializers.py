@@ -42,14 +42,14 @@ class OrganizationSerializer(serializers.ModelSerializer):
 class TrustModelSerializer(serializers.ModelSerializer):
     class Meta:
         model = TrustModel
-        fields = ['id', 'name', 'description', 'eudi_compliant'] #TODO add environment
+        fields = ['id', 'name', 'description', 'eudi_compliant']
 
 class YiviTrustModelSerializer(serializers.ModelSerializer):
     class Meta:
         model = YiviTrustModelEnv
         fields = '__all__'
 
-class ApplicationStatus(serializers.ModelSerializer):
+class ApplicationStatusSerializer(serializers.ModelSerializer):
     class Meta:
         model = ApplicationStatus
         fields = '__all__'
