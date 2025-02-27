@@ -132,7 +132,7 @@ class CredentialAttribute(models.Model):
         return f"{self.credential.name_en} - {self.name}"
 
 class CondisconAttribute(models.Model):
-    credential = models.ForeignKey(Credential, on_delete=models.CASCADE)
+    credential_attribute = models.ForeignKey(CredentialAttribute, on_delete=models.CASCADE, related_name='condiscon_attributes')
     condiscon = models.ForeignKey(Condiscon, on_delete=models.CASCADE)
     reason_en = models.TextField()
     reason_nl = models.TextField()
