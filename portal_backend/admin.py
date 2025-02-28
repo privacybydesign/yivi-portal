@@ -1,8 +1,9 @@
 from django.contrib import admin
 from portal_backend.models.models import (
-    Organization, TrustModel, YiviTrustModelEnv, ApplicationStatus,
+    Organization, TrustModel, YiviTrustModelEnv, Status,
     RelyingPartyHostname, Condiscon, AttestationProvider, Credential,
-    CredentialAttribute, CondisconAttribute, RelyingParty, User
+    CredentialAttribute, CondisconAttribute, RelyingParty, User,
+    StatusRP, StatusAP
 )
 
 # Organization Admin
@@ -28,9 +29,9 @@ class YiviTrustModelEnvAdmin(admin.ModelAdmin):
     search_fields = ('trust_model__name', 'environment', 'timestamp_server')
     list_filter = ('environment',)
 
-# ApplicationStatus Admin
-@admin.register(ApplicationStatus)
-class ApplicationStatusAdmin(admin.ModelAdmin):
+# Status Admin
+@admin.register(Status)
+class StatusAdmin(admin.ModelAdmin):
     list_display = ('id', 'ready', 'reviewed_accepted', 'published_at')
     list_filter = ('ready', 'reviewed_accepted', 'published_at')
     readonly_fields = ('created_at', 'last_updated_at')
@@ -51,15 +52,15 @@ class CondisconAdmin(admin.ModelAdmin):
 # AttestationProvider Admin
 @admin.register(AttestationProvider)
 class AttestationProviderAdmin(admin.ModelAdmin):
-    list_display = ('organization', 'yivi_tme', 'status', 'version')
+    list_display = ('organization', 'yivi_tme', 'version')
     search_fields = ('organization__name_en', 'version')
-    list_filter = ('status',)
+    list_filter = ('yivi_tme',)
 
 # Inline model for Credential Attributes
 class CredentialAttributeInline(admin.TabularInline):
     model = CredentialAttribute
     extra = 1  
-    
+
 # Credential Admin
 @admin.register(Credential)
 class CredentialAdmin(admin.ModelAdmin):
@@ -67,16 +68,35 @@ class CredentialAdmin(admin.ModelAdmin):
     search_fields = ('name_en', 'credential_tag')
     inlines = [CredentialAttributeInline] 
 
+# CondisconAttribute Admin 
+@admin.register(CondisconAttribute)
+class CondisconAttributeAdmin(admin.ModelAdmin):
+    list_display = ('credential_attribute', 'condiscon', 'reason_en', 'reason_nl')
+    search_fields = ('credential_attribute__name', 'reason_en', 'reason_nl')
+    list_filter = ('condiscon',)
+
 # Relying Party Admin
 @admin.register(RelyingParty)
 class RelyingPartyAdmin(admin.ModelAdmin):
-    list_display = ('organization', 'yivi_tme', 'hostname', 'condiscon')
+    list_display = ('organization', 'yivi_tme')
     search_fields = ('organization__name_en', 'hostname__hostname')
     list_filter = ('yivi_tme',)
 
-# User Admin
+# User Admin 
 @admin.register(User)
 class UserAdmin(admin.ModelAdmin):
-    list_display = ('organization', 'role')
-    search_fields = ('organization__name_en', 'role')
+    list_display = ('email', 'organization', 'role')
+    search_fields = ('email', 'organization__name_en', 'role')
     list_filter = ('role',)
+
+# StatusRP Admin 
+@admin.register(StatusRP)
+class StatusRPAdmin(admin.ModelAdmin):
+    list_display = ('relying_party', 'status')
+    search_fields = ('relying_party__organization__name_en', 'status__id')
+
+# StatusAP Admin 
+@admin.register(StatusAP)
+class StatusAPAdmin(admin.ModelAdmin):
+    list_display = ('attestation_provider', 'status')
+    search_fields = ('attestation_provider__organization__name_en', 'status__id')

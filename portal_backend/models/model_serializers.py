@@ -49,9 +49,9 @@ class YiviTrustModelSerializer(serializers.ModelSerializer):
         model = YiviTrustModelEnv
         fields = '__all__'
 
-class ApplicationStatusSerializer(serializers.ModelSerializer):
+class StatusSerializer(serializers.ModelSerializer):
     class Meta:
-        model = ApplicationStatus
+        model = Status
         fields = '__all__'
 
 class RelyingPartyHostnameSerializer(serializers.ModelSerializer):

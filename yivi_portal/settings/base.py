@@ -23,7 +23,9 @@ SIMPLE_JWT = {
     'ROTATE_REFRESH_TOKENS': True,
     'BLACKLIST_AFTER_ROTATION': True,
     "SIGNING_KEY": "test",
-    "USER_ID_FIELD": "username",  # Prevent user_id from being used
+    "USER_ID_FIELD": "email",
+    "USER_ID_CLAIM": "email",
+  # Prevent user_id from being used
 }
 
 INSTALLED_APPS = [

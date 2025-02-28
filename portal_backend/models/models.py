@@ -49,11 +49,11 @@ class YiviTrustModelEnv(models.Model):
 
     def __str__(self):
         return f"{self.trust_model.name} - {self.environment}"
-
-class ApplicationStatus(models.Model):
+    
+class Status(models.Model):
     class Meta:
-        verbose_name = 'Application status'
-        verbose_name_plural = 'Application statuses'
+        verbose_name = 'Status'
+        verbose_name_plural = 'Statuses'
     created_at = models.DateTimeField(auto_now_add=True)
     last_updated_at = models.DateTimeField(auto_now=True)
     ready = models.BooleanField(default=False)
@@ -66,41 +66,9 @@ class ApplicationStatus(models.Model):
     def __str__(self):
         return f"Status {self.id} - Ready: {self.ready}"
 
-class RelyingPartyHostname(models.Model):
-    DOMAIN_REGEX = r'^(?!-)[A-Za-z0-9-]{1,63}(?<!-)(\.[A-Za-z]{2,6})+$'
-    hostname = models.CharField(
-        max_length=255,
-        unique=True,
-        validators=[RegexValidator(
-            regex=DOMAIN_REGEX,
-            message="Enter a valid domain (e.g., example.com).",
-            code="invalid_domain"
-        )]
-    )
-    dns_challenge = models.CharField(max_length=255)
-    dns_challenge_created_at = models.DateTimeField()
-    dns_challenge_verified = models.BooleanField(default=False)
-    dns_challenge_verified_at = models.DateTimeField(null=True, blank=True)
-    dns_challenge_invalidated_at = models.DateTimeField(null=True, blank=True)
-    manually_verified = models.BooleanField(default=False)
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return self.hostname
-
-class Condiscon(models.Model):
-    condiscon = models.JSONField()
-    context_description_en = models.CharField(max_length=255)
-    context_description_nl = models.CharField(max_length=255)
-
-    def __str__(self):
-        return str(self.condiscon)
-
-
 class AttestationProvider(models.Model):
     yivi_tme = models.ForeignKey(YiviTrustModelEnv, on_delete=models.CASCADE, related_name='attestation_providers')
     organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='attestation_providers')
-    status = models.ForeignKey(ApplicationStatus, on_delete=models.CASCADE)
     version = models.CharField(max_length=50)
     shortname_en = models.CharField(max_length=100)
     shortname_nl = models.CharField(max_length=100)
@@ -108,7 +76,7 @@ class AttestationProvider(models.Model):
     base_url = models.URLField()
 
     def __str__(self):
-        return self.organization.name_en
+        return self.organization.name_en    
 
 class Credential(models.Model):
     attestation_provider = models.ForeignKey(AttestationProvider, on_delete=models.CASCADE, related_name='credentials')
@@ -131,29 +99,58 @@ class CredentialAttribute(models.Model):
     def __str__(self):
         return f"{self.credential.name_en} - {self.name}"
 
-class CondisconAttribute(models.Model):
-    credential_attribute = models.ForeignKey(CredentialAttribute, on_delete=models.CASCADE, related_name='condiscon_attributes')
-    condiscon = models.ForeignKey(Condiscon, on_delete=models.CASCADE)
-    reason_en = models.TextField()
-    reason_nl = models.TextField()
-
-
-    def __str__(self):
-        return f"{self.credential.name_en} - {self.reason_en}"
-
 class RelyingParty(models.Model):
     class Meta:
         verbose_name = 'Relying Party'
         verbose_name_plural = 'Relying Parties'
     yivi_tme = models.ForeignKey(YiviTrustModelEnv, on_delete=models.CASCADE, related_name='relying_parties')
-    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='relying_parties')
-    status = models.ForeignKey(ApplicationStatus, on_delete=models.CASCADE)
-    hostname = models.ForeignKey(RelyingPartyHostname, on_delete=models.CASCADE)
-    condiscon = models.ForeignKey(Condiscon, on_delete=models.CASCADE)
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='relying_parties')    
 
     def __str__(self):
         return f"{self.organization.name_en}"
+    
+class RelyingPartyHostname(models.Model):
+    DOMAIN_REGEX = r'^(?!-)[A-Za-z0-9-]{1,63}(?<!-)(\.[A-Za-z]{2,6})+$'
+    hostname = models.CharField(
+        max_length=255,
+        unique=True,
+        validators=[RegexValidator(
+            regex=DOMAIN_REGEX,
+            message="Enter a valid domain (e.g., example.com).",
+            code="invalid_domain"
+        )]
+    )
+    dns_challenge = models.CharField(max_length=255)
+    dns_challenge_created_at = models.DateTimeField()
+    dns_challenge_verified = models.BooleanField(default=False)
+    dns_challenge_verified_at = models.DateTimeField(null=True, blank=True)
+    dns_challenge_invalidated_at = models.DateTimeField(null=True, blank=True)
+    manually_verified = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    relying_party = models.ForeignKey(RelyingParty, on_delete=models.CASCADE, related_name='hostnames')
 
+    def __str__(self):
+        return self.hostname
+
+class Condiscon(models.Model):
+    condiscon = models.JSONField()
+    context_description_en = models.CharField(max_length=255)
+    context_description_nl = models.CharField(max_length=255)
+    relying_party = models.ForeignKey(RelyingParty, on_delete=models.CASCADE, related_name='condiscons')
+
+
+    def __str__(self):
+        return str(self.condiscon)
+    
+class CondisconAttribute(models.Model):
+    credential_attribute = models.ForeignKey(CredentialAttribute, on_delete=models.CASCADE, related_name='condiscon_attributes')
+    condiscon = models.ForeignKey(Condiscon, on_delete=models.CASCADE)
+    reason_en = models.TextField()
+    reason_nl = models.TextField()
+    
+    def __str__(self):
+        return f"{self.credential_attribute.credential.name_en} - {self.reason_en}"
+    
 class User(models.Model):
     ROLE_CHOICES = [
         ('admin', 'Admin'),
@@ -169,3 +166,19 @@ class User(models.Model):
 
     def __str__(self):
         return f"{self.organization.name_en} - {self.role}"
+    
+class StatusRP(models.Model):
+    class Meta:
+        verbose_name = 'Relying Party status'
+        verbose_name_plural = 'Relying Parties statuses'
+
+    relying_party = models.ForeignKey(RelyingParty,on_delete=models.CASCADE,related_name='status_rp')
+    status = models.ForeignKey(Status,on_delete=models.CASCADE,related_name='status_rp')
+
+class StatusAP(models.Model):
+    class Meta:
+        verbose_name = 'Attestation Provider status'
+        verbose_name_plural = 'Attestation Providers statuses'
+
+    attestation_provider = models.ForeignKey(AttestationProvider,on_delete=models.CASCADE,related_name='status_ap')
+    status = models.ForeignKey(Status,on_delete=models.CASCADE,related_name='status_ap')
