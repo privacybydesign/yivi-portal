@@ -14,42 +14,15 @@ import Link from "next/link";
 import Image from "next/image";
 import axiosInstance from "@/lib/axiosInstance";
 import { useEffect, useState } from "react";
-import { Organization } from "@/store";
-
-const organizations = [
-  {
-    id: "nijmegen",
-    name: "Gemeente Nijmegen",
-    logo: "/logos/nijmegen.jpg",
-    domain: "nijmegen.nl",
-    issuer: { status: "Active", color: "green" },
-    verifier: { status: "Inactive", color: "red" },
-  },
-  {
-    id: "pubhubs",
-    name: "PubHubs",
-    domain: "pubhubs.net",
-    logo: "/logos/pubhubs.png",
-    issuer: { status: "Inactive", color: "red" },
-    verifier: { status: "Active", color: "green" },
-  },
-  {
-    id: "minvws",
-    name: "Ministerie van Volksgezondheid Welzijn en Sport",
-    domain: "orgc.org",
-    logo: "/logos/minvws.jpg",
-    issuer: { status: "Pending", color: "yellow" },
-    verifier: { status: "Active", color: "green" },
-  },
-];
+import { Organization, PaninatedResult } from "@/store";
 
 export default function Organizations() {
   const [organizations, setOrganizations] = useState<Organization[]>([]);
 
   useEffect(() => {
-    axiosInstance.get('v1/organizations') // Replace with your API endpoint
+    axiosInstance.get<PaninatedResult<Organization>>('v1/organizations') // Replace with your API endpoint
       .then(response => {
-        setOrganizations(response.data);
+        setOrganizations(response.data.results);
       })
       .catch(error => {
         console.error('Error fetching data:', error);
@@ -66,31 +39,34 @@ export default function Organizations() {
             <TableHead>Logo</TableHead>
             <TableHead>Name</TableHead>
             <TableHead>Domain</TableHead>
-            <TableHead>Issuer</TableHead>
-            <TableHead>Verifier</TableHead>
+            <TableHead>Attestation Provider</TableHead>
+            <TableHead>Relying Party</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {organizations.map((org, index) => (
+          {organizations && organizations.map((org, index) => (
             <TableRow key={index}>
               <TableCell>
-                <Image src={org.logo} alt={`${org.name} logo`} width={30} height={30}></Image>
+                {org.logo &&  <Image src={`http://localhost:8000${org.logo}`} alt={`${org.name_en} logo`} width={30} height={30}></Image> }
               </TableCell>
               <TableCell className="font-medium">
                 <Link href={`/organizations/${org.id}`} className="hover:text-blue-600">
-                  {org.name}
+                  {org.name_en}
                 </Link>
               </TableCell>
-              <TableCell>{org.domain}</TableCell>
+              <TableCell>{org.slug}</TableCell>
               <TableCell>
-                <Badge className={`text-white`}>
-                  {org.status}
+                {org.is_AP && <Badge className={`text-white`}>
+                  Attestion Provider
                 </Badge>
+                }
               </TableCell>
               <TableCell>
-                <Badge className={`text-white`}>
-                  {org.status}
-                </Badge>
+                {org.is_RP &&
+                  <Badge className={`text-white`}>
+                    Relying Party
+                  </Badge>
+                }
               </TableCell>
             </TableRow>
           ))}

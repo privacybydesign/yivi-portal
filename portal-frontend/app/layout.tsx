@@ -40,7 +40,7 @@ export default function RootLayout({
 
             <div className="flex-1 pl-4">
               <Link href="/" className="text-xl">
-                Portal {email}
+                Portal
               </Link>
             </div>
 
