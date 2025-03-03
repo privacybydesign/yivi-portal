@@ -47,7 +47,7 @@ export default function Organizations() {
           {organizations && organizations.map((org, index) => (
             <TableRow key={index}>
               <TableCell>
-                {org.logo &&  <Image src={`http://localhost:8000${org.logo}`} alt={`${org.name_en} logo`} width={30} height={30}></Image> }
+                {org.logo && <Image src={`http://localhost:8000${org.logo}`} alt={`${org.name_en} logo`} width={30} height={30}></Image> }
               </TableCell>
               <TableCell className="font-medium">
                 <Link href={`/organizations/${org.id}`} className="hover:text-blue-600">

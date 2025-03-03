@@ -1,7 +1,8 @@
 "use client";
 
 import { useParams } from 'next/navigation';
-import { Organization, PaninatedResult} from "@/store";
+import { Organization } from "@/store";
+import Image from "next/image";
 import axiosInstance from '@/lib/axiosInstance';
 import { useState, useEffect } from 'react';
 
@@ -39,7 +40,7 @@ export default function OrganizationPage() {
             <p><strong>Is Verified:</strong> {organization.is_verified ? 'Yes' : 'No'}</p>
             <p><strong>Verified At:</strong> {organization.verified_at}</p>
             <p><strong>Trade Names:</strong> {organization.trade_names.join(', ')}</p>
-            <p><strong>Logo:</strong> <img src={organization.logo} alt={`${organization.name_en} logo`} /></p>
+            <p><strong>Logo:</strong> {organization.logo && <Image src={`http://localhost:8000${organization.logo}`} alt={`${organization.name_en} logo`} width={30} height={30}></Image> }</p>
             <p><strong>Created At:</strong> {organization.created_at}</p>
             <p><strong>Last Updated At:</strong> {organization.last_updated_at}</p>
             <p><strong>Is RP:</strong> {organization.is_RP ? 'Yes' : 'No'}</p>
