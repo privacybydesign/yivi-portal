@@ -17,14 +17,15 @@ class OrganizationSerializer(serializers.ModelSerializer):
     def get_is_RP(self, obj):
         return RelyingParty.objects.filter(
             organization=obj,
-            status__reviewed_accepted=True
+            status_rp__status__reviewed_accepted=True  
         ).exists()
-    
+
     def get_is_AP(self, obj):
         return AttestationProvider.objects.filter(
             organization=obj,
-            status__reviewed_accepted=True
+            status_ap__status__reviewed_accepted=True  # Follow the relation chain properly
         ).exists()
+
     
     def get_trust_model(self, obj):
         # check for trust model in AP
