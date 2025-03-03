@@ -38,8 +38,9 @@ class RelyingPartyRegisterAPIView(APIView):
         }
         
         credential_attributes = {}
+        
         for attr in attributes_data:
-            credential_attribute = CredentialAttribute.objects.get(id=attr['credential_attribute_id'])
+            credential_attribute = CredentialAttribute.objects.get(credential__credential_tag=attr['credential_attribute_tag'], name=attr['credential_attribute_name'])
             credential_id = credential_attribute.credential.id
             
             if credential_id not in credential_attributes:
@@ -107,7 +108,8 @@ class RelyingPartyRegisterAPIView(APIView):
             for attr_data in attributes_data:
                 credential_attribute = get_object_or_404(
                     CredentialAttribute, 
-                    id=attr_data['credential_attribute_id']
+                    credential__credential_tag=attr_data['credential_attribute_tag'],
+                    name=attr_data['credential_attribute_name']
                 )
 
                 condiscon_attr = CondisconAttribute(
@@ -172,22 +174,18 @@ class RelyingPartyRegisterAPIView(APIView):
     def post(self, request, pk):
         """Registers a new relying party, given the user is authenticated and is the maintainer of the org with same pk as in the URL"""
 
-        # Validate user first (keep this outside to stop early if not authorized)
         validation_response = self.validate_user(request, pk)
-        if validation_response is not None:  # If validate_user returned a Response, return it
+        if validation_response is not None:  
             return validation_response
 
-        # Create relying party and related objects
         relying_party = self.save_rp(request, pk)
         hostname = self.save_hostname(request, relying_party)
 
         attributes_data = request.data.get("attributes", [])
 
-        # Create the condiscon for the relying party
         condiscon = self.save_condiscon(request, attributes_data, relying_party)
         self.save_condiscon_attributes(condiscon, attributes_data)
 
-        # Create status object and link it to the relying party
         rp_status = self.assign_status(relying_party)
 
         return Response({

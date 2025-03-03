@@ -97,7 +97,7 @@ class CredentialAttribute(models.Model):
         unique_together = ('credential', 'name')
 
     def __str__(self):
-        return f"{self.credential.name_en} - {self.name}"
+        return self.name
 
 class RelyingParty(models.Model):
     class Meta:
