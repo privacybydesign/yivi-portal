@@ -2,8 +2,7 @@ from django.contrib import admin
 from portal_backend.models.models import (
     Organization, TrustModel, YiviTrustModelEnv, Status,
     RelyingPartyHostname, Condiscon, AttestationProvider, Credential,
-    CredentialAttribute, CondisconAttribute, RelyingParty, User,
-    StatusRP, StatusAP
+    CredentialAttribute, CondisconAttribute, RelyingParty, User
 )
 
 # Organization Admin
@@ -32,7 +31,7 @@ class YiviTrustModelEnvAdmin(admin.ModelAdmin):
 # Status Admin
 @admin.register(Status)
 class StatusAdmin(admin.ModelAdmin):
-    list_display = ('id', 'ready', 'reviewed_accepted', 'published_at')
+    list_display = ('id', 'ready', 'reviewed_accepted', 'published_at', 'relying_party', 'attestation_provider','created_at', 'last_updated_at')
     list_filter = ('ready', 'reviewed_accepted', 'published_at')
     readonly_fields = ('created_at', 'last_updated_at')
 
@@ -71,9 +70,10 @@ class CredentialAdmin(admin.ModelAdmin):
 # CondisconAttribute Admin 
 @admin.register(CondisconAttribute)
 class CondisconAttributeAdmin(admin.ModelAdmin):
-    list_display = ('credential_attribute', 'condiscon', 'reason_en', 'reason_nl')
+    list_display = ('credential_attribute', 'condiscon_id', 'reason_en', 'reason_nl')
     search_fields = ('credential_attribute__name', 'reason_en', 'reason_nl')
     list_filter = ('condiscon',)
+    exclude = ('credential_attribute',)
 
 # Relying Party Admin
 @admin.register(RelyingParty)
@@ -89,14 +89,3 @@ class UserAdmin(admin.ModelAdmin):
     search_fields = ('email', 'organization__name_en', 'role')
     list_filter = ('role',)
 
-# StatusRP Admin 
-@admin.register(StatusRP)
-class StatusRPAdmin(admin.ModelAdmin):
-    list_display = ('relying_party', 'status')
-    search_fields = ('relying_party__organization__name_en', 'status__id')
-
-# StatusAP Admin 
-@admin.register(StatusAP)
-class StatusAPAdmin(admin.ModelAdmin):
-    list_display = ('attestation_provider', 'status')
-    search_fields = ('attestation_provider__organization__name_en', 'status__id')
