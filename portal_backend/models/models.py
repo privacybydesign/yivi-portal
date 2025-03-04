@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models import CheckConstraint, Q
 from django.core.validators import URLValidator, RegexValidator
 import uuid
 
@@ -50,22 +51,6 @@ class YiviTrustModelEnv(models.Model):
     def __str__(self):
         return f"{self.trust_model.name} - {self.environment}"
     
-class Status(models.Model):
-    class Meta:
-        verbose_name = 'Status'
-        verbose_name_plural = 'Statuses'
-    created_at = models.DateTimeField(auto_now_add=True)
-    last_updated_at = models.DateTimeField(auto_now=True)
-    ready = models.BooleanField(default=False)
-    ready_at = models.DateTimeField(null=True, blank=True)
-    reviewed_accepted = models.BooleanField(default=False)
-    reviewed_at = models.DateTimeField(null=True, blank=True)
-    rejection_remarks = models.TextField(blank=True)
-    published_at = models.DateTimeField(null=True, blank=True)
-
-    def __str__(self):
-        return f"Status {self.id} - Ready: {self.ready}"
-
 class AttestationProvider(models.Model):
     yivi_tme = models.ForeignKey(YiviTrustModelEnv, on_delete=models.CASCADE, related_name='attestation_providers')
     organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='attestation_providers')
@@ -77,6 +62,41 @@ class AttestationProvider(models.Model):
 
     def __str__(self):
         return self.organization.name_en    
+
+class RelyingParty(models.Model):
+    class Meta:
+        verbose_name = 'Relying Party'
+        verbose_name_plural = 'Relying Parties'
+    yivi_tme = models.ForeignKey(YiviTrustModelEnv, on_delete=models.CASCADE, related_name='relying_parties')
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='relying_parties')    
+
+    def __str__(self):
+        return f"{self.organization.name_en}"
+    
+class Status(models.Model):
+    class Meta:
+        verbose_name = 'Status'
+        verbose_name_plural = 'Statuses'
+        constraints = [
+        CheckConstraint(     check=Q(relying_party__isnull=False, attestation_provider__isnull=True) | 
+                                   Q(relying_party__isnull=True, attestation_provider__isnull=False),
+                            name='either_rp_or_ap',)
+        ]
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    last_updated_at = models.DateTimeField(auto_now=True)
+    ready = models.BooleanField(default=False)
+    ready_at = models.DateTimeField(null=True, blank=True)
+    reviewed_accepted = models.BooleanField(default=False)
+    reviewed_at = models.DateTimeField(null=True, blank=True)
+    rejection_remarks = models.TextField(blank=True)
+    published_at = models.DateTimeField(null=True, blank=True)
+    relying_party = models.OneToOneField(RelyingParty, on_delete=models.CASCADE, related_name='status', null=True, blank=True)
+    attestation_provider = models.OneToOneField(AttestationProvider, on_delete=models.CASCADE, related_name='status', null=True, blank=True)
+
+    def __str__(self):
+        return f"Status {self.id} - Ready: {self.ready}"
+
 
 class Credential(models.Model):
     attestation_provider = models.ForeignKey(AttestationProvider, on_delete=models.CASCADE, related_name='credentials')
@@ -98,16 +118,6 @@ class CredentialAttribute(models.Model):
 
     def __str__(self):
         return self.name
-
-class RelyingParty(models.Model):
-    class Meta:
-        verbose_name = 'Relying Party'
-        verbose_name_plural = 'Relying Parties'
-    yivi_tme = models.ForeignKey(YiviTrustModelEnv, on_delete=models.CASCADE, related_name='relying_parties')
-    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='relying_parties')    
-
-    def __str__(self):
-        return f"{self.organization.name_en}"
     
 class RelyingPartyHostname(models.Model):
     DOMAIN_REGEX = r'^(?!-)[A-Za-z0-9-]{1,63}(?<!-)(\.[A-Za-z]{2,6})+$'
@@ -149,7 +159,7 @@ class CondisconAttribute(models.Model):
     reason_nl = models.TextField()
     
     def __str__(self):
-        return f"{self.credential_attribute.credential.name_en} - {self.reason_en}"
+        return f"{self.credential_attribute.credential.name_en}"
     
 class User(models.Model):
     ROLE_CHOICES = [
@@ -167,18 +177,3 @@ class User(models.Model):
     def __str__(self):
         return f"{self.organization.name_en} - {self.role}"
     
-class StatusRP(models.Model):
-    class Meta:
-        verbose_name = 'Relying Party status'
-        verbose_name_plural = 'Relying Parties statuses'
-
-    relying_party = models.ForeignKey(RelyingParty,on_delete=models.CASCADE,related_name='status_rp')
-    status = models.ForeignKey(Status,on_delete=models.CASCADE,related_name='status_rp')
-
-class StatusAP(models.Model):
-    class Meta:
-        verbose_name = 'Attestation Provider status'
-        verbose_name_plural = 'Attestation Providers statuses'
-
-    attestation_provider = models.ForeignKey(AttestationProvider,on_delete=models.CASCADE,related_name='status_ap')
-    status = models.ForeignKey(Status,on_delete=models.CASCADE,related_name='status_ap')
