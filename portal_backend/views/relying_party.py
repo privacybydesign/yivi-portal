@@ -9,7 +9,8 @@ from ..models.model_serializers import *
 from rest_framework import permissions
 from django.utils import timezone
 from django.db import transaction
-
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 
 
 class RelyingPartyListAPIView(APIView):
@@ -52,6 +53,7 @@ class RelyingPartyRegisterAPIView(APIView):
             condiscon_json['disclose'][0].append(attribute_list)
         
         return condiscon_json
+
     
     def save_rp(self, request, org_pk):
             yivi_tme = get_object_or_404(YiviTrustModelEnv, environment=request.data.get("trust_model_env"))
@@ -63,17 +65,15 @@ class RelyingPartyRegisterAPIView(APIView):
             relying_party.full_clean()
             relying_party.save()
             return relying_party
-
-    def assign_status(self, relying_party):
-
-        with transaction.atomic():
+    
+    @receiver(post_save, sender=RelyingParty)
+    def assign_status(sender, instance, created, **kwargs):
+        if created:
             rp_status = Status.objects.create(
-            relying_party=relying_party,
+            relying_party=instance,
             attestation_provider=None,
-            ready=False,
             )
-
-        return rp_status
+            return rp_status
 
     def save_hostname(self, request , rp):
         hostname_text = request.data.get("hostname")
@@ -182,13 +182,11 @@ class RelyingPartyRegisterAPIView(APIView):
 
         relying_party = self.save_rp(request, pk)
         hostname = self.save_hostname(request, relying_party)
-
         attributes_data = request.data.get("attributes", [])
-
         condiscon = self.save_condiscon(request, attributes_data, relying_party)
         self.save_condiscon_attributes(condiscon, attributes_data)
+        rp_status = Status.objects.get(relying_party=relying_party)
 
-        rp_status = self.assign_status(relying_party)
 
         return Response({
             "id": str(relying_party.id),

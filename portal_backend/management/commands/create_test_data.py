@@ -3,7 +3,7 @@ from django.utils import timezone
 import uuid
 from portal_backend.models.models import (
     User, Organization, TrustModel, YiviTrustModelEnv, 
-    Status, StatusAP, AttestationProvider, Credential, CredentialAttribute
+    Status, AttestationProvider, Credential, CredentialAttribute
 )
 
 class Command(BaseCommand):
@@ -67,11 +67,6 @@ class Command(BaseCommand):
         )
         self.stdout.write(self.style.SUCCESS(f'Created user: {user.email}'))
 
-        # Create status for test provider
-        status = Status.objects.create(
-            ready=True,
-            reviewed_accepted=True
-        )
 
         # Create test attestation provider
         provider, _ = AttestationProvider.objects.get_or_create(
@@ -86,11 +81,6 @@ class Command(BaseCommand):
             }
         )
         
-        # Create status association for attestation provider
-        StatusAP.objects.get_or_create(
-            attestation_provider=provider,
-            status=status
-        )
         
         self.stdout.write(self.style.SUCCESS(f'Created attestation provider: {provider}'))
 
