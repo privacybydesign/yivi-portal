@@ -65,13 +65,14 @@ class RelyingPartyRegisterAPIView(APIView):
             return relying_party
 
     def assign_status(self, relying_party):
-        rp_status = Status.objects.create(
-        ready=False,
-        reviewed_accepted=False)
-        StatusRP.objects.create(
-        relying_party=relying_party,
-        status=rp_status
-        )
+
+        with transaction.atomic():
+            rp_status = Status.objects.create(
+            relying_party=relying_party,
+            attestation_provider=None,
+            ready=False,
+            )
+
         return rp_status
 
     def save_hostname(self, request , rp):
@@ -123,6 +124,7 @@ class RelyingPartyRegisterAPIView(APIView):
 
     def validate_user(self,request,org_pk):
         email_in_token = request.user.email
+        print(email_in_token)
         user_obj = get_object_or_404(User, email=email_in_token)
         user_org_id = user_obj.organization.id
 
