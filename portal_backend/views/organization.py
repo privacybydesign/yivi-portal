@@ -2,8 +2,6 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
-# from models.model_serializers import OrganizationSerializer
-# from models.models import Organization
 from ..models.model_serializers import OrganizationSerializer
 from ..models.models import Organization
 from rest_framework import permissions
@@ -44,7 +42,7 @@ class OrganizationDetailAPIView(APIView):
     @swagger_auto_schema(
         responses={200: "Success"}
     )
-    def get(self, request, pk):
+    def get(self, pk):
         """Get organization by uuid"""
         org = Organization.objects.get(pk=pk)
         serializer = OrganizationSerializer(org)

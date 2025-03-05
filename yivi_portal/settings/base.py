@@ -114,11 +114,10 @@ USE_TZ = True
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-# CRON_CLASSES = [
-#     "portal_backend.crons.NewDNSVerification",
-#     "portal_backend.crons.ExistingDNSVerification",
-#     "portal_backend.crons.FetchPublishedSchemes",
-# ]
+CRON_CLASSES = [
+    "portal_backend.crons.NewDNSVerification",
+    "portal_backend.crons.ExistingDNSVerification",
+]
 
 DJANGO_CRON_DELETE_LOGS_OLDER_THAN = 7
 

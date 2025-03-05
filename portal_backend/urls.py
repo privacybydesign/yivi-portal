@@ -34,4 +34,5 @@ urlpatterns = [
     path("v1/trust-models/yivi/<str:environment>/attestation-providers/", AttestationProviderListAPIView.as_view(), name="trust-model-list-with-environment"),
     path("v1/trust-models/yivi/<str:environment>/relying-parties/", RelyingPartyListAPIView.as_view(), name="trust-model-list-with-environment"),
     path("v1/organizations/<uuid:pk>/relying-party", RelyingPartyRegisterAPIView.as_view(), name="register-relying-party"),
-]
+    path("v1/relying-party/<str:slug>/hostname/status/", RelyingPartyHostnameStatusAPIView.as_view(), name="hostname-status"),
+   ]
