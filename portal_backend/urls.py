@@ -27,6 +27,7 @@ urlpatterns = [
     path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
     path("v1/organizations", OrganizationListAPIView.as_view(), name="organizations"),
     path("v1/organizations/<uuid:pk>", OrganizationDetailAPIView.as_view(), name="organization-detail"),
+    path("v1/organizations/<uuid:pk>/maintainers", OrganizationMaintainersAPIView.as_view(), name="organization-maintainers"),
     path("v1/trust-models", TrustModelListAPIView.as_view(), name="trust-models"),
     path("v1/trust-models/<str:name>/<str:environment>", TrustModelDetailAPIView.as_view(), name="trust-model-detail"),
     path("v1/trust-models/<str:name>/", TrustModelDetailAPIView.as_view(), name="trust-model-detail-with-environment"),

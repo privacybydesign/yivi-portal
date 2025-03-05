@@ -5,7 +5,10 @@ from rest_framework import status
 from ..models.model_serializers import OrganizationSerializer
 from ..models.models import Organization
 from rest_framework import permissions
+from ..models.models import User
+from .helpers import BelongsToOrganization, IsMaintainer
 from rest_framework.pagination import LimitOffsetPagination
+from drf_yasg import openapi
 from django.shortcuts import get_object_or_404
 
 
@@ -61,3 +64,112 @@ class OrganizationDetailAPIView(APIView):
             return Response({"Your Organization registration was updated.",serializer.data},status=status.HTTP_400_BAD_REQUEST)
         serializer.save()
         return Response(status=status.HTTP_200_OK)
+
+class OrganizationMaintainersAPIView(APIView):
+    permission_classes = [permissions.IsAuthenticated, BelongsToOrganization, IsMaintainer]
+
+    @swagger_auto_schema(
+        responses={200: "Success"}
+    )
+    def get(self, request, pk):
+        """Get all maintainers for an organization"""
+        organization = get_object_or_404(Organization, pk=pk)
+        maintainers = User.objects.filter(organization=organization)
+        
+        return Response({
+            "maintainers": [
+                {
+                    "email": user.email,
+                    "role": user.role
+                } for user in maintainers
+            ]
+        })
+
+    @swagger_auto_schema(
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            required=['email'],
+            properties={
+                'email': openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_EMAIL),
+            }
+        ),
+        responses={
+            201: "Created",
+            400: "Bad Request",
+            403: "Forbidden - Not enough permissions",
+            404: "Organization not found"
+        }
+    )
+    def post(self, request, pk):
+        """Add a maintainer to an organization"""
+        organization = get_object_or_404(Organization, pk=pk)
+            
+        email = request.data.get('email')
+        
+        if not email:
+            return Response(
+                {"error": "Email is required"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+            
+        existing_user = User.objects.filter(email=email, organization=organization).first()
+        if existing_user:
+            return Response(
+                {"error": f"User with email {email} is already a maintainer of this organization"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+            
+        User.objects.create(
+            email=email,
+            organization=organization,
+            role="maintainer"
+        )
+        
+        return Response(
+            {"message": f"User {email} added to organization as maintainer"},
+            status=status.HTTP_201_CREATED
+        )
+        
+    @swagger_auto_schema(
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            required=['email'],
+            properties={
+                'email': openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_EMAIL),
+            }
+        ),
+        responses={
+            200: "Success",
+            400: "Bad Request",
+            403: "Forbidden",
+            404: "Not Found"   
+        }
+    )
+    def delete(self, request, pk):
+        """Remove a maintainer from an organization"""
+        email = request.data.get('email')
+        
+        if not email:
+            return Response(
+                {"error": "Email is required"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        if email == request.user.email:
+                    return Response(
+                        {"error": "Cannot remove yourself from the organization"},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+        
+        organization = get_object_or_404(Organization, pk=pk)
+        deleted, _ = User.objects.filter(email=email, organization=organization).delete()
+        
+        if deleted:
+            return Response(
+                {"message": f"User {email} removed from organization"},
+                status=status.HTTP_200_OK
+            )
+        else:
+            return Response(
+                {"error": f"User with email {email} is not a maintainer of this organization"},
+                status=status.HTTP_404_NOT_FOUND
+            )
