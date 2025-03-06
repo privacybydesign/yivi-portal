@@ -1,3 +1,4 @@
+import logging
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from drf_yasg.utils import swagger_auto_schema
@@ -11,6 +12,7 @@ from rest_framework.pagination import LimitOffsetPagination
 from drf_yasg import openapi
 from django.shortcuts import get_object_or_404
 
+logger = logging.getLogger(__name__)
 
 class OrganizationListAPIView(APIView):
     permission_classes = [permissions.AllowAny]
@@ -18,6 +20,9 @@ class OrganizationListAPIView(APIView):
     @swagger_auto_schema(responses={200: "Success"})
     def get(self, request):
         """Get all registered organizations"""
+        
+        logger.info("Fetching all registered organizations")
+        
         orgs = Organization.objects.filter(is_verified=True)
         paginator = LimitOffsetPagination()  
         paginator.default_limit = 10  
@@ -32,21 +37,27 @@ class OrganizationListAPIView(APIView):
     )
     def post(self, request):
         """Creates an organization."""
+        
+        logger.info("Creating a new organization")
+        
         serializer = OrganizationSerializer(data=request.data)
         if not serializer.is_valid():
+            logger.warning("Invalid organization data: %s", serializer.errors)
             return Response(status=status.HTTP_400_BAD_REQUEST)
         organization = serializer.save()
+        logger.info("Organization created with ID: %s", organization.id)
         return Response({"id":organization.id},status=status.HTTP_201_CREATED)
     
 class OrganizationDetailAPIView(APIView):
     permission_classes = [permissions.AllowAny]
-
         
     @swagger_auto_schema(
         responses={200: "Success"}
     )
-    def get(self,request, pk):
+    def get(self, request, pk):
         """Get organization by uuid"""
+        logger.info("Fetching organization with ID: %s", pk)
+        
         org = Organization.objects.get(pk=pk)
         serializer = OrganizationSerializer(org)
         return Response(serializer.data)

@@ -33,11 +33,11 @@ class RelyingPartyListAPIView(APIView):
     @swagger_auto_schema(
         responses={200: "Success", 404: "Not Found"}
     )
-    def get(self, request, environment):
+    def get(self, request, name: str, environment: str):
         """Gets details of a specific attestation provider by ID."""
-        relying_party = RelyingParty.objects.get(yivi_tme__environment=environment)
+        relying_party = get_object_or_404(RelyingParty, yivi_tme__trust_model__name=name, yivi_tme__environment=environment)
         serializer = RelyingPartySerializer(relying_party)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(data=serializer, status=status.HTTP_200_OK)
 
 
 class RelyingPartyRegisterAPIView(APIView):

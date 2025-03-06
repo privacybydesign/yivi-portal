@@ -45,7 +45,7 @@ class TrustModelSerializer(serializers.ModelSerializer):
         model = TrustModel
         fields = ['id', 'name', 'description', 'eudi_compliant']
 
-class YiviTrustModelSerializer(serializers.ModelSerializer):
+class YiviTrustModelEnvSerializer(serializers.ModelSerializer):
     class Meta:
         model = YiviTrustModelEnv
         fields = '__all__'
