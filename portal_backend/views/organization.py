@@ -71,7 +71,7 @@ class OrganizationMaintainersAPIView(APIView):
     @swagger_auto_schema(
         responses={200: "Success"}
     )
-    def get(self, request, pk):
+    def get(self, pk):
         """Get all maintainers for an organization"""
         organization = get_object_or_404(Organization, pk=pk)
         maintainers = User.objects.filter(organization=organization)
@@ -80,7 +80,6 @@ class OrganizationMaintainersAPIView(APIView):
             "maintainers": [
                 {
                     "email": user.email,
-                    "role": user.role
                 } for user in maintainers
             ]
         })
