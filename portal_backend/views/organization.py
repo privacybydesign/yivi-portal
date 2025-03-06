@@ -45,7 +45,7 @@ class OrganizationDetailAPIView(APIView):
     @swagger_auto_schema(
         responses={200: "Success"}
     )
-    def get(self, pk):
+    def get(self,request, pk):
         """Get organization by uuid"""
         org = Organization.objects.get(pk=pk)
         serializer = OrganizationSerializer(org)
@@ -71,7 +71,7 @@ class OrganizationMaintainersAPIView(APIView):
     @swagger_auto_schema(
         responses={200: "Success"}
     )
-    def get(self, pk):
+    def get(self, request, pk):
         """Get all maintainers for an organization"""
         organization = get_object_or_404(Organization, pk=pk)
         maintainers = User.objects.filter(organization=organization)
