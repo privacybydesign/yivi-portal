@@ -16,7 +16,7 @@ from ..dns_verification import generate_dns_challenge
 from .helpers import IsMaintainer, BelongsToOrganization
 
 
-def check_existing_hostname(request, rp=None):
+def check_existing_hostname(request):
     request_hostname = request.data.get("hostname")
     
     if RelyingPartyHostname.objects.filter(hostname=request_hostname).exists():
@@ -80,15 +80,6 @@ class RelyingPartyRegisterAPIView(APIView):
             relying_party.full_clean()
             relying_party.save()
             return relying_party
-    
-    @receiver(post_save, sender=RelyingParty)
-    def assign_status(sender, instance, created, **kwargs):
-        if created:
-            rp_status = Status.objects.create(
-            relying_party=instance,
-            attestation_provider=None,
-            )
-            return rp_status
 
     def save_hostname(self, request, rp):
         hostname_text = request.data.get("hostname")
@@ -119,6 +110,13 @@ class RelyingPartyRegisterAPIView(APIView):
         condiscon.full_clean()
         condiscon.save()
         return condiscon
+    
+    def create_initial_status(self,rp):
+        status = Status(
+            relying_party=rp,
+        )
+        status.save()
+        return status
 
     def save_condiscon_attributes(self,condiscon, attributes_data):
             for attr_data in attributes_data:
@@ -181,17 +179,16 @@ class RelyingPartyRegisterAPIView(APIView):
         existing_rp = self.check_existing_rp(request, pk)
         if existing_rp:
             return existing_rp
-        
-        existing_hostname = check_existing_hostname(request, relying_party)
+        existing_hostname = check_existing_hostname(request)
         if existing_hostname:
             return existing_hostname
         
         relying_party = self.save_rp(request, pk)
+        rp_status = self.create_initial_status(relying_party)
         hostname = self.save_hostname(request, relying_party)
         attributes_data = request.data.get("attributes", [])
         condiscon = self.save_condiscon(request, attributes_data, relying_party)
         self.save_condiscon_attributes(condiscon, attributes_data)
-        rp_status = Status.objects.get(relying_party=relying_party)
 
 
         return Response({
@@ -199,10 +196,7 @@ class RelyingPartyRegisterAPIView(APIView):
             "message": "Relying party registration successful",
             "dns_challenge": hostname.dns_challenge,
             "hostname": hostname.hostname,
-            "status": {
-                "ready": rp_status.ready,
-                "reviewed_accepted": rp_status.reviewed_accepted
-            }
+            "current_status": rp_status.rp_status.label
         }, status=status.HTTP_201_CREATED)
         
     def patch(self, request, pk):
@@ -211,16 +205,10 @@ class RelyingPartyRegisterAPIView(APIView):
         response_message = "Relying party updated successfully"
         response_data = {"id": str(relying_party.id)}
         
-        if request.data.get("ready") is not None:
-            status_obj = Status.objects.get(relying_party=relying_party)
-            status_obj.ready = request.data.get("ready")
-            status_obj.ready_at = timezone.now()
-            status_obj.save()
-
         if request.data.get("hostname") is not None:
             hostname_text = request.data.get("hostname")
             
-            existing_hostname = check_existing_hostname(request, relying_party)
+            existing_hostname = check_existing_hostname(request)
             if existing_hostname:
                 return existing_hostname
                 
@@ -260,6 +248,17 @@ class RelyingPartyRegisterAPIView(APIView):
             relying_party.yivi_tme = yivi_tme
             relying_party.save()
 
+        if "ready" in request.data:
+            rp_status = Status.objects.get(relying_party=relying_party)
+            rp_status.ready = request.data.get("ready")
+            rp_status.ready_at = timezone.now() if request.data.get("ready") else None
+            rp_status.save()
+
+        elif any(field in request.data for field in ["hostname", "context_description_en", "context_description_nl", "attributes", "trust_model_env"]): # if any of these fields are updated, set ready to False. User must explicitly set ready to make status PENDING FOR REVIEW
+            rp_status = Status.objects.get(relying_party=relying_party)
+            rp_status.ready = False
+            rp_status.save()
+
         response_data["message"] = response_message
         return Response(response_data, status=status.HTTP_200_OK)
 
@@ -282,4 +281,21 @@ class RelyingPartyHostnameStatusAPIView(APIView):
             "dns_challenge_verified_at": hostname.dns_challenge_verified_at,
             "dns_challenge_invalidated_at": hostname.dns_challenge_invalidated_at
         })
+    
+class RelyingPartyRegistrationStatusAPIView(APIView):
+    permission_classes = [permissions.IsAuthenticated, BelongsToOrganization, IsMaintainer]
+    
+    @swagger_auto_schema(
+        responses={200: "Success"})
+    
+    def get(self, request, slug):
+        """Get status of relying party registration"""
+        relying_party = get_object_or_404(RelyingParty, organization__slug=slug)
+        status = get_object_or_404(Status, relying_party=relying_party)
+        
+        return Response({
+            "current_status": status.rp_status.label,
+            "ready": status.ready,
+            "ready_at": status.ready_at
+        })  
     
