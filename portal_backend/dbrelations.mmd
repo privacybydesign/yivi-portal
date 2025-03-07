@@ -85,7 +85,7 @@ erDiagram
     RelyingParty {
         int id PK
         int yivi_tme_id FK
-        int org_id FK        
+        int org_id FK     
     }
 
     Status {
@@ -100,6 +100,8 @@ erDiagram
         datetime reviewed_at
         text rejection_remarks
         datetime published_at
+        json requested_provider_details
+        json published_provider_details
     }
 
     %% StatusAP{
@@ -144,7 +146,7 @@ erDiagram
         datetime dns_challenge_verified_at
         datetime dns_challenge_invalidated_at
         boolean manually_verified
-        datetime created_atC
+        datetime created_at
     }
 
     Condiscon {

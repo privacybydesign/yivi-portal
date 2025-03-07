@@ -2,6 +2,7 @@ from django.db import models
 from django.db.models import CheckConstraint, Q
 from django.core.validators import URLValidator, RegexValidator
 import uuid
+from django.utils import timezone
 
 class Organization(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -68,11 +69,21 @@ class RelyingParty(models.Model):
         verbose_name = 'Relying Party'
         verbose_name_plural = 'Relying Parties'
     yivi_tme = models.ForeignKey(YiviTrustModelEnv, on_delete=models.CASCADE, related_name='relying_parties')
-    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='relying_parties')    
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='relying_parties')
 
     def __str__(self):
         return f"{self.organization.name_en}"
     
+class StatusChoices(models.TextChoices):
+    """Choices for the status of a Relying Party or Attestation Provider."""
+
+    DRAFT = 'draft', 'Draft'
+    PENDING_FOR_REVIEW = 'pending', 'Pending'
+    ACCEPTED = 'accepted', 'Accepted'
+    REJECTED = 'rejected', 'Rejected'
+    PUBLISHED = 'published', 'Published'
+    INVALIDATED = 'invalidated', 'Invalidated' # the ap or rp became invalid after being published, possibly due to a failure in dns_challenge  (for the rp)
+
 class Status(models.Model):
     class Meta:
         verbose_name = 'Status'
@@ -89,14 +100,74 @@ class Status(models.Model):
     ready_at = models.DateTimeField(null=True, blank=True)
     reviewed_accepted = models.BooleanField(default=False)
     reviewed_at = models.DateTimeField(null=True, blank=True)
-    rejection_remarks = models.TextField(blank=True)
+    rejection_remarks = models.TextField(blank=True, null=True)
     published_at = models.DateTimeField(null=True, blank=True)
     relying_party = models.OneToOneField(RelyingParty, on_delete=models.CASCADE, related_name='status', null=True, blank=True)
     attestation_provider = models.OneToOneField(AttestationProvider, on_delete=models.CASCADE, related_name='status', null=True, blank=True)
+    approved_provider_details = models.JSONField(null=True) # what will be added to requestors scheme (formerly called scheme data)
+    published_provider_details = models.JSONField(null=True) # what is actually published (formerly called published scheme data)
 
+
+
+    @property
+    def published(self):
+        return self.approved_provider_details == self.published_provider_details and self.published_at is not None
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._initial_ready = self.ready
+        self._initial_reviewed_accepted = self.reviewed_accepted
+        self._initial_published = self.published
+
+    def save(self, *args, **kwargs): # state transition logic
+        if  self.ready and not self._initial_ready:  # if ready is changed to True from inital False
+            if self.ready:
+                self.ready_at = timezone.now()
+            # status will be PENDING FOR REVIEW
+            elif self._initial_ready and not self.ready: # if ready is changed to False
+                self.ready_at = None
+                self.reviewed_accepted = None
+                self.reviewed_at = None
+                self.rejection_remarks = None
+                self.published_at = None
+             # if the user unchecks the ready checkbox, the status will go back DRAFT and all other fields will reset
+
+        if self.reviewed_accepted and not self._initial_reviewed_accepted:  #  if reviewed_accepted is changed to True
+            if self.reviewed_accepted:
+                self.reviewed_at = timezone.now()
+                # status will be ACCEPTED
+                self.rejection_remarks = None
+            elif self._initial_reviewed_accepted and not self.reviewed_accepted: # if reviewed_accepted is changed to False
+                self.reviewed_at = timezone.now()
+                # status will be REJECTED
+
+        if self.published and not self._initial_published: # if published is changed to True
+            self.published_at = timezone.now()
+            # status will be PUBLISHED
+
+        self._initial_ready = self.ready # save initial states for future comparisons
+        self._initial_reviewed_accepted = self.reviewed_accepted
+        self._initial_published = self.published
+        super().save(*args, **kwargs)
+ 
     def __str__(self):
         return f"Status {self.id} - Ready: {self.ready}"
 
+    @property
+    def rp_status(self):
+        rphostname = RelyingPartyHostname.objects.filter(relying_party=self.relying_party).first()
+        if rphostname and self.published and rphostname.invalidated: # if rp is published and then dns_challenge is invalidated
+            return StatusChoices.INVALIDATED
+        elif self.ready and self.published:
+            return StatusChoices.PUBLISHED
+        elif self.reviewed_accepted is False:
+            return StatusChoices.REJECTED
+        elif self.reviewed_accepted is True:
+            return StatusChoices.ACCEPTED
+        elif self.ready:
+            return StatusChoices.PENDING_FOR_REVIEW
+        return StatusChoices.DRAFT
+    
 
 class Credential(models.Model):
     attestation_provider = models.ForeignKey(AttestationProvider, on_delete=models.CASCADE, related_name='credentials')
@@ -137,8 +208,13 @@ class RelyingPartyHostname(models.Model):
     dns_challenge_invalidated_at = models.DateTimeField(null=True, blank=True)
     manually_verified = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
-    relying_party = models.ForeignKey(RelyingParty, on_delete=models.CASCADE, related_name='hostnames')
+    relying_party = models.OneToOneField(RelyingParty, on_delete=models.CASCADE, related_name='hostnames')
+    
 
+    @property
+    def invalidated(self):
+        return self.dns_challenge_verified and self.dns_challenge_invalidated_at is not None
+    
     def __str__(self):
         return self.hostname
 
