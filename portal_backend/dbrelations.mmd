@@ -9,8 +9,6 @@ erDiagram
     
     AttestationProvider ||--|| Status : "has_status"
     RelyingParty ||--|| Status : "has_status"
-    %% StatusAP ||--|| Status: "has_details"
-    %% StatusRP ||--|| Status: "has_details"
 
                            
     RelyingPartyHostname ||--|| RelyingParty : "validates"
@@ -138,7 +136,6 @@ erDiagram
         datetime dns_challenge_verified_at
         datetime dns_challenge_invalidated_at
         boolean manually_verified
-        datetime created_at
     }
 
     Condiscon {

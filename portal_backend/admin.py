@@ -31,9 +31,23 @@ class YiviTrustModelEnvAdmin(admin.ModelAdmin):
 # Status Admin
 @admin.register(Status)
 class StatusAdmin(admin.ModelAdmin):
-    list_display = ('id', 'ready', 'reviewed_accepted', 'published_at', 'relying_party', 'attestation_provider','created_at', 'last_updated_at')
+    list_display = (
+        'id',
+        'ready',
+        'reviewed_accepted',
+        'published_at',
+        'relying_party',
+        'attestation_provider',
+        'rp_status_display'  
+    )
     list_filter = ('ready', 'reviewed_accepted', 'published_at')
-    readonly_fields = ('created_at', 'last_updated_at')
+
+    @admin.display(description='RP Status')
+    def rp_status_display(self, obj):
+        if obj.relying_party:
+            return obj.rp_status
+        return "-"
+
 
 # RelyingPartyHostname Admin
 @admin.register(RelyingPartyHostname)

@@ -42,7 +42,7 @@ INSTALLED_APPS = [
     "django_bootstrap5",
     "django_cron",
     "imagekit",
-    "portal_backend.apps.SchememanagerConfig",
+    "portal_backend.apps.PortalBackendConfig",
     "yivi_portal",
 ]
 
