@@ -60,6 +60,8 @@ class AttestationProvider(models.Model):
     shortname_nl = models.CharField(max_length=100)
     contact_email = models.EmailField(max_length=255, unique=True)
     base_url = models.URLField()
+    approved_ap_details = models.JSONField(null=True) # what will be added to issuers scheme
+    published_ap_details = models.JSONField(null=True) # what is actually published 
 
     def __str__(self):
         return self.organization.name_en    
@@ -70,9 +72,40 @@ class RelyingParty(models.Model):
         verbose_name_plural = 'Relying Parties'
     yivi_tme = models.ForeignKey(YiviTrustModelEnv, on_delete=models.CASCADE, related_name='relying_parties')
     organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='relying_parties')
+    approved_rp_details = models.JSONField(null=True) # what will be added to requestors scheme (formerly called scheme data)
+    published_rp_details = models.JSONField(null=True)
 
     def __str__(self):
         return f"{self.organization.name_en}"
+    
+    @property
+    def new_rp_details(self):
+        hostname = RelyingPartyHostname.objects.filter(relying_party=self).first()
+        requestor_scheme_entry = {
+            "id": self.id,
+            "name": {
+                "en": self.organization.name_en,
+                "nl": self.organization.name_nl
+            },
+            "logo": self.organization.logo.url, # will need to be the hash of the logo
+            "hostnames": [hostname.hostname], # right now the verifier can only have one hostname
+            "scheme": self.yivi_tme.environment,
+        }
+        return requestor_scheme_entry
+
+
+
+     # construct new rp details based on RP hostname , condiscon and rest of needed data
+
+    @property
+    def approve(self):
+        pass # put new_rp_details in approved_rp_details
+
+    @property
+    def published_rp_details(self):
+        pass # published_check checks if this rp is published and returns the published_rp_details
+
+    
     
 class StatusChoices(models.TextChoices):
     """Choices for the status of a Relying Party or Attestation Provider."""
@@ -118,6 +151,7 @@ class Status(models.Model):
         self._initial_ready = self.ready
         self._initial_reviewed_accepted = self.reviewed_accepted
         self._initial_published = self.published
+        self._initial_rejection_remarks = None
 
     def save(self, *args, **kwargs): # state transition logic
         if  self.ready and not self._initial_ready:  # if ready is changed to True from inital False
@@ -139,6 +173,7 @@ class Status(models.Model):
                 self.rejection_remarks = None
             elif self._initial_reviewed_accepted and not self.reviewed_accepted: # if reviewed_accepted is changed to False
                 self.reviewed_at = timezone.now()
+                self._initial_rejection_remarks = self.rejection_remarks
                 # status will be REJECTED
 
         if self.published and not self._initial_published: # if published is changed to True
@@ -212,8 +247,9 @@ class RelyingPartyHostname(models.Model):
     
 
     @property
-    def invalidated(self):
+    def invalidated(self): # TODO if dns_challenge is invalidated or if the published_rp_details is now different than approved_rp_details
         return self.dns_challenge_verified and self.dns_challenge_invalidated_at is not None
+    
     
     def __str__(self):
         return self.hostname

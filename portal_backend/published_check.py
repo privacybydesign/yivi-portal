@@ -73,3 +73,5 @@
 #         logger.info(f"Saving verifier {verifier.slug}")
 #         verifier.save()
 #         # TODO save logo's
+
+# TODO : check issuers scheme

@@ -54,6 +54,8 @@ erDiagram
         string shortname_nl
         string contact_url
         string base_url
+        JSON approved_ap_details
+        JSON published_ap_details
     }
 
     Credential {
@@ -86,6 +88,8 @@ erDiagram
         int id PK
         int yivi_tme_id FK
         int org_id FK     
+        JSON approved_rp_details
+        JSON published_rp_details
     }
 
     Status {
@@ -100,19 +104,7 @@ erDiagram
         datetime reviewed_at
         text rejection_remarks
         datetime published_at
-        json requested_provider_details
-        json published_provider_details
     }
-
-    %% StatusAP{
-    %%     int id
-    %%     int ap_id FK
-    %%     int status_id FK
-    %% }
-
-    %% StatusRP{int id 
-    %%          int rp_id FK
-    %%          int status_id FK}
 
     Organization {
         uuid id PK
