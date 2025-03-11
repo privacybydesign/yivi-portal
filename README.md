@@ -36,7 +36,7 @@ The project consists of two main components:
 ### Running the Frontend
 
 ```bash
-cd portal-frontend
+cd portal_frontend
 npm install
 npm run dev
 ```
