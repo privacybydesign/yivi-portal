@@ -5,11 +5,13 @@ from django.core.exceptions import ValidationError
 
 # --------- RELYING PARTY SIGNALS ----------
 
+
 @receiver(post_save, sender=RelyingParty)
 def create_status_for_relying_party(sender, instance, created, **kwargs):
     if created:
         Status.objects.create(relying_party=instance)
         print(f"Status created for RelyingParty {instance}")
+
 
 @receiver(post_delete, sender=RelyingParty)
 def delete_status_for_relying_party(sender, instance, **kwargs):
@@ -21,6 +23,7 @@ def delete_status_for_relying_party(sender, instance, **kwargs):
         pass
 
 # --------- ORGANIZATION SIGNALS ----------
+
 
 @receiver(pre_save, sender=Organization)
 def save_logo_as_approved_logo(sender, instance, **kwargs):

@@ -8,9 +8,10 @@ from ..models.model_serializers import *
 
 from rest_framework import permissions
 
+
 class TrustModelListAPIView(APIView):
     permission_classes = [permissions.AllowAny]
-    
+
     @swagger_auto_schema(
         responses={200: "Success"}
     )
@@ -18,8 +19,9 @@ class TrustModelListAPIView(APIView):
         """Gets a list of trust models."""
         trust_models = TrustModel.objects.all()
         serializer = TrustModelSerializer(trust_models, many=True)
-        return Response(serializer.data,status=status.HTTP_200_OK)
-    
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
 class TrustModelDetailAPIView(APIView):
     permission_classes = [permissions.AllowAny]
 
@@ -31,11 +33,12 @@ class TrustModelDetailAPIView(APIView):
         """Gets a specific trust model."""
         trust_model = get_object_or_404(TrustModel, name=name)
         serializer = TrustModelSerializer(trust_model)
-        return Response(serializer.data,status=status.HTTP_200_OK)
-    
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
 class TrustModelEnvironments(APIView):
     permission_classes = [permissions.AllowAny]
-    
+
     @swagger_auto_schema(
         responses={200: "Success",
                    404: "Not found"}
@@ -45,11 +48,12 @@ class TrustModelEnvironments(APIView):
         trust_model = get_object_or_404(TrustModel, name=name)
         environments = trust_model.environments.all()
         serializer = YiviTrustModelEnvSerializer(environments, many=True)
-        return Response(serializer.data,status=status.HTTP_200_OK)
-    
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
 class TrustModelEnvironment(APIView):
     permission_classes = [permissions.AllowAny]
-    
+
     @swagger_auto_schema(
         responses={200: "Success",
                    404: "Not found"}
@@ -59,5 +63,4 @@ class TrustModelEnvironment(APIView):
         trust_model = get_object_or_404(TrustModel, name=name)
         environments = trust_model.environments.all()
         serializer = YiviTrustModelEnvSerializer(environments, many=True)
-        return Response(serializer.data,status=status.HTTP_200_OK)
-
+        return Response(serializer.data, status=status.HTTP_200_OK)
