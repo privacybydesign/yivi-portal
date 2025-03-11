@@ -1,265 +1,148 @@
 # Yivi Portal
 
-The Yivi Portal is a web application for managing registrations for the [Yivi scheme](https://irma.app/docs/schemes/) of the [Yivi ecosystem](https://irma.app/docs/what-is-irma/).
-Verifiers and issuers can register themselves in the Yivi scheme via the portal and manage their registration.
+Yivi Portal is a project designed to streamline the process of joining Yivi as an Issuer or Verifier, with an outlook toward adopting EUDI Wallet terminologies. Relying Parties can use the protal to join the Trusted Verifier Program of Yivi.
 
-Specifically, Yivi Portal should make it easy to manage the schemes that are currently managed in the following repositories:
+**Note!** This is a work in progress. Feel free to contribute.
 
-- [pbdf](https://github.com/privacybydesign/pbdf-portal_backend)
-- [pbdf-requestors](https://github.com/privacybydesign/pbdf-requestors)
-- [irma-demo](https://github.com/privacybydesign/irma-demo-portal_backend)
-- [irma-demo-requestors](https://github.com/privacybydesign/irma-demo-requestors)
+## Terminology Mapping
 
-> Yivi is formerly called IRMA and is currently being rebranded. As such, some of the documentation still refers to IRMA.
+Yivi terminology is translated to the following in the scope of this project:
 
-## Functionality
+| Yivi Term | Project Term |
+|-----------|--------------|
+| **Issuer** | Attestation Provider |
+| **Verifier** | Relying Party |
+| **Scheme** | Trust Model Environment (for either Attestation Providers or Relying Parties) |
+| **pbdf** | Trust model production environment for Attestation Providers |
+| **pbdf staging** | Trust model development environment for Attestation Providers |
+| **irma-demo** | Trust model demo environment for Attestation Providers |
+| **requestors scheme** | Trust model production environment for Relying Parties |
 
-### Registration
+## Project Architecture
 
-Organizations can be registered in the Yivi portal after disclosure of valid [KvK credentials (via Yivi)](https://privacybydesign.foundation/attribute-index/nl/pbdf.signicat.kvkTradeRegister.html) by an authorized representative of the organization.
+This project is built with:
 
-> **To be discussed**:
->
-> Perhaps, for legal reasons, the registration should be done with a Yivi signature, instead of a Yivi disclosure.
+* **Backend**: Django REST framework (Python)
+* **Frontend**: Next.js (React, TypeScript)
+* **Database**: PostgreSQL
+* **Authentication**: Yivi authentication
 
-After registration, the organization can enter the email addresses of people that are authorized to access the portal on behalf of the organization.
-This way, the organization can manage its own users without requiring them to be actual legal representatives of the organization.
+The project consists of two main components:
+1. **Portal Backend**: Django application with REST API
+2. **Portal Frontend**: Next.js application with React components
 
-When a user logs in (by disclosing their email address via Yivi) to the portal, they can see a list of all organizations they have access to in the portal.
+## Development Setup
 
-### Scheme management
-
-The Yivi Portal can manage multiple Yivi schemes.
-There are two types of schemes:
-
-- issuer schemes that contain credential definitions and issuers
-- requestor schemes that contain verifiers
-
-Apart from that, a scheme can be a demo scheme or a production scheme.
-Demo schemes are used for testing and development purposes.
-Production schemes are used for actual production.
-Only after approval, a registration will be included in a production scheme.
-
-#### Scheme export and signing
-
-For security reasons, the Yivi Portal does not sign the scheme itself, as it should not possess the keys to do so.
-Instead, the portal only _exports_ the scheme in the format that is required by [irmago](https://github.com/privacybydesign/irmago).
-Signing the scheme should be done by the [irma command line application](https://irma.app/docs/schemes/#updating-and-signing-schemes-with-irma).
-
-This should be done periodically to ensure that the scheme is up-to-date, but remains a manual action.
-
-> It is yet to be determined how often this should be done and what guarantees we can give parties on how fast the scheme is updated.
-
-#### Scheme hosting and distribution
-
-The Yivi portal does not host or distribute the schemes itself, but monitors the published version.
-
-#### Approval process and status
-
-The portal should display the current status of the registration in the scheme.
-
-For a _demo_ scheme, the status can be one of the following:
-
-- `draft`: the verifier or issuer is still working on their registration and will not be published.
-- `ready`: the verifier or issuer has finished their registration and is ready to be published.
-- `published`: the registration has been published in the scheme.
-- `invalidated`: the registration became invalid (e.g. because the hostname no longer verifies) and will be removed from the scheme on the next update.
-
-For a _production_ scheme, the status can be one of the following:
-
-- `draft`: the verifier or issuer is still working on their registration, and it is not yet ready for review.
-- `ready`: the verifier or issuer has finished their registration and is **under review** by the scheme manager.
-- `approved`: the registration has been approved by the scheme manager and is ready to be published in the scheme.
-- `rejected`: the registration has been rejected by the scheme manager and the verifier or issuer should make changes to their registration.
-- `published`: the registration has been published in the scheme.
-- `invalidated`: the registration became invalid (e.g. because the hostname no longer verifies) and will be removed from the scheme on the next update.
-
-When a verifier changes their registration, the status is set to `draft` again.
-The transition from `draft` to `ready` is a manual action by the verifier or issuer themselves.
-The transition from `ready` to `approved` or `rejected` in production schemes is a manual action by the scheme manager.
-The transition from `approved` to `published` in production schemes, or from `ready` to `published` in demo schemes, is an automated action by the portal, based on monitoring of the published schemes (see above).
-The transition from `published` to `invalidated` or `approved` to `invalidated` is an automated action by the portal as well.
-
-### Verifier portal
-
-An organization can register itself as a [(pretty) verifier](https://creativecode.github.io/irma-made-easy/posts/pretty-verifier-names/) in a requestor scheme via the portal.
-Here, they can upload a small logo and their display name (and potentially other information that will be required for the scheme).
-
-#### Hostname registration
-
-Verifiers can register the hostnames of their Yivi servers.
-This hostname is used to identify the verifier in the Yivi scheme.
-After entering a hostname of a Yivi server, the Yivi Portal creates a DNS challenge.
-The verifier should add a DNS TXT record to the DNS zone of the hostname that is registered in the portal.
-In the background (e.g. every 15 minutes), the portal checks if the DNS TXT record is added and if it is valid.
-If the DNS TXT record is valid, the hostname will be successfully registered in the scheme.
-
-In the background, the portal will check periodically if the DNS TXT records are still valid.
-If the DNS TXT record is not valid anymore, the hostname will be removed from the scheme and the verifier will be notified.
-
-#### Disclosure request registration
-
-Verifiers can register the disclosure requests they want to perform by submitting the [_condiscon_](https://irma.app/docs/condiscon/) of the disclosure request.
-For each attribute in the _condiscon_, the verifier should list the reason why they want to request the attribute (explanation for purpose binding) in both Dutch and English.
-These explanations should clarify that indeed, the disclosure request is minimal.
-
-### Issuer portal
-
-For future work. The Yivi Portal can also be used to register issuers and their credentials (and public keys).
-
-### Billing
-
-> **For future work**
->
-> Verifiers should be able to classify themselves as a `small` / `medium` / `large` verifier in the portal (based on number of verifications per month).
-> This classification is used to determine the billing of the verifier.
-
-### Logging
-
-For future work. Perhaps, the Yivi app should stochastically log disclosure sessions to the Yivi Portal, so that the portal can monitor the usage of the scheme and determine if verifiers are properly classified (see billing).
-Probably, the logging should be a different microservice, as it should not be part of the portal itself.
-
-## Technical specifications
-
-The Yivi Portal is written in Python 3.11 and uses [the Django framework](https://www.djangoproject.com).
-It can be run in a Docker container, for which a Dockerfile and docker-compose file are provided.
-For the actual Yivi authentication, the portal communicates with a Yivi server that is running in a separate container.
-
-### Development
-
-1. Clone the repository
-2. Make sure you have installed [Docker](https://docker.com)
-3. Start the containers with:
-   ```bash
-   docker compose up
-   ```
-4. Open a shell in the application container and create an admin user:
-   ```bash
-   docker compose exec -it yivi-portal /bin/sh
-   python manage.py createsuperuser --email <email> --username <username> --noinput
-   ```
-   We don't set up a password here, because we want to use Yivi authentication.
-   If you want to use a password as fallback (to use Django admin login flow), that is possible as well.
-
-**Make sure to use the `yivi_portal.settings.development` settings module when running the development server.**
-
-Also, a Yivi server should be available somewhere, for which the URL should be configured in the `YIVI_SERVER_URL` and the `YIVI_SERVER_TOKEN` environment variable.
-
-### Deployment
-
-For production deployment, the Dockerfile can be used.
-
-#### Docker image
-
-The Dockerfile is based on the [official Python image](https://hub.docker.com/_/python) and installs the required dependencies.
-It copies the source code into the image and sets the `yivi_portal.settings.production` settings module as the default settings module.
-The `DJANGO_STATIC_ROOT` and `DJANGO_MEDIA_ROOT` environment variables are set to `/app/static` and `/app/media` respectively during the build.
-During build, the static files are collected to the `DJANGO_STATIC_ROOT` directory, which is served by the webserver.
-
-The Docker images also prepares a cronjob to run the background tasks periodically, using [django-cron](https://django-cron.readthedocs.io/en/latest/installation.html).
-However, the cronjob is not started by default.
-This should be done by running the image with the `/bin/sh /app/entrypoint_sh` command, instead of the default command (`/bin/sh /app/entrypoint.sh` that runs the webserver).
-
-##### Webserver
-
-The Docker images uses [uWSGI](https://uwsgi-docs.readthedocs.io/en/latest/) as the webserver.
-The uWSGI configuration is set in the `entrypoint.sh` script, which is the default command of the Docker image.
-
-During startup, the `entrypoint.sh` script first runs the migrations.
-The uWSGI configuration uses the `yivi_portal.wsgi` module as the WSGI module and to serve the static files from the `DJANGO_STATIC_ROOT` directory (which is set to `/app/static` during build) and the media files from the `DJANGO_MEDIA_ROOT` directory (which is set to `/app/media` during build).
-This is done at the `DJANGO_STATIC_URL` and `DJANGO_MEDIA_URL` respectively, which are set to `/static/` and `/media/` during build by default, but can be overridden by setting the `DJANGO_STATIC_URL` and `DJANGO_MEDIA_URL` environment variables for runtime.
-The webserver is exposed internally on port `8080` and runs with 4 workers and 2 threads (by the user `nobody` in the `nogroup` group).
-
-##### Database
-
-The production image expects a PostgreSQL database to be available.
-The database connection is configured in the `yivi_portal.settings.production` settings module, using the `POSTGRES_HOST`, `POSTGRES_PORT`, `POSTGRES_DB`, `POSTGRES_USER` and `POSTGRES_PASSWORD` environment variables.
-
-##### Yivi server
-
-Similar to during development, a Yivi server should be available somewhere, for which the URL should be configured in the `YIVI_SERVER_URL` and the `YIVI_SERVER_TOKEN` environment variable.
-
-##### Expected environment variables
-
-During runtime, the following environment variables are expected:
-
-- `DJANGO_SECRET_KEY`: the secret key of the Django application
-- `DJANGO_ALLOWED_HOSTS`: a comma-separated list of allowed hosts
-- `POSTGRES_HOST`: the hostname of the PostgreSQL database
-- `POSTGRES_PORT`: the port of the PostgreSQL database
-- `POSTGRES_DB`: the name of the PostgreSQL database
-- `POSTGRES_USER`: the username of the PostgreSQL database
-- `POSTGRES_PASSWORD`: the password of the PostgreSQL database
-- `YIVI_SERVER_URL`: the URL of the Yivi server (for all Yivi sessions)
-- `YIVI_SERVER_TOKEN`: the token of the Yivi server (for all Yivi sessions)
-
-Additionally, the following environment variables can be set:
-
-- `DJANGO_STATIC_URL`: the URL where the static files are served from (default: `/static/`)
-- `DJANGO_MEDIA_URL`: the URL where the media files are served from (default: `/media/`)
-
-##### Cron jobs
-
-Background tasks are run periodically with [django-cron](https://django-cron.readthedocs.io/en/latest/installation.html).
-This is achieved by running `python manage.py runcrons` every 5 minutes, which will launch `django-cron` cronjobs with a resolution of 5 minutes.
-
-#### Docker-compose
-
-An example docker-compose file is provided to run the Yivi Portal in production.
-The docker-compose file is configured to build the Docker image from the Dockerfile in the repository on the host machine.
-
-This file expects a [nginx reverse proxy](https://hub.docker.com/r/nginxproxy/nginx-proxy) to be running on the host machine, which proxies the requests to the Yivi Portal, based on the `VIRTUAL_HOST` environment variable, and automatically requests and renews TLS certificates using [Let's Encrypt](https://letsencrypt.org).
-
-The docker-compose file starts 3 services:
-
-- `yivi-portal`: the Yivi Portal itself
-- `yivi-portal-db`: the PostgreSQL database that is used by the portal
-- `yivi-portal-yivi`: the Yivi server that is used by the portal for Yivi sessions
-- `yivi-portal-cron`: a service that runs the same image as the `yivi-portal` service, but with the `/bin/sh /app/entrypoint_cron.sh` entrypoint, which makes the cronjobs run in a different container.
-
-The nginx reverse proxy should be connected to the (externally defined) `web` network in Docker, which the Yivi Portal and Yivi server connect to as well.
-Additionally, there is an internal `db` network, which is used by the Yivi Portal and the Yivi server to connect to the database.
-
-The database data and the media files are stored in a Docker volumes `postgres-data` and `portal-media`.
-
-In the docker-compose file, all hostnames are currently hardcoded, but they should be changed to the actual hostnames.
-Additionally, secret information should be provided in a `.env` file, which should look like this:
+### Running the Frontend
 
 ```bash
-YIVI_SERVER_URL=https://yivi.jobdoesburg.nl
-YIVI_SERVER_TOKEN=test-yivi-token-1234
+cd portal-frontend
+npm install
+npm run dev
+```
+
+### Running the Backend
+
+Build and run with Docker. Currently, migrations are in the gitignore list due to ongoing restructuring of the model. This means migrations will be made and then applied for you.
+
+#### Environment Variables
+
+Create a `.env` file in the root directory with the following variables:
+
+```
+YIVI_SERVER_URL=https://yivi.example.nl
+YIVI_SERVER_TOKEN=token-used-in-irma-server
 POSTGRES_USER=yivi
 POSTGRES_PASSWORD=yivi
 POSTGRES_DB=yivi
-DJANGO_SECRET_KEY=secret-key
+DJANGO_SECRET_KEY=your-secret-key
+DJANGO_ALLOWED_HOSTS=localhost
 ```
 
-##### Useful commands
+Then start the services:
 
-- To start the docker-compose file, run:
+```bash
+docker compose up -d
+```
 
-  ```bash
-  docker-compose up -d --build
-  ```
+Since the database will be empty, you can populate it with test data:
 
-  (The `-d` flag runs the containers in the background, the `--build` flag rebuilds the images, which does not happen automatically when the source code changes.)
+```bash
+docker compose exec yivi-portal python manage.py create_test_data
+```
 
-- To create an admin user:
+### Admin Access
 
-  ```bash
-  docker-compose exec yivi-portal python manage.py createsuperuser --email <email> --username <username> --noinput
-  ```
+The easiest way to view the database is with Django admin. You will need a superuser:
 
-  Note that a user must re-login before the admin interface is available.
+```bash
+docker compose exec yivi-portal python manage.py createsuperuser
+```
 
-- To run the cronjobs manually, forcefully:
-  ```bash
-  docker-compose exec yivi-portal-cron python manage.py runcrons --force
-  ```
+**Note!** If changes are made to the model, please record it in the ER diagram `dbrelations.md`.
 
-## More information
+**Note!** If you are testing endpoints with permission class `IsAuthenticated`, you first need to run the frontend project, login with Yivi (currently bound to Yivi staging server), and obtain the token.
 
-The Yivi Portal is built as based on recommendations in the [master thesis of Job Doesburg](https://jobdoesburg.nl/docs/Measures_against_over_asking_in_SSI_and_the_Yivi_ecosystem.pdf).
-The purpose of the Yivi Portal is to make it easy for verifiers to register themselves in the Yivi scheme and become a pretty verifier.
-In the future, the Yivi mobile app can be configured to display warnings when a verifier is not registered in the Yivi scheme.
-This way, the Yivi Portal can help to prevent over-asking in the Yivi ecosystem and make it easier for users to trust verifiers.
+### Service URLs
+
+* Backend API: http://localhost:8000/
+* Frontend: http://localhost:3000/
+* Admin panel: http://localhost:8000/admin/
+
+## API Documentation
+
+API documentation is available at:
+* Swagger UI: `/swagger/`
+* ReDoc: `/redoc/`
+
+### Available Endpoints
+
+| Endpoint                                                              | Method | Description                                      |
+|-----------------------------------------------------------------------|--------|--------------------------------------------------|
+| `/v1/organizations`                                                   | GET    | List all organizations                           |
+| `/v1/organizations/<uuid:pk>`                                         | GET    | Get details of a specific organization           |
+| `/v1/organizations/<uuid:pk>/maintainers`                             | GET    | List maintainers of an organization              |
+| `/v1/organizations/<uuid:pk>/relying-party`                           | POST   | Register organization as a relying party         |
+| `/v1/trust-models`                                                    | GET    | List all trust models                            |
+| `/v1/trust-models/<str:name>/`                                        | GET    | Get details of a specific trust model            |
+| `/v1/trust-models/<str:name>/environments`                            | GET    | List environments for a trust model              |
+| `/v1/trust-models/<str:name>/environments/<str:environment>`          | GET    | Get details of a specific trust model environment|
+| `/v1/trust-models/<str:name>/environments/<str:environment>/attestation-providers/` | GET | List attestation providers for a trust model environment |
+| `/v1/trust-models/<str:name>/environments/<str:environment>/relying-parties/` | GET | List relying parties for a trust model environment |
+| `/v1/relying-party/<str:slug>/hostname/status/`                       | GET    | Get hostname status for a relying party          |
+| `/v1/relying-party/<str:slug>/status/`                                | GET    | Get registration status of a relying party       |
+| `/v1/session/`                                                        | POST   | Start a new Yivi authentication session          |
+| `/v1/token/<str:token>`                                               | GET    | Get authentication token from Yivi session       |
+
+## Features
+
+### Organization Registration
+* Organizations register by filling in the registration form (TODO: Authentication needed)
+* Update of organization profiles, logos, and contact information
+* A maintainer can add new maintainers
+
+### Relying Party Registration
+* Registration as a Verifier (Relying Party) in a Yivi scheme
+* Automatic DNS verification for Relying Party hostnames
+* Disclosure request registration:
+   * With choice from credentials from existing Attestation Providers
+   * Purpose inquiry per Condiscon (session request format of Yivi) and per individual chosen attributes
+
+### Issuer Registration
+(in progress...)
+
+### AP and RP List up to date with the scheme 
+(in progress...)
+
+### Status Tracking
+The state of AP or RP registrations from an organization can be followed with status detailed workflow:
+* **Draft**: Organization is working on their registration
+* **Ready/Pending for Review**: Registration is complete and ready for review
+* **Approved**: Registration has been approved by Yivi admins (production only)
+* **Rejected**: Registration has been rejected and requires changes
+* **Published**: Registration has been published in the scheme
+* **Invalidated**: Registration has become invalid and needs fixes
+
+## Acknowledgements
+
+he Yivi Portal was built as based on recommendations in the [master thesis of Job Doesburg](https://jobdoesburg.nl/docs/Measures_against_over_asking_in_SSI_and_the_Yivi_ecosystem.pdf). Later, the Yivi Team started their own fork of this project to make it appropriate for production.
