@@ -1,4 +1,5 @@
-from .base import *  # noqa
+from .base import BASE_DIR
+import os
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
@@ -34,7 +35,7 @@ SWAGGER_SETTINGS = {
             "type": "apiKey",
             "name": "Authorization",
             "in": "header",
-            "description": "Enter the token as: Bearer <token>"
+            "description": "Enter the token as: Bearer <token>",
         }
     },
     "DEFAULT_SECURITY": [
@@ -52,9 +53,4 @@ MEDIA_URL = "assets/"
 STATIC_ROOT = BASE_DIR / "static"
 MEDIA_ROOT = BASE_DIR / "assets"
 
-EMAIL_DISCLOSURE = [
-    [
-        [ "irma-demo.sidn-pbdf.email.email" ]
-    ]
-]
-
+EMAIL_DISCLOSURE = [[["irma-demo.sidn-pbdf.email.email"]]]

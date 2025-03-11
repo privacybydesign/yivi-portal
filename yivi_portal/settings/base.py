@@ -1,5 +1,4 @@
 import os
-import sys
 from datetime import timedelta
 from pathlib import Path
 
@@ -9,8 +8,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Application definition
 
 REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
     ),
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.IsAuthenticated",  # Restrict access to authenticated users
@@ -18,14 +17,16 @@ REST_FRAMEWORK = {
 }
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(hours=24), # TODO: make this shorter after testing
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
-    'ROTATE_REFRESH_TOKENS': True,
-    'BLACKLIST_AFTER_ROTATION': True,
+    "ACCESS_TOKEN_LIFETIME": timedelta(
+        hours=24
+    ),  # TODO: make this shorter after testing
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
+    "ROTATE_REFRESH_TOKENS": True,
+    "BLACKLIST_AFTER_ROTATION": True,
     "SIGNING_KEY": "test",
     "USER_ID_FIELD": "email",
     "USER_ID_CLAIM": "email",
-  # Prevent user_id from being used
+    # Prevent user_id from being used
 }
 
 INSTALLED_APPS = [
@@ -37,7 +38,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "corsheaders",
     "rest_framework",
-    'rest_framework_simplejwt',
+    "rest_framework_simplejwt",
     "drf_yasg",
     "django_bootstrap5",
     "django_cron",
@@ -70,7 +71,6 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
-
             ],
         },
     },

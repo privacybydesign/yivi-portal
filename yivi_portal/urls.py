@@ -5,7 +5,6 @@ from django.urls import path, include
 from django.views.generic import RedirectView
 
 urlpatterns = [
-
     path("admin/logout/", RedirectView.as_view(url="/logout", query_string=True)),
     path("admin/", admin.site.urls),
     path("", include("portal_backend.urls")),
