@@ -1,9 +1,37 @@
 from django.db import models
 from django.db.models import CheckConstraint, Q
-from django.core.validators import URLValidator, RegexValidator
+from django.core.validators import URLValidator, RegexValidator, FileExtensionValidator
+from django.core.files.storage import FileSystemStorage
 import uuid
+import os
+import hashlib
+from imagekit.models import ProcessedImageField
+from django.conf import settings
 from django.utils import timezone
+from django.utils.text import slugify
 from django.core.exceptions import ValidationError
+
+class LogoStorage(FileSystemStorage):
+    def get_available_name(self, name, **kwargs):
+        if self.exists(name):
+            # If the file already exists, delete it, because we want to overwrite it
+            os.remove(os.path.join(settings.MEDIA_ROOT, name))
+        return name
+    @staticmethod
+    
+    def hash_file_contents(file_contents):
+        sha256 = hashlib.sha256()
+        sha256.update(file_contents)
+        return sha256.hexdigest()
+
+    @staticmethod
+    def get_logo_path(instance, filename):
+        """Determine the path for a logo image, based on the contents of the file"""
+        instance.logo.file.seek(0)
+        content_hash = LogoStorage.hash_file_contents(instance.logo.file.read())
+        filename, file_extension = os.path.splitext(filename)
+        return f"{content_hash}{file_extension}"
+    
 
 class Organization(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -15,12 +43,48 @@ class Organization(models.Model):
     is_verified = models.BooleanField(default=False)
     verified_at = models.DateTimeField(null=True)
     trade_names = models.JSONField(default=list)
-    logo = models.ImageField(upload_to='organization/logos/')
+    logo = ProcessedImageField(
+        upload_to=LogoStorage.get_logo_path,
+        storage=LogoStorage(),
+        null=True,
+        blank=True,
+        validators=[FileExtensionValidator(allowed_extensions=['png', 'jpg', 'jpeg'])]
+    )   
+    approved_logo = models.ImageField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     last_updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return self.name_en
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._logo = self.logo
+
+    def save(self, *args, **kwargs):
+            if not self.slug:
+                self.slug = slugify(self.name_en)
+            # If the logo has changed when saving, delete the old one
+            # But only if it's not the same as the approved logo, since we keep a copy of all logos that have ever been approved.
+            if self._logo != self.logo and self._logo:
+                if not self.approved_logo == self._logo:
+                    self.logo.storage.delete(self._logo.path)
+
+
+            return super().save(*args, **kwargs)
+
+    # When deleting an organization, delete all associated logos
+    def delete(self, *args, **kwargs): 
+            if self.logo:
+                storage, path = self.logo.storage, self.logo.path
+                storage.delete(path)
+
+            if self.approved_logo:
+                storage, path = self.approved_logo.storage, self.approved_logo.path
+                storage.delete(path)
+
+            super().delete(*args, **kwargs)
+
 
 class TrustModel(models.Model):
     name = models.CharField(max_length=255)
@@ -121,13 +185,17 @@ class RelyingParty(models.Model):
 
      # construct new rp details based on RP hostname , condiscon and rest of needed data
 
-    @property
     def approve(self):
-        pass # put new_rp_details in approved_rp_details
+        if not self.status.ready:
+            raise ValidationError("Relying Party must be marked as ready before approving.")
+
+        self.approved_rp_details = self.new_rp_details
+        self.status.reviewed_accepted = True
+        self.status.reviewed_at = timezone.now()
 
     @property
     def published(self):
-        #check requestors json and see if the rp with approved_rp_details is in there
+        # check requestors json and see if the rp with approved_rp_details is in there
         pass
     
 class StatusChoices(models.TextChoices):
@@ -262,7 +330,7 @@ class RelyingPartyHostname(models.Model):
     dns_challenge_verified_at = models.DateTimeField(null=True, blank=True)
     dns_challenge_invalidated_at = models.DateTimeField(null=True, blank=True)
     manually_verified = models.BooleanField(default=False)
-    relying_party = models.OneToOneField(RelyingParty, on_delete=models.CASCADE, related_name='hostnames')
+    relying_party = models.ForeignKey(RelyingParty, on_delete=models.CASCADE, related_name='hostnames')
     
 
     @property
