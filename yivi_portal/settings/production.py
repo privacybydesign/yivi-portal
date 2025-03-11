@@ -38,33 +38,3 @@ EMAIL_DISCLOSURE = [
         [ "pbdf.sidn-pbdf.email.email" ]
     ]
 ]
-
-KVK_DISCLOSURE = [
-    [
-        [
-            "pbdf.signicat.kvkTradeRegister.kvkNumber",
-            "pbdf.signicat.kvkTradeRegister.name",
-            "pbdf.signicat.kvkTradeRegister.tradeNames",
-            "pbdf.signicat.kvkTradeRegister.typeOwner",
-            "pbdf.signicat.kvkTradeRegister.legalEntity",
-            "pbdf.signicat.kvkTradeRegister.address",
-            "pbdf.signicat.kvkTradeRegister.emailAddress",
-            "pbdf.signicat.kvkTradeRegister.phone",
-            "pbdf.signicat.kvkTradeRegister.registrationStart",
-            "pbdf.signicat.kvkTradeRegister.dateDeregistration",
-            "pbdf.signicat.kvkTradeRegister.registrationEnd",
-            "pbdf.signicat.kvkTradeRegister.specialLegalSituation",
-            "pbdf.signicat.kvkTradeRegister.restrictionInLegalAction",
-            "pbdf.signicat.kvkTradeRegister.foreignLegalStatus",
-            "pbdf.signicat.kvkTradeRegister.hasRestriction",
-            "pbdf.signicat.kvkTradeRegister.isAuthorized",
-            "pbdf.signicat.kvkTradeRegister.reason",
-            "pbdf.signicat.kvkTradeRegister.referenceMoment",
-        ]
-    ],
-    [
-        [
-            "pbdf.sidn-pbdf.email.email"
-        ]
-    ],
-]

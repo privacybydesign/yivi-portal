@@ -1,0 +1,148 @@
+erDiagram
+    TrustModel ||--|{ YiviTrustModelEnv : "has_environments"
+    YiviTrustModelEnv ||--o{ AttestationProvider : "has_providers"
+    YiviTrustModelEnv ||--o{ RelyingParty : "has_Relying_parties"
+    
+    Organization ||--o{ AttestationProvider : "operates"
+    Organization ||--o{ RelyingParty : "operates"
+    Organization ||--|{ Users : "operated_by"
+    
+    AttestationProvider ||--|| Status : "has_status"
+    RelyingParty ||--|| Status : "has_status"
+
+                           
+    RelyingPartyHostname ||--|| RelyingParty : "validates"
+    
+    Condiscon ||--|| RelyingParty : "defines"
+    
+    Condiscon ||--|{ CondisconAttribute : "has"
+    CondisconAttribute ||--|{ CredentialAttribute : "uses"
+    AttestationProvider ||--|{ Credential : "can_issue"
+    Credential ||--|{ CredentialAttribute : "has"
+
+    TrustModel {
+        int id PK
+        string name 
+        text description
+        boolean eudi_compliant
+    }
+
+    YiviTrustModelEnv {
+        int id PK
+        int trust_model_id FK
+        string env
+        string timestamp_server
+        string keyshare_server
+        string keyshare_website
+        string keyshare_attribute
+        string contact
+        string minimum_android_version
+        string minimum_ios_version
+        string description_en
+        string description_nl
+        string url
+    }
+    
+    AttestationProvider {
+        int id PK
+        int yivi_tme_id FK
+        int org_id FK
+        string version
+        string shortname_en
+        string shortname_nl
+        string contact_url
+        string base_url
+        JSON approved_ap_details
+        JSON published_ap_details
+    }
+
+    Credential {
+        int id PK
+        int attestation_provider_id FK
+        string credential_tag
+        string name_en
+        string name_nl
+        string description_en
+        string description_nl
+    }
+
+    CredentialAttribute {
+        int id PK
+        string name
+        int credential_id FK,PK
+        int attribute_id FK,PK
+    }
+
+    CondisconAttribute {
+        int id PK
+        int condiscon_id FK
+        int credential_attribute_id FK
+        text reason-en
+        text reason-nl
+
+    }
+
+    RelyingParty {
+        int id PK
+        int yivi_tme_id FK
+        int org_id FK     
+        JSON approved_rp_details
+        JSON published_rp_details
+    }
+
+    Status {
+        int id PK
+        int AP_id FK
+        int RP_id FK
+        datetime created_at
+        datetime last_updated_at
+        boolean ready
+        datetime ready_at
+        boolean reviewed_accepted
+        datetime reviewed_at
+        text rejection_remarks
+        datetime published_at
+    }
+
+    Organization {
+        uuid id PK
+        string name_en
+        string name_nl
+        string slug 
+        string registration_number
+        text address
+        json trade_names
+        image logo
+        verified boolean
+        datetime verified_at 
+        datetime created_at
+        datetime last_updated_at
+    }
+
+    Users {
+        string email
+        int id PK
+        int org_id FK
+        string role "admin/maintainer"
+    }
+
+    RelyingPartyHostname {
+        int id PK
+        int rp_id FK
+        string hostname
+        string dns_challenge
+        datetime dns_challenge_created_at
+        boolean dns_challenge_verified
+        datetime dns_challenge_verified_at
+        datetime dns_challenge_invalidated_at
+        boolean manually_verified
+    }
+
+    Condiscon {
+        int id PK
+        int rp_id FK
+        json condiscon
+        string context_description_en
+        string context_description_nl
+    }
+

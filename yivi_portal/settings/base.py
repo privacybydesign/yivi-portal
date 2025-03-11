@@ -1,11 +1,32 @@
 import os
 import sys
+from datetime import timedelta
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Application definition
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+    "DEFAULT_PERMISSION_CLASSES": [
+        "rest_framework.permissions.IsAuthenticated",  # Restrict access to authenticated users
+    ],
+}
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(hours=24), # TODO: make this shorter after testing
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+    'ROTATE_REFRESH_TOKENS': True,
+    'BLACKLIST_AFTER_ROTATION': True,
+    "SIGNING_KEY": "test",
+    "USER_ID_FIELD": "email",
+    "USER_ID_CLAIM": "email",
+  # Prevent user_id from being used
+}
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -14,16 +35,19 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "corsheaders",
     "rest_framework",
+    'rest_framework_simplejwt',
+    "drf_yasg",
     "django_bootstrap5",
     "django_cron",
     "imagekit",
-    "yivi_auth.apps.YiviAuthConfig",
-    "schememanager.apps.SchememanagerConfig",
+    "portal_backend.apps.PortalBackendConfig",
     "yivi_portal",
 ]
 
 MIDDLEWARE = [
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -46,8 +70,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
-                "schememanager.context_processors.organizations",
-                "schememanager.context_processors.settings",
+
             ],
         },
     },
@@ -92,9 +115,8 @@ USE_TZ = True
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 CRON_CLASSES = [
-    "schememanager.crons.NewDNSVerification",
-    "schememanager.crons.ExistingDNSVerification",
-    "schememanager.crons.FetchPublishedSchemes",
+    "portal_backend.crons.NewDNSVerification",
+    "portal_backend.crons.ExistingDNSVerification",
 ]
 
 DJANGO_CRON_DELETE_LOGS_OLDER_THAN = 7
