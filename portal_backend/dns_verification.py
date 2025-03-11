@@ -1,8 +1,8 @@
 import logging
 import secrets
-import dns.resolver
+import dns.resolver  # type: ignore
 from django.utils import timezone
-from dns.resolver import Resolver
+from dns.resolver import Resolver  # type: ignore
 from portal_backend.models.models import RelyingPartyHostname
 
 logger = logging.getLogger(__name__)

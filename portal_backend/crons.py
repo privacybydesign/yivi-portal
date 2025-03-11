@@ -1,4 +1,4 @@
-from django_cron import CronJobBase, Schedule
+from django_cron import CronJobBase, Schedule  # type: ignore
 from portal_backend.dns_verification import verify_new_dns, verify_existing_dns
 from portal_backend.models.models import RelyingPartyHostname
 

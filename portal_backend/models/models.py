@@ -5,7 +5,7 @@ from django.core.files.storage import FileSystemStorage
 import uuid
 import os
 import hashlib
-from imagekit.models import ProcessedImageField
+from imagekit.models import ProcessedImageField  # type: ignore
 from django.conf import settings
 from django.utils import timezone
 from django.utils.text import slugify

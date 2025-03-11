@@ -1,7 +1,7 @@
 import logging
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from drf_yasg.utils import swagger_auto_schema
+from drf_yasg.utils import swagger_auto_schema  # type: ignore
 from rest_framework import status
 from ..models.model_serializers import OrganizationSerializer
 from ..models.models import Organization
@@ -9,7 +9,7 @@ from rest_framework import permissions
 from ..models.models import User
 from .helpers import BelongsToOrganization, IsMaintainer
 from rest_framework.pagination import LimitOffsetPagination
-from drf_yasg import openapi
+from drf_yasg import openapi  # type: ignore
 from django.shortcuts import get_object_or_404
 
 logger = logging.getLogger(__name__)

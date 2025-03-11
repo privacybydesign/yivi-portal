@@ -5,8 +5,8 @@ from portal_backend.views.attestation_provider import *
 from portal_backend.views.relying_party import *
 from django.urls import re_path
 from rest_framework import permissions
-from drf_yasg.views import get_schema_view
-from drf_yasg import openapi
+from drf_yasg.views import get_schema_view  # type: ignore
+from drf_yasg import openapi  # type: ignore
 
 
 app_name = "portal_backend"

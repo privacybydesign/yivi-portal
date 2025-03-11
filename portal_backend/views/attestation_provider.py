@@ -1,7 +1,7 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from drf_yasg.utils import swagger_auto_schema
+from drf_yasg.utils import swagger_auto_schema  # type: ignore
 from django.shortcuts import get_object_or_404
 from portal_backend.models.models import *
 from django.shortcuts import get_object_or_404
