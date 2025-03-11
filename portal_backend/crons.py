@@ -9,7 +9,9 @@ class NewDNSVerification(CronJobBase):
     code = "portal_backend.new_dns_verification"
 
     def do(self):
-        for hostname in RelyingPartyHostname.objects.filter(dns_challenge_verified=False, manually_verified=False):
+        for hostname in RelyingPartyHostname.objects.filter(
+            dns_challenge_verified=False, manually_verified=False
+        ):
             verify_new_dns(hostname)
 
 
@@ -19,5 +21,7 @@ class ExistingDNSVerification(CronJobBase):
     code = "portal_backend.existing_dns_verification"
 
     def do(self):
-        for hostname in RelyingPartyHostname.objects.filter(dns_challenge_verified=True):
+        for hostname in RelyingPartyHostname.objects.filter(
+            dns_challenge_verified=True
+        ):
             verify_existing_dns(hostname)

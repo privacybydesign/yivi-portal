@@ -2,9 +2,9 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from drf_yasg.utils import swagger_auto_schema  # type: ignore
-from ..models.models import *
+from ..models.models import TrustModel
 from django.shortcuts import get_object_or_404
-from ..models.model_serializers import *
+from ..models.model_serializers import TrustModelSerializer, YiviTrustModelEnvSerializer
 
 from rest_framework import permissions
 
@@ -12,9 +12,7 @@ from rest_framework import permissions
 class TrustModelListAPIView(APIView):
     permission_classes = [permissions.AllowAny]
 
-    @swagger_auto_schema(
-        responses={200: "Success"}
-    )
+    @swagger_auto_schema(responses={200: "Success"})
     def get(self, request):
         """Gets a list of trust models."""
         trust_models = TrustModel.objects.all()
@@ -25,10 +23,7 @@ class TrustModelListAPIView(APIView):
 class TrustModelDetailAPIView(APIView):
     permission_classes = [permissions.AllowAny]
 
-    @swagger_auto_schema(
-        responses={200: "Success",
-                   404: "Not found"}
-    )
+    @swagger_auto_schema(responses={200: "Success", 404: "Not found"})
     def get(self, request, name: str):
         """Gets a specific trust model."""
         trust_model = get_object_or_404(TrustModel, name=name)
@@ -39,10 +34,7 @@ class TrustModelDetailAPIView(APIView):
 class TrustModelEnvironments(APIView):
     permission_classes = [permissions.AllowAny]
 
-    @swagger_auto_schema(
-        responses={200: "Success",
-                   404: "Not found"}
-    )
+    @swagger_auto_schema(responses={200: "Success", 404: "Not found"})
     def get(self, request, name: str):
         """Gets a list of environments for a trust model."""
         trust_model = get_object_or_404(TrustModel, name=name)
@@ -54,10 +46,7 @@ class TrustModelEnvironments(APIView):
 class TrustModelEnvironment(APIView):
     permission_classes = [permissions.AllowAny]
 
-    @swagger_auto_schema(
-        responses={200: "Success",
-                   404: "Not found"}
-    )
+    @swagger_auto_schema(responses={200: "Success", 404: "Not found"})
     def get(self, request, name: str, environment: str):
         """Gets a list of environments for a trust model."""
         trust_model = get_object_or_404(TrustModel, name=name)

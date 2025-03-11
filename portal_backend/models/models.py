@@ -29,8 +29,7 @@ class LogoStorage(FileSystemStorage):
     def get_logo_path(instance, filename):
         """Determine the path for a logo image, based on the contents of the file"""
         instance.logo.file.seek(0)
-        content_hash = LogoStorage.hash_file_contents(
-            instance.logo.file.read())
+        content_hash = LogoStorage.hash_file_contents(instance.logo.file.read())
         filename, file_extension = os.path.splitext(filename)
         return f"{content_hash}{file_extension}"
 
@@ -50,8 +49,7 @@ class Organization(models.Model):
         storage=LogoStorage(),
         null=True,
         blank=True,
-        validators=[FileExtensionValidator(
-            allowed_extensions=["png", "jpg", "jpeg"])],
+        validators=[FileExtensionValidator(allowed_extensions=["png", "jpg", "jpeg"])],
     )
     approved_logo = models.ImageField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -138,8 +136,7 @@ class AttestationProvider(models.Model):
     base_url = models.URLField()
     # what will be added to issuers scheme
     approved_ap_details = models.JSONField(null=True)
-    published_ap_details = models.JSONField(
-        null=True)  # what is actually published
+    published_ap_details = models.JSONField(null=True)  # what is actually published
     created_at = models.DateTimeField(auto_now_add=True)
     last_updated_at = models.DateTimeField(auto_now=True)
 
@@ -176,8 +173,7 @@ class RelyingParty(models.Model):
     )
     # what will be added to requestors scheme (formerly called scheme data)
     approved_rp_details = models.JSONField(null=True, default=None, blank=True)
-    published_rp_details = models.JSONField(
-        null=True, default=None, blank=True)
+    published_rp_details = models.JSONField(null=True, default=None, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     last_updated_at = models.DateTimeField(auto_now=True)
 
@@ -186,8 +182,7 @@ class RelyingParty(models.Model):
 
     @property
     def new_rp_details(self):
-        hostname = RelyingPartyHostname.objects.filter(
-            relying_party=self).first()
+        hostname = RelyingPartyHostname.objects.filter(relying_party=self).first()
         requestor_scheme_entry = {
             "id": self.id,
             "name": {"en": self.organization.name_en, "nl": self.organization.name_nl},
@@ -234,8 +229,7 @@ class Status(models.Model):
         verbose_name_plural = "Statuses"
         constraints = [
             CheckConstraint(
-                check=Q(relying_party__isnull=False,
-                        attestation_provider__isnull=True)
+                check=Q(relying_party__isnull=False, attestation_provider__isnull=True)
                 | Q(relying_party__isnull=True, attestation_provider__isnull=False),
                 name="either_rp_or_ap",
             )

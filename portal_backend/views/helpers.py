@@ -15,8 +15,8 @@ class BelongsToOrganization(permissions.BasePermission):
     message = "Unauthorized: User does not belong to this organization"
 
     def has_permission(self, request, view):
-        org_pk = view.kwargs.get('org_pk')
-        slug = view.kwargs.get('slug')
+        org_pk = view.kwargs.get("org_pk")
+        slug = view.kwargs.get("slug")
 
         user_obj = get_object_or_404(User, email=request.user.email)
 

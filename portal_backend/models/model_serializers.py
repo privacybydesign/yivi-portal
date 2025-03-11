@@ -1,5 +1,17 @@
 from rest_framework import serializers
-from .models import *
+from .models import (
+    Organization,
+    TrustModel,
+    YiviTrustModelEnv,
+    Status,
+    RelyingPartyHostname,
+    Condiscon,
+    AttestationProvider,
+    Credential,
+    CredentialAttribute,
+    CondisconAttribute,
+    RelyingParty,
+)
 
 
 class OrganizationSerializer(serializers.ModelSerializer):
@@ -83,12 +95,9 @@ class CondisconSerializer(serializers.ModelSerializer):
 
 
 class AttestationProviderSerializer(serializers.ModelSerializer):
-    yivi_tme = serializers.CharField(
-        source="yivi_tme.environment", read_only=True)
-    organization = serializers.CharField(
-        source="organization.name_en", read_only=True)
-    status = serializers.BooleanField(
-        source="status.reviewed_accepted", read_only=True)
+    yivi_tme = serializers.CharField(source="yivi_tme.environment", read_only=True)
+    organization = serializers.CharField(source="organization.name_en", read_only=True)
+    status = serializers.BooleanField(source="status.reviewed_accepted", read_only=True)
 
     class Meta:
         model = AttestationProvider
@@ -114,16 +123,11 @@ class CondisconAttributeSerializer(serializers.ModelSerializer):
 
 
 class RelyingPartySerializer(serializers.ModelSerializer):
-    yivi_tme = serializers.CharField(
-        source="yivi_tme.environment", read_only=True)
-    organization = serializers.CharField(
-        source="organization.name_en", read_only=True)
-    status = serializers.BooleanField(
-        source="status.reviewed_accepted", read_only=True)
-    hostname = serializers.CharField(
-        source="hostname.hostname", read_only=True)
-    condiscon = serializers.JSONField(
-        source="condiscon.condiscon", read_only=True)
+    yivi_tme = serializers.CharField(source="yivi_tme.environment", read_only=True)
+    organization = serializers.CharField(source="organization.name_en", read_only=True)
+    status = serializers.BooleanField(source="status.reviewed_accepted", read_only=True)
+    hostname = serializers.CharField(source="hostname.hostname", read_only=True)
+    condiscon = serializers.JSONField(source="condiscon.condiscon", read_only=True)
 
     class Meta:
         model = RelyingParty
