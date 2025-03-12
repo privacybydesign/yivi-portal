@@ -1,6 +1,4 @@
-import sys
-
-from .base import *  # noqa
+import os
 
 SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY")
 
@@ -33,8 +31,4 @@ MEDIA_URL = os.environ.get("DJANGO_MEDIA_URL")
 STATIC_ROOT = os.environ.get("DJANGO_STATIC_ROOT")
 MEDIA_ROOT = os.environ.get("DJANGO_MEDIA_ROOT")
 
-EMAIL_DISCLOSURE = [
-    [
-        [ "pbdf.sidn-pbdf.email.email" ]
-    ]
-]
+EMAIL_DISCLOSURE = [[["pbdf.sidn-pbdf.email.email"]]]

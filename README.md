@@ -95,24 +95,30 @@ API documentation is available at:
 * Swagger UI: `/swagger/`
 * ReDoc: `/redoc/`
 
-### Available Endpoints
+## Available Endpoints
 
-| Endpoint                                                              | Method | Description                                      |
-|-----------------------------------------------------------------------|--------|--------------------------------------------------|
-| `/v1/organizations`                                                   | GET    | List all organizations                           |
-| `/v1/organizations/<uuid:pk>`                                         | GET    | Get details of a specific organization           |
-| `/v1/organizations/<uuid:pk>/maintainers`                             | GET    | List maintainers of an organization              |
-| `/v1/organizations/<uuid:pk>/relying-party`                           | POST   | Register organization as a relying party         |
-| `/v1/trust-models`                                                    | GET    | List all trust models                            |
-| `/v1/trust-models/<str:name>/`                                        | GET    | Get details of a specific trust model            |
-| `/v1/trust-models/<str:name>/environments`                            | GET    | List environments for a trust model              |
-| `/v1/trust-models/<str:name>/environments/<str:environment>`          | GET    | Get details of a specific trust model environment|
-| `/v1/trust-models/<str:name>/environments/<str:environment>/attestation-providers/` | GET | List attestation providers for a trust model environment |
-| `/v1/trust-models/<str:name>/environments/<str:environment>/relying-parties/` | GET | List relying parties for a trust model environment |
-| `/v1/relying-party/<str:slug>/hostname/status/`                       | GET    | Get hostname status for a relying party          |
-| `/v1/relying-party/<str:slug>/status/`                                | GET    | Get registration status of a relying party       |
-| `/v1/session/`                                                        | POST   | Start a new Yivi authentication session          |
-| `/v1/token/<str:token>`                                               | GET    | Get authentication token from Yivi session       |
+| **Endpoint**                                                                                                     | **Method** | **Description**                                                      |
+|------------------------------------------------------------------------------------------------------------------|------------|----------------------------------------------------------------------|
+| **Organizations**                                                                                                           |                                                                      |
+| `/v1/organizations/`                                                                                            | `GET`      | List all organizations                                               |
+| `/v1/organizations/<uuid:pk>/`                                                                                  | `GET`      | Retrieve details of a specific organization                          |
+| `/v1/organizations/<uuid:pk>/maintainers/`                                                                      | `GET`      | List maintainers of a specific organization                          |
+| `/v1/organizations/<uuid:pk>/register-rp/`                                                                      | `POST`     | Register the organization as a relying party (RP)                   |
+| **Trust Models**                                                                                                |           |                                                                      |
+| `/v1/trust-models/`                                                                                             | `GET`      | List all trust models                                                |
+| `/v1/trust-models/<str:name>/`                                                                                  | `GET`      | Retrieve details of a specific trust model                           |
+| `/v1/trust-models/<str:name>/environments/`                                                                     | `GET`      | List all environments within a specific trust model                  |
+| `/v1/trust-models/<str:name>/environments/<str:environment>/`                                                   | `GET`      | Retrieve details of a specific environment within a trust model      |
+| **Public Listings in a Trust Model Environment**                                                                |           |                                                                      |
+| `/v1/trust-models/<str:name>/environments/<str:environment>/organizations/`                                     | `GET`      | List organizations in a trust model environment                      |
+| `/v1/trust-models/<str:name>/environments/<str:environment>/attestation-providers/`                             | `GET`      | List attestation providers (APs) in a trust model environment        |
+| `/v1/trust-models/<str:name>/environments/<str:environment>/relying-parties/`                                   | `GET`      | List relying parties (RPs) in a trust model environment              |
+| **Relying Parties**                                                                                                        |                                                                      |
+| `/v1/relying-party/<str:slug>/hostname-status/`                                                               | `GET`      | Get hostname validation status of a relying party                    |
+| `/v1/relying-party/<str:slug>/registration-status/`                                                           | `GET`      | Get registration status of a relying party                           |
+| **Yivi Authentication**                                                                                          |          |                                                                      |
+| `/v1/session/`                                                                                                  | `POST`     | Start a new Yivi authentication session                              |
+| `/v1/token/<str:token>/`                                                                                        | `GET`      | Retrieve authentication token from the Yivi session                  |
 
 ## Features
 

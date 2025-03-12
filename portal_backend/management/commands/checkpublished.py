@@ -1,6 +1,6 @@
 from django.core.management.base import BaseCommand
 
-from portal_backend.models.scheme import Scheme
+from portal_backend.models.models import Scheme
 from portal_backend.published_check import fetch_requestor_scheme
 
 
