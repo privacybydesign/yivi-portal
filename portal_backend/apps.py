@@ -6,4 +6,4 @@ class PortalBackendConfig(AppConfig):
     name = "portal_backend"
 
     def ready(self):
-        import portal_backend.signals
+        import portal_backend.signals  # noqa: F401
