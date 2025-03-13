@@ -12,10 +12,8 @@ from ...models.models import (
     Organization,
     RelyingPartyHostname,
     YiviTrustModelEnv,
-    Status,
 )
 from django.db import transaction, IntegrityError
-from PIL import Image
 
 
 class Command(BaseCommand):
@@ -25,50 +23,61 @@ class Command(BaseCommand):
 
     @transaction.atomic
     def create_org_rp_hostname(
-        self, slug, logo_image_file, hostname, name_en, name_nl, verifier
+        self, slug, logo_image_file, hostnames, name_en, name_nl, verifier
     ):
         """
         Create Organization, RelyingParty, RelyingPartyHostname, and Status records for a verifier.
         """
 
-        if Organization.objects.filter(slug=slug).exists():
-            self.stdout.write(
-                self.style.WARNING(
-                    f"Organization '{slug}' already exists. Skipping creation."
-                )
-            )
-            return
-
-        org = Organization(
+        org, org_created = Organization.objects.update_or_create(
             slug=slug,
-            is_verified=True,
-            logo=logo_image_file,
-            name_en=name_en,
-            name_nl=name_nl,
-            registration_number="AUTO-GENERATED",
-            address="AUTO-GENERATED",
+            defaults={
+                "is_verified": True,
+                "logo": logo_image_file,
+                "name_en": name_en,
+                "name_nl": name_nl,
+                "registration_number": "AUTO-GENERATED",
+                "address": "AUTO-GENERATED",
+            },
         )
-        org.save()
-        self.stdout.write(f"Created Organization: {slug}")
+
+        if org_created:
+            self.stdout.write(f"Created Organization: {slug}")
+        else:
+            self.stdout.write(f"Updated Organization: {slug}")
 
         yivi_tme = YiviTrustModelEnv.objects.get(environment="production")
-        rp = RelyingParty.objects.create(
+        rp, rp_created = RelyingParty.objects.update_or_create(
             organization=org,
-            yivi_tme=yivi_tme,
-            approved_rp_details=verifier,
-            published_rp_details=verifier,
+            defaults={
+                "yivi_tme": yivi_tme,
+                "approved_rp_details": verifier,
+                "published_rp_details": verifier,
+            },
         )
-        rp.save()
-        self.stdout.write(f"Created RelyingParty for Organization: {slug}")
 
-        rp_hostname = RelyingPartyHostname.objects.create(
-            relying_party=rp,
-            hostname=hostname,
-            manually_verified=True,
-            dns_challenge=None,
-            dns_challenge_created_at=None,
-        )
-        self.stdout.write(f"Created Hostname: {hostname}")
+        if rp_created:
+            self.stdout.write(f"Created RelyingParty for Organization: {slug}")
+        else:
+            self.stdout.write(f"Updated RelyingParty for Organization: {slug}")
+        for i in range(0, hostnames.__len__()):
+            hostname = hostnames[i]
+            rp_hostname, hostname_created = (
+                RelyingPartyHostname.objects.update_or_create(
+                    relying_party=rp,
+                    hostname=hostname,
+                    defaults={
+                        "manually_verified": True,
+                        "dns_challenge": None,
+                        "dns_challenge_created_at": None,
+                    },
+                )
+            )
+
+            if hostname_created:
+                self.stdout.write(f"Created Hostname: {hostname}")
+            else:
+                self.stdout.write(f"Updated Hostname: {hostname}")
 
     # download requestors repo
     repo_url = "https://github.com/privacybydesign/pbdf-requestors/archive/refs/heads/master.zip"
@@ -104,7 +113,7 @@ class Command(BaseCommand):
                 print(f"No logo found for {verifier['id']}")
                 continue
             slug = verifier["id"].split(".")[1]
-            hostname = verifier["hostnames"][0]
+            hostnames = verifier["hostnames"]
             name_en = verifier["name"]["en"]
             name_nl = verifier["name"]["nl"]
             logo_path = f"requestors-repo/pbdf-requestors-master/assets/{logo_hash}.png"
@@ -113,10 +122,11 @@ class Command(BaseCommand):
                 self.create_org_rp_hostname(
                     slug,
                     logo_image_file,
-                    hostname,
+                    hostnames,
                     name_en,
                     name_nl,
                     verifier,
                 )
                 self.stdout.write(self.style.SUCCESS(f"Created verifier: {slug}"))
+            self.stdout.write(self.style.SUCCESS(f"Created verifier: {slug}"))
         self.stdout.write(self.style.SUCCESS("Import completed successfully"))
