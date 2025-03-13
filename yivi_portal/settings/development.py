@@ -1,4 +1,4 @@
-from .base import BASE_DIR
+from .base import *
 import os
 
 # Quick-start development settings - unsuitable for production

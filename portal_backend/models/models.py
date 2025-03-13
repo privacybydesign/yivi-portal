@@ -370,12 +370,12 @@ class RelyingPartyHostname(models.Model):
             )
         ],
     )
-    dns_challenge = models.CharField(max_length=255)
-    dns_challenge_created_at = models.DateTimeField()
-    dns_challenge_verified = models.BooleanField(default=False)
+    dns_challenge = models.CharField(max_length=255, null=True, blank=True)
+    dns_challenge_created_at = models.DateTimeField(null=True, blank=True)
+    dns_challenge_verified = models.BooleanField(null=True, blank=True)
     dns_challenge_verified_at = models.DateTimeField(null=True, blank=True)
     dns_challenge_invalidated_at = models.DateTimeField(null=True, blank=True)
-    manually_verified = models.BooleanField(default=False)
+    manually_verified = models.BooleanField(null=True, blank=True)
     relying_party = models.ForeignKey(
         RelyingParty, on_delete=models.CASCADE, related_name="hostnames"
     )
