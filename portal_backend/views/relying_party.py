@@ -38,15 +38,14 @@ class RelyingPartyListAPIView(APIView):
     permission_classes = [permissions.AllowAny]
 
     @swagger_auto_schema(responses={200: "Success", 404: "Not Found"})
-    def get(self, request, name: str, environment: str):
-        """Gets details of a specific attestation provider by ID."""
-        relying_party = get_object_or_404(
-            RelyingParty,
-            yivi_tme__trust_model__name=name,
+    def get(self, request, trustmodel_name: str, environment: str):
+        """Gets a list of relying parties and its details"""
+        relying_parties = RelyingParty.objects.filter(
+            yivi_tme__trust_model__name__iexact=trustmodel_name,
             yivi_tme__environment=environment,
         )
-        serializer = RelyingPartySerializer(relying_party)
-        return Response(data=serializer, status=status.HTTP_200_OK)
+        serializer = RelyingPartySerializer(relying_parties, many=True)
+        return Response(data=serializer.data, status=status.HTTP_200_OK)
 
 
 class RelyingPartyRegisterAPIView(APIView):

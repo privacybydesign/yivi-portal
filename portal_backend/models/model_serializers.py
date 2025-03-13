@@ -15,8 +15,7 @@ from .models import (
 
 
 class OrganizationSerializer(serializers.ModelSerializer):
-    is_RP = serializers.SerializerMethodField()
-    is_AP = serializers.SerializerMethodField()
+
     trust_model = serializers.SerializerMethodField()
 
     class Meta:
@@ -39,16 +38,6 @@ class OrganizationSerializer(serializers.ModelSerializer):
             "trust_model",
         ]
         read_only_fields = ["is_verified"]
-
-    def get_is_RP(self, obj):
-        return RelyingParty.objects.filter(
-            organization=obj, status__reviewed_accepted=True
-        ).exists()
-
-    def get_is_AP(self, obj):
-        return AttestationProvider.objects.filter(
-            organization=obj, status__reviewed_accepted=True
-        ).exists()
 
     def get_trust_model(self, obj):
         # check for trust model in AP
