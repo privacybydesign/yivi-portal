@@ -1,10 +1,9 @@
 from django.core.management.base import BaseCommand
 from django.core.files.images import ImageFile
-from django.core.files.base import ContentFile
 import json
 import os
-import tempfile
 import zipfile
+from django.db import transaction
 from urllib.request import urlopen
 from io import BytesIO
 from ...models.models import (
@@ -13,7 +12,6 @@ from ...models.models import (
     RelyingPartyHostname,
     YiviTrustModelEnv,
 )
-from django.db import transaction, IntegrityError
 
 
 class Command(BaseCommand):
@@ -91,8 +89,8 @@ class Command(BaseCommand):
         zip_file = zipfile.ZipFile(BytesIO(response.read()))
         try:
             zip_file.extractall("requestors-repo")
-        except:
-            self.stdout.write(self.style.ERROR("Error extracting the zip file"))
+        except Exception as e:
+            self.stdout.write(self.style.ERROR(f"Error extracting the zip file: {e}"))
 
         self.stdout.write(
             self.style.SUCCESS("Requestors scheme downloaded successfully")

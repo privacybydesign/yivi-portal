@@ -1,4 +1,4 @@
-from .base import *
+from .base import *  # F403
 import os
 
 # Quick-start development settings - unsuitable for production
@@ -38,9 +38,7 @@ SWAGGER_SETTINGS = {
             "description": "Enter the token as: Bearer <token>",
         }
     },
-    "DEFAULT_SECURITY": [
-        {"Bearer": []}  # Apply Bearer auth globally
-    ],
+    "DEFAULT_SECURITY": [{"Bearer": []}],  # Apply Bearer auth globally
     "PERSIST_AUTH": True,  # Keep token saved in Swagger UI
 }
 
