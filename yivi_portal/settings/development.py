@@ -1,4 +1,4 @@
-from .base import *  # F403
+from .base import *  # noqa: F405, F403
 import os
 
 # Quick-start development settings - unsuitable for production
@@ -23,7 +23,7 @@ CORS_ALLOWED_ORIGINS = [
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR.parent / "db.sqlite3",
+        "NAME": BASE_DIR.parent / "db.sqlite3",  # noqa: F405
     }
 }
 
@@ -48,7 +48,7 @@ SWAGGER_SETTINGS = {
 STATIC_URL = "static/"
 MEDIA_URL = "assets/"
 
-STATIC_ROOT = BASE_DIR / "static"
-MEDIA_ROOT = BASE_DIR / "assets"
+STATIC_ROOT = BASE_DIR / "static"  # noqa: F405
+MEDIA_ROOT = BASE_DIR / "assets"  # noqa: F405
 
 EMAIL_DISCLOSURE = [[["irma-demo.sidn-pbdf.email.email"]]]
