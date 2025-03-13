@@ -127,6 +127,4 @@ class Command(BaseCommand):
                     name_nl,
                     verifier,
                 )
-                self.stdout.write(self.style.SUCCESS(f"Created verifier: {slug}"))
-            self.stdout.write(self.style.SUCCESS(f"Created verifier: {slug}"))
         self.stdout.write(self.style.SUCCESS("Import completed successfully"))

@@ -12,11 +12,11 @@ class AttestationProviderListAPIView(APIView):
     permission_classes = [permissions.AllowAny]
 
     @swagger_auto_schema(responses={200: "Success", 404: "Not Found"})
-    def get(self, request, name: str, environment: str):
+    def get(self, request, trustmodel_name: str, environment: str):
         """Gets details of a specific attestation provider by ID."""
         attestation_provider = get_object_or_404(
             AttestationProvider,
-            yivi_tme__trust_model__name=name,
+            yivi_tme__trust_model__name=trustmodel_name,
             yivi_tme__environment=environment,
         )
         serializer = AttestationProviderSerializer(attestation_provider)

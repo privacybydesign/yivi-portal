@@ -71,34 +71,29 @@ urlpatterns = [
     ),
     # Trust Model Environments
     path(
-        "v1/trust-models/<str:name>/environments/",
+        "v1/<str:name>/environments/",
         TrustModelEnvironments.as_view(),
         name="trust-model-environment-list",
     ),
     path(
-        "v1/trust-models/<str:name>/environments/<str:environment>/",
+        "v1/<str:trustmodel_name>/<str:environment>/",
         TrustModelEnvironment.as_view(),
         name="trust-model-environment-detail",
     ),
     # Public Listings inside a Trust Model Environment
     path(
-        "v1/trust-models/<str:name>/environments/<str:environment>/organizations/",
-        OrganizationListAPIView.as_view(),
-        name="trust-model-organization-list",
-    ),
-    path(
-        "v1/trust-models/<str:name>/environments/<str:environment>/attestation-providers/",
+        "v1/<str:trustmodel_name>/<str:environment>/attestation-providers/",
         AttestationProviderListAPIView.as_view(),
         name="trust-model-ap-list",
     ),
     path(
-        "v1/trust-models/<str:name>/environments/<str:environment>/relying-parties/",
+        "v1/<str:trustmodel_name>/<str:environment>/relying-parties/",
         RelyingPartyListAPIView.as_view(),
         name="trust-model-rp-list",
     ),
     # Relying Party Statuses
     path(
-        "v1/relying-parties/<str:slug>/hostname-status/",
+        "v1/relying-party/<str:slug>/hostname-status/",
         RelyingPartyHostnameStatusAPIView.as_view(),
         name="rp-hostname-status",
     ),

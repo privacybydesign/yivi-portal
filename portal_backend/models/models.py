@@ -85,6 +85,14 @@ class Organization(models.Model):
 
         super().delete(*args, **kwargs)
 
+    @property
+    def is_RP(self):
+        return RelyingParty.objects.filter(organization=self).exists()
+
+    @property
+    def is_AP(self):
+        return AttestationProvider.objects.filter(organization=self).exists()
+
 
 class TrustModel(models.Model):
     name = models.CharField(max_length=255)
