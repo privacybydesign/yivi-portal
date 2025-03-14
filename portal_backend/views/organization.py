@@ -26,7 +26,7 @@ class OrganizationListAPIView(APIView):
 
         orgs = Organization.objects.filter(is_verified=True)
         paginator = LimitOffsetPagination()
-        paginator.default_limit = 10
+        paginator.default_limit = 20
         result_page = paginator.paginate_queryset(orgs, request)
         serializer = OrganizationSerializer(result_page, many=True)
         return paginator.get_paginated_response(serializer.data)

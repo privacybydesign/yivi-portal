@@ -13,6 +13,8 @@ media
 portal_backend/migrations/0*.py
 yivi_portal/assets
 requestors-repo
+attestation-provider-repo
+
 
 # If your build process includes running collectstatic, then you probably don't need or want to include staticfiles/
 # in your Git repository. Update and uncomment the following line accordingly.
