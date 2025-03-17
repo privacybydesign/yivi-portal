@@ -1,5 +1,4 @@
 from django.core.management.base import BaseCommand
-from django_cron import CronJobManager  # type: ignore
 from portal_backend.crons import (
     NewDNSVerification,
     ExistingDNSVerification,

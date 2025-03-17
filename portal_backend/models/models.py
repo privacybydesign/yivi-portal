@@ -138,9 +138,9 @@ class AttestationProvider(models.Model):
         Organization, on_delete=models.CASCADE, related_name="attestation_providers"
     )
     version = models.CharField(max_length=50)
-    shortname_en = models.CharField(max_length=100)
-    shortname_nl = models.CharField(max_length=100)
-    contact_email = models.EmailField(max_length=255, unique=True)
+    shortname_en = models.CharField(max_length=100, null=True, blank=True)
+    shortname_nl = models.CharField(max_length=100, null=True, blank=True)
+    contact_email = models.EmailField(max_length=255, null=True, blank=True)
     base_url = models.URLField(null=True, blank=True)
     # what will be added to issuers scheme
     approved_ap_details = models.JSONField(null=True)
