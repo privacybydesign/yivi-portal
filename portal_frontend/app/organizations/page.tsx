@@ -180,6 +180,13 @@ export default function OrganizationsPage() {
     return pageNumbers;
   };
 
+  // Calculate visible range for current page
+  const getVisibleRange = () => {
+    const start = ((currentPage - 1) * pageSize) + 1;
+    const end = Math.min(currentPage * pageSize, totalCount);
+    return { start, end };
+  };
+
   return (
     <div className="container mx-auto p-4">
       <div className="flex flex-col gap-6 mb-6">
@@ -272,7 +279,12 @@ export default function OrganizationsPage() {
       
       <Table>
         <TableCaption>
-          Organizations {applyingFilters ? '' : `(Page ${currentPage} of ${totalPages})`}
+          {!loading && !applyingFilters && (
+            <>
+              Showing {totalCount > 0 ? getVisibleRange().start : 0} to {getVisibleRange().end} of {totalCount} organizations
+              {totalPages > 1 && ` (Page ${currentPage} of ${totalPages})`}
+            </>
+          )}
         </TableCaption>
         <TableHeader>
           <TableRow>
@@ -359,7 +371,7 @@ export default function OrganizationsPage() {
       {totalPages > 1 && (
         <div className="flex justify-between items-center mt-6">
           <div className="text-sm text-gray-500">
-            Showing page {currentPage} of {totalPages}
+            Showing {totalCount > 0 ? getVisibleRange().start : 0} to {getVisibleRange().end} of {totalCount} organizations
           </div>
           
           <div className="flex-1 flex justify-center">
@@ -398,7 +410,7 @@ export default function OrganizationsPage() {
           
           <div className="invisible text-sm text-gray-500">
             {/* This invisible element helps maintain the layout balance */}
-            Showing page {currentPage} of {totalPages}
+            Showing {totalCount > 0 ? getVisibleRange().start : 0} to {getVisibleRange().end} of {totalCount} organizations
           </div>
         </div>
       )}
