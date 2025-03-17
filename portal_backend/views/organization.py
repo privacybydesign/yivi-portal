@@ -25,6 +25,23 @@ class OrganizationListAPIView(APIView):
         logger.info("Fetching all registered organizations")
 
         orgs = Organization.objects.filter(is_verified=True)
+
+        search_query = request.query_params.get("search")
+        trust_model = request.query_params.get("trust_model")
+        is_ap = request.query_params.get("is_ap", None)
+        is_rp = request.query_params.get("is_rp", None)
+
+        if search_query:
+            orgs = orgs.filter(name_en__icontains=search_query) | orgs.filter(
+                name_en__icontains=search_query
+            )
+        if trust_model:
+            orgs = orgs.filter(trust_model=trust_model)
+        if is_ap:
+            orgs = orgs.filter(is_AP=is_ap)
+        if is_rp:
+            orgs = orgs.filter(is_RP=is_rp)
+
         paginator = LimitOffsetPagination()
         paginator.default_limit = 20
         result_page = paginator.paginate_queryset(orgs, request)
