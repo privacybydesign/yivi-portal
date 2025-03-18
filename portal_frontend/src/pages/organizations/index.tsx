@@ -3,10 +3,11 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import Link from 'next/link';
-import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
+import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/src/components/ui/table";
+import { Badge } from "@/src/components/ui/badge";
+import { Button } from "@/src/components/ui/button";
+import { Checkbox } from "@/src/components/ui/checkbox";
+import Image from "next/image";
 
 // Define Organization type
 interface Organization {
@@ -50,7 +51,7 @@ export default function OrganizationsPage() {
     const offset = (page - 1) * pageSize;
     
     // Base URL with pagination
-    let url = `http://0.0.0.0:8000/v1/organizations/?limit=${pageSize}&offset=${offset}`;
+    let url = `http://localhost:8000/v1/organizations/?limit=${pageSize}&offset=${offset}`;
     
     // Only add filters if applyFilters is true
     if (applyFilters) {
@@ -313,13 +314,15 @@ export default function OrganizationsPage() {
                     <TableCell>
                       {org.logo ? (
                         <div className="relative h-8 w-8 rounded-full overflow-hidden border border-gray-200">
-                          <img 
-                            src={`http://0.0.0.0:8000${org.logo}`} 
+                          <Image 
+                            src={`http://localhost:8000${org.logo}`}
+                            width={32}
+                            height={32}
                             alt={`${org.name_en} logo`} 
                             className="object-cover w-full h-full"
-                            onError={(e) => {
-                              e.currentTarget.src = "/placeholder-logo.png"; 
-                            }}
+                            // onError={(e) => {
+                            //   // e.currentTarget.src = "/placeholder-logo.png"; 
+                            // }}
                           />
                         </div>
                       ) : (

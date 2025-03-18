@@ -6,7 +6,8 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "release": "next build && cp -r out/* ../yivi_portal/static"
   },
   "dependencies": {
     "@privacybydesign/yivi-frontend": "^0.1.3",

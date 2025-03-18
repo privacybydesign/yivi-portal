@@ -1,11 +1,10 @@
-"use client";
-
+import type { AppProps } from "next/app";
 import { Geist, Geist_Mono } from "next/font/google";
-import "./globals.css";
+import "../styles/globals.css";
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import useStore from "@/store";
+import useStore from "@/src/store";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -17,11 +16,7 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+export default function MyApp({ Component, pageProps }: AppProps) {
   const email = useStore((state) => state.email);
   const setAccessToken = useStore((state) => state.setAccessToken)
   const [isOpen, setIsOpen] = useState(false);
@@ -30,11 +25,8 @@ export default function RootLayout({
     setAccessToken(null);
     // Add any additional logout logic here
   };
-
-  return (
-    <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <header className="bg-white shadow-md">
+  return <div className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+  <header className="bg-white shadow-md">
           <div className="container mx-auto flex justify-between items-center p-4">
             <Image src="/yivi-logo.svg" alt="Yivi Logo" height={30} width={54} />
 
@@ -85,8 +77,6 @@ export default function RootLayout({
             </div>
           )}
         </header>
-        {children}
-      </body>
-    </html>
-  );
+        <Component {...pageProps} />;
+        </div>
 }

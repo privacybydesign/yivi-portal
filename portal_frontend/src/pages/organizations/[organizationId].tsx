@@ -1,11 +1,12 @@
 "use client";
 
-import { useParams } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/src/components/ui/card";
+import { Badge } from "@/src/components/ui/badge";
+import { useParams } from "next/navigation";
 import Link from 'next/link';
+import Image from "next/image";
 
 // Define types
 interface Organization {
@@ -65,8 +66,10 @@ interface RPDetails {
 
 export default function OrganizationPage() {
   const params = useParams();
-  const organizationId = params.organizationid as string;
-  
+  const organizationId = params?.organizationId;
+
+  // alert(organizationId)
+
   const [organization, setOrganization] = useState<Organization | null>(null);
   const [maintainers, setMaintainers] = useState<Maintainer[]>([]);
   const [rpDetails, setRpDetails] = useState<RPDetails | null>(null);
@@ -74,18 +77,18 @@ export default function OrganizationPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeSection, setActiveSection] = useState('overview');
-  
+
   useEffect(() => {
     const fetchOrganizationData = async () => {
       try {
         // Fetch organization details
-        const orgResponse = await axios.get(`http://0.0.0.0:8000/v1/organizations/${organizationId}/`);
+        const orgResponse = await axios.get(`http://localhost:8000/v1/organizations/${organizationId}/`);
         setOrganization(orgResponse.data);
         
         // Fetch maintainers
         try {
-          const maintainersResponse = await axios.get(`http://0.0.0.0:8000/v1/organizations/${organizationId}/maintainers/`);
-          setMaintainers(maintainersResponse.data);
+          // const maintainersResponse = await axios.get(`http://localhost:8000/v1/organizations/${organizationId}/maintainers/`);
+          setMaintainers([]); //maintainersResponse.data
         } catch (maintainersError) {
           console.error('Error fetching maintainers:', maintainersError);
           // Don't set error state, as this is not critical
@@ -111,7 +114,7 @@ export default function OrganizationPage() {
     // Fetch RP details when switching to RP details tab
     if (section === 'rp-details' && organization?.is_RP && !rpDetails && !loadingRpDetails) {
       setLoadingRpDetails(true);
-      axios.get(`http://0.0.0.0:8000/v1/Yivi/production/relying-parties/`) // TODO : Fix Yivi having to be uppercase
+      axios.get(`http://localhost:8000/v1/Yivi/production/relying-parties/`) // TODO : Fix Yivi having to be uppercase
         .then(response => {
           // Find the RP details for this organization
           const details = response.data.find(
@@ -162,8 +165,10 @@ export default function OrganizationPage() {
         <div className="flex items-center gap-4">
           {organization.logo && (
             <div className="relative h-16 w-16 rounded-full overflow-hidden border border-gray-200">
-              <img 
-                src={`http://0.0.0.0:8000${organization.logo}`} 
+              <Image
+                src={`http://localhost:8000${organization.logo}`} 
+                width={50}
+                height={50}
                 alt={`${organization.name_en} logo`} 
                 className="object-cover w-full h-full"
                 onError={(e) => {
