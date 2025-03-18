@@ -1,7 +1,6 @@
 import zipfile
 import xmltodict  # type: ignore
 import json
-from django.core.files.images import ImageFile
 from io import BytesIO
 import os
 from dotenv import load_dotenv
