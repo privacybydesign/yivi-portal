@@ -63,7 +63,7 @@ ROOT_URLCONF = "yivi_portal.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [BASE_DIR / "static"],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -152,3 +152,11 @@ LOGGING = {
 
 # SPECIFIC SETTINGS FOR THE SCHEME MANAGER
 USE_SESSION_REQUEST_REGISTRATION = False
+
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, "static") 
+]
+
+STATIC_URL = "/static/"  # Keep this default
+MEDIA_URL = "/media/"
+MEDIA_ROOT = os.path.join(BASE_DIR, "assets")
