@@ -21,14 +21,26 @@ def load_config(config_file="config.json"):
 
 
 def load_logo_if_exists(logo_path: str):
-    if os.path.exists(logo_path):
+    try:
+        if not os.path.exists(logo_path):
+            logger.error(f"Logo path does not exist: {logo_path}")
+            return None
+
         with open(logo_path, "rb") as logo_file:
             logo_content = logo_file.read()
-            logo_image_file = ImageFile(BytesIO(logo_content))
-            return logo_image_file
-    else:
-        logger.error(f"Logo file not found at {logo_path}")
+
+            if not logo_content:
+                logger.error(f"Logo content is empty for path: {logo_path}")
+                return None
+
+            filename = os.path.basename(logo_path)
+            logo_image_file = ImageFile(BytesIO(logo_content), name=filename)
+
+    except Exception as e:
+        logger.error(f"Exception while loading logo from {logo_path}: {e}")
         return None
+
+    return logo_image_file
 
 
 def create_org(slug, name_en, name_nl, logo_path):
@@ -47,17 +59,19 @@ def create_org(slug, name_en, name_nl, logo_path):
             },
         )
         logger.info(f"{'Created' if org_created else 'Updated'} Organization: {slug}")
-        return org
+
     except Exception as org_error:
         logger.error(f"Failed to create/update Organization {slug}: {org_error}")
         raise
+
+    return org
 
 
 def get_trust_model_env(environment: str):
     try:
         yivi_tme = YiviTrustModelEnv.objects.get(environment=environment)
-        return yivi_tme
     except YiviTrustModelEnv.DoesNotExist:
         raise Exception(
             f"YiviTrustModelEnv for environment '{environment}' does not exist"
         )
+    return yivi_tme

@@ -51,8 +51,7 @@ def convert_xml_to_json(repo_name):
                         dict_data = xmltodict.parse(f.read())
                         all_APs_dict[dir] = dict_data
 
-                        is_logo_here = os.path.isfile(f"{base_path}/{dir}/logo.png")
-                        if is_logo_here:
+                        if os.path.isfile(f"{base_path}/{dir}/logo.png"):
                             abs_logo_path = os.path.abspath(
                                 f"{base_path}/{dir}/logo.png"
                             )
@@ -76,7 +75,15 @@ def convert_xml_to_json(repo_name):
 
 
 def create_ap(
-    org, yivi_tme, version, shortname_en, shortname_nl, contact_email, base_url, slug
+    org,
+    yivi_tme,
+    version,
+    shortname_en,
+    shortname_nl,
+    contact_email,
+    base_url,
+    slug,
+    environment,
 ):
     try:
         ap, ap_created = AttestationProvider.objects.get_or_create(
@@ -94,7 +101,7 @@ def create_ap(
         )
 
         logger.info(
-            f"{'Created' if ap_created else 'Updated'} Attestation Provider: {slug}"
+            f"{'Created' if ap_created else 'Updated'} Attestation Provider: {slug} in environment {environment}"
         )
 
         return ap
@@ -175,6 +182,7 @@ def create_update_APs(environment: str):
                 contact_email,
                 base_url,
                 slug,
+                environment,
             )
 
         logger.info(f"Found {len(all_APs_dict)} attestation providers in the JSON.")

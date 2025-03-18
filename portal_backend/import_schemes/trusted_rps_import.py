@@ -64,10 +64,11 @@ def fields_from_verifier(repo_folder: str, rp_data: dict):
 
 
 def create_rp(
-    org,
-    yivi_tme,
+    org: import_utils.Organization,
+    yivi_tme: import_utils.YiviTrustModelEnv,
     rp_data: dict,
     slug: str,
+    environment: str,
 ):
     if not org or not yivi_tme:
         raise ValueError("Missing organization or trust model environment")
@@ -82,7 +83,9 @@ def create_rp(
             },
         )
 
-        logger.info(f"{'Created' if rp_created else 'Updated'} Relying Party: {slug}")
+        logger.info(
+            f"{'Created' if rp_created else 'Updated'} Relying Party: {slug} in environment {environment}"
+        )
 
     except Exception as rp_error:
         logger.error(f"Failed to create/update RelyingParty for {org}: {rp_error}")
@@ -113,7 +116,7 @@ def create_hostnames(hostnames: str, rp: str, slug: str, environment: str):
                 )
             )
             logger.info(
-                f"{'Created' if hostname_created else 'Updated'} Hostname: {hostname} for RP {slug} in environment '{environment}'"
+                f"{'Created' if hostname_created else 'Updated'} Hostname: {hostname} for RP {slug} in environment {environment}"
             )
         except Exception as hostname_error:
             logger.error(
@@ -143,7 +146,7 @@ def create_org_rp(repo_folder: str, environment: str):
 
         org = import_utils.create_org(slug, name_en, name_nl, logo_path)
         yivi_tme = import_utils.get_trust_model_env(environment)
-        rp = create_rp(org, yivi_tme, rp_data, slug)
+        rp = create_rp(org, yivi_tme, rp_data, slug, environment)
         create_hostnames(hostnames, rp, slug, environment)
 
 
