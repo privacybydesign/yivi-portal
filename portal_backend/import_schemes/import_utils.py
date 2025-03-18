@@ -43,7 +43,7 @@ def load_logo_if_exists(logo_path: str):
     return logo_image_file
 
 
-def create_org(slug, name_en, name_nl, logo_path):
+def create_org(slug: str, name_en: str, name_nl: str, logo_path: str):
 
     try:
         logo_image_file = load_logo_if_exists(logo_path)

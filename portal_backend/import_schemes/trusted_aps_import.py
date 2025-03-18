@@ -34,7 +34,7 @@ def download_extract_scheme(url: str):
         raise
 
 
-def convert_xml_to_json(repo_name):
+def convert_xml_to_json(repo_name: str):
     try:
         os.makedirs("downloads", exist_ok=True)
         all_APs_dict = {}
@@ -75,8 +75,8 @@ def convert_xml_to_json(repo_name):
 
 
 def create_ap(
-    org,
-    yivi_tme,
+    org: import_utils.Organization,
+    yivi_tme: import_utils.YiviTrustModelEnv,
     version,
     shortname_en,
     shortname_nl,
@@ -120,7 +120,7 @@ def get_trust_model_env(environment: str):
         )
 
 
-def fields_from_issuer(all_APs_dict, AP):
+def fields_from_issuer(all_APs_dict: dict, AP: str):
     try:
         slug = AP
         version = all_APs_dict[AP]["Issuer"]["@version"]
@@ -196,16 +196,14 @@ def import_aps(config_file="config.json"):
         config = import_utils.load_config(config_file)
         environment = os.environ.get("AP_ENV")
         if environment not in ["production", "staging", "demo"]:
-            logger.error("No specific environment specified.")
-            print(environment)
-            return
+            logger.error(f"No specific environment specified. Got: '{environment}'")
+            raise ValueError("No specific environment specified.")
 
         repo_url = config["AP"]["environment"][environment]["repo-url"]
         repo_name = config["AP"]["environment"][environment]["name"]
         download_extract_scheme(repo_url)
         convert_xml_to_json(repo_name)
         create_update_APs(environment)
-        logger.info("Attestation providers imported/updated successfully.")
 
     except Exception as e:
         logger.error(f"Failed to import attestation providers: {e}")

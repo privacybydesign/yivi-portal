@@ -28,22 +28,19 @@ def download_extract_scheme(url: str, repo_name: str):
             f"Successfully extracted zip file to downloads/relying-party-repo/{repo_name}-master"
         )
     except Exception as e:
-        logger.error(f"Error extracting the zip file: {e}")
-        raise
+        raise Exception(f"Error extracting the zip file: {e}")
 
 
 def load_requestor_data(repo_folder: str):
     requestors_json_path = os.path.join(repo_folder, "requestors.json")
     if not os.path.exists(requestors_json_path):
-        logger.error(f"requestors.json not found in {repo_folder}")
         raise FileNotFoundError(f"requestors.json not found in {repo_folder}")
 
     try:
         with open(requestors_json_path, "r", encoding="utf-8") as f:
             rp_list = json.load(f)
     except Exception as e:
-        logger.error(f"Failed to load requestors.json: {e}")
-        raise
+        raise Exception(f"Failed to load requestors.json: {e}")
 
     logger.info(f"Found {len(rp_list)} verifiers in the JSON.")
     return rp_list
@@ -59,8 +56,7 @@ def fields_from_verifier(repo_folder: str, rp_data: dict):
         logo_path = os.path.join(repo_folder, "assets", f"{logo_hash}.png")
         return slug, hostnames, name_en, name_nl, logo_path
     except (KeyError, IndexError) as e:
-        logger.error(f"Error extracting fields from verifier: {e}")
-        raise
+        raise Exception(f"Error extracting fields from verifier: {e}")
 
 
 def create_rp(
@@ -88,8 +84,7 @@ def create_rp(
         )
 
     except Exception as rp_error:
-        logger.error(f"Failed to create/update RelyingParty for {org}: {rp_error}")
-        raise
+        raise Exception(f"Failed to create/update RelyingParty for {org}: {rp_error}")
 
     return rp
 
@@ -99,7 +94,6 @@ def create_hostnames(hostnames: str, rp: str, slug: str, environment: str):
     if not rp:
         raise ValueError("Missing relying party object")
     if not hostnames:
-        logger.error(f"No hostnames found for {slug}")
         raise ValueError(f"No hostnames found for {slug}")
 
     for hostname in hostnames:
@@ -119,10 +113,9 @@ def create_hostnames(hostnames: str, rp: str, slug: str, environment: str):
                 f"{'Created' if hostname_created else 'Updated'} Hostname: {hostname} for RP {slug} in environment {environment}"
             )
         except Exception as hostname_error:
-            logger.error(
+            raise Exception(
                 f"Failed to create/update Hostname {hostname} for RP {slug}: {hostname_error}"
             )
-            raise
 
 
 @transaction.atomic
@@ -134,7 +127,6 @@ def create_org_rp(repo_folder: str, environment: str):
     rp_list = load_requestor_data(repo_folder)
 
     if not rp_list:
-        logger.error("No requestors data loaded")
         raise ValueError("No requestors data loaded")
 
     logger.info(f"Found {len(rp_list)} verifiers in the JSON.")
@@ -155,11 +147,10 @@ def import_rps():
     try:
         config = import_utils.load_config()
         environment = os.environ.get("RP_ENV")
-        logger.info(f"Current RP_ENV value: {environment}")
+
         if environment in ["staging", "production"]:
             logger.info(f"Importing relying parties for environment: {environment}")
         else:
-            logger.error(f"No specific environment specified. Got: '{environment}'")
             raise ValueError(f"No specific environment specified. Got: '{environment}'")
 
         repo_url = config["RP"]["environment"]["production"]["repo-url"]
@@ -168,7 +159,6 @@ def import_rps():
 
         repo_folder = f"downloads/relying-party-repo/{repo_name}-master"
         create_org_rp(repo_folder, environment)
-        logger.info("Relying parties imported/updated successfully.")
 
     except Exception as e:
         logger.error(f"Failed to import relying parties: {e}")
