@@ -1,8 +1,8 @@
 from django_cron import CronJobBase, Schedule  # type: ignore
 from portal_backend.dns_verification import verify_new_dns, verify_existing_dns
 from portal_backend.models.models import RelyingPartyHostname
-from portal_backend.trusted_aps_import import import_aps
-from portal_backend.trusted_rps_import import import_rps
+from portal_backend.import_schemes.trusted_aps_import import import_aps
+from portal_backend.import_schemes.trusted_rps_import import import_rps
 
 
 class NewDNSVerification(CronJobBase):

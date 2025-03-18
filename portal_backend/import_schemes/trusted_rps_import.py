@@ -1,4 +1,3 @@
-from django.core.files.images import ImageFile
 import json
 import os
 from dotenv import load_dotenv
@@ -8,27 +7,14 @@ from urllib.request import urlopen
 from io import BytesIO
 from portal_backend.models.models import (
     RelyingParty,
-    Organization,
     RelyingPartyHostname,
-    YiviTrustModelEnv,
 )
 import logging
+import portal_backend.import_schemes.import_utils as import_utils
 
 
 logger = logging.getLogger(__name__)
 load_dotenv()
-
-
-def load_config(config_file="config.json"):
-    """Load configuration from JSON file"""
-    try:
-        with open(config_file, "r") as f:
-            config = json.load(f)
-            logger.info(f"Configuration loaded from {config_file}")
-            return config
-    except Exception as e:
-        logger.error(f"Error loading configuration from {config_file}: {e}")
-        raise
 
 
 def download_extract_scheme(url: str, repo_name: str):
@@ -63,19 +49,6 @@ def load_requestor_data(repo_folder: str):
     return rp_list
 
 
-def get_trust_model_env(environment: str):
-    try:
-        yivi_tme = YiviTrustModelEnv.objects.get(environment=environment)
-        return yivi_tme
-    except YiviTrustModelEnv.DoesNotExist:
-        logger.error(
-            f"YiviTrustModelEnv for environment '{environment}' does not exist"
-        )
-        raise Exception(
-            f"YiviTrustModelEnv for environment '{environment}' does not exist"
-        )
-
-
 def fields_from_verifier(repo_folder: str, rp_data: dict):
     try:
         slug = rp_data["id"].split(".")[1]
@@ -84,42 +57,9 @@ def fields_from_verifier(repo_folder: str, rp_data: dict):
         name_nl = rp_data.get("name", {}).get("nl", slug)
         logo_hash = rp_data.get("logo")
         logo_path = os.path.join(repo_folder, "assets", f"{logo_hash}.png")
-        return slug, hostnames, name_en, name_nl, logo_hash, logo_path
+        return slug, hostnames, name_en, name_nl, logo_path
     except (KeyError, IndexError) as e:
         logger.error(f"Error extracting fields from verifier: {e}")
-        raise
-
-
-def load_logo_if_exists(logo_path: str):
-    if os.path.exists(logo_path):
-        with open(logo_path, "rb") as logo_file:
-            logo_content = logo_file.read()
-            logo_image_file = ImageFile(BytesIO(logo_content))
-            return logo_image_file
-    else:
-        logger.error(f"Logo file not found at {logo_path}")
-        return None
-
-
-def create_org(slug, name_en, name_nl, logo_path):
-
-    try:
-        logo_image_file = load_logo_if_exists(logo_path)
-        org, org_created = Organization.objects.update_or_create(
-            slug=slug,
-            defaults={
-                "is_verified": True,
-                "logo": logo_image_file,
-                "name_en": name_en,
-                "name_nl": name_nl,
-                "registration_number": None,
-                "contact_address": None,
-            },
-        )
-        logger.info(f"{'Created' if org_created else 'Updated'} Organization: {slug}")
-        return org
-    except Exception as org_error:
-        logger.error(f"Failed to create/update Organization {slug}: {org_error}")
         raise
 
 
@@ -197,12 +137,12 @@ def create_org_rp(repo_folder: str, environment: str):
     logger.info(f"Found {len(rp_list)} verifiers in the JSON.")
 
     for rp_data in rp_list:
-        slug, hostnames, name_en, name_nl, logo_hash, logo_path = fields_from_verifier(
+        slug, hostnames, name_en, name_nl, logo_path = fields_from_verifier(
             repo_folder, rp_data
         )
 
-        org = create_org(slug, name_en, name_nl, logo_path)
-        yivi_tme = get_trust_model_env(environment)
+        org = import_utils.create_org(slug, name_en, name_nl, logo_path)
+        yivi_tme = import_utils.get_trust_model_env(environment)
         rp = create_rp(org, yivi_tme, rp_data, slug)
         create_hostnames(hostnames, rp, slug, environment)
 
@@ -210,7 +150,7 @@ def create_org_rp(repo_folder: str, environment: str):
 # download requestors repo
 def import_rps():
     try:
-        config = load_config()
+        config = import_utils.load_config()
         environment = os.environ.get("RP_ENV")
         logger.info(f"Current RP_ENV value: {environment}")
         if environment in ["staging", "production"]:

@@ -7,29 +7,17 @@ import os
 from dotenv import load_dotenv
 from urllib.request import urlopen
 from portal_backend.models.models import (
-    Organization,
     YiviTrustModelEnv,
     AttestationProvider,
 )
 from django.db import transaction
 import logging
+import portal_backend.import_schemes.import_utils as import_utils
 
 
 logger = logging.getLogger(__name__)
 os.makedirs("downloads", exist_ok=True)
 os.makedirs("downloads/attestation-provider-repo", exist_ok=True)
-
-
-def load_config(config_file="config.json"):
-    """Load configuration from JSON file"""
-    try:
-        with open(config_file, "r") as f:
-            config = json.load(f)
-            logger.info(f"Configuration loaded from {config_file}")
-            return config
-    except Exception as e:
-        logger.error(f"Error loading configuration from {config_file}: {e}")
-        raise
 
 
 def download_extract_scheme(url: str):
@@ -86,33 +74,6 @@ def convert_xml_to_json(repo_name):
     except Exception as e:
         logger.error(f"Error converting XML to JSON: {e}")
         raise
-
-
-def create_org(name_en, name_nl, slug, contact_url, logo_path):
-    try:
-        with open(logo_path, "rb") as logo_file:
-            logo_image_file = ImageFile(logo_file, name=f"{slug}.png")
-            org, org_created = Organization.objects.get_or_create(
-                slug=slug,
-                defaults={
-                    "name_en": name_en,
-                    "name_nl": name_nl,
-                    "slug": slug,
-                    "logo": logo_image_file,
-                    "registration_number": "AUTO-GENERATED",
-                    "contact_address": contact_url,
-                    "is_verified": True,
-                },
-            )
-
-            logger.info(
-                f"{'Created' if org_created else 'Updated'} Organization: {slug}"
-            )
-
-    except Exception as e:
-        logger.error(f"Error creating organization {slug}: {e}")
-        raise
-    return org
 
 
 def create_ap(
@@ -204,7 +165,7 @@ def create_update_APs(environment: str):
                 base_url,
             ) = fields_from_issuer(all_APs_dict, AP)
 
-            org = create_org(name_en, name_nl, slug, contact_url, logo_path)
+            org = import_utils.create_org(slug, name_en, name_nl, logo_path)
 
             create_ap(
                 org,
@@ -225,7 +186,7 @@ def import_aps(config_file="config.json"):
     """Main function to import attestation providers"""
     try:
         load_dotenv()
-        config = load_config(config_file)
+        config = import_utils.load_config(config_file)
         environment = os.environ.get("AP_ENV")
         if environment not in ["production", "staging", "demo"]:
             logger.error("No specific environment specified.")
