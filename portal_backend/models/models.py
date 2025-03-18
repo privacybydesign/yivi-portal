@@ -39,7 +39,7 @@ class Organization(models.Model):
     name_en = models.CharField(max_length=255)
     name_nl = models.CharField(max_length=255)
     slug = models.SlugField(unique=True)
-    registration_number = models.CharField(max_length=100)
+    registration_number = models.CharField(max_length=100, null=True, blank=True)
     contact_address = models.TextField(null=True, blank=True)
     is_verified = models.BooleanField(default=False)
     verified_at = models.DateTimeField(null=True)
