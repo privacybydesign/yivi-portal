@@ -18,7 +18,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         # Create test trust model
         trust_model, _ = TrustModel.objects.get_or_create(
-            name="Yivi Test",
+            name="Yivi",
             defaults={
                 "description": "Test trust model for development",
                 "eudi_compliant": False,
@@ -31,7 +31,7 @@ class Command(BaseCommand):
         # Create trust model environments
         yivi_tme, _ = YiviTrustModelEnv.objects.get_or_create(
             trust_model=trust_model,
-            environment="development",
+            environment="production",
             defaults={
                 "timestamp_server": "https://timestamp.example.com",
                 "keyshare_server": "https://keyshare.example.com",
@@ -60,7 +60,7 @@ class Command(BaseCommand):
                 "name_nl": "Testorganisatie",
                 "slug": "test-organization",
                 "registration_number": "12345678",
-                "address": "123 Test Street\nTest City\nTest Country",
+                "contact_address": "123 Test Street\nTest City\nTest Country",
                 "is_verified": True,
                 "verified_at": timezone.now(),
                 "trade_names": ["Test Inc.", "Test LLC"],
