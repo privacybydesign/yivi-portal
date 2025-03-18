@@ -20,6 +20,7 @@ os.makedirs("downloads/attestation-provider-repo", exist_ok=True)
 
 
 def download_extract_scheme(url: str) -> None:
+    """Download and extract the zip of Attestation Provider Github repository"""
     logger.info(f"Downloading scheme from {url}")
     try:
         response = urlopen(url)
@@ -34,41 +35,66 @@ def download_extract_scheme(url: str) -> None:
 
 
 def convert_xml_to_json(repo_name: str) -> None:
+    """Convert all XML files in the Attestation Provider directories to JSON"""
     try:
         os.makedirs("downloads", exist_ok=True)
         all_APs_dict = {}
         base_path = f"downloads/attestation-provider-repo/{repo_name}-master"
 
-        logger.info(f"Looking for attestation providers in {base_path}")
-        for root, dirs, files in os.walk(base_path):
-            for dir in dirs:
-                AP_xml_path = f"{base_path}/{dir}/description.xml"
-                is_description_file_here = os.path.isfile(AP_xml_path)
-                if is_description_file_here:
-                    logger.debug(f"Found description.xml for AP {dir}")
-                    with open(AP_xml_path) as f:
-                        dict_data = xmltodict.parse(f.read())
-                        all_APs_dict[dir] = dict_data
+        logger.info(f"Looking for Attestation Providers in {base_path}")
 
-                        if os.path.isfile(f"{base_path}/{dir}/logo.png"):
-                            abs_logo_path = os.path.abspath(
-                                f"{base_path}/{dir}/logo.png"
-                            )
-                            all_APs_dict[dir]["logo_path"] = abs_logo_path
-                        else:
-                            logger.info(f"No logo found for {dir}")
-                            raise Exception(f"No logo found for {dir}")
+        for ap_dir in find_ap_directories(base_path):
+            ap_data = process_ap_directory(base_path, ap_dir)
+            if ap_data:
+                all_APs_dict[ap_dir] = ap_data
 
-        with open("downloads/all-APs.json", "w", encoding="utf-8") as all_APs_json:
-            all_APs_json.write(
-                json.dumps(all_APs_dict, indent=4, sort_keys=True, ensure_ascii=False)
-            )
+        write_aps_to_json(all_APs_dict)
 
-        logger.info(f"Found {len(all_APs_dict)} attestation providers.")
-        if len(all_APs_dict) == 0:
-            raise Exception("No attestation providers found")
+        if not all_APs_dict:
+            raise Exception("No Attestation Providers found")
+
+        logger.info(f"Found {len(all_APs_dict)} Attestation Providers.")
+
     except Exception as e:
         raise Exception(f"Error converting XML to JSON: {e}")
+
+
+def find_ap_directories(base_path: str) -> list[str]:
+    """Return a list of Attestation Provider directories"""
+    directories = []
+    for _, dirs, _ in os.walk(base_path):
+        directories.extend(dirs)
+        break  # only top-level directories
+    return directories
+
+
+def process_ap_directory(base_path: str, ap_dir: str) -> dict | None:
+    """Forming all Attestation Provider details in a directory into a dictionary"""
+    AP_xml_path = f"{base_path}/{ap_dir}/description.xml"
+
+    if not os.path.isfile(AP_xml_path):
+        return None
+
+    logger.debug(f"Found description.xml for AP {ap_dir}")
+
+    with open(AP_xml_path) as f:
+        ap_data = xmltodict.parse(f.read())
+
+    logo_path = f"{base_path}/{ap_dir}/logo.png"
+    if not os.path.isfile(logo_path):
+        logger.info(f"No logo found for {ap_dir}")
+        raise Exception(f"No logo found for {ap_dir}")
+
+    ap_data["logo_path"] = os.path.abspath(logo_path)
+    return ap_data
+
+
+def write_aps_to_json(all_APs_dict: dict) -> None:
+    """Write the Attestation Provider details to a JSON file."""
+    with open("downloads/all-APs.json", "w", encoding="utf-8") as all_APs_json:
+        all_APs_json.write(
+            json.dumps(all_APs_dict, indent=4, sort_keys=True, ensure_ascii=False)
+        )
 
 
 def create_ap(
@@ -82,6 +108,7 @@ def create_ap(
     slug,
     environment,
 ) -> AttestationProvider:
+    """Create or update an Attestation Provider in the database"""
     try:
         ap, ap_created = AttestationProvider.objects.get_or_create(
             organization=org,
@@ -103,10 +130,11 @@ def create_ap(
 
         return ap
     except Exception as e:
-        raise Exception(f"Error creating attestation provider for {slug}: {e}")
+        raise Exception(f"Error creating Attestation Provider for {slug}: {e}")
 
 
 def get_trust_model_env(environment: str) -> YiviTrustModelEnv:
+    """Get the YiviTrustModelEnv object for the specified environment, so we can link the Attestation Providers to it"""
     try:
         yivi_tme = YiviTrustModelEnv.objects.get(environment=environment)
         return yivi_tme
@@ -119,6 +147,7 @@ def get_trust_model_env(environment: str) -> YiviTrustModelEnv:
 def fields_from_issuer(
     all_APs_dict: dict, AP: str
 ) -> tuple[str, str, str, str, str, str, str, str, str, str]:
+    """Extract the fields from the Issuer dictionary in the JSON"""
     try:
         slug = AP
         version = all_APs_dict[AP]["Issuer"]["@version"]
@@ -182,11 +211,11 @@ def create_update_APs(environment: str) -> None:
                 environment,
             )
 
-        logger.info(f"Found {len(all_APs_dict)} attestation providers in the JSON.")
+        logger.info(f"Found {len(all_APs_dict)} Attestation Providers in the JSON.")
 
 
 def import_aps(config_file="config.json") -> None:
-    """Main function to import attestation providers"""
+    """Main function to import Attestation Providers"""
     try:
         load_dotenv()
         config = import_utils.load_config(config_file)
@@ -202,4 +231,4 @@ def import_aps(config_file="config.json") -> None:
         create_update_APs(environment)
 
     except Exception as e:
-        raise Exception(f"Failed to import attestation providers: {e}")
+        raise Exception(f"Failed to import Attestation Providers: {e}")
