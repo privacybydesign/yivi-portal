@@ -8,7 +8,7 @@ from portal_backend.models.models import Organization, YiviTrustModelEnv
 logger = logging.getLogger(__name__)
 
 
-def load_config(config_file="config.json"):
+def load_config(config_file="config.json") -> dict:
     """Load configuration from JSON file"""
     try:
         with open(config_file, "r") as f:
@@ -20,7 +20,7 @@ def load_config(config_file="config.json"):
         raise
 
 
-def load_logo_if_exists(logo_path: str):
+def load_logo_if_exists(logo_path: str) -> ImageFile | None:
     try:
         if not os.path.exists(logo_path):
             logger.error(f"Logo path does not exist: {logo_path}")
@@ -43,7 +43,7 @@ def load_logo_if_exists(logo_path: str):
     return logo_image_file
 
 
-def create_org(slug: str, name_en: str, name_nl: str, logo_path: str):
+def create_org(slug: str, name_en: str, name_nl: str, logo_path: str) -> Organization:
 
     try:
         logo_image_file = load_logo_if_exists(logo_path)
@@ -67,7 +67,7 @@ def create_org(slug: str, name_en: str, name_nl: str, logo_path: str):
     return org
 
 
-def get_trust_model_env(environment: str):
+def get_trust_model_env(environment: str) -> YiviTrustModelEnv:
     try:
         yivi_tme = YiviTrustModelEnv.objects.get(environment=environment)
     except YiviTrustModelEnv.DoesNotExist:

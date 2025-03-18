@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 load_dotenv()
 
 
-def download_extract_scheme(url: str, repo_name: str):
+def download_extract_scheme(url: str, repo_name: str) -> None:
     os.makedirs("downloads", exist_ok=True)
     logger.info(f"Downloading scheme from {url}")
     try:
@@ -31,7 +31,7 @@ def download_extract_scheme(url: str, repo_name: str):
         raise Exception(f"Error extracting the zip file: {e}")
 
 
-def load_requestor_data(repo_folder: str):
+def load_requestor_data(repo_folder: str) -> list:
     requestors_json_path = os.path.join(repo_folder, "requestors.json")
     if not os.path.exists(requestors_json_path):
         raise FileNotFoundError(f"requestors.json not found in {repo_folder}")
@@ -46,7 +46,9 @@ def load_requestor_data(repo_folder: str):
     return rp_list
 
 
-def fields_from_verifier(repo_folder: str, rp_data: dict):
+def fields_from_verifier(
+    repo_folder: str, rp_data: dict
+) -> tuple[str, list, str, str, str]:
     try:
         slug = rp_data["id"].split(".")[1]
         hostnames = rp_data.get("hostnames", [])
@@ -65,7 +67,7 @@ def create_rp(
     rp_data: dict,
     slug: str,
     environment: str,
-):
+) -> RelyingParty:
     if not org or not yivi_tme:
         raise ValueError("Missing organization or trust model environment")
 
@@ -89,7 +91,7 @@ def create_rp(
     return rp
 
 
-def create_hostnames(hostnames: str, rp: str, slug: str, environment: str):
+def create_hostnames(hostnames: str, rp: str, slug: str, environment: str) -> None:
     # validate if hostname object can be created
     if not rp:
         raise ValueError("Missing relying party object")
@@ -119,7 +121,7 @@ def create_hostnames(hostnames: str, rp: str, slug: str, environment: str):
 
 
 @transaction.atomic
-def create_org_rp(repo_folder: str, environment: str):
+def create_org_rp(repo_folder: str, environment: str) -> None:
     """
     For each verifier in the requestors json file, create or update the corresponding
     Organization, RelyingParty, and RelyingPartyHostname objects in the database.
@@ -143,7 +145,7 @@ def create_org_rp(repo_folder: str, environment: str):
 
 
 # download requestors repo
-def import_rps():
+def import_rps() -> None:
     try:
         config = import_utils.load_config()
         environment = os.environ.get("RP_ENV")
@@ -161,5 +163,4 @@ def import_rps():
         create_org_rp(repo_folder, environment)
 
     except Exception as e:
-        logger.error(f"Failed to import relying parties: {e}")
-        raise
+        raise Exception(f"Failed to import relying parties: {e}")

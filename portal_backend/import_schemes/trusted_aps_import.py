@@ -19,7 +19,7 @@ os.makedirs("downloads", exist_ok=True)
 os.makedirs("downloads/attestation-provider-repo", exist_ok=True)
 
 
-def download_extract_scheme(url: str):
+def download_extract_scheme(url: str) -> None:
     logger.info(f"Downloading scheme from {url}")
     try:
         response = urlopen(url)
@@ -28,13 +28,12 @@ def download_extract_scheme(url: str):
         logger.info(
             "Successfully extracted zip file to downloads/attestation-provider-repo"
         )
-        return True
     except Exception as e:
         logger.error(f"Error downloading or extracting the zip file: {e}")
         raise
 
 
-def convert_xml_to_json(repo_name: str):
+def convert_xml_to_json(repo_name: str) -> None:
     try:
         os.makedirs("downloads", exist_ok=True)
         all_APs_dict = {}
@@ -68,10 +67,8 @@ def convert_xml_to_json(repo_name: str):
         logger.info(f"Found {len(all_APs_dict)} attestation providers.")
         if len(all_APs_dict) == 0:
             raise Exception("No attestation providers found")
-        return True
     except Exception as e:
-        logger.error(f"Error converting XML to JSON: {e}")
-        raise
+        raise Exception(f"Error converting XML to JSON: {e}")
 
 
 def create_ap(
@@ -84,7 +81,7 @@ def create_ap(
     base_url,
     slug,
     environment,
-):
+) -> AttestationProvider:
     try:
         ap, ap_created = AttestationProvider.objects.get_or_create(
             organization=org,
@@ -106,11 +103,10 @@ def create_ap(
 
         return ap
     except Exception as e:
-        logger.error(f"Error creating attestation provider for {slug}: {e}")
-        raise
+        raise Exception(f"Error creating attestation provider for {slug}: {e}")
 
 
-def get_trust_model_env(environment: str):
+def get_trust_model_env(environment: str) -> YiviTrustModelEnv:
     try:
         yivi_tme = YiviTrustModelEnv.objects.get(environment=environment)
         return yivi_tme
@@ -120,7 +116,9 @@ def get_trust_model_env(environment: str):
         )
 
 
-def fields_from_issuer(all_APs_dict: dict, AP: str):
+def fields_from_issuer(
+    all_APs_dict: dict, AP: str
+) -> tuple[str, str, str, str, str, str, str, str, str, str]:
     try:
         slug = AP
         version = all_APs_dict[AP]["Issuer"]["@version"]
@@ -145,12 +143,11 @@ def fields_from_issuer(all_APs_dict: dict, AP: str):
             base_url,
         )
     except Exception as e:
-        logger.error(f"Error extracting fields from issuer: {e}")
-        raise
+        raise Exception(f"Error extracting fields from issuer: {e}")
 
 
 @transaction.atomic
-def create_update_APs(environment: str):
+def create_update_APs(environment: str) -> None:
     """For each Issuer in the JSON, create/update the corresponding Attestation Provider and Organization"""
     with open("downloads/all-APs.json", "r", encoding="utf-8") as f:
         all_APs_dict = json.load(f)
@@ -186,10 +183,9 @@ def create_update_APs(environment: str):
             )
 
         logger.info(f"Found {len(all_APs_dict)} attestation providers in the JSON.")
-        return True
 
 
-def import_aps(config_file="config.json"):
+def import_aps(config_file="config.json") -> None:
     """Main function to import attestation providers"""
     try:
         load_dotenv()
@@ -206,5 +202,4 @@ def import_aps(config_file="config.json"):
         create_update_APs(environment)
 
     except Exception as e:
-        logger.error(f"Failed to import attestation providers: {e}")
-        raise
+        raise Exception(f"Failed to import attestation providers: {e}")
