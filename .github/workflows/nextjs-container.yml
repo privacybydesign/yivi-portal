@@ -26,10 +26,11 @@ jobs:
 
       - uses: docker/build-push-action@v5
         with:
-          context: .
+          context: portal_frontend
+          file: Dockerfile.nextjs
           cache-from: type=gha
           cache-to: type=gha,mode=max
           push: true
           tags: |
-            ghcr.io/privacybydesign/yivi-portal:${{ github.workflow_sha }}
-            ghcr.io/privacybydesign/yivi-portal:latest
+            ghcr.io/privacybydesign/nextjs-portal:${{ github.workflow_sha }}
+            ghcr.io/privacybydesign/nextjs-portal:latest
