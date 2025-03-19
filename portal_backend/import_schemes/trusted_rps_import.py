@@ -134,11 +134,12 @@ def import_rps() -> None:
 
         repo_url = config["RP"]["environment"]["production"]["repo-url"]
         repo_name = config["RP"]["environment"]["production"]["name"]
-        repo_path = f"downloads/relying-party-repo/{repo_name}-master"
+        repo_path = f"downloads/relying-party-repo"
+        
         import_utils.download_extract_repo(repo_url, repo_name, repo_path)
 
         all_RPs_dict = import_utils.load_json_to_dict(
-            os.path.join(repo_path, "requestors.json")
+            os.path.join(repo_path, f"{repo_name}-master/requestors.json")
         )
         create_org_rp(all_RPs_dict, environment, repo_path)
 
