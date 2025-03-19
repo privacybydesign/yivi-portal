@@ -4,8 +4,10 @@
 import useStore from "@/src/store";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import getConfig from "next/config";
 
 export default function Login() {
+  const { publicRuntimeConfig } = getConfig();
   const accessToken = useStore((state) => state.accessToken);
   const setAccessToken = useStore((state) => state.setAccessToken)
   const router = useRouter();
@@ -19,7 +21,7 @@ export default function Login() {
         // Back-end options
         session: {
           // Point this to your controller:
-          url: 'http://localhost:8000/v1',
+          url: publicRuntimeConfig.API_ENDPOINT + '/v1',
       
           start: {
             url: (o: any) => `${o.url}/session/`,
