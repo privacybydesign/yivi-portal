@@ -1,22 +1,6 @@
 services:
-  # yivi:
-  #   container_name: yivi-portal-yivi
-  #   image: ghcr.io/privacybydesign/irma:edge
-  #   command: >
-  #     server -v --no-email --no-tls --url ${YIVI_SERVER_URL:-http://localhost:8080} --port 8080
-  #   restart: unless-stopped
-  #   networks:
-  #     - web
-  #   ports:
-  #     - 8080:8080
-  #   volumes:
-  #     - ./downloads/schemes:/schemes
-  #   environment:
-  #     - YIVI_SERVER_TOKEN=${YIVI_SERVER_TOKEN}
-  #     - IRMASERVER_SCHEMES_PATH=/schemes
-
   database:
-    image: postgres:13.3-alpine
+    image: postgres:15.12
     container_name: yivi-portal-db
     restart: unless-stopped
     networks:
@@ -33,10 +17,11 @@ services:
       timeout: 5s
       retries: 5
 
-  yivi-portal:
-    container_name: yivi-portal
+  django:
+    container_name: django
     build:
       context: .
+      dockerfile: Dockerfile.django
     restart: unless-stopped
     command: /bin/sh /app/entrypoint_dev.sh
     networks:
@@ -66,28 +51,42 @@ services:
       timeout: 20s
       retries: 3
 
-  # yivi-portal-cron:
-  #   container_name: yivi-portal-cron
-  #   build:
-  #     context: .
-  #   entrypoint: ['/bin/sh', '/app/entrypoint_cron.sh']
-  #   restart: unless-stopped
-  #   networks:
-  #     - web
-  #     - db
-  #   depends_on:
-  #     - database
-  #     - yivi
-  #   volumes:
-  #     - .:/app
-  #   environment:
-  #     - POSTGRES_USER=${POSTGRES_USER:-postgres}
-  #     - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
-  #     - POSTGRES_DB=${POSTGRES_DB:-postgres}
-  #     - POSTGRES_HOST=database
-  #     - POSTGRES_PORT=5432
-  #     - DJANGO_SETTINGS_MODULE=yivi_portal.settings.development
-  #     - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
+  nextjs:
+    build:
+      context: portal_frontend
+      dockerfile: Dockerfile.nextjs
+      # target: nextjs
+    container_name: nextjs
+    ports:
+      - "9000:3000"
+    depends_on:
+      - django
+    networks:
+      - web
+
+  yivi-portal-cron:
+    container_name: yivi-portal-cron
+    build:
+      context: .
+      dockerfile: Dockerfile.django
+    entrypoint: ['/bin/sh', '/app/entrypoint_cron.sh']
+    restart: unless-stopped
+    networks:
+      - web
+      - db
+    depends_on:
+      - database
+      - django
+    volumes:
+      - .:/app
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
+      - POSTGRES_DB=${POSTGRES_DB:-postgres}
+      - POSTGRES_HOST=database
+      - POSTGRES_PORT=5432
+      - DJANGO_SETTINGS_MODULE=yivi_portal.settings.development
+      - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
 
 networks:
   web:
