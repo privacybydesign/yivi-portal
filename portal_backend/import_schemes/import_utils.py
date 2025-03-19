@@ -2,7 +2,9 @@ import logging
 import json
 import os
 from io import BytesIO
+import zipfile
 from django.core.files.images import ImageFile
+from urllib.request import urlopen
 from portal_backend.models.models import Organization, YiviTrustModelEnv
 
 logger = logging.getLogger(__name__)
@@ -75,3 +77,34 @@ def get_trust_model_env(environment: str) -> YiviTrustModelEnv:
             f"YiviTrustModelEnv for environment '{environment}' does not exist"
         )
     return yivi_tme
+
+
+def download_extract_repo(repo_url: str, repo_name: str, repo_path: str) -> None:
+    os.makedirs("downloads", exist_ok=True)
+    logger.info(f"Downloading scheme from {repo_url}")
+
+    try:
+        response = urlopen(repo_url)
+        repo_zip = zipfile.ZipFile(BytesIO(response.read()))
+        repo_zip.extractall(repo_path)
+        logger.info(
+            f"Successfully extracted zip file to {repo_path}/{repo_name}-master"
+        )
+    except Exception as e:
+        raise Exception(f"Error extracting the zip file: {e}")
+
+
+def load_json_to_dict(json_path: str) -> dict:
+    """Load JSON file to dictionary"""
+
+    if not os.path.exists(json_path):
+        raise FileNotFoundError(f"JSON file not found: {json_path}")
+
+    try:
+        with open(json_path, "r", encoding="utf-8") as f:
+            dict = json.load(f)
+    except Exception as e:
+        raise Exception(f"Failed to load JSON file: {e}")
+
+    logger.info(f"Loaded {len(dict)} items from {json_path}")
+    return dict
