@@ -1,6 +1,6 @@
 services:
   database:
-    image: postgres:13.3-alpine
+    image: postgres:15.12
     container_name: yivi-portal-db
     restart: unless-stopped
     networks:
@@ -51,44 +51,42 @@ services:
       timeout: 20s
       retries: 3
 
-  nginx:
+  nextjs:
     build:
-      context: .
-      dockerfile: Dockerfile.nginx
-      target: nginx
-    container_name: nginx
+      context: portal_frontend
+      dockerfile: Dockerfile.nextjs
+      # target: nextjs
+    container_name: nextjs
     ports:
-      - "9000:8080"
+      - "9000:3000"
     depends_on:
       - django
-    volumes:
-      - static_volume:/app/static
-      - media_volume:/app/media
     networks:
       - web
 
-  # yivi-portal-cron:
-  #   container_name: yivi-portal-cron
-  #   build:
-  #     context: .
-  #   entrypoint: ['/bin/sh', '/app/entrypoint_cron.sh']
-  #   restart: unless-stopped
-  #   networks:
-  #     - web
-  #     - db
-  #   depends_on:
-  #     - database
-  #     - yivi
-  #   volumes:
-  #     - .:/app
-  #   environment:
-  #     - POSTGRES_USER=${POSTGRES_USER:-postgres}
-  #     - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
-  #     - POSTGRES_DB=${POSTGRES_DB:-postgres}
-  #     - POSTGRES_HOST=database
-  #     - POSTGRES_PORT=5432
-  #     - DJANGO_SETTINGS_MODULE=yivi_portal.settings.development
-  #     - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
+  yivi-portal-cron:
+    container_name: yivi-portal-cron
+    build:
+      context: .
+      dockerfile: Dockerfile.django
+    entrypoint: ['/bin/sh', '/app/entrypoint_cron.sh']
+    restart: unless-stopped
+    networks:
+      - web
+      - db
+    depends_on:
+      - database
+      - django
+    volumes:
+      - .:/app
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
+      - POSTGRES_DB=${POSTGRES_DB:-postgres}
+      - POSTGRES_HOST=database
+      - POSTGRES_PORT=5432
+      - DJANGO_SETTINGS_MODULE=yivi_portal.settings.development
+      - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
 
 networks:
   web:
@@ -96,5 +94,3 @@ networks:
 
 volumes:
   postgres-data:
-  static_volume:
-  media_volume:
