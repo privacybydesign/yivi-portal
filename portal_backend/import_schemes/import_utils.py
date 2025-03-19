@@ -10,7 +10,7 @@ from portal_backend.models.models import Organization, YiviTrustModelEnv
 logger = logging.getLogger(__name__)
 
 
-def load_config(config_file="config.json") -> dict:
+def load_config(config_file="/app/config.json") -> dict:
     """Load configuration from JSON file"""
     try:
         with open(config_file, "r") as f:

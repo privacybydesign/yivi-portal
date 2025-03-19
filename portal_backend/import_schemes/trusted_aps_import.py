@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 DOWNLOADS_DIR = "downloads"
 REPO_DIR = f"{DOWNLOADS_DIR}/attestation-provider-repo"
 AP_JSON_PATH = f"{DOWNLOADS_DIR}/all-APs.json"
-CONFIG_FILE = "config.json"
+CONFIG_FILE = "/app/config.json"
 load_dotenv()
 
 os.makedirs(DOWNLOADS_DIR, exist_ok=True)
