@@ -1,20 +1,4 @@
 services:
-  # yivi:
-  #   container_name: yivi-portal-yivi
-  #   image: ghcr.io/privacybydesign/irma:edge
-  #   command: >
-  #     server -v --no-email --no-tls --url ${YIVI_SERVER_URL:-http://localhost:8080} --port 8080
-  #   restart: unless-stopped
-  #   networks:
-  #     - web
-  #   ports:
-  #     - 8080:8080
-  #   volumes:
-  #     - ./downloads/schemes:/schemes
-  #   environment:
-  #     - YIVI_SERVER_TOKEN=${YIVI_SERVER_TOKEN}
-  #     - IRMASERVER_SCHEMES_PATH=/schemes
-
   database:
     image: postgres:13.3-alpine
     container_name: yivi-portal-db
@@ -33,10 +17,11 @@ services:
       timeout: 5s
       retries: 5
 
-  yivi-portal:
-    container_name: yivi-portal
+  django:
+    container_name: django
     build:
       context: .
+      dockerfile: Dockerfile.django
     restart: unless-stopped
     command: /bin/sh /app/entrypoint_dev.sh
     networks:
@@ -65,6 +50,22 @@ services:
       interval: 60s
       timeout: 20s
       retries: 3
+
+  nginx:
+    build:
+      context: .
+      dockerfile: Dockerfile.nginx
+      target: nginx
+    container_name: nginx
+    ports:
+      - "9000:8080"
+    depends_on:
+      - django
+    volumes:
+      - static_volume:/app/static
+      - media_volume:/app/media
+    networks:
+      - web
 
   # yivi-portal-cron:
   #   container_name: yivi-portal-cron
@@ -95,3 +96,5 @@ networks:
 
 volumes:
   postgres-data:
+  static_volume:
+  media_volume:

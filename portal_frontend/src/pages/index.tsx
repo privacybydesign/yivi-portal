@@ -1,6 +1,9 @@
 "use client";
 
 import Image from "next/image";
+import { Button } from "../components/ui/button";
+import { Card, CardHeader, CardTitle, CardContent } from "../components/ui/card";
+import Link from "next/link";
 
 export default function Home() {
   return (
@@ -18,37 +21,62 @@ export default function Home() {
           Welcome to the Yivi Portal
         </h1>
         <p className="text-sm sm:text-base text-center sm:text-left">
-          This is the Yivi portal where organizations can work together to create a secure and trusted ecosystem. Join us as a verifier, issuer, and become part of the Yivi ecosystem.
+          Explore the Yivi ecosystem and discover how you can participate.
         </p>
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            <strong>Become a Verifier:</strong> Verify the authenticity of credentials and ensure trust within the ecosystem.
-          </li>
-          <li className="mb-2">
-            <strong>Become an Issuer:</strong> Issue credentials to users and organizations, contributing to a secure and reliable network.
-          </li>
-          <li className="mb-2">
-            <strong>Join the Yivi Ecosystem:</strong> Collaborate with other organizations to build a robust and trusted environment.
-          </li>
-        </ol>
-
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="/login"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Get started
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://docs.yivi.app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Learn More
-          </a>
+        
+        <div className="grid gap-4 sm:grid-cols-2 w-full max-w-2xl">
+          <Card>
+            <CardHeader>
+              <CardTitle>I am a Yivi user, where can I use Yivi?</CardTitle>
+            </CardHeader>
+            <CardContent>
+              Find out where you can authenticate using Yivi.
+              <div className="mt-4">
+                <Button variant="outline" asChild>
+                  <Link href="/organizations">Explore relying parties</Link>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle>I want to become a relying party.</CardTitle>
+            </CardHeader>
+            <CardContent>
+              Integrate Yivi authentication into your services.
+              <div className="mt-4">
+                <Button variant="outline" asChild>
+                  <Link href="/organizations">Register relying party</Link>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle>I want to become an attestation provider.</CardTitle>
+            </CardHeader>
+            <CardContent>
+              Issue credentials for the Yivi ecosystem.
+              <div className="mt-4">
+                <Button variant="outline" asChild>
+                  <Link href="/organizations">Register attestation provider</Link>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle>I want to manage my organization.</CardTitle>
+            </CardHeader>
+            <CardContent>
+              Administer your organization’s role in the Yivi ecosystem.
+              <div className="mt-4">
+                <Button variant="outline" asChild>
+                  <Link href="/manage-organization">Manage organization</Link>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </main>
     </div>

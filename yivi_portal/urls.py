@@ -23,7 +23,7 @@ urlpatterns = [
     # re_path(r"^(?!media/)(?P<path>.*)$", serve, {"document_root": settings.STATICFILES_DIRS[0]}),
     # Catch all unknown frontend routes and serve index.html
     # Serve static files from root `/` (except for `/media/`)
-    re_path(r"^(?!media/)(?P<path>.*)$", serve, {"document_root": settings.STATICFILES_DIRS[0]}),
+    # re_path(r"^(?!media/)(?P<path>.*)$", serve, {"document_root": settings.STATICFILES_DIRS[0]}),
 ]
 
 # Serve media files separately
