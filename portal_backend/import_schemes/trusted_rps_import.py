@@ -123,7 +123,6 @@ def create_org_rp(all_RPs_dict: dict, environment: str, repo_path: str) -> None:
         org = import_utils.create_org(
             rpfields.slug, rpfields.name_en, rpfields.name_nl, rpfields.logo_path
         )
-        print("logo_path", rpfields.logo_path)
         yivi_tme = import_utils.get_trust_model_env(environment)
         rp = create_rp(org, yivi_tme, rp_dict, environment)
         create_hostnames(rpfields, rp, environment)
