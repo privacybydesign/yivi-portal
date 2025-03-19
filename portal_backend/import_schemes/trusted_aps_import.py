@@ -1,10 +1,7 @@
-import zipfile
 import xmltodict
 import json
-from io import BytesIO
 import os
 from dotenv import load_dotenv
-from urllib.request import urlopen
 from portal_backend.models.models import (
     YiviTrustModelEnv,
     AttestationProvider,
