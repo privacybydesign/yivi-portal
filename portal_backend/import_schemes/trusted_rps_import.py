@@ -12,6 +12,14 @@ import portal_backend.import_schemes.import_utils as import_utils
 logger = logging.getLogger(__name__)
 load_dotenv()
 
+DOWNLOADS_DIR = "downloads"
+EXTRACT_DIR = f"{DOWNLOADS_DIR}/relying-party-repo"
+
+load_dotenv()
+
+os.makedirs(DOWNLOADS_DIR, exist_ok=True)
+os.makedirs(EXTRACT_DIR, exist_ok=True)
+
 
 class RPFields:
     """
@@ -134,13 +142,11 @@ def import_rps() -> None:
 
         repo_url = config["RP"]["environment"]["production"]["repo-url"]
         repo_name = config["RP"]["environment"]["production"]["name"]
-        repo_path = "downloads/relying-party-repo"
+        repo_path = f"{EXTRACT_DIR}/{repo_name}-master"
 
-        import_utils.download_extract_repo(repo_url, repo_name, repo_path)
+        import_utils.download_extract_repo(repo_url, repo_name, EXTRACT_DIR)
 
-        all_RPs_dict = import_utils.load_json_to_dict(
-            os.path.join(repo_path, f"{repo_name}-master/requestors.json")
-        )
+        all_RPs_dict = import_utils.load_json_to_dict(f"{repo_path}/requestors.json")
         create_org_rp(all_RPs_dict, environment, repo_path)
 
     except Exception as e:

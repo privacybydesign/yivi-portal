@@ -61,7 +61,6 @@ def create_org(slug: str, name_en: str, name_nl: str, logo_path: str) -> Organiz
             },
         )
         logger.info(f"{'Created' if org_created else 'Updated'} Organization: {slug}")
-
     except Exception as org_error:
         logger.error(f"Failed to create/update Organization {slug}: {org_error}")
         raise
