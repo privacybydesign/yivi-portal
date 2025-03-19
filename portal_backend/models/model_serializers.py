@@ -26,7 +26,7 @@ class OrganizationSerializer(serializers.ModelSerializer):
             "name_nl",
             "slug",
             "registration_number",
-            "address",
+            "contact_address",
             "is_verified",
             "verified_at",
             "trade_names",

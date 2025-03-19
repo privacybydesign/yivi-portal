@@ -39,8 +39,8 @@ class Organization(models.Model):
     name_en = models.CharField(max_length=255)
     name_nl = models.CharField(max_length=255)
     slug = models.SlugField(unique=True)
-    registration_number = models.CharField(max_length=100)
-    address = models.TextField()
+    registration_number = models.CharField(max_length=100, null=True, blank=True)
+    contact_address = models.TextField(null=True, blank=True)
     is_verified = models.BooleanField(default=False)
     verified_at = models.DateTimeField(null=True)
     trade_names = models.JSONField(default=list)
@@ -138,10 +138,10 @@ class AttestationProvider(models.Model):
         Organization, on_delete=models.CASCADE, related_name="attestation_providers"
     )
     version = models.CharField(max_length=50)
-    shortname_en = models.CharField(max_length=100)
-    shortname_nl = models.CharField(max_length=100)
-    contact_email = models.EmailField(max_length=255, unique=True)
-    base_url = models.URLField()
+    shortname_en = models.CharField(max_length=100, null=True, blank=True)
+    shortname_nl = models.CharField(max_length=100, null=True, blank=True)
+    contact_email = models.EmailField(max_length=255, null=True, blank=True)
+    base_url = models.URLField(null=True, blank=True)
     # what will be added to issuers scheme
     approved_ap_details = models.JSONField(null=True)
     published_ap_details = models.JSONField(null=True)  # what is actually published

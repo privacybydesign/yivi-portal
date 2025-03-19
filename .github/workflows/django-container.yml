@@ -27,9 +27,10 @@ jobs:
       - uses: docker/build-push-action@v5
         with:
           context: .
+          file: Dockerfile.django
           cache-from: type=gha
           cache-to: type=gha,mode=max
           push: true
           tags: |
-            ghcr.io/privacybydesign/yivi-portal:${{ github.workflow_sha }}
-            ghcr.io/privacybydesign/yivi-portal:latest
+            ghcr.io/privacybydesign/django-portal:${{ github.workflow_sha }}
+            ghcr.io/privacybydesign/django-portal:latest

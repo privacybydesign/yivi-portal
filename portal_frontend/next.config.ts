@@ -2,7 +2,9 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   /* config options here */
+  output: "standalone",
   images: {
+    unoptimized: true,
     remotePatterns: [
       {
         protocol: 'http',
@@ -11,6 +13,9 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  publicRuntimeConfig: {
+    API_ENDPOINT: process.env.NEXT_PUBLIC_API_ENDPOINT
+  }
 };
 
 export default nextConfig;

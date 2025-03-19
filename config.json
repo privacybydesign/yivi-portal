@@ -1,0 +1,35 @@
+{
+  "AP": {
+    "environment": {
+      "development": {
+        "name": "pbdf-staging",
+        "environment": "staging",
+        "repo-url": "https://github.com/privacybydesign/pbdf-staging/archive/refs/heads/main.zip"
+      },
+      "production": {
+        "name": "pbdf-schememanager",
+        "environment": "production",
+        "repo-url": "https://github.com/privacybydesign/pbdf-schememanager/archive/refs/heads/master.zip"
+      },
+      "demo": {
+        "name": "irma-demo-schememanager",
+        "environment": "demo",
+        "repo-url": "https://github.com/privacybydesign/irma-demo-schememanager/archive/refs/heads/master.zip"
+      }
+    }
+  },
+  "RP": {
+    "environment": {
+      "production": {
+        "name": "pbdf-requestors",
+        "environment": "production",
+        "repo-url": "https://github.com/privacybydesign/pbdf-requestors/archive/refs/heads/master.zip"
+      },
+      "demo": {
+        "name": "irma-demo-requestors",
+        "environment": "demo",
+        "repo-url": "https://github.com/privacybydesign/irma-demo-requestors/archive/refs/heads/master.zip"
+      }
+    }
+  }
+}

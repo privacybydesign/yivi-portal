@@ -18,6 +18,7 @@ ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", "").split(",")
 ALLOWED_HOSTS = ["*", "localhost", "127.0.0.1"]
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
+    "http://localhost:9000",
 ]
 
 DATABASES = {
@@ -45,10 +46,10 @@ SWAGGER_SETTINGS = {
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
-STATIC_URL = "static/"
-MEDIA_URL = "assets/"
+# STATIC_URL = "static/"
+# MEDIA_URL = "assets/"
 
-STATIC_ROOT = BASE_DIR / "static"  # noqa: F405
-MEDIA_ROOT = BASE_DIR / "assets"  # noqa: F405
+# STATIC_ROOT = BASE_DIR / "static"  # noqa: F405
+# MEDIA_ROOT = BASE_DIR / "assets"  # noqa: F405
 
 EMAIL_DISCLOSURE = [[["irma-demo.sidn-pbdf.email.email"]]]
