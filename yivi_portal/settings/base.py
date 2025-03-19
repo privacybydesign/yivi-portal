@@ -117,8 +117,8 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 CRON_CLASSES = [
     "portal_backend.crons.NewDNSVerification",
     "portal_backend.crons.ExistingDNSVerification",
-    "portal_backend.trusted_aps_import",
-    "portal_backend.trusted_rps_import",
+    "portal_backend.crons.TrustedAPsImport",
+    "portal_backend.crons.TrustedRPsImport",
 ]
 
 DJANGO_CRON_DELETE_LOGS_OLDER_THAN = 7
