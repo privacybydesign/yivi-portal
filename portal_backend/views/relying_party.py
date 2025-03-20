@@ -23,29 +23,76 @@ from .helpers import IsMaintainer, BelongsToOrganization
 
 
 def check_existing_hostname(request):
-    request_hostname = request.data.get("hostname")
+    hostname_data = request.data.get("hostname")
+    # check if hostname_data is a list
+    if isinstance(hostname_data, list):
+        for hostname in hostname_data:
+            if RelyingPartyHostname.objects.filter(hostname=hostname).exists():
+                return Response(
+                    {
+                        "error": f"Hostname '{hostname}' is already registered by another relying party"
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+    else:
+        if RelyingPartyHostname.objects.filter(hostname=hostname_data).exists():
+            return Response(
+                {
+                    "error": "This hostname is already registered by another relying party"
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
-    if RelyingPartyHostname.objects.filter(hostname=request_hostname).exists():
-        return Response(
-            {"error": "This hostname is already registered by another relying party"},
-            status=status.HTTP_400_BAD_REQUEST,
-        )
 
-    return None
-
-
-class RelyingPartyListAPIView(APIView):
+class RelyingPartyDetailAPIView(APIView):
     permission_classes = [permissions.AllowAny]
 
     @swagger_auto_schema(responses={200: "Success", 404: "Not Found"})
-    def get(self, request, trustmodel_name: str, environment: str):
-        """Gets a list of relying parties and its details"""
-        relying_parties = RelyingParty.objects.filter(
+    def get(self, request, trustmodel_name: str, environment: str, org_pk: str):
+        """Gets details of a specific relying party."""
+        relying_party = get_object_or_404(
+            RelyingParty,
             yivi_tme__trust_model__name__iexact=trustmodel_name,
             yivi_tme__environment=environment,
+            organization__id=org_pk,
         )
-        serializer = RelyingPartySerializer(relying_parties, many=True)
-        return Response(data=serializer.data, status=status.HTTP_200_OK)
+
+        base_data = RelyingPartySerializer(relying_party).data
+
+        hostname = RelyingPartyHostname.objects.filter(
+            relying_party=relying_party
+        ).first()
+        condiscon = Condiscon.objects.filter(relying_party=relying_party).first()
+
+        response_data = {
+            **base_data,
+            "hostname_data": (
+                {
+                    "hostname": hostname.hostname if hostname else None,
+                    "dns_challenge": hostname.dns_challenge if hostname else None,
+                    "dns_verified": (
+                        hostname.dns_challenge_verified if hostname else None
+                    ),
+                }
+                if hostname
+                else None
+            ),
+            "condiscon_data": (
+                {
+                    "context_description_en": (
+                        condiscon.context_description_en if condiscon else None
+                    ),
+                    "context_description_nl": (
+                        condiscon.context_description_nl if condiscon else None
+                    ),
+                    "condiscon": condiscon.condiscon if condiscon else None,
+                }
+                if condiscon
+                else None
+            ),
+        }
+
+        return Response(response_data, status=status.HTTP_200_OK)
 
 
 class RelyingPartyRegisterAPIView(APIView):
@@ -98,18 +145,35 @@ class RelyingPartyRegisterAPIView(APIView):
 
     def save_hostname(self, request, rp):
         hostname_text = request.data.get("hostname")
-        hostname, _ = RelyingPartyHostname.objects.get_or_create(
-            relying_party=rp,
-            hostname=hostname_text,
-            defaults={
-                "dns_challenge": generate_dns_challenge(),
-                "dns_challenge_created_at": timezone.now(),
-                "dns_challenge_verified": False,
-            },
-        )
-        hostname.full_clean()
-        hostname.save()
-        return hostname
+        if isinstance(hostname_text, list):
+            hostnames = []
+            for hostname in hostname_text:
+                hostname_obj, _ = RelyingPartyHostname.objects.get_or_create(
+                    relying_party=rp,
+                    hostname=hostname,
+                    defaults={
+                        "dns_challenge": generate_dns_challenge(),
+                        "dns_challenge_created_at": timezone.now(),
+                        "dns_challenge_verified": False,
+                    },
+                )
+                hostname_obj.full_clean()
+                hostname_obj.save()
+                hostnames.append(hostname_obj)
+            return hostnames
+        else:
+            hostname_obj, _ = RelyingPartyHostname.objects.get_or_create(
+                relying_party=rp,
+                hostname=hostname_text,
+                defaults={
+                    "dns_challenge": generate_dns_challenge(),
+                    "dns_challenge_created_at": timezone.now(),
+                    "dns_challenge_verified": False,
+                },
+            )
+            hostname_obj.full_clean()
+            hostname_obj.save()
+            return [hostname_obj]
 
     def save_condiscon(self, request, attributes_data, rp):
         condiscon_json = self.make_condiscon_from_attributes(attributes_data)
@@ -124,13 +188,6 @@ class RelyingPartyRegisterAPIView(APIView):
         condiscon.full_clean()
         condiscon.save()
         return condiscon
-
-    def create_initial_status(self, rp):
-        status = Status(
-            relying_party=rp,
-        )
-        status.save()
-        return status
 
     def save_condiscon_attributes(self, condiscon, attributes_data):
         for attr_data in attributes_data:
@@ -155,7 +212,6 @@ class RelyingPartyRegisterAPIView(APIView):
                 {"error": "The organization already has a relying party registered"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        return None
 
     @swagger_auto_schema(
         responses={
@@ -194,10 +250,8 @@ class RelyingPartyRegisterAPIView(APIView):
             },
         ),
     )
-    @transaction.atomic  # rollback if any part of the transaction fails
+    @transaction.atomic
     def post(self, request, pk):
-        """Registers a new relying party, given the user is authenticated and is the maintainer of the org with same pk as in the URL"""
-
         existing_rp = self.check_existing_rp(request, pk)
         if existing_rp:
             return existing_rp
@@ -206,53 +260,98 @@ class RelyingPartyRegisterAPIView(APIView):
             return existing_hostname
 
         relying_party = self.save_rp(request, pk)
-        rp_status = self.create_initial_status(relying_party)
-        hostname = self.save_hostname(request, relying_party)
+        rp_status = Status.objects.get(relying_party=relying_party).rp_status
+        hostnames = self.save_hostname(request, relying_party)
         attributes_data = request.data.get("attributes", [])
         condiscon = self.save_condiscon(request, attributes_data, relying_party)
         self.save_condiscon_attributes(condiscon, attributes_data)
+
+        hostname_data = []
+        for hostname in hostnames:
+            hostname_data.append(
+                {"hostname": hostname.hostname, "dns_challenge": hostname.dns_challenge}
+            )
 
         return Response(
             {
                 "id": str(relying_party.id),
                 "message": "Relying party registration successful",
-                "dns_challenge": hostname.dns_challenge,
-                "hostname": hostname.hostname,
-                "current_status": rp_status.rp_status.label,
+                "hostnames": hostname_data,
+                "current_status": rp_status,
             },
             status=status.HTTP_201_CREATED,
         )
 
     def patch(self, request, pk):
-        """Mark a relying party as ready, or update its details"""
         relying_party = get_object_or_404(RelyingParty, organization__id=pk)
         response_message = "Relying party updated successfully"
         response_data = {"id": str(relying_party.id)}
 
         if request.data.get("hostname") is not None:
-            hostname_text = request.data.get("hostname")
+            hostname_data = request.data.get("hostname")
 
             existing_hostname = check_existing_hostname(request)
             if existing_hostname:
                 return existing_hostname
 
-            hostname_obj = get_object_or_404(
-                RelyingPartyHostname, relying_party=relying_party
-            )
+            if isinstance(hostname_data, list):
+                # delete existing hostnames
+                RelyingPartyHostname.objects.filter(
+                    relying_party=relying_party
+                ).delete()
 
-            if hostname_obj.hostname != hostname_text:
-                hostname_obj.hostname = hostname_text
-                hostname_obj.dns_challenge = generate_dns_challenge()
-                hostname_obj.dns_challenge_created_at = timezone.now()
-                hostname_obj.dns_challenge_verified = False
-                hostname_obj.dns_challenge_verified_at = None
-                hostname_obj.save()
-                # add hostname dns challenge to response
-                response_data["hostname"] = hostname_obj.hostname
-                response_data["dns_challenge"] = hostname_obj.dns_challenge
-                response_message += ". Hostname updated. Please update your DNS record with the new challenge."
+                # create new hostnames
+                hostnames = []
+                for hostname_text in hostname_data:
+                    hostname_obj = RelyingPartyHostname.objects.create(
+                        relying_party=relying_party,
+                        hostname=hostname_text,
+                        dns_challenge=generate_dns_challenge(),
+                        dns_challenge_created_at=timezone.now(),
+                        dns_challenge_verified=False,
+                    )
+                    hostnames.append(hostname_obj)
+
+                hostname_data_response = []
+                for hostname in hostnames:
+                    hostname_data_response.append(
+                        {
+                            "hostname": hostname.hostname,
+                            "dns_challenge": hostname.dns_challenge,
+                        }
+                    )
+
+                response_data["hostnames"] = hostname_data_response
+                response_message += ". Hostnames updated. Please update your DNS records with the new challenges."
             else:
-                hostname_obj.save()
+                hostname_obj = RelyingPartyHostname.objects.filter(
+                    relying_party=relying_party
+                ).first()
+
+                if hostname_obj:
+                    if hostname_obj.hostname != hostname_data:
+                        hostname_obj.hostname = hostname_data
+                        hostname_obj.dns_challenge = generate_dns_challenge()
+                        hostname_obj.dns_challenge_created_at = timezone.now()
+                        hostname_obj.dns_challenge_verified = False
+                        hostname_obj.dns_challenge_verified_at = None
+                        hostname_obj.save()
+                        response_data["hostname"] = hostname_obj.hostname
+                        response_data["dns_challenge"] = hostname_obj.dns_challenge
+                        response_message += ". Hostname updated. Please update your DNS record with the new challenge."
+                else:
+                    hostname_obj = RelyingPartyHostname.objects.create(
+                        relying_party=relying_party,
+                        hostname=hostname_data,
+                        dns_challenge=generate_dns_challenge(),
+                        dns_challenge_created_at=timezone.now(),
+                        dns_challenge_verified=False,
+                    )
+                    response_data["hostname"] = hostname_obj.hostname
+                    response_data["dns_challenge"] = hostname_obj.dns_challenge
+                    response_message += (
+                        ". Hostname added. Please add a DNS record with the challenge."
+                    )
 
         if (
             request.data.get("context_description_en") is not None
@@ -307,6 +406,30 @@ class RelyingPartyRegisterAPIView(APIView):
 
         response_data["message"] = response_message
         return Response(response_data, status=status.HTTP_200_OK)
+
+    @swagger_auto_schema(
+        responses={
+            204: "No Content",
+            404: "Not Found",
+            403: "Forbidden",
+        }
+    )
+    @transaction.atomic
+    def delete(self, request, pk):
+        relying_party = get_object_or_404(RelyingParty, organization__id=pk)
+
+        RelyingPartyHostname.objects.filter(relying_party=relying_party).delete()
+
+        condiscons = Condiscon.objects.filter(relying_party=relying_party)
+        for condiscon in condiscons:
+            CondisconAttribute.objects.filter(condiscon=condiscon).delete()
+        condiscons.delete()
+
+        Status.objects.filter(relying_party=relying_party).delete()
+
+        relying_party.delete()
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class RelyingPartyHostnameStatusAPIView(APIView):
