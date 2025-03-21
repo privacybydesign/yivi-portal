@@ -40,7 +40,7 @@ class Organization(models.Model):
     name_nl = models.CharField(max_length=255)
     slug = models.SlugField(unique=True)
     registration_number = models.CharField(max_length=100, null=True, blank=True)
-    contact_address = models.TextField(null=True, blank=True)
+    contact_address = models.CharField(max_length=255, null=True, blank=True)
     is_verified = models.BooleanField(default=False)
     verified_at = models.DateTimeField(null=True)
     trade_names = models.JSONField(default=list)
@@ -173,6 +173,7 @@ class RelyingParty(models.Model):
         verbose_name = "Relying Party"
         verbose_name_plural = "Relying Parties"
 
+    rp_slug = models.SlugField(unique=True, null=True, blank=True)
     yivi_tme = models.ForeignKey(
         YiviTrustModelEnv, on_delete=models.CASCADE, related_name="relying_parties"
     )
