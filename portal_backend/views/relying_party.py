@@ -274,7 +274,7 @@ class RelyingPartyRegisterView(APIView):
 
         return Response(
             {
-                "id": str(relying_party.id),
+                "slug": str(relying_party.rp_slug),
                 "message": "Relying party registration successful",
                 "hostnames": hostname_data,
                 "current_status": rp_status,
@@ -284,16 +284,27 @@ class RelyingPartyRegisterView(APIView):
 
 
 class RelyingPartyDetailView(APIView):
-
-    def patch(self, request, pk, environment, slug):
+    def get(self, request, org_slug, environment, rp_slug):
         relying_party = get_object_or_404(
             RelyingParty,
-            organization__id=pk,
+            organization__slug=org_slug,
             yivi_tme__environment=environment,
-            organization__slug=slug,
+            rp_slug=rp_slug,
+        )
+        serializer = RelyingPartySerializer(relying_party)
+        return Response(serializer.data)
+
+    def patch(self, request, org_slug, environment, rp_slug):
+        print(rp_slug, environment, org_slug)
+
+        relying_party = get_object_or_404(
+            RelyingParty,
+            organization__slug=org_slug,
+            yivi_tme__environment=environment,
+            rp_slug=rp_slug,
         )
         response_message = "Relying party updated successfully"
-        response_data = {"id": str(relying_party.id)}
+        response_data = {"slug": str(relying_party.rp_slug)}
 
         if request.data.get("hostname") is not None:
             hostname_data = request.data.get("hostname")
@@ -427,8 +438,13 @@ class RelyingPartyDetailView(APIView):
         }
     )
     @transaction.atomic
-    def delete(self, request, pk):
-        relying_party = get_object_or_404(RelyingParty, organization__id=pk)
+    def delete(self, request, environment, org_slug, rp_slug):
+        relying_party = get_object_or_404(
+            RelyingParty,
+            organization__slug=org_slug,
+            rp_slug=rp_slug,
+            yivi_tme__environment=environment,
+        )
 
         RelyingPartyHostname.objects.filter(relying_party=relying_party).delete()
 
