@@ -17,7 +17,7 @@ from portal_backend.views.relying_party import (
     RelyingPartyRegisterView,
     RelyingPartyDetailView,
     RelyingPartyHostnameStatusView,
-    RelyingPartyRegistrationStatusView,
+    RelyingPartyUpdateView,
 )
 from rest_framework import permissions
 from drf_yasg.views import get_schema_view  # type: ignore
@@ -65,9 +65,20 @@ urlpatterns = [
         name="organization-register-rp",
     ),
     path(
-        "v1/yivi/organizations/<uuid:pk>/relying-party/<str:environment>/<str:slug>/",
+        "v1/yivi/organizations/<str:org_slug>/relying-party/<str:environment>/<str:rp_slug>/",
         RelyingPartyDetailView.as_view(),
         name="organization-rp-list",
+    ),
+    path(
+        "v1/yivi/organizations/<str:org_slug>/relying-party/<str:rp_slug>/",
+        RelyingPartyUpdateView.as_view(),
+        name="organization-rp-manage",
+    ),
+    # Relying Party Hostname
+    path(
+        "v1/yivi/organizations/<str:org_slug>/relying-party/<str:environment>/<str:rp_slug>/dns-verification/",
+        RelyingPartyHostnameStatusView.as_view(),
+        name="rp-hostname-status",
     ),
     # Trust Models
     path("v1/trust-models/", TrustModelListView.as_view(), name="trust-model-list"),
@@ -92,16 +103,5 @@ urlpatterns = [
         "v1/<str:trustmodel_name>/<str:environment>/attestation-providers/",
         AttestationProviderListView.as_view(),
         name="trust-model-ap-list",
-    ),
-    # Relying Party Statuses
-    path(
-        "v1/relying-party/<str:slug>/hostname-status/",
-        RelyingPartyHostnameStatusView.as_view(),
-        name="rp-hostname-status",
-    ),
-    path(
-        "v1/relying-parties/<str:slug>/registration-status/",
-        RelyingPartyRegistrationStatusView.as_view(),
-        name="rp-registration-status",
     ),
 ]

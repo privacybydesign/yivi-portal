@@ -130,7 +130,7 @@ class RelyingPartyRegisterView(APIView):
 
         return condiscon_json
 
-    def save_rp(self, request, org_slug):
+    def save_rp(self, request, org_slug, rp_slug):
         yivi_tme = get_object_or_404(
             YiviTrustModelEnv, environment=request.data.get("trust_model_env")
         )
@@ -138,6 +138,7 @@ class RelyingPartyRegisterView(APIView):
         relying_party = RelyingParty(
             yivi_tme=yivi_tme,
             organization=organization,
+            rp_slug=rp_slug,
         )
         relying_party.full_clean()
         relying_party.save()
@@ -259,7 +260,9 @@ class RelyingPartyRegisterView(APIView):
         if existing_hostname:
             return existing_hostname
 
-        relying_party = self.save_rp(request, org_slug)
+        relying_party = self.save_rp(
+            request, org_slug, rp_slug=request.data.get("rp_slug")
+        )
         rp_status = Status.objects.get(relying_party=relying_party).rp_status
         hostnames = self.save_hostname(request, relying_party)
         attributes_data = request.data.get("attributes", [])
@@ -284,6 +287,8 @@ class RelyingPartyRegisterView(APIView):
 
 
 class RelyingPartyDetailView(APIView):
+    permission_classes = [permissions.AllowAny]
+
     def get(self, request, org_slug, environment, rp_slug):
         relying_party = get_object_or_404(
             RelyingParty,
@@ -294,7 +299,79 @@ class RelyingPartyDetailView(APIView):
         serializer = RelyingPartySerializer(relying_party)
         return Response(serializer.data)
 
-    def patch(self, request, org_slug, environment, rp_slug):
+    @swagger_auto_schema(
+        responses={
+            204: "No Content",
+            404: "Not Found",
+            403: "Forbidden",
+        }
+    )
+    @transaction.atomic
+    def delete(self, request, environment, org_slug, rp_slug):
+        relying_party = get_object_or_404(
+            RelyingParty,
+            organization__slug=org_slug,
+            rp_slug=rp_slug,
+            yivi_tme__environment=environment,
+        )
+
+        RelyingPartyHostname.objects.filter(relying_party=relying_party).delete()
+
+        condiscons = Condiscon.objects.filter(relying_party=relying_party)
+        for condiscon in condiscons:
+            CondisconAttribute.objects.filter(condiscon=condiscon).delete()
+        condiscons.delete()
+
+        Status.objects.filter(relying_party=relying_party).delete()
+
+        relying_party.delete()
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class RelyingPartyUpdateView(APIView):
+    permission_classes = [
+        permissions.IsAuthenticated,
+        BelongsToOrganization,
+        IsMaintainer,
+    ]
+
+    @swagger_auto_schema(
+        responses={
+            200: "Success",
+            404: "Not Found",
+            400: "Bad Request",
+            401: "Unauthorized",
+        },
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                "hostname": openapi.Schema(type=openapi.TYPE_STRING),
+                "trust_model_env": openapi.Schema(type=openapi.TYPE_STRING),
+                "context_description_en": openapi.Schema(type=openapi.TYPE_STRING),
+                "context_description_nl": openapi.Schema(type=openapi.TYPE_STRING),
+                "attributes": openapi.Schema(
+                    type=openapi.TYPE_ARRAY,
+                    items=openapi.Schema(
+                        type=openapi.TYPE_OBJECT,
+                        properties={
+                            "credential_attribute_tag": openapi.Schema(
+                                type=openapi.TYPE_STRING
+                            ),
+                            "credential_attribute_name": openapi.Schema(
+                                type=openapi.TYPE_STRING
+                            ),
+                            "reason_en": openapi.Schema(type=openapi.TYPE_STRING),
+                            "reason_nl": openapi.Schema(type=openapi.TYPE_STRING),
+                        },
+                    ),
+                ),
+                "ready": openapi.Schema(type=openapi.TYPE_BOOLEAN),
+            },
+        ),
+    )
+    def patch(self, request, org_slug, rp_slug):
+        environment = request.data.get("environment")
         print(rp_slug, environment, org_slug)
 
         relying_party = get_object_or_404(
@@ -430,35 +507,6 @@ class RelyingPartyDetailView(APIView):
             response_data["message"] = response_message
             return Response(response_data, status=status.HTTP_200_OK)
 
-    @swagger_auto_schema(
-        responses={
-            204: "No Content",
-            404: "Not Found",
-            403: "Forbidden",
-        }
-    )
-    @transaction.atomic
-    def delete(self, request, environment, org_slug, rp_slug):
-        relying_party = get_object_or_404(
-            RelyingParty,
-            organization__slug=org_slug,
-            rp_slug=rp_slug,
-            yivi_tme__environment=environment,
-        )
-
-        RelyingPartyHostname.objects.filter(relying_party=relying_party).delete()
-
-        condiscons = Condiscon.objects.filter(relying_party=relying_party)
-        for condiscon in condiscons:
-            CondisconAttribute.objects.filter(condiscon=condiscon).delete()
-        condiscons.delete()
-
-        Status.objects.filter(relying_party=relying_party).delete()
-
-        relying_party.delete()
-
-        return Response(status=status.HTTP_204_NO_CONTENT)
-
 
 class RelyingPartyHostnameStatusView(APIView):
     permission_classes = [
@@ -468,9 +516,15 @@ class RelyingPartyHostnameStatusView(APIView):
     ]
 
     @swagger_auto_schema(responses={200: "Success"})
-    def get(self, request, slug):
+    def get(self, request, org_slug, environment, rp_slug):
         """Get status of DNS verification for a hostname"""
-        relying_party = get_object_or_404(RelyingParty, organization__slug=slug)
+        relying_party = get_object_or_404(
+            RelyingParty,
+            organization__slug=org_slug,
+            rp_slug=rp_slug,
+            yivi_tme__environment=environment,
+        )
+
         hostname = get_object_or_404(RelyingPartyHostname, relying_party=relying_party)
 
         return Response(
@@ -482,27 +536,5 @@ class RelyingPartyHostnameStatusView(APIView):
                 "dns_challenge_verified": hostname.dns_challenge_verified,
                 "dns_challenge_verified_at": hostname.dns_challenge_verified_at,
                 "dns_challenge_invalidated_at": hostname.dns_challenge_invalidated_at,
-            }
-        )
-
-
-class RelyingPartyRegistrationStatusView(APIView):
-    permission_classes = [
-        permissions.IsAuthenticated,
-        BelongsToOrganization,
-        IsMaintainer,
-    ]
-
-    @swagger_auto_schema(responses={200: "Success"})
-    def get(self, request, slug):
-        """Get status of relying party registration"""
-        relying_party = get_object_or_404(RelyingParty, organization__slug=slug)
-        status = get_object_or_404(Status, relying_party=relying_party)
-
-        return Response(
-            {
-                "current_status": status.rp_status.label,
-                "ready": status.ready,
-                "ready_at": status.ready_at,
             }
         )

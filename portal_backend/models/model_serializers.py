@@ -114,7 +114,7 @@ class CondisconAttributeSerializer(serializers.ModelSerializer):
 class RelyingPartySerializer(serializers.ModelSerializer):
     yivi_tme = serializers.CharField(source="yivi_tme.environment", read_only=True)
     organization = serializers.CharField(source="organization.name_en", read_only=True)
-    status = serializers.BooleanField(source="status.reviewed_accepted", read_only=True)
+    status = serializers.CharField(source="status.rp_status", read_only=True)
 
     class Meta:
         model = RelyingParty
