@@ -8,7 +8,7 @@ from portal_backend.models.model_serializers import AttestationProviderSerialize
 from rest_framework import permissions
 
 
-class AttestationProviderListAPIView(APIView):
+class AttestationProviderListView(APIView):
     permission_classes = [permissions.AllowAny]
 
     @swagger_auto_schema(responses={200: "Success", 404: "Not Found"})

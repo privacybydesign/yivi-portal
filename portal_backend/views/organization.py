@@ -15,7 +15,7 @@ from django.shortcuts import get_object_or_404
 logger = logging.getLogger(__name__)
 
 
-class OrganizationListAPIView(APIView):
+class OrganizationListView(APIView):
     permission_classes = [permissions.AllowAny]
 
     @swagger_auto_schema(responses={200: "Success"})
@@ -66,15 +66,15 @@ class OrganizationListAPIView(APIView):
         return Response({"id": organization.id}, status=status.HTTP_201_CREATED)
 
 
-class OrganizationDetailAPIView(APIView):
+class OrganizationDetailView(APIView):
     permission_classes = [permissions.AllowAny]
 
     @swagger_auto_schema(responses={200: "Success"})
-    def get(self, request, pk):
+    def get(self, request, org_slug):
         """Get organization by uuid"""
-        logger.info("Fetching organization with ID: %s", pk)
+        logger.info("Fetching organization with slug: %s", org_slug)
 
-        org = Organization.objects.get(pk=pk)
+        org = Organization.objects.get(slug=org_slug)
         serializer = OrganizationSerializer(org)
         return Response(serializer.data)
 
@@ -97,7 +97,7 @@ class OrganizationDetailAPIView(APIView):
         return Response(status=status.HTTP_200_OK)
 
 
-class OrganizationMaintainersAPIView(APIView):
+class OrganizationMaintainersView(APIView):
     permission_classes = [
         permissions.IsAuthenticated,
         BelongsToOrganization,
@@ -105,9 +105,9 @@ class OrganizationMaintainersAPIView(APIView):
     ]
 
     @swagger_auto_schema(responses={200: "Success"})
-    def get(self, request, pk):
+    def get(self, request, org_slug):
         """Get all maintainers for an organization"""
-        organization = get_object_or_404(Organization, pk=pk)
+        organization = get_object_or_404(Organization, slug=org_slug)
         maintainers = User.objects.filter(organization=organization)
 
         return Response(

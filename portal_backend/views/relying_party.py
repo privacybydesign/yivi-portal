@@ -44,17 +44,17 @@ def check_existing_hostname(request):
             )
 
 
-class RelyingPartyDetailAPIView(APIView):
+class RelyingPartyDetailView(APIView):
     permission_classes = [permissions.AllowAny]
 
     @swagger_auto_schema(responses={200: "Success", 404: "Not Found"})
-    def get(self, request, trustmodel_name: str, environment: str, org_pk: str):
+    def get(self, request, trustmodel_name: str, environment: str, org_slug: str):
         """Gets details of a specific relying party."""
         relying_party = get_object_or_404(
             RelyingParty,
             yivi_tme__trust_model__name__iexact=trustmodel_name,
             yivi_tme__environment=environment,
-            organization__id=org_pk,
+            organization__slug=org_slug,
         )
 
         base_data = RelyingPartySerializer(relying_party).data
@@ -95,7 +95,7 @@ class RelyingPartyDetailAPIView(APIView):
         return Response(response_data, status=status.HTTP_200_OK)
 
 
-class RelyingPartyRegisterAPIView(APIView):
+class RelyingPartyRegisterView(APIView):
     permission_classes = [
         permissions.IsAuthenticated,
         BelongsToOrganization,
@@ -130,11 +130,11 @@ class RelyingPartyRegisterAPIView(APIView):
 
         return condiscon_json
 
-    def save_rp(self, request, org_pk):
+    def save_rp(self, request, org_slug):
         yivi_tme = get_object_or_404(
             YiviTrustModelEnv, environment=request.data.get("trust_model_env")
         )
-        organization = get_object_or_404(Organization, id=org_pk)
+        organization = get_object_or_404(Organization, slug=org_slug)
         relying_party = RelyingParty(
             yivi_tme=yivi_tme,
             organization=organization,
@@ -206,8 +206,8 @@ class RelyingPartyRegisterAPIView(APIView):
             condiscon_attr.full_clean()
             condiscon_attr.save()
 
-    def check_existing_rp(self, request, org_pk):
-        if RelyingParty.objects.filter(organization__id=org_pk).exists():
+    def check_existing_rp(self, request, org_slug):
+        if RelyingParty.objects.filter(organization__slug=org_slug).exists():
             return Response(
                 {"error": "The organization already has a relying party registered"},
                 status=status.HTTP_400_BAD_REQUEST,
@@ -251,15 +251,15 @@ class RelyingPartyRegisterAPIView(APIView):
         ),
     )
     @transaction.atomic
-    def post(self, request, pk):
-        existing_rp = self.check_existing_rp(request, pk)
+    def post(self, request, org_slug):
+        existing_rp = self.check_existing_rp(request, org_slug)
         if existing_rp:
             return existing_rp
         existing_hostname = check_existing_hostname(request)
         if existing_hostname:
             return existing_hostname
 
-        relying_party = self.save_rp(request, pk)
+        relying_party = self.save_rp(request, org_slug)
         rp_status = Status.objects.get(relying_party=relying_party).rp_status
         hostnames = self.save_hostname(request, relying_party)
         attributes_data = request.data.get("attributes", [])
@@ -282,8 +282,16 @@ class RelyingPartyRegisterAPIView(APIView):
             status=status.HTTP_201_CREATED,
         )
 
-    def patch(self, request, pk):
-        relying_party = get_object_or_404(RelyingParty, organization__id=pk)
+
+class RelyingPartyDetailView(APIView):
+
+    def patch(self, request, pk, environment, slug):
+        relying_party = get_object_or_404(
+            RelyingParty,
+            organization__id=pk,
+            yivi_tme__environment=environment,
+            organization__slug=slug,
+        )
         response_message = "Relying party updated successfully"
         response_data = {"id": str(relying_party.id)}
 
@@ -353,59 +361,63 @@ class RelyingPartyRegisterAPIView(APIView):
                         ". Hostname added. Please add a DNS record with the challenge."
                     )
 
-        if (
-            request.data.get("context_description_en") is not None
-            or request.data.get("context_description_nl") is not None
-        ):
-            condiscon = get_object_or_404(Condiscon, relying_party=relying_party)
-            if request.data.get("context_description_en") is not None:
-                condiscon.context_description_en = request.data.get(
-                    "context_description_en"
+            if (
+                request.data.get("context_description_en") is not None
+                or request.data.get("context_description_nl") is not None
+            ):
+                condiscon = get_object_or_404(Condiscon, relying_party=relying_party)
+                if request.data.get("context_description_en") is not None:
+                    condiscon.context_description_en = request.data.get(
+                        "context_description_en"
+                    )
+                if request.data.get("context_description_nl") is not None:
+                    condiscon.context_description_nl = request.data.get(
+                        "context_description_nl"
+                    )
+                condiscon.save()
+
+            if request.data.get("attributes") is not None:
+                attributes_data = request.data.get("attributes")
+                condiscon = get_object_or_404(Condiscon, relying_party=relying_party)
+                CondisconAttribute.objects.filter(condiscon=condiscon).delete()
+                self.save_condiscon_attributes(condiscon, attributes_data)
+                condiscon.condiscon = self.make_condiscon_from_attributes(
+                    attributes_data
                 )
-            if request.data.get("context_description_nl") is not None:
-                condiscon.context_description_nl = request.data.get(
-                    "context_description_nl"
+                condiscon.save()
+
+            if request.data.get("trust_model_env") is not None:
+                yivi_tme = get_object_or_404(
+                    YiviTrustModelEnv, environment=request.data.get("trust_model_env")
                 )
-            condiscon.save()
+                relying_party.yivi_tme = yivi_tme
+                relying_party.save()
 
-        if request.data.get("attributes") is not None:
-            attributes_data = request.data.get("attributes")
-            condiscon = get_object_or_404(Condiscon, relying_party=relying_party)
-            CondisconAttribute.objects.filter(condiscon=condiscon).delete()
-            self.save_condiscon_attributes(condiscon, attributes_data)
-            condiscon.condiscon = self.make_condiscon_from_attributes(attributes_data)
-            condiscon.save()
+            if "ready" in request.data:
+                rp_status = Status.objects.get(relying_party=relying_party)
+                rp_status.ready = request.data.get("ready")
+                rp_status.ready_at = (
+                    timezone.now() if request.data.get("ready") else None
+                )
+                rp_status.save()
 
-        if request.data.get("trust_model_env") is not None:
-            yivi_tme = get_object_or_404(
-                YiviTrustModelEnv, environment=request.data.get("trust_model_env")
-            )
-            relying_party.yivi_tme = yivi_tme
-            relying_party.save()
+            # if any of these fields are updated, set ready to False. User must explicitly set ready to make status PENDING FOR REVIEW
+            elif any(
+                field in request.data
+                for field in [
+                    "hostname",
+                    "context_description_en",
+                    "context_description_nl",
+                    "attributes",
+                    "trust_model_env",
+                ]
+            ):
+                rp_status = Status.objects.get(relying_party=relying_party)
+                rp_status.ready = False
+                rp_status.save()
 
-        if "ready" in request.data:
-            rp_status = Status.objects.get(relying_party=relying_party)
-            rp_status.ready = request.data.get("ready")
-            rp_status.ready_at = timezone.now() if request.data.get("ready") else None
-            rp_status.save()
-
-        # if any of these fields are updated, set ready to False. User must explicitly set ready to make status PENDING FOR REVIEW
-        elif any(
-            field in request.data
-            for field in [
-                "hostname",
-                "context_description_en",
-                "context_description_nl",
-                "attributes",
-                "trust_model_env",
-            ]
-        ):
-            rp_status = Status.objects.get(relying_party=relying_party)
-            rp_status.ready = False
-            rp_status.save()
-
-        response_data["message"] = response_message
-        return Response(response_data, status=status.HTTP_200_OK)
+            response_data["message"] = response_message
+            return Response(response_data, status=status.HTTP_200_OK)
 
     @swagger_auto_schema(
         responses={
@@ -432,7 +444,7 @@ class RelyingPartyRegisterAPIView(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-class RelyingPartyHostnameStatusAPIView(APIView):
+class RelyingPartyHostnameStatusView(APIView):
     permission_classes = [
         permissions.IsAuthenticated,
         BelongsToOrganization,
@@ -458,7 +470,7 @@ class RelyingPartyHostnameStatusAPIView(APIView):
         )
 
 
-class RelyingPartyRegistrationStatusAPIView(APIView):
+class RelyingPartyRegistrationStatusView(APIView):
     permission_classes = [
         permissions.IsAuthenticated,
         BelongsToOrganization,

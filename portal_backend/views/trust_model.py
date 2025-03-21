@@ -9,7 +9,7 @@ from ..models.model_serializers import TrustModelSerializer, YiviTrustModelEnvSe
 from rest_framework import permissions
 
 
-class TrustModelListAPIView(APIView):
+class TrustModelListView(APIView):
     permission_classes = [permissions.AllowAny]
 
     @swagger_auto_schema(responses={200: "Success"})
@@ -20,7 +20,7 @@ class TrustModelListAPIView(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-class TrustModelDetailAPIView(APIView):
+class TrustModelDetailView(APIView):
     permission_classes = [permissions.AllowAny]
 
     @swagger_auto_schema(responses={200: "Success", 404: "Not found"})

@@ -1,23 +1,23 @@
 from django.urls import path
 from portal_backend.views.trust_model import (
-    TrustModelListAPIView,
-    TrustModelDetailAPIView,
+    TrustModelListView,
+    TrustModelDetailView,
     TrustModelEnvironments,
     TrustModelEnvironment,
 )
 from portal_backend.views.organization import (
-    OrganizationListAPIView,
-    OrganizationDetailAPIView,
-    OrganizationMaintainersAPIView,
+    OrganizationListView,
+    OrganizationDetailView,
+    OrganizationMaintainersView,
 )
 from portal_backend.views.attestation_provider import (
-    AttestationProviderListAPIView,
+    AttestationProviderListView,
 )
 from portal_backend.views.relying_party import (
-    RelyingPartyRegisterAPIView,
-    RelyingPartyListAPIView,
-    RelyingPartyHostnameStatusAPIView,
-    RelyingPartyRegistrationStatusAPIView,
+    RelyingPartyRegisterView,
+    RelyingPartyDetailView,
+    RelyingPartyHostnameStatusView,
+    RelyingPartyRegistrationStatusView,
 )
 from rest_framework import permissions
 from drf_yasg.views import get_schema_view  # type: ignore
@@ -44,29 +44,36 @@ urlpatterns = [
     path("redoc/", schema_view.with_ui("redoc", cache_timeout=0), name="schema-redoc"),
     # Organizations
     path(
-        "v1/organizations/", OrganizationListAPIView.as_view(), name="organization-list"
+        "v1/yivi/organizations/",
+        OrganizationListView.as_view(),
+        name="organization-list",
     ),
     path(
-        "v1/organizations/<uuid:pk>/",
-        OrganizationDetailAPIView.as_view(),
+        "v1/yivi/organizations/<str:org_slug>/",
+        OrganizationDetailView.as_view(),
         name="organization-detail",
     ),
     path(
-        "v1/organizations/<uuid:pk>/maintainers/",
-        OrganizationMaintainersAPIView.as_view(),
+        "v1/yivi/organizations/<str:org_slug>/maintainers/",
+        OrganizationMaintainersView.as_view(),
         name="organization-maintainers",
     ),
-    # Organization Registration as AP or RP
+    # Relying Party
     path(
-        "v1/organizations/<uuid:pk>/register-rp/",
-        RelyingPartyRegisterAPIView.as_view(),
+        "v1/yivi/organizations/<str:org_slug>/relying-party/",
+        RelyingPartyRegisterView.as_view(),
         name="organization-register-rp",
     ),
+    path(
+        "v1/yivi/organizations/<uuid:pk>/relying-party/<str:environment>/<str:slug>/",
+        RelyingPartyDetailView.as_view(),
+        name="organization-rp-list",
+    ),
     # Trust Models
-    path("v1/trust-models/", TrustModelListAPIView.as_view(), name="trust-model-list"),
+    path("v1/trust-models/", TrustModelListView.as_view(), name="trust-model-list"),
     path(
         "v1/trust-models/<str:name>/",
-        TrustModelDetailAPIView.as_view(),
+        TrustModelDetailView.as_view(),
         name="trust-model-detail",
     ),
     # Trust Model Environments
@@ -83,23 +90,18 @@ urlpatterns = [
     # Public Listings inside a Trust Model Environment
     path(
         "v1/<str:trustmodel_name>/<str:environment>/attestation-providers/",
-        AttestationProviderListAPIView.as_view(),
+        AttestationProviderListView.as_view(),
         name="trust-model-ap-list",
-    ),
-    path(
-        "v1/<str:trustmodel_name>/<str:environment>/relying-parties/",
-        RelyingPartyListAPIView.as_view(),
-        name="trust-model-rp-list",
     ),
     # Relying Party Statuses
     path(
         "v1/relying-party/<str:slug>/hostname-status/",
-        RelyingPartyHostnameStatusAPIView.as_view(),
+        RelyingPartyHostnameStatusView.as_view(),
         name="rp-hostname-status",
     ),
     path(
         "v1/relying-parties/<str:slug>/registration-status/",
-        RelyingPartyRegistrationStatusAPIView.as_view(),
+        RelyingPartyRegistrationStatusView.as_view(),
         name="rp-registration-status",
     ),
 ]
