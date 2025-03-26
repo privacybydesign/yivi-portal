@@ -36,7 +36,7 @@ export default function OrganizationsPage() {
   const fetchOrganizations = (page = 1, selectAPs: boolean, selectRPs: boolean) => {
     setLoading(true);
     const offset = (page - 1) * pageSize;
-    
+
     // Base URL with pagination
     let url = `/v1/organizations/?limit=${pageSize}&offset=${offset}`;
     
@@ -53,13 +53,13 @@ export default function OrganizationsPage() {
     url += `&rp=${selectRPs}`;
     url += `&ap=${selectAPs}`;
     
-    axiosInstance.get(url)
+    axiosInstance.get<PaginationResponse<Organization>>(url)
       .then(response => {
-        const data = response.data as PaginationResponse;
+        const data = response.data;
         let orgs = data.results;
        
-        setTotalCount(orgs.length);
-        setTotalPages(Math.ceil(orgs.length / pageSize));
+        setTotalCount(data.count);
+        setTotalPages(Math.ceil(data.count / pageSize));
         setOrganizations(orgs);
         
         // Extract trust models if not already done

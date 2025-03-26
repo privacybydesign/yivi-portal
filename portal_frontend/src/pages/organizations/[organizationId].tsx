@@ -8,9 +8,12 @@ import Link from 'next/link';
 import Image from "next/image";
 import { axiosInstance } from '@/src/services/axiosInstance';
 import getConfig from 'next/config';
+import useStore from '@/src/store';
 
 export default function OrganizationPage() {
   const params = useParams();
+  const userOrgId = useStore((state) => state.organizationId);
+  const userRole = useStore((state) => state.role);
   const organizationId = params?.organizationId;
 
   const { publicRuntimeConfig } = getConfig();
@@ -31,8 +34,10 @@ export default function OrganizationPage() {
         
         // Fetch maintainers
         try {
-          // const maintainersResponse = await axios.get(`/v1/organizations/${organizationId}/maintainers/`);
-          setMaintainers([]); //maintainersResponse.data
+          if ((userOrgId == organizationId && userRole == "maintainer") || userRole == "admin") {
+            const maintainersResponse = await axiosInstance.get<Maintainer[]>(`/v1/organizations/${organizationId}/maintainers/`);
+            setMaintainers(maintainersResponse.data);
+          }
         } catch (maintainersError) {
           console.error('Error fetching maintainers:', maintainersError);
           // Don't set error state, as this is not critical

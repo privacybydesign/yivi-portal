@@ -1,10 +1,11 @@
 import type { AppProps } from "next/app";
 import { Geist, Geist_Mono } from "next/font/google";
 import "../styles/globals.css";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import useStore from "@/src/store";
+import { useRouter, useSearchParams } from 'next/navigation';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -17,6 +18,13 @@ const geistMono = Geist_Mono({
 });
 
 export default function MyApp({ Component, pageProps }: AppProps) {
+  const initializeAuth = useStore((state) => state.initializeAuth);
+  const router = useRouter();
+
+  useEffect(() => {
+    initializeAuth();
+  }, [initializeAuth]);
+
   const email = useStore((state) => state.email);
   const setAccessToken = useStore((state) => state.setAccessToken)
   const [isOpen, setIsOpen] = useState(false);
@@ -24,6 +32,8 @@ export default function MyApp({ Component, pageProps }: AppProps) {
   const handleLogout = () => {
     setAccessToken(null);
     // Add any additional logout logic here
+    // Redirect to login page
+    router.push("/login");
   };
   return <div className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
     <header className="bg-white shadow-md">

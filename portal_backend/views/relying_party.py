@@ -19,7 +19,7 @@ from rest_framework import permissions
 from django.utils import timezone
 from django.db import transaction
 from ..dns_verification import generate_dns_challenge
-from .helpers import IsMaintainer, BelongsToOrganization
+from .helpers import IsMaintainerOrAdmin, BelongsToOrganization
 
 
 def check_existing_hostname(request):
@@ -52,7 +52,7 @@ class RelyingPartyRegisterAPIView(APIView):
     permission_classes = [
         permissions.IsAuthenticated,
         BelongsToOrganization,
-        IsMaintainer,
+        IsMaintainerOrAdmin,
     ]
 
     def make_condiscon_from_attributes(self, attributes_data):
@@ -313,7 +313,7 @@ class RelyingPartyHostnameStatusAPIView(APIView):
     permission_classes = [
         permissions.IsAuthenticated,
         BelongsToOrganization,
-        IsMaintainer,
+        IsMaintainerOrAdmin,
     ]
 
     @swagger_auto_schema(responses={200: "Success"})
@@ -339,7 +339,7 @@ class RelyingPartyRegistrationStatusAPIView(APIView):
     permission_classes = [
         permissions.IsAuthenticated,
         BelongsToOrganization,
-        IsMaintainer,
+        IsMaintainerOrAdmin,
     ]
 
     @swagger_auto_schema(responses={200: "Success"})

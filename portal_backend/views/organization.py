@@ -1,13 +1,14 @@
 import logging
+from uuid import UUID
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from drf_yasg.utils import swagger_auto_schema  # type: ignore
 from rest_framework import status
-from ..models.model_serializers import OrganizationSerializer
+from ..models.model_serializers import MaintainerSerializer, OrganizationSerializer
 from ..models.models import AttestationProvider, Organization, RelyingParty
 from rest_framework import permissions
 from ..models.models import User
-from .helpers import BelongsToOrganization, IsMaintainer
+from .helpers import BelongsToOrganization, IsMaintainerOrAdmin
 from rest_framework.pagination import LimitOffsetPagination
 from drf_yasg import openapi  # type: ignore
 from django.shortcuts import get_object_or_404
@@ -127,25 +128,16 @@ class OrganizationMaintainersAPIView(APIView):
     permission_classes = [
         permissions.IsAuthenticated,
         BelongsToOrganization,
-        IsMaintainer,
+        IsMaintainerOrAdmin,
     ]
 
     @swagger_auto_schema(responses={200: "Success"})
-    def get(self, request, pk):
+    def get(self, request, pk: UUID):
         """Get all maintainers for an organization"""
         organization = get_object_or_404(Organization, pk=pk)
         maintainers = User.objects.filter(organization=organization)
-
-        return Response(
-            {
-                "maintainers": [
-                    {
-                        "email": user.email,
-                    }
-                    for user in maintainers
-                ]
-            }
-        )
+        serializer = MaintainerSerializer(maintainers, many=True)
+        return Response(serializer.data)
 
     @swagger_auto_schema(
         request_body=openapi.Schema(
