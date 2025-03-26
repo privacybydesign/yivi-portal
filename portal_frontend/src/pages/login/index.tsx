@@ -8,7 +8,6 @@ import getConfig from "next/config";
 
 export default function Login() {
   const { publicRuntimeConfig } = getConfig();
-  const accessToken = useStore((state) => state.accessToken);
   const setAccessToken = useStore((state) => state.setAccessToken)
   const router = useRouter();
 
@@ -25,16 +24,6 @@ export default function Login() {
       
           start: {
             url: (o: any) => `${o.url}/session/`,
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              '@context': 'https://irma.app/ld/request/disclosure/v2',
-              'disclose': [
-                [
-                  ['pbdf.pbdf.email.email'],
-                  ['pbdf.sidn-pbdf.email.email'],
-                ]
-              ]
-            }),
             method: 'POST'
           },
           result: {
@@ -45,7 +34,6 @@ export default function Login() {
       });
       web.start()
         .then((result: any) => {
-          console.log(result.access);
           setAccessToken(result.access);
           router.push('/organizations');
         })
@@ -53,14 +41,13 @@ export default function Login() {
           alert(err);
         });
     });
-  }, [router, setAccessToken]);
+  }, [router, publicRuntimeConfig, setAccessToken]);
 
   return (
     <div className="flex justify-center items-center">
       <div className="flex grow p-6 justify-center items-center">
         <div id="yivi-web-form">
         </div>
-        {accessToken}
       </div>
     </div>
   );

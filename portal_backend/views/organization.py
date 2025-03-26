@@ -1,19 +1,30 @@
 import logging
+from uuid import UUID
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from drf_yasg.utils import swagger_auto_schema  # type: ignore
 from rest_framework import status
-from ..models.model_serializers import OrganizationSerializer
-from ..models.models import Organization
+from ..models.model_serializers import MaintainerSerializer, OrganizationSerializer
+from ..models.models import AttestationProvider, Organization, RelyingParty
 from rest_framework import permissions
 from ..models.models import User
-from .helpers import BelongsToOrganization, IsMaintainer
+from .helpers import BelongsToOrganization, IsMaintainerOrAdmin
 from rest_framework.pagination import LimitOffsetPagination
 from drf_yasg import openapi  # type: ignore
 from django.shortcuts import get_object_or_404
+from django.db.models import Exists, OuterRef, Q
 
 logger = logging.getLogger(__name__)
 
+def to_nullable_bool(value: str | None):
+        if value is None:
+            return None
+        value = value.lower()
+        if value == "true":
+            return True
+        if value == "false":
+            return False
+        return None
 
 class OrganizationListAPIView(APIView):
     permission_classes = [permissions.AllowAny]
@@ -24,12 +35,32 @@ class OrganizationListAPIView(APIView):
 
         logger.info("Fetching all registered organizations")
 
-        orgs = Organization.objects.filter(is_verified=True)
-
         search_query = request.query_params.get("search")
         trust_model = request.query_params.get("trust_model")
-        is_ap = request.query_params.get("is_ap", None)
-        is_rp = request.query_params.get("is_rp", None)
+        select_aps = to_nullable_bool(request.query_params.get("ap"))
+        select_rps = to_nullable_bool(request.query_params.get("rp"))
+        
+        # If both select_aps and select_rps are False, return an empty list
+        if (select_aps is False and select_rps is False):
+            paginator = LimitOffsetPagination()
+            paginator.default_limit = 20
+            result_page = paginator.paginate_queryset([], request)
+            serializer = OrganizationSerializer(result_page, many=True)
+            return paginator.get_paginated_response(serializer.data)
+        
+        orgs = Organization.objects.annotate(
+            is_rp=Exists(
+                RelyingParty.objects.filter(organization=OuterRef('pk'))
+            ),
+            is_ap=Exists(
+                AttestationProvider.objects.filter(organization=OuterRef('pk'))
+            )
+        ).filter(
+            is_verified=True
+        ).filter(
+            (Q(is_rp=select_rps) if select_rps is not None else Q()) |
+            (Q(is_ap=select_aps) if select_aps is not None else Q())
+        ).order_by('name_en')
 
         if search_query:
             orgs = orgs.filter(name_en__icontains=search_query) | orgs.filter(
@@ -37,10 +68,6 @@ class OrganizationListAPIView(APIView):
             )
         if trust_model:
             orgs = orgs.filter(trust_model=trust_model)
-        if is_ap:
-            orgs = orgs.filter(is_AP=is_ap)
-        if is_rp:
-            orgs = orgs.filter(is_RP=is_rp)
 
         paginator = LimitOffsetPagination()
         paginator.default_limit = 20
@@ -101,25 +128,16 @@ class OrganizationMaintainersAPIView(APIView):
     permission_classes = [
         permissions.IsAuthenticated,
         BelongsToOrganization,
-        IsMaintainer,
+        IsMaintainerOrAdmin,
     ]
 
     @swagger_auto_schema(responses={200: "Success"})
-    def get(self, request, pk):
+    def get(self, request, pk: UUID):
         """Get all maintainers for an organization"""
         organization = get_object_or_404(Organization, pk=pk)
         maintainers = User.objects.filter(organization=organization)
-
-        return Response(
-            {
-                "maintainers": [
-                    {
-                        "email": user.email,
-                    }
-                    for user in maintainers
-                ]
-            }
-        )
+        serializer = MaintainerSerializer(maintainers, many=True)
+        return Response(serializer.data)
 
     @swagger_auto_schema(
         request_body=openapi.Schema(

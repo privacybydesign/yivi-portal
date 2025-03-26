@@ -8,71 +8,21 @@ import Link from 'next/link';
 import Image from "next/image";
 import { axiosInstance } from '@/src/services/axiosInstance';
 import getConfig from 'next/config';
-
-// Define types
-interface Organization {
-  id: string;
-  name_en: string;
-  name_nl: string;
-  slug: string;
-  registration_number: string;
-  address: string;
-  is_verified: boolean;
-  verified_at: string | null;
-  trade_names: string[];
-  logo: string;
-  created_at: string;
-  last_updated_at: string;
-  is_RP: boolean;
-  is_AP: boolean;
-  trust_model: string;
-}
-
-interface Maintainer {
-  id: string;
-  email: string;
-  first_name: string;
-  last_name: string;
-}
-
-// New RP Details type based on the API response
-interface RPDetails {
-  id: number;
-  yivi_tme: string;
-  organization: string;
-  status: string | null;
-  approved_rp_details: {
-    id: string;
-    logo: string;
-    hostnames: string[];
-    name: {
-      en: string;
-      nl: string;
-    };
-    scheme: string;
-  };
-  published_rp_details: {
-    id: string;
-    logo: string;
-    hostnames: string[];
-    name: {
-      en: string;
-      nl: string;
-    };
-    scheme: string;
-  };
-  created_at: string;
-  last_updated_at: string;
-}
+import useStore from '@/src/store';
+import { Maintainer } from '@/src/models/maintainer';
+import { Organization } from '@/src/models/organization';
+import { RelyingParty } from '@/src/models/relying-party';
 
 export default function OrganizationPage() {
   const params = useParams();
+  const userOrgId = useStore((state) => state.organizationId);
+  const userRole = useStore((state) => state.role);
   const organizationId = params?.organizationId;
 
   const { publicRuntimeConfig } = getConfig();
   const [organization, setOrganization] = useState<Organization | null>(null);
   const [maintainers, setMaintainers] = useState<Maintainer[]>([]);
-  const [rpDetails, setRpDetails] = useState<RPDetails | null>(null);
+  const [rpDetails, setRpDetails] = useState<RelyingParty | null>(null);
   const [loadingRpDetails, setLoadingRpDetails] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -87,8 +37,10 @@ export default function OrganizationPage() {
         
         // Fetch maintainers
         try {
-          // const maintainersResponse = await axios.get(`/v1/organizations/${organizationId}/maintainers/`);
-          setMaintainers([]); //maintainersResponse.data
+          if ((userOrgId == organizationId && userRole == "maintainer") || userRole == "admin") {
+            const maintainersResponse = await axiosInstance.get<Maintainer[]>(`/v1/organizations/${organizationId}/maintainers/`);
+            setMaintainers(maintainersResponse.data);
+          }
         } catch (maintainersError) {
           console.error('Error fetching maintainers:', maintainersError);
           // Don't set error state, as this is not critical
@@ -105,7 +57,7 @@ export default function OrganizationPage() {
     if (organizationId) {
       fetchOrganizationData();
     }
-  }, [organizationId]);
+  }, [organizationId, userOrgId, userRole]);
   
   // Handler for section changes with data fetching
   const handleSectionChange = (section: string) => {
@@ -118,7 +70,7 @@ export default function OrganizationPage() {
         .then(response => {
           // Find the RP details for this organization
           const details = response.data.find(
-            (rp: RPDetails) => rp.organization === organization.name_en
+            (rp: RelyingParty) => rp.organization === organization.name_en
           );
           setRpDetails(details || null);
           setLoadingRpDetails(false);
