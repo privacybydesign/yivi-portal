@@ -20,7 +20,6 @@ const useStore = create<StateStore>((set) => ({
     organizationId: undefined,
 
     setAccessToken: (newToken: string | null) => {
-        console.log(newToken);
         if (newToken) {
             const decoded = jwtDecode<AuthToken>(newToken);
             set({ email: decoded.email, role: decoded.role });

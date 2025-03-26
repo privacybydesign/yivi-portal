@@ -87,7 +87,6 @@ export default function OrganizationsPage() {
         newParams.delete(key);
       }
     });
-    console.log("New query params:", newParams.toString());
     router.push(`?${newParams.toString()}`);
   };
 
@@ -97,7 +96,6 @@ export default function OrganizationsPage() {
     const trustModel = searchParams.get("trust_model") || "all";
     const selectAPs = !searchParams.has("ap") || searchParams.get("ap") === "true";
     const selectRPs = !searchParams.has("rp") || searchParams.get("rp") === "true";
-    console.log("Initial query params:", search, trustModel, selectAPs, selectRPs, page);
     setSearchQuery(search);
     setSelectedTrustModel(trustModel);
     setAPSelected(selectAPs);
@@ -112,7 +110,6 @@ export default function OrganizationsPage() {
   const applyFilters = (searchQuery: string, selectedTrustModel: string, selectAPs: boolean, selectRPs: boolean) => {
     setApplyingFilters(true);
     setCurrentPage(1);
-    console.log("Applying filters:", searchQuery, selectedTrustModel, selectAPs, selectRPs);
     updateQueryParams({
       page: "1",
       search: searchQuery || undefined,
@@ -123,7 +120,6 @@ export default function OrganizationsPage() {
   };
 
   const handleFilterChange = (ap: boolean, rp: boolean, trustModel: string) => {
-    console.log("Filter change:", ap, rp, trustModel);
     applyFilters(searchQuery, trustModel, ap, rp);
   }
 

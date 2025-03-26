@@ -34,7 +34,6 @@ export default function Login() {
       });
       web.start()
         .then((result: any) => {
-          console.log(result.access);
           setAccessToken(result.access);
           router.push('/organizations');
         })
