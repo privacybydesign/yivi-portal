@@ -41,7 +41,7 @@ export default function Login() {
           alert(err);
         });
     });
-  }, [router, setAccessToken]);
+  }, [router, publicRuntimeConfig, setAccessToken]);
 
   return (
     <div className="flex justify-center items-center">

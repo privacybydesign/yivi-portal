@@ -1,4 +1,4 @@
-interface Organization {
+export interface Organization {
     id: string;
     name_en: string;
     name_nl: string;

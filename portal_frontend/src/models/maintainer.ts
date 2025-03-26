@@ -1,4 +1,4 @@
-interface Maintainer {
+export interface Maintainer {
     id: string;
     email: string;
     first_name: string;

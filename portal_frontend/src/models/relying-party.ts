@@ -1,4 +1,4 @@
-interface RelyingParty {
+export interface RelyingParty {
     id: number;
     yivi_tme: string;
     organization: string;

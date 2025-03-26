@@ -10,6 +10,8 @@ import Image from "next/image";
 import { axiosInstance } from '@/src/services/axiosInstance';
 import getConfig from 'next/config';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { PaginationResponse } from '@/src/models/paginated-response';
+import { Organization } from '@/src/models/organization';
 
 export default function OrganizationsPage() {
   const { publicRuntimeConfig } = getConfig();
@@ -56,11 +58,10 @@ export default function OrganizationsPage() {
     axiosInstance.get<PaginationResponse<Organization>>(url)
       .then(response => {
         const data = response.data;
-        let orgs = data.results;
        
         setTotalCount(data.count);
         setTotalPages(Math.ceil(data.count / pageSize));
-        setOrganizations(orgs);
+        setOrganizations(data.results);
         
         // Extract trust models if not already done
         if (trustModels.length === 0) {

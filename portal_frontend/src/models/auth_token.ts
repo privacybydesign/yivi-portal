@@ -1,4 +1,4 @@
-interface AuthToken {
+export interface AuthToken {
     token_type: "access" | "refresh"; // Assuming "access" and "refresh" as possible values
     exp: number; // Expiration time (Unix timestamp)
     iat: number; // Issued at time (Unix timestamp)

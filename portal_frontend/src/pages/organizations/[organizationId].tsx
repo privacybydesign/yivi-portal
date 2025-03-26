@@ -9,6 +9,9 @@ import Image from "next/image";
 import { axiosInstance } from '@/src/services/axiosInstance';
 import getConfig from 'next/config';
 import useStore from '@/src/store';
+import { Maintainer } from '@/src/models/maintainer';
+import { Organization } from '@/src/models/organization';
+import { RelyingParty } from '@/src/models/relying-party';
 
 export default function OrganizationPage() {
   const params = useParams();
@@ -54,7 +57,7 @@ export default function OrganizationPage() {
     if (organizationId) {
       fetchOrganizationData();
     }
-  }, [organizationId]);
+  }, [organizationId, userOrgId, userRole]);
   
   // Handler for section changes with data fetching
   const handleSectionChange = (section: string) => {
