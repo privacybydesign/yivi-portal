@@ -9,91 +9,57 @@ import { Checkbox } from "@/src/components/ui/checkbox";
 import Image from "next/image";
 import { axiosInstance } from '@/src/services/axiosInstance';
 import getConfig from 'next/config';
-
-// Define Organization type
-interface Organization {
-  id: string;
-  name_en: string;
-  name_nl: string;
-  slug: string;
-  logo: string;
-  is_RP: boolean;
-  is_AP: boolean;
-  trust_model: string;
-}
-
-// Define pagination response interface
-interface PaginationResponse {
-  count: number;
-  next: string | null;
-  previous: string | null;
-  results: Organization[];
-}
+import { useRouter, useSearchParams } from 'next/navigation';
 
 export default function OrganizationsPage() {
   const { publicRuntimeConfig } = getConfig();
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  
+  const [searchQuery, setSearchQuery] = useState(searchParams.get("search") || "");
+  const [selectedTrustModel, setSelectedTrustModel] = useState(searchParams.get("trust_model") || "all");
+  const [APSelected, setAPSelected] = useState(!searchParams.has("ap") || searchParams.get("ap") === "true");
+  const [RPSelected, setRPSelected] = useState(!searchParams.has("rp") || searchParams.get("rp") === "true");
+  const [currentPage, setCurrentPage] = useState(parseInt(searchParams.get("page") || "1"));
+
   const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [loading, setLoading] = useState(true);
   const [trustModels, setTrustModels] = useState<string[]>([]);
-  const [selectedTrustModel, setSelectedTrustModel] = useState<string>("all");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [isAP, setIsAP] = useState(false);
-  const [isRP, setIsRP] = useState(false);
   const [applyingFilters, setApplyingFilters] = useState(false);
   
   // Pagination state
   const [totalCount, setTotalCount] = useState(0);
-  const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const pageSize = 20; // Fixed page size
 
   // Function to fetch organizations with pagination
-  const fetchOrganizations = (page = 1, applyFilters = false) => {
+  const fetchOrganizations = (page = 1, selectAPs: boolean, selectRPs: boolean) => {
     setLoading(true);
     const offset = (page - 1) * pageSize;
     
     // Base URL with pagination
     let url = `/v1/organizations/?limit=${pageSize}&offset=${offset}`;
     
-    // Only add filters if applyFilters is true
-    if (applyFilters) {
-      // Add search if present
-      if (searchQuery && searchQuery.trim() !== '') {
-        url += `&search=${encodeURIComponent(searchQuery.trim())}`;
-      }
-      
-      // Add trust model filter
-      if (selectedTrustModel !== "all") {
-        url += `&trust_model=${encodeURIComponent(selectedTrustModel)}`;
-      }
+    // Add search if present
+    if (searchQuery && searchQuery.trim() !== '') {
+      url += `&search=${encodeURIComponent(searchQuery.trim())}`;
     }
     
-    console.log("Fetching organizations:", url);
+    // Add trust model filter
+    if (selectedTrustModel !== "all") {
+      url += `&trust_model=${encodeURIComponent(selectedTrustModel)}`;
+    }
+
+    url += `&rp=${selectRPs}`;
+    url += `&ap=${selectAPs}`;
     
     axiosInstance.get(url)
       .then(response => {
         const data = response.data as PaginationResponse;
         let orgs = data.results;
-        
-        // Filter by AP/RP client-side if needed
-        if (applyFilters && (isAP || isRP)) {
-          if (isAP) {
-            orgs = orgs.filter(org => org.is_AP === true);
-          }
-          
-          if (isRP) {
-            orgs = orgs.filter(org => org.is_RP === true);
-          }
-          
-          // For filtered results, we need to adjust the pagination
-          setTotalCount(orgs.length);
-          setTotalPages(Math.ceil(orgs.length / pageSize));
-        } else {
-          // For regular pagination (server-side), use the counts from the response
-          setTotalCount(data.count);
-          setTotalPages(Math.ceil(data.count / pageSize));
-        }
-        
+       
+        setTotalCount(orgs.length);
+        setTotalPages(Math.ceil(orgs.length / pageSize));
         setOrganizations(orgs);
         
         // Extract trust models if not already done
@@ -112,36 +78,60 @@ export default function OrganizationsPage() {
       });
   };
 
-  // Fetch organizations on initial load and page changes
+  const updateQueryParams = (params: Record<string, string | undefined>) => {
+    const newParams = new URLSearchParams(searchParams.toString());
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined) {
+        newParams.set(key, value);
+      } else {
+        newParams.delete(key);
+      }
+    });
+    console.log("New query params:", newParams.toString());
+    router.push(`?${newParams.toString()}`);
+  };
+
   useEffect(() => {
-    // If we're applying filters, don't refetch on page change
-    if (!applyingFilters) {
-      fetchOrganizations(currentPage, false);
-    }
-  }, [currentPage]);
+    const page = parseInt(searchParams.get("page") || "1");
+    const search = searchParams.get("search") || "";
+    const trustModel = searchParams.get("trust_model") || "all";
+    const selectAPs = !searchParams.has("ap") || searchParams.get("ap") === "true";
+    const selectRPs = !searchParams.has("rp") || searchParams.get("rp") === "true";
+    console.log("Initial query params:", search, trustModel, selectAPs, selectRPs, page);
+    setSearchQuery(search);
+    setSelectedTrustModel(trustModel);
+    setAPSelected(selectAPs);
+    setRPSelected(selectRPs);
+    setCurrentPage(page);
+  
+    fetchOrganizations(page, selectAPs, selectRPs);
+  }, [searchParams.toString()]);
+
 
   // Function to apply filters
-  const applyFilters = () => {
+  const applyFilters = (searchQuery: string, selectedTrustModel: string, selectAPs: boolean, selectRPs: boolean) => {
     setApplyingFilters(true);
     setCurrentPage(1);
-    fetchOrganizations(1, true);
+    console.log("Applying filters:", searchQuery, selectedTrustModel, selectAPs, selectRPs);
+    updateQueryParams({
+      page: "1",
+      search: searchQuery || undefined,
+      trust_model: selectedTrustModel !== "all" ? selectedTrustModel : undefined,
+      ap: selectAPs ? undefined : "false",
+      rp: selectRPs ? undefined : "false",
+    });
   };
 
-  // Handle checkbox changes
-  const handleAPChange = (checked: boolean) => {
-    setIsAP(checked);
-    // Don't apply filters immediately - wait for Apply Filters button click
-  };
-
-  const handleRPChange = (checked: boolean) => {
-    setIsRP(checked);
-    // Don't apply filters immediately - wait for Apply Filters button click
-  };
+  const handleFilterChange = (ap: boolean, rp: boolean, trustModel: string) => {
+    console.log("Filter change:", ap, rp, trustModel);
+    applyFilters(searchQuery, trustModel, ap, rp);
+  }
 
   // Handle page change
   const handlePageChange = (newPage: number) => {
     if (newPage > 0 && newPage <= totalPages) {
       setCurrentPage(newPage);
+      updateQueryParams({ page: newPage.toString() });
     }
   };
 
@@ -208,7 +198,7 @@ export default function OrganizationsPage() {
                 className="w-full px-3 py-2 border rounded-md"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && applyFilters()}
+                onKeyDown={(e) => e.key === 'Enter' && applyFilters(searchQuery, selectedTrustModel, APSelected, RPSelected)}
               />
             </div>
             
@@ -232,13 +222,13 @@ export default function OrganizationsPage() {
             <div className="flex items-center space-x-2 p-2 rounded hover:bg-gray-100">
               <Checkbox 
                 id="isAP" 
-                checked={isAP} 
-                onCheckedChange={(checked) => handleAPChange(checked === true)}
+                checked={APSelected} 
+                onCheckedChange={() => handleFilterChange(!APSelected, RPSelected, selectedTrustModel)}
               />
               <label 
                 htmlFor="isAP" 
                 className="text-sm font-medium leading-none cursor-pointer"
-                onClick={() => handleAPChange(!isAP)}
+                onClick={() => handleFilterChange(!APSelected, RPSelected, selectedTrustModel)}
               >
                 Attestation Provider
               </label>
@@ -247,34 +237,26 @@ export default function OrganizationsPage() {
             <div className="flex items-center space-x-2 p-2 rounded hover:bg-gray-100">
               <Checkbox 
                 id="isRP" 
-                checked={isRP} 
-                onCheckedChange={(checked) => handleRPChange(checked === true)}
+                checked={RPSelected} 
+                onCheckedChange={() => handleFilterChange(APSelected, !RPSelected, selectedTrustModel)}
               />
               <label 
                 htmlFor="isRP" 
                 className="text-sm font-medium leading-none cursor-pointer"
-                onClick={() => handleRPChange(!isRP)}
+                onClick={() => handleFilterChange(APSelected, !RPSelected, selectedTrustModel)}
               >
                 Relying Party
               </label>
             </div>
           </div>
           
-          <Button 
-            onClick={applyFilters} 
-            disabled={loading || applyingFilters}
-            className="w-full md:w-auto"
-          >
-            Apply Filters
-          </Button>
-          
-          {(isAP || isRP || selectedTrustModel !== "all" || searchQuery) && (
+          {(APSelected || RPSelected || selectedTrustModel !== "all" || searchQuery) && (
             <div className="mt-4 text-sm text-blue-600">
               Filtering: 
               {searchQuery && ` Search: "${searchQuery}"`}
               {selectedTrustModel !== "all" && ` Trust Model: ${selectedTrustModel}`}
-              {isAP && " | Attestation Providers"}
-              {isRP && " | Relying Parties"}
+              {APSelected && " | Attestation Providers"}
+              {RPSelected && " | Relying Parties"}
             </div>
           )}
         </div>
