@@ -19,7 +19,7 @@ from rest_framework import permissions
 from django.utils import timezone
 from django.db import transaction
 from ..dns_verification import generate_dns_challenge
-from .helpers import IsMaintainer, BelongsToOrganization
+from .helpers import IsMaintainerOrAdmin, BelongsToOrganization
 
 
 def check_existing_hostname(request):
@@ -99,7 +99,7 @@ class RelyingPartyRegisterView(APIView):
     permission_classes = [
         permissions.IsAuthenticated,
         BelongsToOrganization,
-        IsMaintainer,
+        IsMaintainerOrAdmin,
     ]
 
     def make_condiscon_from_attributes(self, attributes_data):
@@ -512,7 +512,7 @@ class RelyingPartyHostnameStatusView(APIView):
     permission_classes = [
         permissions.IsAuthenticated,
         BelongsToOrganization,
-        IsMaintainer,
+        IsMaintainerOrAdmin,
     ]
 
     @swagger_auto_schema(responses={200: "Success"})
@@ -536,5 +536,27 @@ class RelyingPartyHostnameStatusView(APIView):
                 "dns_challenge_verified": hostname.dns_challenge_verified,
                 "dns_challenge_verified_at": hostname.dns_challenge_verified_at,
                 "dns_challenge_invalidated_at": hostname.dns_challenge_invalidated_at,
+            }
+        )
+
+
+class RelyingPartyRegistrationStatusAPIView(APIView):
+    permission_classes = [
+        permissions.IsAuthenticated,
+        BelongsToOrganization,
+        IsMaintainerOrAdmin,
+    ]
+
+    @swagger_auto_schema(responses={200: "Success"})
+    def get(self, request, slug):
+        """Get status of relying party registration"""
+        relying_party = get_object_or_404(RelyingParty, organization__slug=slug)
+        status = get_object_or_404(Status, relying_party=relying_party)
+
+        return Response(
+            {
+                "current_status": status.rp_status.label,
+                "ready": status.ready,
+                "ready_at": status.ready_at,
             }
         )

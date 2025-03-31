@@ -8,6 +8,7 @@ from drf_yasg.utils import swagger_auto_schema  # type: ignore
 from drf_yasg import openapi  # type: ignore
 from rest_framework_simplejwt.tokens import RefreshToken  # type: ignore
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer  # type: ignore
+from portal_backend.models.models import User
 from yivi_auth.yivi import YiviServer, YiviException
 
 logger = logging.getLogger(__name__)
@@ -18,10 +19,14 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     def get_token(cls, user):
         token = super().get_token(user)
 
+        logger.info("User with email: " + user.email + " logged in.")
         # # Add custom claims
         token["email"] = user.email
-        # token['role'] = user.role
-        # token['organizationId'] = user.organizationId
+        
+        db_usr = User.objects.filter(email=user.email).first()
+        if db_usr is not None:
+            token['role'] = db_usr.role
+            token['organizationId'] = str(db_usr.organization.id)
 
         return token
 
@@ -44,8 +49,10 @@ class YiviSessionProxyStartView(APIView):
             settings.YIVI_SERVER_URL, token=settings.YIVI_SERVER_TOKEN
         )
         try:
-            session_request = '{"@context":"https://irma.app/ld/request/disclosure/v2","disclose":[[["pbdf.pbdf.email.email"],["pbdf.sidn-pbdf.email.email"]]]}'  # noqa: F841
-            response = yivi_server.start_session(request.data)
+            session_request = {
+                "@context":"https://irma.app/ld/request/disclosure/v2",
+                "disclose":[[["pbdf.pbdf.email.email"],["pbdf.sidn-pbdf.email.email"]]]}
+            response = yivi_server.start_session(session_request)
         except YiviException as e:
             return Response(status=e.http_status, data=e.msg)
 
