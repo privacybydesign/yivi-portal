@@ -85,34 +85,6 @@ docker compose exec django python manage.py createsuperuser
 * Frontend: http://localhost:9000/
 * Admin panel: http://localhost:8000/admin/
 
-
-## Available Endpoints
-
-| **Endpoint**                                                                                                     | **Method** | **Description**                                                      |
-|------------------------------------------------------------------------------------------------------------------|------------|----------------------------------------------------------------------|
-| **API Documentation**                                                                                             |            |                                                                      |
-| `/swagger<format>/`                                                                                               | `GET`      | Retrieve the raw OpenAPI schema (JSON/YAML)                          |
-| `/swagger/`                                                                                                       | `GET`      | Interactive Swagger UI for API documentation                         |
-| `/redoc/`                                                                                                         | `GET`      | ReDoc UI for API documentation                                       |
-| **Organizations**                                                                                                 |            |                                                                      |
-| `/v1/organizations/`                                                                                         | `GET`      | List all organizations                                               |
-| `/v1/organizations/<str:org_slug>/`                                                                          | `GET`      | Retrieve details of a specific organization                          |
-| `/v1/organizations/<str:org_slug>/maintainers/`                                                              | `GET`      | List maintainers of a specific organization                          |
-| **Relying Parties**                                                                                               |            |                                                                      |
-| `/v1/yivi/organizations/<str:org_slug>/relying-party/`                                                            | `POST`     | Register a new relying party (RP) for the organization               |
-| `/v1/yivi/organizations/<str:org_slug>/relying-party/<str:environment>/<str:rp_slug>/`                            | `GET`      | Retrieve details of a relying party (RP) in a specific environment   |
-| `/v1/yivi/organizations/<str:org_slug>/relying-party/<str:rp_slug>/`                                              | `PUT`      | Update details of a relying party (RP)                               |
-| `/v1/yivi/organizations/<str:org_slug>/relying-party/<str:environment>/<str:rp_slug>/dns-verification/`           | `GET`      | Get DNS verification status for a relying party (RP) hostname        |
-| **Trust Models**                                                                                                  |            |                                                                      |
-| `/v1/trust-models/`                                                                                               | `GET`      | List all trust models                                                |
-| `/v1/trust-models/<str:name>/`                                                                                    | `GET`      | Retrieve details of a specific trust model                           |
-| `/v1/<str:name>/environments/`                                                                                    | `GET`      | List all environments within a specific trust model                  |
-| `/v1/<str:trustmodel_name>/<str:environment>/`                                                                    | `GET`      | Retrieve details of a specific environment within a trust model      |
-
-
-## Testing API Endpoints
-As the front-end is still in development, you can import `postman-collection.json` in Postman, to easily test endpoints and format of data they return.
-
 ## Features
 
 ### Organization Registration
@@ -146,4 +118,4 @@ The state of AP or RP registrations from an organization can be followed with st
 
 ## Acknowledgements
 
-The Yivi Portal was built as based on recommendations in the [master thesis of Job Doesburg](https://jobdoesburg.nl/docs/Measures_against_over_asking_in_SSI_and_the_Yivi_ecosystem.pdf). Later, the Yivi Team started their own fork of this project to make it appropriate for production.
+The Yivi Portal was built as based on recommendations in the [master thesis of Job Doesburg](https://jobdoesburg.nl/docs/Measures_against_over_asking_in_SSI_and_the_Yivi_ecosystem.pdf). Later, the Yivi Team started their own fork of this project to align it with European Standards such as EUDI Wallet ARF, while making the project production-ready.
