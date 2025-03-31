@@ -44,17 +44,17 @@ urlpatterns = [
     path("redoc/", schema_view.with_ui("redoc", cache_timeout=0), name="schema-redoc"),
     # Organizations
     path(
-        "v1/yivi/organizations/",
+        "v1/organizations/",
         OrganizationListView.as_view(),
         name="organization-list",
     ),
     path(
-        "v1/yivi/organizations/<str:org_slug>/",
+        "v1/organizations/<str:org_slug>/",
         OrganizationDetailView.as_view(),
         name="organization-detail",
     ),
     path(
-        "v1/yivi/organizations/<str:org_slug>/maintainers/",
+        "v1/organizations/<str:org_slug>/maintainers/",
         OrganizationMaintainersView.as_view(),
         name="organization-maintainers",
     ),

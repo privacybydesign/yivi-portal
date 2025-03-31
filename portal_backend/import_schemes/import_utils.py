@@ -5,7 +5,7 @@ from io import BytesIO
 import zipfile
 from django.core.files.images import ImageFile
 from urllib.request import urlopen
-from portal_backend.models.models import Organization, YiviTrustModelEnv
+from portal_backend.models.models import Organization, YiviTrustModelEnv, TrustModel
 
 logger = logging.getLogger(__name__)
 
@@ -48,9 +48,11 @@ def load_logo_if_exists(logo_path: str) -> ImageFile | None:
 def create_org(slug: str, name_en: str, name_nl: str, logo_path: str) -> Organization:
 
     try:
+        trust_model = TrustModel.objects.get(name="Yivi")
         logo_image_file = load_logo_if_exists(logo_path)
         org, org_created = Organization.objects.update_or_create(
             slug=slug,
+            trust_model=trust_model,
             defaults={
                 "is_verified": True,
                 "logo": logo_image_file,

@@ -44,57 +44,6 @@ def check_existing_hostname(request):
             )
 
 
-class RelyingPartyDetailView(APIView):
-    permission_classes = [permissions.AllowAny]
-
-    @swagger_auto_schema(responses={200: "Success", 404: "Not Found"})
-    def get(self, request, trustmodel_name: str, environment: str, org_slug: str):
-        """Gets details of a specific relying party."""
-        relying_party = get_object_or_404(
-            RelyingParty,
-            yivi_tme__trust_model__name__iexact=trustmodel_name,
-            yivi_tme__environment=environment,
-            organization__slug=org_slug,
-        )
-
-        base_data = RelyingPartySerializer(relying_party).data
-
-        hostname = RelyingPartyHostname.objects.filter(
-            relying_party=relying_party
-        ).first()
-        condiscon = Condiscon.objects.filter(relying_party=relying_party).first()
-
-        response_data = {
-            **base_data,
-            "hostname_data": (
-                {
-                    "hostname": hostname.hostname if hostname else None,
-                    "dns_challenge": hostname.dns_challenge if hostname else None,
-                    "dns_verified": (
-                        hostname.dns_challenge_verified if hostname else None
-                    ),
-                }
-                if hostname
-                else None
-            ),
-            "condiscon_data": (
-                {
-                    "context_description_en": (
-                        condiscon.context_description_en if condiscon else None
-                    ),
-                    "context_description_nl": (
-                        condiscon.context_description_nl if condiscon else None
-                    ),
-                    "condiscon": condiscon.condiscon if condiscon else None,
-                }
-                if condiscon
-                else None
-            ),
-        }
-
-        return Response(response_data, status=status.HTTP_200_OK)
-
-
 class RelyingPartyRegisterView(APIView):
     permission_classes = [
         permissions.IsAuthenticated,
@@ -536,27 +485,5 @@ class RelyingPartyHostnameStatusView(APIView):
                 "dns_challenge_verified": hostname.dns_challenge_verified,
                 "dns_challenge_verified_at": hostname.dns_challenge_verified_at,
                 "dns_challenge_invalidated_at": hostname.dns_challenge_invalidated_at,
-            }
-        )
-
-
-class RelyingPartyRegistrationStatusAPIView(APIView):
-    permission_classes = [
-        permissions.IsAuthenticated,
-        BelongsToOrganization,
-        IsMaintainerOrAdmin,
-    ]
-
-    @swagger_auto_schema(responses={200: "Success"})
-    def get(self, request, slug):
-        """Get status of relying party registration"""
-        relying_party = get_object_or_404(RelyingParty, organization__slug=slug)
-        status = get_object_or_404(Status, relying_party=relying_party)
-
-        return Response(
-            {
-                "current_status": status.rp_status.label,
-                "ready": status.ready,
-                "ready_at": status.ready_at,
             }
         )

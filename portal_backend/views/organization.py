@@ -1,5 +1,4 @@
 import logging
-from uuid import UUID
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from drf_yasg.utils import swagger_auto_schema  # type: ignore
@@ -70,7 +69,8 @@ class OrganizationListView(APIView):
                 name_en__icontains=search_query
             )
         if trust_model:
-            orgs = orgs.filter(trust_model=trust_model)
+            trust_model = trust_model.lower()
+            orgs = orgs.filter(trust_model__name=trust_model)
 
         paginator = LimitOffsetPagination()
         paginator.default_limit = 20
