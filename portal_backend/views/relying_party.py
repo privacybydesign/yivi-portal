@@ -333,7 +333,7 @@ class RelyingPartyUpdateView(APIView):
     permission_classes = [
         permissions.IsAuthenticated,
         BelongsToOrganization,
-        IsMaintainer,
+        IsMaintainerOrAdmin,
     ]
 
     @swagger_auto_schema(

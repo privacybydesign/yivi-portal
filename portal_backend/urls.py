@@ -74,7 +74,6 @@ urlpatterns = [
         RelyingPartyUpdateView.as_view(),
         name="organization-rp-manage",
     ),
-    # Relying Party Hostname
     path(
         "v1/yivi/organizations/<str:org_slug>/relying-party/<str:environment>/<str:rp_slug>/dns-verification/",
         RelyingPartyHostnameStatusView.as_view(),
