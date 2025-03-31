@@ -95,9 +95,9 @@ docker compose exec django python manage.py createsuperuser
 | `/swagger/`                                                                                                       | `GET`      | Interactive Swagger UI for API documentation                         |
 | `/redoc/`                                                                                                         | `GET`      | ReDoc UI for API documentation                                       |
 | **Organizations**                                                                                                 |            |                                                                      |
-| `/v1/yivi/organizations/`                                                                                         | `GET`      | List all organizations                                               |
-| `/v1/yivi/organizations/<str:org_slug>/`                                                                          | `GET`      | Retrieve details of a specific organization                          |
-| `/v1/yivi/organizations/<str:org_slug>/maintainers/`                                                              | `GET`      | List maintainers of a specific organization                          |
+| `/v1/organizations/`                                                                                         | `GET`      | List all organizations                                               |
+| `/v1/organizations/<str:org_slug>/`                                                                          | `GET`      | Retrieve details of a specific organization                          |
+| `/v1/organizations/<str:org_slug>/maintainers/`                                                              | `GET`      | List maintainers of a specific organization                          |
 | **Relying Parties**                                                                                               |            |                                                                      |
 | `/v1/yivi/organizations/<str:org_slug>/relying-party/`                                                            | `POST`     | Register a new relying party (RP) for the organization               |
 | `/v1/yivi/organizations/<str:org_slug>/relying-party/<str:environment>/<str:rp_slug>/`                            | `GET`      | Retrieve details of a relying party (RP) in a specific environment   |
@@ -109,6 +109,9 @@ docker compose exec django python manage.py createsuperuser
 | `/v1/<str:name>/environments/`                                                                                    | `GET`      | List all environments within a specific trust model                  |
 | `/v1/<str:trustmodel_name>/<str:environment>/`                                                                    | `GET`      | Retrieve details of a specific environment within a trust model      |
 
+
+## Testing API Endpoints
+As the front-end is still in development, you can import `postman-collection.json` in Postman, to easily test endpoints and format of data they return.
 
 ## Features
 
@@ -131,8 +134,6 @@ Currently, 3 types of Cron Jobs are set. `DNS Verification`, `Import Trusted RPs
 ### AP Registration
 (in progress...)
 
-### AP and RP List up to date with the scheme 
-(in progress...)
 
 ### Status Tracking
 The state of AP or RP registrations from an organization can be followed with status detailed workflow:
@@ -145,4 +146,4 @@ The state of AP or RP registrations from an organization can be followed with st
 
 ## Acknowledgements
 
-he Yivi Portal was built as based on recommendations in the [master thesis of Job Doesburg](https://jobdoesburg.nl/docs/Measures_against_over_asking_in_SSI_and_the_Yivi_ecosystem.pdf). Later, the Yivi Team started their own fork of this project to make it appropriate for production.
+The Yivi Portal was built as based on recommendations in the [master thesis of Job Doesburg](https://jobdoesburg.nl/docs/Measures_against_over_asking_in_SSI_and_the_Yivi_ecosystem.pdf). Later, the Yivi Team started their own fork of this project to make it appropriate for production.

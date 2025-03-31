@@ -67,9 +67,9 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/v1/yivi/organizations/",
+              "raw": "{{baseUrl}}/v1/organizations/",
               "host": ["{{baseUrl}}"],
-              "path": ["v1", "yivi", "organizations", ""],
+              "path": ["v1", "organizations", ""],
               "query": [
                 {
                   "key": "search",
@@ -84,20 +84,20 @@
                   "disabled": true
                 },
                 {
-                  "key": "is_ap",
+                  "key": "ap",
                   "value": "",
-                  "description": "Filter by attestation provider status",
+                  "description": "Filter by attestation provider status (true/false)",
                   "disabled": true
                 },
                 {
-                  "key": "is_rp",
+                  "key": "rp",
                   "value": "",
-                  "description": "Filter by relying party status",
+                  "description": "Filter by relying party status (true/false)",
                   "disabled": true
                 }
               ]
             },
-            "description": "List all organizations"
+            "description": "List all registered organizations"
           },
           "response": []
         },
@@ -107,9 +107,9 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/v1/yivi/organizations/:org_slug/",
+              "raw": "{{baseUrl}}/v1/organizations/:org_slug/",
               "host": ["{{baseUrl}}"],
-              "path": ["v1", "yivi", "organizations", ":org_slug", ""],
+              "path": ["v1", "organizations", ":org_slug", ""],
               "variable": [
                 {
                   "key": "org_slug",
@@ -133,12 +133,12 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n    \"name_en\": \"New Organization\",\n    \"name_nl\": \"Nieuwe Organisatie\",\n    \"registration_number\": \"12345678\",\n    \"contact_address\": \"123 Main St, City, Country\",\n    \"trade_names\": [\"Trade Name 1\", \"Trade Name 2\"]\n}"
+              "raw": "{\n    \"name_en\": \"New Organization\",\n    \"name_nl\": \"Nieuwe Organisatie\",\n    \"url\": \"https://example.org\",\n    \"slug\": \"new-organization\",\n    \"is_verified\": true\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/v1/yivi/organizations/",
+              "raw": "{{baseUrl}}/v1/organizations/",
               "host": ["{{baseUrl}}"],
-              "path": ["v1", "yivi", "organizations", ""]
+              "path": ["v1", "organizations", ""]
             },
             "description": "Create a new organization"
           },
@@ -152,20 +152,16 @@
               {
                 "key": "Content-Type",
                 "value": "application/json"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
               }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n    \"name_en\": \"Updated Organization Name\",\n    \"name_nl\": \"Bijgewerkte Organisatienaam\",\n    \"contact_address\": \"456 New St, City, Country\"\n}"
+              "raw": "{\n    \"name_en\": \"Updated Organization Name\",\n    \"name_nl\": \"Bijgewerkte Organisatienaam\",\n    \"url\": \"https://updated-example.org\"\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/v1/yivi/organizations/:org_slug/",
+              "raw": "{{baseUrl}}/v1/organizations/:org_slug/",
               "host": ["{{baseUrl}}"],
-              "path": ["v1", "yivi", "organizations", ":org_slug", ""],
+              "path": ["v1", "organizations", ":org_slug", ""],
               "variable": [
                 {
                   "key": "org_slug",
@@ -188,9 +184,9 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/v1/yivi/organizations/:org_slug/maintainers/",
+              "raw": "{{baseUrl}}/v1/organizations/:org_slug/maintainers/",
               "host": ["{{baseUrl}}"],
-              "path": ["v1", "yivi", "organizations", ":org_slug", "maintainers", ""],
+              "path": ["v1", "organizations", ":org_slug", "maintainers", ""],
               "variable": [
                 {
                   "key": "org_slug",
@@ -221,9 +217,9 @@
               "raw": "{\n    \"email\": \"new-maintainer@example.com\"\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/v1/yivi/organizations/:org_slug/maintainers/",
+              "raw": "{{baseUrl}}/v1/organizations/:org_slug/maintainers/",
               "host": ["{{baseUrl}}"],
-              "path": ["v1", "yivi", "organizations", ":org_slug", "maintainers", ""],
+              "path": ["v1", "organizations", ":org_slug", "maintainers", ""],
               "variable": [
                 {
                   "key": "org_slug",
@@ -254,9 +250,9 @@
               "raw": "{\n    \"email\": \"maintainer-to-remove@example.com\"\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/v1/yivi/organizations/:org_slug/maintainers/",
+              "raw": "{{baseUrl}}/v1/organizations/:org_slug/maintainers/",
               "host": ["{{baseUrl}}"],
-              "path": ["v1", "yivi", "organizations", ":org_slug", "maintainers", ""],
+              "path": ["v1", "organizations", ":org_slug", "maintainers", ""],
               "variable": [
                 {
                   "key": "org_slug",
@@ -300,7 +296,7 @@
               "variable": [
                 {
                   "key": "name",
-                  "value": "Yivi"
+                  "value": "yivi"
                 }
               ]
             },
@@ -320,7 +316,7 @@
               "variable": [
                 {
                   "key": "name",
-                  "value": "Yivi"
+                  "value": "yivi"
                 }
               ]
             },
@@ -340,7 +336,7 @@
               "variable": [
                 {
                   "key": "trustmodel_name",
-                  "value": "Yivi"
+                  "value": "yivi"
                 },
                 {
                   "key": "environment",
@@ -370,7 +366,7 @@
               "variable": [
                 {
                   "key": "trustmodel_name",
-                  "value": "Yivi"
+                  "value": "yivi"
                 },
                 {
                   "key": "environment",
