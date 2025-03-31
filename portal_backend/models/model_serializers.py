@@ -41,17 +41,7 @@ class OrganizationSerializer(serializers.ModelSerializer):
         read_only_fields = ["is_verified"]
 
     def get_trust_model(self, obj):
-        # check for trust model in AP
-        ap = AttestationProvider.objects.filter(organization=obj).first()
-        if ap and ap.yivi_tme and ap.yivi_tme.trust_model:
-            return ap.yivi_tme.trust_model.name
-
-        # check for trust model in RP
-        rp = RelyingParty.objects.filter(organization=obj).first()
-        if rp and rp.yivi_tme and rp.yivi_tme.trust_model:
-            return rp.yivi_tme.trust_model.name
-
-        return None
+        return obj.trust_model.name if obj.trust_model else None
 
 
 class TrustModelSerializer(serializers.ModelSerializer):
@@ -120,6 +110,7 @@ class RelyingPartySerializer(serializers.ModelSerializer):
     class Meta:
         model = RelyingParty
         fields = "__all__"
+
 
 class MaintainerSerializer(serializers.ModelSerializer):
     class Meta:
