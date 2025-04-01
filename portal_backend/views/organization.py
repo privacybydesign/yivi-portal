@@ -1,4 +1,5 @@
 import logging
+from typing import Optional
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from drf_yasg.utils import swagger_auto_schema  # type: ignore
@@ -12,11 +13,12 @@ from rest_framework.pagination import LimitOffsetPagination
 from drf_yasg import openapi  # type: ignore
 from django.shortcuts import get_object_or_404
 from django.db.models import Exists, OuterRef, Q
+from rest_framework.request import Request
 
 logger = logging.getLogger(__name__)
 
 
-def to_nullable_bool(value: str | None):
+def to_nullable_bool(value: Optional[str]) -> Optional[bool]:
     if value is None:
         return None
     value = value.lower()
@@ -28,18 +30,18 @@ def to_nullable_bool(value: str | None):
 
 
 class OrganizationListView(APIView):
-    permission_classes = [permissions.AllowAny]
+    permission_class = permissions.AllowAny
 
     @swagger_auto_schema(responses={200: "Success"})
-    def get(self, request):
+    def get(self, request: Request) -> Response:
         """Get all registered organizations"""
 
         logger.info("Fetching all registered organizations")
 
-        search_query = request.query_params.get("search")
-        trust_model = request.query_params.get("trust_model")
-        select_aps = to_nullable_bool(request.query_params.get("ap"))
-        select_rps = to_nullable_bool(request.query_params.get("rp"))
+        search_query: Optional[str] = request.query_params.get("search")
+        trust_model: Optional[str] = request.query_params.get("trust_model")
+        select_aps: Optional[bool] = to_nullable_bool(request.query_params.get("ap"))
+        select_rps: Optional[bool] = to_nullable_bool(request.query_params.get("rp"))
 
         # If both select_aps and select_rps are False, return an empty list
         if select_aps is False and select_rps is False:
@@ -82,7 +84,7 @@ class OrganizationListView(APIView):
         request_body=OrganizationSerializer,
         responses={201: "Success", 400: "Bad Request"},
     )
-    def post(self, request):
+    def post(self, request: Request) -> Response:
         """Creates an organization."""
 
         logger.info("Creating a new organization")
@@ -100,7 +102,7 @@ class OrganizationDetailView(APIView):
     permission_classes = [permissions.AllowAny]
 
     @swagger_auto_schema(responses={200: "Success"})
-    def get(self, request, org_slug):
+    def get(self, request: Request, org_slug: str) -> Response:
         """Get organization by uuid"""
         logger.info("Fetching organization with slug: %s", org_slug)
 
@@ -112,7 +114,7 @@ class OrganizationDetailView(APIView):
         request_body=OrganizationSerializer,
         responses={201: "Success", 400: "Bad Request", 404: "Not Found"},
     )
-    def patch(self, request, pk):
+    def patch(self, request: Request, pk: int) -> Response:
         """Updates an organization, given the uuid."""
         organization = get_object_or_404(Organization, pk=pk)
         serializer = OrganizationSerializer(
@@ -135,7 +137,7 @@ class OrganizationMaintainersView(APIView):
     ]
 
     @swagger_auto_schema(responses={200: "Success"})
-    def get(self, request, org_slug):
+    def get(self, request: Request, org_slug: str) -> Response:
         """Get all maintainers for an organization"""
         organization = get_object_or_404(Organization, slug=org_slug)
         maintainers = User.objects.filter(organization=organization)
@@ -159,11 +161,11 @@ class OrganizationMaintainersView(APIView):
             404: "Organization not found",
         },
     )
-    def post(self, request, pk):
+    def post(self, request: Request, pk: int) -> Response:
         """Add a maintainer to an organization"""
         organization = get_object_or_404(Organization, pk=pk)
 
-        email = request.data.get("email")
+        email: Optional[str] = request.data.get("email")
 
         if not email:
             return Response(
@@ -205,9 +207,9 @@ class OrganizationMaintainersView(APIView):
             404: "Not Found",
         },
     )
-    def delete(self, request, pk):
+    def delete(self, request: Request, pk: int) -> Response:
         """Remove a maintainer from an organization"""
-        email = request.data.get("email")
+        email: Optional[str] = request.data.get("email")
 
         if not email:
             return Response(

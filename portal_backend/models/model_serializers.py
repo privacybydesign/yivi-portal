@@ -13,11 +13,11 @@ from .models import (
     CondisconAttribute,
     RelyingParty,
 )
+from typing import Optional
 
 
 class OrganizationSerializer(serializers.ModelSerializer):
-
-    trust_model = serializers.SerializerMethodField()
+    trust_model: serializers.SerializerMethodField = serializers.SerializerMethodField()
 
     class Meta:
         model = Organization
@@ -40,7 +40,7 @@ class OrganizationSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ["is_verified"]
 
-    def get_trust_model(self, obj):
+    def get_trust_model(self, obj: Organization) -> Optional[str]:
         return obj.trust_model.name if obj.trust_model else None
 
 
