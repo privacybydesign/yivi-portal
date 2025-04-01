@@ -17,7 +17,7 @@ export default function OrganizationsPage() {
   const { publicRuntimeConfig } = getConfig();
   const searchParams = useSearchParams();
   const router = useRouter();
-  
+
   const [searchQuery, setSearchQuery] = useState(searchParams.get("search") || "");
   const [selectedTrustModel, setSelectedTrustModel] = useState(searchParams.get("trust_model") || "all");
   const [APSelected, setAPSelected] = useState(!searchParams.has("ap") || searchParams.get("ap") === "true");
@@ -28,7 +28,7 @@ export default function OrganizationsPage() {
   const [loading, setLoading] = useState(true);
   const [trustModels, setTrustModels] = useState<string[]>([]);
   const [applyingFilters, setApplyingFilters] = useState(false);
-  
+
   // Pagination state
   const [totalCount, setTotalCount] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
@@ -41,12 +41,12 @@ export default function OrganizationsPage() {
 
     // Base URL with pagination
     let url = `/v1/organizations/?limit=${pageSize}&offset=${offset}`;
-    
+
     // Add search if present
     if (searchQuery && searchQuery.trim() !== '') {
       url += `&search=${encodeURIComponent(searchQuery.trim())}`;
     }
-    
+
     // Add trust model filter
     if (selectedTrustModel !== "all") {
       url += `&trust_model=${encodeURIComponent(selectedTrustModel)}`;
@@ -54,21 +54,21 @@ export default function OrganizationsPage() {
 
     url += `&rp=${selectRPs}`;
     url += `&ap=${selectAPs}`;
-    
+
     axiosInstance.get<PaginationResponse<Organization>>(url)
       .then(response => {
         const data = response.data;
-       
+
         setTotalCount(data.count);
         setTotalPages(Math.ceil(data.count / pageSize));
         setOrganizations(data.results);
-        
+
         // Extract trust models if not already done
         if (trustModels.length === 0) {
           const models = [...new Set(data.results.map(org => org.trust_model))].filter(Boolean);
           setTrustModels(models);
         }
-        
+
         setLoading(false);
         setApplyingFilters(false);
       })
@@ -102,7 +102,7 @@ export default function OrganizationsPage() {
     setAPSelected(selectAPs);
     setRPSelected(selectRPs);
     setCurrentPage(page);
-  
+
     fetchOrganizations(page, selectAPs, selectRPs);
   }, [searchParams.toString()]);
 
@@ -135,7 +135,7 @@ export default function OrganizationsPage() {
   // Generate page numbers array for pagination
   const getPageNumbers = () => {
     const pageNumbers = [];
-    
+
     // If few pages, show all
     if (totalPages <= 5) {
       for (let i = 1; i <= totalPages; i++) {
@@ -144,29 +144,29 @@ export default function OrganizationsPage() {
     } else {
       // Always show first page
       pageNumbers.push(1);
-      
+
       // Show ellipsis or pages around current
       if (currentPage > 3) {
         pageNumbers.push("...");
       }
-      
+
       // Pages around current
       const startPage = Math.max(2, currentPage - 1);
       const endPage = Math.min(totalPages - 1, currentPage + 1);
-      
+
       for (let i = startPage; i <= endPage; i++) {
         pageNumbers.push(i);
       }
-      
+
       // Show ellipsis if needed
       if (currentPage < totalPages - 2) {
         pageNumbers.push("...");
       }
-      
+
       // Always show last page
       pageNumbers.push(totalPages);
     }
-    
+
     return pageNumbers;
   };
 
@@ -180,11 +180,26 @@ export default function OrganizationsPage() {
   return (
     <div className="container mx-auto p-4">
       <div className="flex flex-col gap-6 mb-6">
-        <h1 className="text-2xl font-bold">Organizations</h1>
-        
+
+        <div className="flex justify-between items-start mb-4">
+          <div>
+            <h1 className="text-2xl font-bold">Organizations</h1>
+          </div>
+          <div className="flex flex-col items-end">
+            <Link href="/organizations/register">
+              <Button variant="default">
+                Register Organization
+              </Button>
+            </Link>
+            <p className="text-sm text-gray-700 mt-2 text-right">
+              Want to make use of Yivi? Click the button above to register your organization.
+            </p>
+          </div>
+        </div>
+
         <div className="border rounded-md p-4 bg-gray-50">
           <h2 className="text-lg font-medium mb-4">Filters</h2>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
             <div>
               <label htmlFor="search" className="block text-sm font-medium mb-1">Search</label>
@@ -198,10 +213,10 @@ export default function OrganizationsPage() {
                 onKeyDown={(e) => e.key === 'Enter' && applyFilters(searchQuery, selectedTrustModel, APSelected, RPSelected)}
               />
             </div>
-            
+
             <div>
               <label htmlFor="trustModel" className="block text-sm font-medium mb-1">Trust Model</label>
-              <select 
+              <select
                 id="trustModel"
                 value={selectedTrustModel}
                 onChange={(e) => setSelectedTrustModel(e.target.value)}
@@ -214,31 +229,31 @@ export default function OrganizationsPage() {
               </select>
             </div>
           </div>
-          
+
           <div className="flex flex-wrap gap-6 mb-4">
             <div className="flex items-center space-x-2 p-2 rounded hover:bg-gray-100">
-              <Checkbox 
-                id="isAP" 
-                checked={APSelected} 
+              <Checkbox
+                id="isAP"
+                checked={APSelected}
                 onCheckedChange={() => handleFilterChange(!APSelected, RPSelected, selectedTrustModel)}
               />
-              <label 
-                htmlFor="isAP" 
+              <label
+                htmlFor="isAP"
                 className="text-sm font-medium leading-none cursor-pointer"
                 onClick={() => handleFilterChange(!APSelected, RPSelected, selectedTrustModel)}
               >
                 Attestation Provider
               </label>
             </div>
-            
+
             <div className="flex items-center space-x-2 p-2 rounded hover:bg-gray-100">
-              <Checkbox 
-                id="isRP" 
-                checked={RPSelected} 
+              <Checkbox
+                id="isRP"
+                checked={RPSelected}
                 onCheckedChange={() => handleFilterChange(APSelected, !RPSelected, selectedTrustModel)}
               />
-              <label 
-                htmlFor="isRP" 
+              <label
+                htmlFor="isRP"
                 className="text-sm font-medium leading-none cursor-pointer"
                 onClick={() => handleFilterChange(APSelected, !RPSelected, selectedTrustModel)}
               >
@@ -246,10 +261,10 @@ export default function OrganizationsPage() {
               </label>
             </div>
           </div>
-          
+
           {(APSelected || RPSelected || selectedTrustModel !== "all" || searchQuery) && (
             <div className="mt-4 text-sm text-blue-600">
-              Filtering: 
+              Filtering:
               {searchQuery && ` Search: "${searchQuery}"`}
               {selectedTrustModel !== "all" && ` Trust Model: ${selectedTrustModel}`}
               {APSelected && " | Attestation Providers"}
@@ -258,7 +273,7 @@ export default function OrganizationsPage() {
           )}
         </div>
       </div>
-      
+
       <Table>
         <TableCaption>
           {!loading && !applyingFilters && (
@@ -280,8 +295,8 @@ export default function OrganizationsPage() {
         <TableBody>
           {loading || applyingFilters ? (
             <TableRow>
-              <TableCell 
-                colSpan={5} 
+              <TableCell
+                colSpan={5}
                 className="text-center py-4 text-gray-500"
               >
                 {applyingFilters ? "Applying filters..." : "Loading organizations..."}
@@ -295,15 +310,15 @@ export default function OrganizationsPage() {
                     <TableCell>
                       {org.logo ? (
                         <div className="relative h-8 w-8 rounded-full overflow-hidden border border-gray-200">
-                          <Image 
+                          <Image
                             src={`${publicRuntimeConfig.API_ENDPOINT}${org.logo}`}
                             width={32}
                             height={32}
-                            alt={`${org.name_en} logo`} 
+                            alt={`${org.name_en} logo`}
                             className="object-cover w-full h-full"
-                            // onError={(e) => {
-                            //   // e.currentTarget.src = "/placeholder-logo.png"; 
-                            // }}
+                          // onError={(e) => {
+                          //   // e.currentTarget.src = "/placeholder-logo.png"; 
+                          // }}
                           />
                         </div>
                       ) : (
@@ -338,8 +353,8 @@ export default function OrganizationsPage() {
                 ))
               ) : (
                 <TableRow>
-                  <TableCell 
-                    colSpan={5} 
+                  <TableCell
+                    colSpan={5}
                     className="text-center py-4 text-gray-500"
                   >
                     No organizations found matching your criteria
@@ -357,18 +372,18 @@ export default function OrganizationsPage() {
           <div className="text-sm text-gray-500">
             Showing {totalCount > 0 ? getVisibleRange().start : 0} to {getVisibleRange().end} of {totalCount} organizations
           </div>
-          
+
           <div className="flex-1 flex justify-center">
             <div className="flex gap-2">
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 size="sm"
                 onClick={() => handlePageChange(currentPage - 1)}
                 disabled={currentPage === 1 || loading}
               >
                 Previous
               </Button>
-              
+
               {getPageNumbers().map((page, index) => (
                 <Button
                   key={index}
@@ -380,9 +395,9 @@ export default function OrganizationsPage() {
                   {page}
                 </Button>
               ))}
-              
-              <Button 
-                variant="outline" 
+
+              <Button
+                variant="outline"
                 size="sm"
                 onClick={() => handlePageChange(currentPage + 1)}
                 disabled={currentPage === totalPages || loading}
@@ -391,7 +406,7 @@ export default function OrganizationsPage() {
               </Button>
             </div>
           </div>
-          
+
           <div className="invisible text-sm text-gray-500">
             {/* This invisible element helps maintain the layout balance */}
             Showing {totalCount > 0 ? getVisibleRange().start : 0} to {getVisibleRange().end} of {totalCount} organizations
