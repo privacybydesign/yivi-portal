@@ -83,9 +83,7 @@ class OrganizationListView(APIView):
 
     def create_user(self, organization: Organization, email: str) -> Response:
         """Creates a maintainer user for the organization."""
-        user = User.objects.create(
-            email=email, organization=organization, role="maintainer"
-        )
+        User.objects.create(email=email, organization=organization, role="maintainer")
 
     @swagger_auto_schema(
         request_body=OrganizationSerializer,
