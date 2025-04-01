@@ -33,17 +33,11 @@ The project consists of two main components:
 
 ## Development Setup
 
-### Running the Frontend
 
-```bash
-cd portal_frontend
-npm install
-npm run dev
-```
+### Running the Project
 
-### Running the Backend
-
-Build and run with Docker. Currently, migrations are in the gitignore list due to ongoing restructuring of the model. This means migrations will be made and then applied for you.
+Build and run the project with Docker. This will also build the frontend application.
+Currently, migrations are in the gitignore list due to ongoing restructuring of the model. This means migrations will be made and then applied for you.
 
 #### Environment Variables
 
@@ -57,6 +51,8 @@ POSTGRES_PASSWORD=yivi
 POSTGRES_DB=yivi
 DJANGO_SECRET_KEY=your-secret-key
 DJANGO_ALLOWED_HOSTS=localhost
+AP_ENV=production
+RP_ENV=production
 ```
 
 Then start the services:
@@ -68,7 +64,7 @@ docker compose up -d
 Since the database will be empty, you can populate it with test data:
 
 ```bash
-docker compose exec yivi-portal python manage.py create_test_data
+docker compose exec django python manage.py create_test_data
 ```
 
 ### Admin Access
@@ -76,49 +72,18 @@ docker compose exec yivi-portal python manage.py create_test_data
 The easiest way to view the database is with Django admin. You will need a superuser:
 
 ```bash
-docker compose exec yivi-portal python manage.py createsuperuser
+docker compose exec django python manage.py createsuperuser
 ```
 
 **Note!** If changes are made to the model, please record it in the ER diagram `dbrelations.md`.
 
-**Note!** If you are testing endpoints with permission class `IsAuthenticated`, you first need to run the frontend project, login with Yivi (currently bound to Yivi staging server), and obtain the token.
+**Note!** If you are testing endpoints with permission class `IsAuthenticated`, you first need to run the frontend project, login with Yivi (currently bound to Yivi staging server), and obtain the token. Currently the token is set to be valid for a day.
 
 ### Service URLs
 
 * Backend API: http://localhost:8000/
-* Frontend: http://localhost:3000/
+* Frontend: http://localhost:9000/
 * Admin panel: http://localhost:8000/admin/
-
-## API Documentation
-
-API documentation is available at:
-* Swagger UI: `/swagger/`
-* ReDoc: `/redoc/`
-
-## Available Endpoints
-
-| **Endpoint**                                                                                                     | **Method** | **Description**                                                      |
-|------------------------------------------------------------------------------------------------------------------|------------|----------------------------------------------------------------------|
-| **Organizations**                                                                                                           |                                                                      |
-| `/v1/organizations/`                                                                                            | `GET`      | List all organizations                                               |
-| `/v1/organizations/<uuid:pk>/`                                                                                  | `GET`      | Retrieve details of a specific organization                          |
-| `/v1/organizations/<uuid:pk>/maintainers/`                                                                      | `GET`      | List maintainers of a specific organization                          |
-| `/v1/organizations/<uuid:pk>/register-rp/`                                                                      | `POST`     | Register the organization as a relying party (RP)                   |
-| **Trust Models**                                                                                                |           |                                                                      |
-| `/v1/trust-models/`                                                                                             | `GET`      | List all trust models                                                |
-| `/v1/trust-models/<str:name>/`                                                                                  | `GET`      | Retrieve details of a specific trust model                           |
-| `/v1/trust-models/<str:name>/environments/`                                                                     | `GET`      | List all environments within a specific trust model                  |
-| `/v1/trust-models/<str:name>/environments/<str:environment>/`                                                   | `GET`      | Retrieve details of a specific environment within a trust model      |
-| **Public Listings in a Trust Model Environment**                                                                |           |                                                                      |
-| `/v1/trust-models/<str:name>/environments/<str:environment>/organizations/`                                     | `GET`      | List organizations in a trust model environment                      |
-| `/v1/trust-models/<str:name>/environments/<str:environment>/attestation-providers/`                             | `GET`      | List attestation providers (APs) in a trust model environment        |
-| `/v1/trust-models/<str:name>/environments/<str:environment>/relying-parties/`                                   | `GET`      | List relying parties (RPs) in a trust model environment              |
-| **Relying Parties**                                                                                                        |                                                                      |
-| `/v1/relying-party/<str:slug>/hostname-status/`                                                               | `GET`      | Get hostname validation status of a relying party                    |
-| `/v1/relying-party/<str:slug>/registration-status/`                                                           | `GET`      | Get registration status of a relying party                           |
-| **Yivi Authentication**                                                                                          |          |                                                                      |
-| `/v1/session/`                                                                                                  | `POST`     | Start a new Yivi authentication session                              |
-| `/v1/token/<str:token>/`                                                                                        | `GET`      | Retrieve authentication token from the Yivi session                  |
 
 ## Features
 
@@ -134,11 +99,13 @@ API documentation is available at:
    * With choice from credentials from existing Attestation Providers
    * Purpose inquiry per Condiscon (session request format of Yivi) and per individual chosen attributes
 
-### Issuer Registration
+### Cron Jobs
+
+Currently, 3 types of Cron Jobs are set. `DNS Verification`, `Import Trusted RPs`, `Import Trusted APs`. The latter use appropriate scheme repositories to create or update entities in the database.
+
+### AP Registration
 (in progress...)
 
-### AP and RP List up to date with the scheme 
-(in progress...)
 
 ### Status Tracking
 The state of AP or RP registrations from an organization can be followed with status detailed workflow:
@@ -151,4 +118,4 @@ The state of AP or RP registrations from an organization can be followed with st
 
 ## Acknowledgements
 
-he Yivi Portal was built as based on recommendations in the [master thesis of Job Doesburg](https://jobdoesburg.nl/docs/Measures_against_over_asking_in_SSI_and_the_Yivi_ecosystem.pdf). Later, the Yivi Team started their own fork of this project to make it appropriate for production.
+The Yivi Portal was built as based on recommendations in the [master thesis of Job Doesburg](https://jobdoesburg.nl/docs/Measures_against_over_asking_in_SSI_and_the_Yivi_ecosystem.pdf). Later, the Yivi Team started their own fork of this project to align it with European Standards such as EUDI Wallet ARF, while making the project production-ready.

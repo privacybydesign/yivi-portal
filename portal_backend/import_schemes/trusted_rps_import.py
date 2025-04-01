@@ -55,6 +55,7 @@ def create_rp(
     try:
         rp, rp_created = RelyingParty.objects.update_or_create(
             organization=org,
+            rp_slug=org.slug,
             yivi_tme=yivi_tme,
             defaults={
                 "approved_rp_details": rp_dict,
