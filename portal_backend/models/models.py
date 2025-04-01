@@ -451,4 +451,4 @@ class User(models.Model):
         verbose_name_plural = "Users"
 
     def __str__(self):
-        return f"{self.organization.name_en} - {self.role}"
+        return f"{self.email} - {self.role}"

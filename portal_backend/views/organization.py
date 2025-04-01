@@ -13,6 +13,7 @@ from rest_framework.pagination import LimitOffsetPagination
 from drf_yasg import openapi  # type: ignore
 from django.shortcuts import get_object_or_404
 from django.db.models import Exists, OuterRef, Q
+from django.db import transaction
 from rest_framework.request import Request
 
 logger = logging.getLogger(__name__)
@@ -80,20 +81,29 @@ class OrganizationListView(APIView):
         serializer = OrganizationSerializer(result_page, many=True)
         return paginator.get_paginated_response(serializer.data)
 
+    def create_user(self, organization: Organization, email: str) -> Response:
+        """Creates a maintainer user for the organization."""
+        user = User.objects.create(
+            email=email, organization=organization, role="maintainer"
+        )
+
     @swagger_auto_schema(
         request_body=OrganizationSerializer,
         responses={201: "Success", 400: "Bad Request"},
     )
+    @transaction.atomic
     def post(self, request: Request) -> Response:
         """Creates an organization."""
 
+        email = request.user.email
         logger.info("Creating a new organization")
-
         serializer = OrganizationSerializer(data=request.data)
         if not serializer.is_valid():
             logger.warning("Invalid organization data: %s", serializer.errors)
             return Response(status=status.HTTP_400_BAD_REQUEST)
         organization = serializer.save()
+        org_obj = Organization.objects.get(id=organization.id)
+        self.create_user(org_obj, email)
         logger.info("Organization created with ID: %s", organization.id)
         return Response({"id": organization.id}, status=status.HTTP_201_CREATED)
 

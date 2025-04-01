@@ -17,7 +17,7 @@ from typing import Optional
 
 
 class OrganizationSerializer(serializers.ModelSerializer):
-    trust_model: serializers.SerializerMethodField = serializers.SerializerMethodField()
+    trust_model = serializers.SerializerMethodField()
 
     class Meta:
         model = Organization
