@@ -81,7 +81,7 @@ class OrganizationListView(APIView):
         serializer = OrganizationSerializer(result_page, many=True)
         return paginator.get_paginated_response(serializer.data)
 
-    def create_user(self, organization: Organization, email: str) -> Response:
+    def create_user(self, organization: Organization, email: str) -> None:
         """Creates a maintainer user for the organization."""
         User.objects.create(email=email, organization=organization, role="maintainer")
 
