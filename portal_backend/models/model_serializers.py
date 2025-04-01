@@ -13,10 +13,10 @@ from .models import (
     CondisconAttribute,
     RelyingParty,
 )
+from typing import Optional
 
 
 class OrganizationSerializer(serializers.ModelSerializer):
-
     trust_model = serializers.SerializerMethodField()
 
     class Meta:
@@ -40,18 +40,8 @@ class OrganizationSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ["is_verified"]
 
-    def get_trust_model(self, obj):
-        # check for trust model in AP
-        ap = AttestationProvider.objects.filter(organization=obj).first()
-        if ap and ap.yivi_tme and ap.yivi_tme.trust_model:
-            return ap.yivi_tme.trust_model.name
-
-        # check for trust model in RP
-        rp = RelyingParty.objects.filter(organization=obj).first()
-        if rp and rp.yivi_tme and rp.yivi_tme.trust_model:
-            return rp.yivi_tme.trust_model.name
-
-        return None
+    def get_trust_model(self, obj: Organization) -> Optional[str]:
+        return obj.trust_model.name if obj.trust_model else None
 
 
 class TrustModelSerializer(serializers.ModelSerializer):
@@ -115,13 +105,12 @@ class CondisconAttributeSerializer(serializers.ModelSerializer):
 class RelyingPartySerializer(serializers.ModelSerializer):
     yivi_tme = serializers.CharField(source="yivi_tme.environment", read_only=True)
     organization = serializers.CharField(source="organization.name_en", read_only=True)
-    status = serializers.BooleanField(source="status.reviewed_accepted", read_only=True)
-    hostname = serializers.CharField(source="hostname.hostname", read_only=True)
-    condiscon = serializers.JSONField(source="condiscon.condiscon", read_only=True)
+    status = serializers.CharField(source="status.rp_status", read_only=True)
 
     class Meta:
         model = RelyingParty
         fields = "__all__"
+
 
 class MaintainerSerializer(serializers.ModelSerializer):
     class Meta:

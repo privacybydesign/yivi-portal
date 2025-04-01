@@ -40,7 +40,7 @@ class Organization(models.Model):
     name_nl = models.CharField(max_length=255)
     slug = models.SlugField(unique=True)
     registration_number = models.CharField(max_length=100, null=True, blank=True)
-    contact_address = models.TextField(null=True, blank=True)
+    contact_address = models.CharField(max_length=255, null=True, blank=True)
     is_verified = models.BooleanField(default=False)
     verified_at = models.DateTimeField(null=True)
     trade_names = models.JSONField(default=list)
@@ -54,6 +54,13 @@ class Organization(models.Model):
     approved_logo = models.ImageField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     last_updated_at = models.DateTimeField(auto_now=True)
+    trust_model = models.ForeignKey(
+        "TrustModel",
+        on_delete=models.CASCADE,
+        related_name="organizations",
+        null=True,
+        blank=True,
+    )
 
     def __str__(self):
         return self.name_en
@@ -173,6 +180,7 @@ class RelyingParty(models.Model):
         verbose_name = "Relying Party"
         verbose_name_plural = "Relying Parties"
 
+    rp_slug = models.SlugField(unique=True, null=True, blank=True)
     yivi_tme = models.ForeignKey(
         YiviTrustModelEnv, on_delete=models.CASCADE, related_name="relying_parties"
     )
@@ -366,7 +374,7 @@ class CredentialAttribute(models.Model):
 
 
 class RelyingPartyHostname(models.Model):
-    DOMAIN_REGEX = r"^(?!-)[A-Za-z0-9-]{1,63}(?<!-)(\.[A-Za-z]{2,6})+$"
+    DOMAIN_REGEX = r"^(?!-)[A-Za-z0-9-]{1,63}(?<!-)(\.[A-Za-z0-9-]{1,63}(?<!-))*(\.[A-Za-z]{2,6})+$"
     hostname = models.CharField(
         max_length=255,
         unique=True,
@@ -443,4 +451,4 @@ class User(models.Model):
         verbose_name_plural = "Users"
 
     def __str__(self):
-        return f"{self.organization.name_en} - {self.role}"
+        return f"{self.email} - {self.role}"
