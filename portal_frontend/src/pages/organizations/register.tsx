@@ -3,6 +3,8 @@ import { useRouter } from "next/router";
 import { Button } from "@/src/components/ui/button";
 import { Input } from "@/src/components/ui/input";
 import { axiosInstance } from "@/src/services/axiosInstance";
+import Image from 'next/image';
+
 
 // SET STATES
 export default function RegisterOrganization() {
@@ -77,11 +79,7 @@ const generateSlug = (text: string) => {
       `${form.street} ${form.housenumber}, ${form.postal_code} ${form.city}, ${form.country}`
     );
     formData.append("verified_at", new Date().toISOString());
-
-    // Append trade names as JSON
     formData.append("trade_names", JSON.stringify(form.trade_names));
-
-    // Append logo if it exists
     if (logoFile) {
       formData.append("logo", logoFile);
     }
@@ -100,7 +98,7 @@ const generateSlug = (text: string) => {
     } catch (err) {
       alert(err);
     } finally {
-      setSubmitting(false);
+      setSubmitting(false); // ?
     }
   };
 
@@ -210,11 +208,11 @@ const removeTradeName = (nameToRemove: string) => {
             </div>
           </fieldset>
             <div>
-              <label className="block mb-1 font-medium">Organization Logo</label>
+              <label className="block mb-2 font-medium">Organization Logo</label>
               <Input
                 type="file"
                 accept="image/png, image/jpeg"
-                className="file:mr-4 file:py-1 file:px-4 file:rounded file:border-0 file:bg-black file:text-white hover:file:bg-gray-800"
+                className="file:mr-4 file:py-1 file:px-4 file:rounded file:border-0 file:bg-black file:text-white file:bg-gray-800"
                 onChange={(e) => {
                   if (e.target.files && e.target.files.length > 0) {
                     setLogoFile(e.target.files[0]);
@@ -226,9 +224,11 @@ const removeTradeName = (nameToRemove: string) => {
               {logoFile && (
                 <div className="mt-2">
                   <p className="text-sm text-gray-700">Selected: {logoFile.name}</p>
-                  <img
+                  <Image
                     src={URL.createObjectURL(logoFile)}
                     alt="Logo Preview"
+                    width={96}
+                    height={96}
                     className="mt-2 h-24 rounded border object-contain"
                   />
                   <button
@@ -241,8 +241,6 @@ const removeTradeName = (nameToRemove: string) => {
                 </div>
               )}
             </div>
-
-
 
           <Button type="submit" disabled={submitting || !!slugError}>
             {submitting ? "Submitting..." : "Register Organization"}
