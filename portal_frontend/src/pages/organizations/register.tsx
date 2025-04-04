@@ -1,251 +1,275 @@
-import { useState } from "react";
-import { useRouter } from "next/router";
-import { Button } from "@/src/components/ui/button";
-import { Input } from "@/src/components/ui/input";
-import { axiosInstance } from "@/src/services/axiosInstance";
-import Image from 'next/image';
+import { useActionState, useState } from 'react';
+import { Button } from '@/src/components/ui/button';
+import { Input } from '@/src/components/ui/input';
+import { generateSlug } from '@/lib/utils';
+import { registerOrganization } from '@/src/actions/register-organization';
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/src/components/ui/form';
+import { Control, FieldErrors, useFieldArray, useForm, useWatch } from 'react-hook-form';
+import { Avatar, AvatarFallback, AvatarImage } from '@/src/components/ui/avatar';
+import { XIcon } from 'lucide-react';
 
+type RegistrationInputs = {
+  name_en: string;
+  name_nl: string;
+  slug: string;
+  registration_number: string;
+  street: string;
+  housenumber: string;
+  postal_code: string;
+  city: string;
+  country: string;
+  trade_names: string[];
+  logo: File | undefined;
+};
 
-// SET STATES
 export default function RegisterOrganization() {
-  const [form, setForm] = useState({
-    name_en: "",
-    name_nl: "",
-    slug: "",
-    registration_number: "",
-    street: "",
-    housenumber: "",
-    postal_code: "",
-    city: "",
-    country: "",
-    trade_names: [] as string[], // initialize as empty string array
+  const [formState, register, pending] = useActionState<{ values: RegistrationInputs; errors: Partial<FieldErrors>; }, FormData>(
+    registerOrganization,
+    {
+      values: {
+        name_en: '',
+        name_nl: '',
+        slug: '',
+        registration_number: '',
+        street: '',
+        housenumber: '',
+        postal_code: '',
+        city: '',
+        country: '',
+        trade_names: [],
+        logo: undefined,
+      },
+      errors: {}
+    }
+  );
+
+  const form = useForm<RegistrationInputs>({
+    errors: formState.errors,
+    values: formState.values,
   });
-  const [submitting, setSubmitting] = useState(false);
-  const [slugEdited, setSlugEdited] = useState(false);
-  const [slugError, setSlugError] = useState("");
-  const router = useRouter();
-  const [tradeNameInput, setTradeNameInput] = useState("");
-  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const tradeNames = useFieldArray<RegistrationInputs>({
+    control: form.control,
+    name: 'trade_names' as never
+  });
 
+  const [tradeNameInput, setTradeNameInput] = useState('');
 
+  const LogoPreview = ({ control, setValue }: { control: Control<RegistrationInputs>; setValue: any; }) => {
+    const logo = useWatch({ control, name: "logo" });
 
-const generateSlug = (text: string) => {
-  return text
-    .toLowerCase()
-    .replace(/\s+/g, "-")         // replace spaces with hyphen
-    .replace(/[^a-z0-9-]/g, "")   // allow only lowercase letters, digits, and hyphen
-  
-};
+    return (
+      <div className="relative size-24">
+        <Avatar className="!size-24">
+          <AvatarImage src={logo ? URL.createObjectURL(logo) : ''}
+            className="rounded-full border object-contain" />
+          <AvatarFallback>
+            {logo
+              ? 'Logo Preview'
+              : <span className="cursor-pointer whitespace-nowrap rounded-md text-sm font-medium transition-colors bg-primary text-primary-foreground shadow hover:bg-primary/90 p-1">Select logo</span>}
+          </AvatarFallback>
+        </Avatar>
 
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-
-    setForm((prev) => { // form setter function, takes previous state of the form, spreads it to update it
-      const updated = { ...prev, [name]: value };
-
-      if (name === "name_en" && !slugEdited) { // if the name of the form field is name_en than update its slug like so
-        updated.slug = generateSlug(value);
-        setSlugError("");
-      }
-
-      return updated; // return updated form inputs
-    });
-
-    if (name === "slug") { // if the name of the form field is slug, (user edited the slug instead of using the automatic slug) do a small regex validation check
-      setSlugEdited(true);
-      const isValid = /^[a-z0-9-]+$/.test(value);
-      setSlugError(isValid ? "" : "Slug must be lowercase and only contain letters, numbers, or hyphens.");
-    }
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault(); // prevent default behavior like restarting the page upon form submit
-    setSubmitting(true);
-
-    if (!/^[a-z0-9-]+$/.test(form.slug)) { // complain if the slug is invalid
-      setSlugError("Slug must be lowercase and only contain letters, numbers, or hyphens.");
-      setSubmitting(false);
-      return;
-    }
-
-    const formData = new FormData();
-    formData.append("name_en", form.name_en);
-    formData.append("name_nl", form.name_nl);
-    formData.append("slug", form.slug);
-    formData.append("registration_number", form.registration_number);
-    formData.append(
-      "contact_address",
-      `${form.street} ${form.housenumber}, ${form.postal_code} ${form.city}, ${form.country}`
+        {logo && <button
+          type="button"
+          aria-description="Remove logo"
+          onClick={() => setValue('logo', undefined)}
+          className="bg-red-400 rounded-full p-1 absolute top-0 right-0"
+        >
+          <XIcon size={12} strokeWidth={3} />
+        </button>}
+      </div>
     );
-    formData.append("verified_at", new Date().toISOString());
-    formData.append("trade_names", JSON.stringify(form.trade_names));
-    if (logoFile) {
-      formData.append("logo", logoFile);
-    }
-
-
-    try {
-      axiosInstance.post("/v1/organizations/", formData).then((response) => { // axiosInstance helps us send the request with client's access token
-        if (response.status === 200) {
-        router.push("v1/organizations/"); // for now if the post was successful reroute to organizations main page
-      } 
-        console.log("response from api", {response})
-        
-      }).catch((error) => { console.log("error", {error})
-
-      });
-    } catch (err) {
-      alert(err);
-    } finally {
-      setSubmitting(false); // ?
-    }
   };
 
-  const addTradeName = () => {
-  const trimmed = tradeNameInput.trim();
-  if (trimmed && !form.trade_names.includes(trimmed)) {
-    setForm((prev) => ({
-      ...prev,
-      trade_names: [...prev.trade_names, trimmed],
-    }));
-  }
-  setTradeNameInput(""); // Clear the input
-};
+  const addTradeName = (): void => {
+    const trimmed = tradeNameInput.trim();
 
-const removeTradeName = (nameToRemove: string) => {
-  setForm((prev) => ({
-    ...prev,
-    trade_names: prev.trade_names.filter((name) => name !== nameToRemove),
-  }));
-};
+    if (trimmed) {
+      tradeNames.append(trimmed);
+    }
+
+    // Clear the input
+    setTradeNameInput('');
+  };
 
   return (
     <div className="container mx-auto p-4">
       <div className="flex flex-col gap-6 mb-6">
         <h1 className="text-2xl font-bold mb-6">Register Organization</h1>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block mb-1 font-medium">English Name</label>
-            <Input name="name_en" value={form.name_en} onChange={handleChange} required />
-            <small className="text-sm text-gray-500">Formal name of your organization in English.</small>
-          </div>
-          <div>
-            <label className="block mb-1 font-medium">Dutch Name</label>
-            <Input name="name_nl" value={form.name_nl} onChange={handleChange} required />
-            <small className="text-sm text-gray-500">Formal name of your organization in Dutch.</small>
-          </div>
+        <Form {...form}>
+          <form action={register} className="md:grid md:grid-cols-2 gap-6">
+            <div className="space-y-4">
+              <FormField control={form.control} name="name_en" render={({ field: { onBlur, ...field } }) => (
+                <FormItem>
+                  <FormLabel>English Name</FormLabel>
+                  <FormControl>
+                    <Input {...field} onBlur={(event) => {
+                      if (!form.control.getFieldState('slug').isDirty) {
+                        form.setValue('slug', generateSlug(event.target.value.trim()));
+                      }
 
-          <div>
-            <label className="block mb-1 font-medium">Slug</label>
-            <Input name="slug" value={form.slug} onChange={handleChange} required />
-            <small className="text-sm text-gray-500">
-              Auto-generated from the name. Lowercase, hyphens instead of spaces, no special characters.
-            </small>
-            {slugError && <p className="text-sm text-red-600 mt-1">{slugError}</p>}
-          </div>
+                      onBlur();
+                    }} />
+                  </FormControl>
+                  <FormDescription>
+                    Formal name of your organization in English.
+                  </FormDescription>
+                  {formState.errors.name_en &&
+                    <FormMessage className="text-sm text-red-600 mt-1">{!formState.errors.name_en.message}</FormMessage>}
+                </FormItem>
+              )} />
 
-          <div>
-            <label className="block mb-1 font-medium">Registration Number</label>
-            <Input name="registration_number" value={form.registration_number} onChange={handleChange} />
-            <small className="text-sm text-gray-500">e.g. KVK number or similar official registration code.</small>
-          </div>
-          <div>
-            <label className="block mb-1 font-medium">Trade Names</label>
-            <div className="flex gap-2">
-              <Input
-                name="trade_name_input"
-                value={tradeNameInput}
-                onChange={(e) => setTradeNameInput(e.target.value)}
-                placeholder="Enter a trade name"
-              />
-              <Button type="button" onClick={addTradeName}>Add</Button>
+              <FormField control={form.control} name="name_nl" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Dutch Name</FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                  <FormDescription>
+                    Formal name of your organization in Dutch.
+                  </FormDescription>
+                  {formState.errors.name_nl &&
+                    <FormMessage className="text-sm text-red-600 mt-1">{!formState.errors.name_nl.message}</FormMessage>}
+                </FormItem>
+              )} />
+
+              <FormField control={form.control} name="slug" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Slug</FormLabel>
+                  <FormControl>
+                    <Input {...field} pattern='[a-z0-9\-]+' />
+                  </FormControl>
+                  <FormDescription>
+                    Auto-generated from the name. Lowercase, hyphens instead of spaces, no special characters.
+                  </FormDescription>
+                  {formState.errors.slug &&
+                    <FormMessage className="text-sm text-red-600 mt-1">{!formState.errors.slug.message}</FormMessage>}
+                </FormItem>
+              )} />
+
+              <FormField control={form.control} name="registration_number" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Registration Number</FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                  <FormDescription>
+                    e.g. KVK number or similar official registration code.
+                  </FormDescription>
+                  {formState.errors.registration_number &&
+                    <FormMessage className="text-sm text-red-600 mt-1">{!formState.errors.registration_number.message}</FormMessage>}
+                </FormItem>
+              )} />
+
+              <FormField control={form.control} name="trade_names" render={() => (
+                <FormItem>
+                  <FormLabel>Trade Names</FormLabel>
+                  <div className="flex gap-2">
+                    <FormControl>
+                      <Input placeholder="Enter a trade name" value={tradeNameInput} onChange={(event) => setTradeNameInput(event.target.value)} />
+                    </FormControl>
+                    <Button type="button" onClick={addTradeName}>
+                      Add
+                    </Button>
+                  </div>
+                  <FormDescription>
+                    Click &quot;Add&quot; to insert trade names. You can remove them below.
+                  </FormDescription>
+                  {formState.errors.trade_names &&
+                    <FormMessage className="text-sm text-red-600 mt-1">{!formState.errors.trade_names.message}</FormMessage>}
+                </FormItem>
+              )} />
+
+              {tradeNames.fields.map((item, index) => (
+                <FormField key={item.id} control={form.control} name={`trade_names.${index}`} render={({ field }) => (
+                  <div className="flex gap-2 relative">
+                    <FormControl>
+                      <Input className="pr-10" {...field} />
+                    </FormControl>
+                    <Button type="button" className="absolute inset-y-1.5 right-1.5 !h-auto my-auto !p-1" onClick={() => tradeNames.remove(index)}>
+                      <XIcon />
+                    </Button>
+                  </div>
+                )} />
+              ))}
+
+              <FormField control={form.control} name="logo" render={({ field: { value, onChange, ...field } }) => (
+                <FormItem className="flex items-center gap-2">
+                  <div className="grow">
+                    <FormLabel>Organization Logo
+                      <LogoPreview {...form} />
+                      <FormControl>
+                        <Input
+                          type="file"
+                          accept="image/png,image/jpeg"
+                          className="hidden"
+                          onChange={(event) => onChange(event.target.files?.[0])}
+                          {...field}
+                        />
+                      </FormControl>
+                    </FormLabel>
+                    <FormDescription>Upload your logo (PNG or JPEG).</FormDescription>
+                    {formState.errors.logo &&
+                      <FormMessage className="text-sm text-red-600 mt-1">{!formState.errors.logo.message}</FormMessage>}
+                  </div>
+                </FormItem>
+              )} />
             </div>
-            {form.trade_names.length > 0 && (
-              <ul className="mt-2 space-y-1">
-                {form.trade_names.map((name) => (
-                  <li key={name} className="flex justify-between items-center bg-gray-100 px-2 py-1 rounded">
-                    <span>{name}</span>
-                    <button
-                      type="button"
-                      className="text-red-500 text-sm"
-                      onClick={() => removeTradeName(name)}
-                    >
-                      Remove
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
-            <small className="text-sm text-gray-500">Click &quot;Add&quot; to insert trade names. You can remove them below.</small>
-          </div>
-          <fieldset className="border p-4 rounded space-y-2">
-            <legend className="font-medium">Contact Address</legend>
 
-            <div>
-              <label className="block mb-1 font-medium">Street</label>
-              <Input name="street" value={form.street} onChange={handleChange} />
-            </div>
+            <fieldset className="border p-4 rounded space-y-2 mb-auto">
+              <legend className="font-medium">Contact Address</legend>
 
-            <div>
-              <label className="block mb-1 font-medium">House Number</label>
-              <Input name="housenumber" value={form.housenumber} onChange={handleChange} />
-            </div>
+              <FormField control={form.control} name="street" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Street</FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                </FormItem>
+              )} />
 
-            <div>
-              <label className="block mb-1 font-medium">Postal Code</label>
-              <Input name="postal_code" value={form.postal_code} onChange={handleChange} />
-            </div>
+              <FormField control={form.control} name="housenumber" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>House Number</FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                </FormItem>
+              )} />
 
-            <div>
-              <label className="block mb-1 font-medium">City</label>
-              <Input name="city" value={form.city} onChange={handleChange} />
-            </div>
+              <FormField control={form.control} name="postal_code" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Postal Code</FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                </FormItem>
+              )} />
 
-            <div>
-              <label className="block mb-1 font-medium">Country</label>
-              <Input name="country" value={form.country} onChange={handleChange} />
-            </div>
-          </fieldset>
-            <div>
-              <label className="block mb-2 font-medium">Organization Logo</label>
-              <Input
-                type="file"
-                accept="image/png, image/jpeg"
-                className="file:mr-4 file:py-1 file:px-4 file:rounded file:border-0 file:bg-black file:text-white file:bg-gray-800"
-                onChange={(e) => {
-                  if (e.target.files && e.target.files.length > 0) {
-                    setLogoFile(e.target.files[0]);
-                  }
-                }}
-              />
-              <small className="text-sm text-gray-500">Upload your logo (PNG or JPEG).</small>
+              <FormField control={form.control} name="city" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>City</FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                </FormItem>
+              )} />
 
-              {logoFile && (
-                <div className="mt-2">
-                  <p className="text-sm text-gray-700">Selected: {logoFile.name}</p>
-                  <Image
-                    src={URL.createObjectURL(logoFile)}
-                    alt="Logo Preview"
-                    width={96}
-                    height={96}
-                    className="mt-2 h-24 rounded border object-contain"
-                  />
-                  <button
-                    type="button"
-                    className="text-red-500 text-sm mt-1"
-                    onClick={() => setLogoFile(null)}
-                  >
-                    Remove Image
-                  </button>
-                </div>
-              )}
-            </div>
+              <FormField control={form.control} name="country" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Country</FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                </FormItem>
+              )} />
+            </fieldset>
 
-          <Button type="submit" disabled={submitting || !!slugError}>
-            {submitting ? "Submitting..." : "Register Organization"}
-          </Button>
-        </form>
+            <Button type="submit" disabled={pending}>
+              {pending ? 'Submitting...' : 'Register Organization'}
+            </Button>
+          </form>
+        </Form>
       </div>
     </div>
   );

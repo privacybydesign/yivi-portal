@@ -26,7 +26,7 @@ export default function MyApp({ Component, pageProps }: AppProps) {
   }, [initializeAuth]);
 
   const email = useStore((state) => state.email);
-  const setAccessToken = useStore((state) => state.setAccessToken)
+  const setAccessToken = useStore((state) => state.setAccessToken);
   const [isOpen, setIsOpen] = useState(false);
 
   const handleLogout = () => {
@@ -36,7 +36,7 @@ export default function MyApp({ Component, pageProps }: AppProps) {
     router.push("/login");
   };
   return <div className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-    <header className="bg-white shadow-md">
+    <header className="bg-white border-b border-gray-200">
       <div className="container mx-auto flex justify-between items-center p-4">
         <Image src="/yivi-logo.svg" alt="Yivi Logo" height={30} width={54} />
 
@@ -87,6 +87,6 @@ export default function MyApp({ Component, pageProps }: AppProps) {
         </div>
       )}
     </header>
-    <Component {...pageProps} />;
-  </div>
+    <Component {...pageProps} />
+  </div>;
 }

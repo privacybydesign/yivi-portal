@@ -3,7 +3,7 @@
 import { create } from 'zustand'
 import { jwtDecode } from "jwt-decode";
 import { useEffect } from "react";
-import { AuthToken } from '../models/auth_token';
+import { AuthToken } from '@/src/models/auth_token';
 
 interface StateStore {
     accessToken: string | null
