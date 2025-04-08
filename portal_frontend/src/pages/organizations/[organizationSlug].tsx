@@ -14,19 +14,17 @@ import Image from "next/image";
 import { axiosInstance } from "@/src/services/axiosInstance";
 import getConfig from "next/config";
 import useStore from "@/src/store";
-import { Maintainer } from "@/src/models/maintainer";
 import { Organization } from "@/src/models/organization";
 import { RelyingParty } from "@/src/models/relying-party";
 
 export default function OrganizationPage() {
   const params = useParams();
-  const userOrgId = useStore((state) => state.organizationSlug);
+  const userOrgSlug = useStore((state) => state.organizationSlug);
   const userRole = useStore((state) => state.role);
   const organizationSlug = params?.organizationSlug;
 
   const { publicRuntimeConfig } = getConfig();
   const [organization, setOrganization] = useState<Organization | null>(null);
-  const [maintainers, setMaintainers] = useState<Maintainer[]>([]);
   const [rpDetails, setRpDetails] = useState<RelyingParty | null>(null);
   const [loadingRpDetails, setLoadingRpDetails] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -42,22 +40,6 @@ export default function OrganizationPage() {
         );
         setOrganization(orgResponse.data);
 
-        // Fetch maintainers
-        try {
-          if (
-            (userOrgId == organizationSlug && userRole == "maintainer") ||
-            userRole == "admin"
-          ) {
-            const maintainersResponse = await axiosInstance.get<Maintainer[]>(
-              `/v1/organizations/${organizationSlug}/maintainers/`
-            );
-            setMaintainers(maintainersResponse.data);
-          }
-        } catch (maintainersError) {
-          console.error("Error fetching maintainers:", maintainersError);
-          // Don't set error state, as this is not critical
-        }
-
         setLoading(false);
       } catch (error) {
         console.error("Error fetching organization:", error);
@@ -71,7 +53,7 @@ export default function OrganizationPage() {
     if (organizationSlug) {
       fetchOrganizationData();
     }
-  }, [organizationSlug, userOrgId, userRole]);
+  }, [organizationSlug, userOrgSlug, userRole]);
 
   // Handler for section changes with data fetching
   const handleSectionChange = (section: string) => {
@@ -213,17 +195,6 @@ export default function OrganizationPage() {
             RP Details
           </button>
         )}
-
-        <button
-          className={`px-4 py-2 font-medium ${
-            activeSection === "maintainers"
-              ? "border-b-2 border-blue-500 text-blue-600"
-              : "text-gray-600"
-          }`}
-          onClick={() => handleSectionChange("maintainers")}
-        >
-          Maintainers
-        </button>
       </div>
 
       {activeSection === "overview" && (
@@ -416,39 +387,6 @@ export default function OrganizationPage() {
                   specific configuration details are not available.
                 </p>
               </div>
-            )}
-          </CardContent>
-        </Card>
-      )}
-
-      {activeSection === "maintainers" && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Organization Maintainers</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {maintainers.length > 0 ? (
-              <div className="space-y-4">
-                {maintainers.map((maintainer) => (
-                  <div
-                    key={maintainer.id}
-                    className="flex justify-between items-center p-3 border rounded-md"
-                  >
-                    <div>
-                      <div className="font-medium">
-                        {maintainer.first_name} {maintainer.last_name}
-                      </div>
-                      <div className="text-sm text-gray-500">
-                        {maintainer.email}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-gray-500">
-                No maintainers found for this organization.
-              </p>
             )}
           </CardContent>
         </Card>

@@ -400,7 +400,7 @@ export default function OrganizationsPage() {
                     </TableCell>
                     <TableCell className="font-medium">
                       <Link
-                        href={`/organizations/${org.id}`}
+                        href={`/organizations/${org.slug}`}
                         className="hover:text-blue-600"
                       >
                         {org.name_en}
