@@ -5,7 +5,9 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import useStore from "@/src/store";
-import { useRouter } from 'next/navigation';
+import { useRouter } from "next/navigation";
+import { initials } from "@dicebear/collection";
+import { createAvatar } from "@dicebear/core";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -29,64 +31,77 @@ export default function MyApp({ Component, pageProps }: AppProps) {
   const setAccessToken = useStore((state) => state.setAccessToken);
   const [isOpen, setIsOpen] = useState(false);
 
+  const svg = createAvatar(initials, {
+    seed: email ?? "default-user",
+    radius: 50,
+    backgroundColor: ["d1d4f9", "ffd5dc", "c0aede"],
+  }).toString();
+
   const handleLogout = () => {
     setAccessToken(null);
     // Add any additional logout logic here
     // Redirect to login page
     router.push("/login");
   };
-  return <div className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-    <header className="bg-white border-b border-gray-200">
-      <div className="container mx-auto flex justify-between items-center p-4">
-        <Image src="/yivi-logo.svg" alt="Yivi Logo" height={30} width={54} />
+  return (
+    <div className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+      <header className="bg-white border-b border-gray-200">
+        <div className="container mx-auto flex justify-between items-center px-4 py-3">
+          {/* Left: Logo and Brand */}
+          <div className="flex items-center gap-4">
+            <Image
+              src="/yivi-logo.svg"
+              alt="Yivi Logo"
+              height={32}
+              width={54}
+            />
+            <Link href="/" className="text-xl font-semibold">
+              Portal
+            </Link>
+          </div>
 
-        <div className="flex-1 pl-4">
-          <Link href="/" className="text-xl">
-            Portal
-          </Link>
+          {/* Center + Right: Nav and User Info */}
+          <div className="hidden md:flex items-center gap-6">
+            <Link href="/organizations" className="hover:text-blue-600 text-sm">
+              Organizations
+            </Link>
+
+            {email ? (
+              <div className="flex items-center gap-3 px-4 py-1 rounded-xl backdrop-blur-md bg-white/30 border border-white/50 shadow-sm">
+                <img
+                  src={`data:image/svg+xml;utf8,${encodeURIComponent(svg)}`}
+                  alt="User Avatar"
+                  width={32}
+                  height={32}
+                  className="rounded-full border border-white"
+                />
+                <span className="text-sm truncate max-w-[140px] text-black/80">
+                  {email}
+                </span>
+                <button
+                  onClick={handleLogout}
+                  className="text-sm text-blue-600 hover:underline transition"
+                >
+                  Logout
+                </button>
+              </div>
+            ) : (
+              <Link href="/login" className="text-sm hover:text-blue-600">
+                Login
+              </Link>
+            )}
+          </div>
+
+          {/* Mobile menu toggle */}
+          <div className="md:hidden">
+            <button onClick={() => setIsOpen(!isOpen)} className="text-sm p-2">
+              {isOpen ? "Close" : "Menu"}
+            </button>
+          </div>
         </div>
+      </header>
 
-        <nav className="hidden md:flex gap-6">
-          <Link href="/organizations" className="hover:text-blue-600">
-            Organizations
-          </Link>
-          {email ? (
-            <div className="flex items-center gap-4">
-              <span>{email}</span>
-              <button onClick={handleLogout} className="hover:text-blue-600">
-                Logout
-              </button>
-            </div>
-          ) : <Link href="/login" className="hover:text-blue-600">
-            Login
-          </Link>
-          }
-        </nav>
-
-        <div className="md:hidden">
-          <button onClick={() => setIsOpen(!isOpen)} className="p-2">
-            {isOpen ? "Close" : "Menu"}
-          </button>
-        </div>
-      </div>
-
-      {isOpen && (
-        <div className="md:hidden bg-white shadow-md absolute w-full left-0 top-0 h-screen flex flex-col items-center justify-center z-50">
-          <Link href="/" className="block py-2 hover:text-blue-600">
-            Home
-          </Link>
-          <Link href="/about" className="block py-2 hover:text-blue-600">
-            About
-          </Link>
-          <Link href="/services" className="block py-2 hover:text-blue-600">
-            Services
-          </Link>
-          <Link href="/extra" className="block py-2 hover:text-blue-600">
-            Extra
-          </Link>
-        </div>
-      )}
-    </header>
-    <Component {...pageProps} />
-  </div>;
+      <Component {...pageProps} />
+    </div>
+  );
 }

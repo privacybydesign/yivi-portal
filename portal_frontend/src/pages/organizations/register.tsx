@@ -104,14 +104,10 @@ export default function RegisterOrganization() {
       <div className="relative size-24">
         <Avatar className="!size-24">
           <AvatarImage
-            src={logo ? URL.createObjectURL(logo) : ""}
+            src={logo ? URL.createObjectURL(logo) : "/logo-placeholder.svg"}
             className="rounded-full border object-contain"
           />
-          <AvatarFallback>
-            {/* {logo
-              ? 'Logo Preview'
-              : <span className="cursor-pointer whitespace-nowrap rounded-md text-sm font-medium transition-colors bg-primary text-primary-foreground shadow hover:bg-primary/90 p-1">Select logo</span>} */}
-          </AvatarFallback>
+          <AvatarFallback></AvatarFallback>
         </Avatar>
 
         {logo && (
@@ -135,15 +131,15 @@ export default function RegisterOrganization() {
   };
 
   return (
-    <div className="container mx-auto p-4">
+    <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8">
       <div className="flex flex-col gap-6 mb-6">
-        <h1 className="text-2xl font-bold mb-6">Register Organization</h1>
+        <h1 className="text-2xl font-bold mb-1">Register Organization</h1>
         <Form {...form}>
           <form action={register} className="space-y-4">
             <FormField
               control={form.control}
               name="logo"
-              render={({ field: { value, onChange, ...field } }) => (
+              render={({ field: { onChange } }) => (
                 <FormItem className="grid md:grid-cols-2 items-center md:gap-4">
                   <div className="py-1">
                     <Label className="">Organization Logo</Label>
@@ -151,11 +147,10 @@ export default function RegisterOrganization() {
                       Upload your logo (PNG or JPEG).
                     </FormDescription>
                   </div>
-                  <div className="grid grid-flow-col items-center justify-start gap-4">
+                  <div className="flex items-center justify-between w-full">
                     <LogoPreview {...form} />
-
                     <Label>
-                      <div className="cursor-pointer whitespace-nowrap rounded-md text-sm font-medium transition-colors bg-primary text-primary-foreground shadow hover:bg-primary/90 h-9 px-4 py-2 flex items-center gap-2">
+                      <div className="inline-block cursor-pointer whitespace-nowrap rounded-md text-sm font-medium transition-colors bg-primary text-primary-foreground shadow hover:bg-primary/90 h-9 px-4 py-2 flex items-center gap-2">
                         <UploadIcon size={12} strokeWidth={3} />
                         Select logo
                       </div>
@@ -167,7 +162,6 @@ export default function RegisterOrganization() {
                           onChange={(event) =>
                             onChange(event.target.files?.[0])
                           }
-                          {...field}
                         />
                       </FormControl>
                     </Label>
@@ -470,7 +464,7 @@ export default function RegisterOrganization() {
             </fieldset>
 
             <Button type="submit" disabled={pending} className="col-span-2">
-              {pending ? "Submitting..." : "Register Organization"}
+              {pending ? "Submitting..." : "Submit"}
             </Button>
             {formState?.globalError && (
               <div className="col-span-2 text-sm text-red-600 font-medium">
