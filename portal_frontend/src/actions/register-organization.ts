@@ -13,13 +13,12 @@ export const registerOrganization = async (
   formData: FormData
 ): Promise<RegistrationFormState> => {
   try {
-    const response = await axiosInstance.post("/v1/organizations/", formData);
-    const orgSlug = response.data?.slug;
+    await axiosInstance.post("/v1/organizations/", formData);
     return {
       values: formState.values,
       errors: {},
       success: true,
-      redirectTo: `/organizations/success?org=${orgSlug}`,
+      redirectTo: `/organizations/success`,
     };
   } catch (e: unknown) {
     console.log(e);

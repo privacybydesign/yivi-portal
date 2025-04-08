@@ -1,3 +1,5 @@
+"use client"
+
 export default function RegistrationSuccess() {
   return (
     <div className="container p-8">
