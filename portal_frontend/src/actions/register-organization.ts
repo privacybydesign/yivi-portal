@@ -2,11 +2,29 @@
 
 import { AxiosError } from "axios";
 import { axiosInstance } from "../services/axiosInstance";
-import {
-  RegistrationInputs,
-  RegistrationFormState,
-} from "../pages/organizations/register";
 import { FieldErrors } from "react-hook-form";
+
+export type RegistrationInputs = {
+  name_en: string;
+  name_nl: string;
+  slug: string;
+  registration_number: string;
+  street: string;
+  housenumber: string;
+  postal_code: string;
+  city: string;
+  country: string;
+  trade_names: string[];
+  logo: File | undefined;
+};
+
+export type RegistrationFormState = {
+  values: RegistrationInputs;
+  errors: Partial<FieldErrors<RegistrationInputs>>;
+  globalError?: string;
+  success?: boolean;
+  redirectTo?: string;
+};
 
 export const registerOrganization = async (
   formState: RegistrationFormState,
