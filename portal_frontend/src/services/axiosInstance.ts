@@ -1,6 +1,9 @@
-import axios from 'axios';
-import getConfig from 'next/config';
-import useStore from '../store';
+// utils/api.js
+import axios from "axios";
+import getConfig from "next/config";
+import useStore from "../store";
+import Router from "next/router";
+
 const { publicRuntimeConfig } = getConfig();
 
 export const axiosInstance = axios.create({
@@ -9,13 +12,15 @@ export const axiosInstance = axios.create({
 
 axiosInstance.interceptors.request.use(
   (config) => {
-    // Access token directly from Zustand store
     const { accessToken } = useStore.getState();
 
     if (accessToken) {
       config.headers.Authorization = `Bearer ${accessToken}`;
+    } else {
+      Router.push("/access-denied");
     }
 
+    config.headers.Authorization = `Bearer ${accessToken}`;
     return config;
   },
   (error) => Promise.reject(error)
