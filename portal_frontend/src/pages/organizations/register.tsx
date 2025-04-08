@@ -1,14 +1,15 @@
-import { useActionState, useState } from 'react';
+import { useActionState, useEffect, useState } from 'react';
 import { Button } from '@/src/components/ui/button';
 import { Input } from '@/src/components/ui/input';
 import { generateSlug } from '@/lib/utils';
-import { registerOrganization } from '@/src/actions/register-organization';
+import { registerOrganization} from '@/src/actions/register-organization';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/src/components/ui/form';
-import { Control, FieldErrors, useFieldArray, useForm, useWatch } from 'react-hook-form';
+import { Control, UseFormSetValue, useFieldArray, useForm, useWatch, FieldErrors } from 'react-hook-form';
 import { Avatar, AvatarFallback, AvatarImage } from '@/src/components/ui/avatar';
 import { XIcon } from 'lucide-react';
 
-type RegistrationInputs = {
+
+export type RegistrationInputs = {
   name_en: string;
   name_nl: string;
   slug: string;
@@ -22,11 +23,15 @@ type RegistrationInputs = {
   logo: File | undefined;
 };
 
-export default function RegisterOrganization() {
-  const [formState, register, pending] = useActionState<{ values: RegistrationInputs; errors: Partial<FieldErrors>; }, FormData>(
-    registerOrganization,
-    {
-      values: {
+export type RegistrationFormState = {
+  values: RegistrationInputs;
+  errors: Partial<FieldErrors<RegistrationInputs>>;
+  globalError?: string;
+  success?: boolean;
+  redirectTo?: string;
+};
+
+const defaultFormInput:RegistrationInputs = {
         name_en: '',
         name_nl: '',
         slug: '',
@@ -37,16 +42,39 @@ export default function RegisterOrganization() {
         city: '',
         country: '',
         trade_names: [],
-        logo: undefined,
-      },
+        logo: undefined,}
+
+export default function RegisterOrganization() {
+  const [formState, register, pending] = useActionState<RegistrationFormState, FormData>(
+    registerOrganization,
+    {
+      values: defaultFormInput,
       errors: {}
     }
   );
 
   const form = useForm<RegistrationInputs>({
-    errors: formState.errors,
-    values: formState.values,
+    defaultValues: formState?.values ?? defaultFormInput,
   });
+
+useEffect(() => {
+    form.clearErrors();
+
+  if (formState?.errors) {
+    (Object.entries(formState.errors) as [keyof RegistrationInputs, { message?: string }][]).forEach(
+      ([field, error]) => {
+        if (error?.message) {
+          form.setError(field, {
+            type: 'server',
+            message: error?.message,
+          });
+        }
+      }
+    );
+  }
+}, [formState?.errors, form]);
+
+
   const tradeNames = useFieldArray<RegistrationInputs>({
     control: form.control,
     name: 'trade_names' as never
@@ -54,7 +82,7 @@ export default function RegisterOrganization() {
 
   const [tradeNameInput, setTradeNameInput] = useState('');
 
-  const LogoPreview = ({ control, setValue }: { control: Control<RegistrationInputs>; setValue: any; }) => {
+  const LogoPreview = ({ control, setValue }: { control: Control<RegistrationInputs>; setValue: UseFormSetValue<RegistrationInputs>; }) => {
     const logo = useWatch({ control, name: "logo" });
 
     return (
@@ -114,8 +142,7 @@ export default function RegisterOrganization() {
                   <FormDescription>
                     Formal name of your organization in English.
                   </FormDescription>
-                  {formState.errors.name_en &&
-                    <FormMessage className="text-sm text-red-600 mt-1">{!formState.errors.name_en.message}</FormMessage>}
+                    <FormMessage  />
                 </FormItem>
               )} />
 
@@ -128,8 +155,7 @@ export default function RegisterOrganization() {
                   <FormDescription>
                     Formal name of your organization in Dutch.
                   </FormDescription>
-                  {formState.errors.name_nl &&
-                    <FormMessage className="text-sm text-red-600 mt-1">{!formState.errors.name_nl.message}</FormMessage>}
+                    <FormMessage />
                 </FormItem>
               )} />
 
@@ -142,8 +168,7 @@ export default function RegisterOrganization() {
                   <FormDescription>
                     Auto-generated from the name. Lowercase, hyphens instead of spaces, no special characters.
                   </FormDescription>
-                  {formState.errors.slug &&
-                    <FormMessage className="text-sm text-red-600 mt-1">{!formState.errors.slug.message}</FormMessage>}
+                    <FormMessage />
                 </FormItem>
               )} />
 
@@ -156,8 +181,7 @@ export default function RegisterOrganization() {
                   <FormDescription>
                     e.g. KVK number or similar official registration code.
                   </FormDescription>
-                  {formState.errors.registration_number &&
-                    <FormMessage className="text-sm text-red-600 mt-1">{!formState.errors.registration_number.message}</FormMessage>}
+                    <FormMessage />
                 </FormItem>
               )} />
 
@@ -175,8 +199,7 @@ export default function RegisterOrganization() {
                   <FormDescription>
                     Click &quot;Add&quot; to insert trade names. You can remove them below.
                   </FormDescription>
-                  {formState.errors.trade_names &&
-                    <FormMessage className="text-sm text-red-600 mt-1">{!formState.errors.trade_names.message}</FormMessage>}
+                    <FormMessage />
                 </FormItem>
               )} />
 
@@ -193,7 +216,7 @@ export default function RegisterOrganization() {
                 )} />
               ))}
 
-              <FormField control={form.control} name="logo" render={({ field: { value, onChange, ...field } }) => (
+              <FormField control={form.control} name="logo" render={({ field: { onChange } }) => (
                 <FormItem className="flex items-center gap-2">
                   <div className="grow">
                     <FormLabel>Organization Logo
@@ -204,13 +227,11 @@ export default function RegisterOrganization() {
                           accept="image/png,image/jpeg"
                           className="hidden"
                           onChange={(event) => onChange(event.target.files?.[0])}
-                          {...field}
                         />
                       </FormControl>
                     </FormLabel>
                     <FormDescription>Upload your logo (PNG or JPEG).</FormDescription>
-                    {formState.errors.logo &&
-                      <FormMessage className="text-sm text-red-600 mt-1">{!formState.errors.logo.message}</FormMessage>}
+                      <FormMessage />
                   </div>
                 </FormItem>
               )} />
@@ -268,6 +289,12 @@ export default function RegisterOrganization() {
             <Button type="submit" disabled={pending}>
               {pending ? 'Submitting...' : 'Register Organization'}
             </Button>
+            {formState?.globalError && (
+            <div className="col-span-2 text-sm text-red-600 font-medium">
+              {formState.globalError}
+            </div>
+          )}
+
           </form>
         </Form>
       </div>
