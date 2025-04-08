@@ -1,40 +1,60 @@
-import { useActionState, useState } from 'react';
+import { useActionState, useEffect, useState } from 'react';
 import { Button } from '@/src/components/ui/button';
 import { Input } from '@/src/components/ui/input';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormMessage } from '@/src/components/ui/form';
-import { Card, CardContent, CardHeader, CardTitle } from '@/src/components/ui/card';
 import { Label } from '@/src/components/ui/label';
-import { registerOrganization, RegistrationInputs } from '@/src/actions/register-organization';
+import { registerOrganization, RegistrationFormState, RegistrationInputs } from '@/src/actions/register-organization';
 import { generateSlug } from '@/lib/utils';
-import { Control, FieldErrors, useFieldArray, useForm, UseFormSetValue, useWatch } from 'react-hook-form';
 import { Avatar, AvatarFallback, AvatarImage } from '@/src/components/ui/avatar';
 import { UploadIcon, XIcon } from 'lucide-react';
+import { Control, UseFormSetValue, useFieldArray, useForm, useWatch } from 'react-hook-form';
+
+
+const defaultFormInput: RegistrationInputs = {
+  name_en: '',
+  name_nl: '',
+  slug: '',
+  registration_number: '',
+  street: '',
+  housenumber: '',
+  postal_code: '',
+  city: '',
+  country: '',
+  trade_names: [],
+  logo: undefined,
+};
 
 export default function RegisterOrganization() {
-  const [formState, register, pending] = useActionState<{ values: RegistrationInputs; errors: Partial<FieldErrors>; }, FormData>(
+  const [formState, register, pending] = useActionState<RegistrationFormState, FormData>(
     registerOrganization,
     {
-      values: {
-        name_en: '',
-        name_nl: '',
-        slug: '',
-        registration_number: '',
-        street: '',
-        housenumber: '',
-        postal_code: '',
-        city: '',
-        country: '',
-        trade_names: [],
-        logo: undefined,
-      },
+      values: defaultFormInput,
       errors: {}
     }
   );
 
   const form = useForm<RegistrationInputs>({
-    errors: formState.errors,
-    values: formState.values,
+    defaultValues: formState?.values ?? defaultFormInput,
   });
+
+  useEffect(() => {
+    form.clearErrors();
+
+    if (formState?.errors) {
+      (Object.entries(formState.errors) as [keyof RegistrationInputs, { message?: string; }][]).forEach(
+        ([field, error]) => {
+          if (error?.message) {
+            form.setError(field, {
+              type: 'server',
+              message: error?.message,
+            });
+          }
+        }
+      );
+    }
+  }, [formState?.errors, form]);
+
+
   const tradeNames = useFieldArray<RegistrationInputs>({
     control: form.control,
     name: 'trade_names' as never
@@ -316,6 +336,11 @@ export default function RegisterOrganization() {
             <Button type="submit" disabled={pending} className="col-span-2">
               {pending ? 'Submitting...' : 'Register Organization'}
             </Button>
+            {formState?.globalError && (
+              <div className="col-span-2 text-sm text-red-600 font-medium">
+                {formState.globalError}
+              </div>
+            )}
           </form>
         </Form>
       </div>
