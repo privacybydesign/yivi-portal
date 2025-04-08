@@ -2,29 +2,36 @@
 
 import { AxiosError } from 'axios';
 import { axiosInstance } from '../services/axiosInstance';
+import { FieldErrors } from 'react-hook-form';
 
-export const registerOrganization = async (state: any, formData: FormData) => {
-    console.log(state, formData);
+export type RegistrationInputs = {
+    name_en: string;
+    name_nl: string;
+    slug: string;
+    registration_number: string;
+    street: string;
+    housenumber: string;
+    postal_code: string;
+    city: string;
+    country: string;
+    trade_names: string[];
+    logo: File | undefined;
+};
 
+export const registerOrganization = async (state: { values: RegistrationInputs, errors: Partial<FieldErrors>; }, formData: FormData) => {
     try {
-        const response = await axiosInstance.post('/v1/organizations/', formData);
+        await axiosInstance.post('/v1/organizations/', formData);
 
-        console.debug('response from api', { response });
-    } catch (e: any) {
-        if (e.code === AxiosError.ERR_BAD_REQUEST) {
-            for (const key in e.response.data) {
-                state = {
-                    ...state,
-                    errors: {
-                        ...state.errors,
-                        [key]: { message: e.response.data[key].join(' ') }
-                    }
-                };
+        // TODO: Redirect if it went well
+    } catch (e) {
+        if (e instanceof AxiosError && e.code === AxiosError.ERR_BAD_REQUEST) {
+            for (const key in e.response?.data) {
+                state.errors[key] = { message: e.response.data[key]?.join(' ') };
             }
 
             return state;
         }
     }
 
-    // TODO: Redirect if it went well
+    return state;
 };
