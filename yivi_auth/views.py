@@ -79,7 +79,7 @@ class YiviSessionProxyResultView(APIView):
             if yivi_session_result is None:
                 return Response(status=400, data="Invalid Yivi session token.")
 
-            email = "dibran.mulder@outlook.com"
+            email = yivi_session_result.get("disclosed")[0][0]["rawvalue"]
             logger.info("Yivi session result received for:  " + email)
 
             User = get_user_model()
