@@ -14,7 +14,7 @@ export default function Login() {
   useEffect(() => {
     import("@privacybydesign/yivi-frontend").then((yivi: any) => {
       const web = yivi.newWeb({
-        debugging: false,            // Enable to get helpful output in the browser console
+        debugging: true,            // Enable to get helpful output in the browser console
         element:   '#yivi-web-form', // Which DOM element to render to
       
         // Back-end options
@@ -24,11 +24,13 @@ export default function Login() {
       
           start: {
             url: (o: any) => `${o.url}/session/`,
-            method: 'POST'
+            method: 'POST',
+            credentials: 'include'
           },
           result: {
             url: (o: any, { sessionToken}: any) => `${o.url}/token/${sessionToken}`,
-            method: 'GET'
+            method: 'GET',
+            credentials: 'include'
           }
         }
       });

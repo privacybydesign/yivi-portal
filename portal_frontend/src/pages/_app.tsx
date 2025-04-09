@@ -8,6 +8,7 @@ import useStore from "@/src/store";
 import { useRouter } from "next/navigation";
 import { initials } from "@dicebear/collection";
 import { createAvatar } from "@dicebear/core";
+import { axiosInstance } from "../services/axiosInstance";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -38,11 +39,15 @@ export default function MyApp({ Component, pageProps }: AppProps) {
   }).toString();
 
   const handleLogout = () => {
-    setAccessToken(null);
-    // Add any additional logout logic here
-    // Redirect to login page
-    router.push("/login");
+    axiosInstance
+      .post('/v1/logout')
+      .then(() => {
+        // Redirect to login page
+        setAccessToken(null);
+        router.push("/login");
+      });
   };
+
   return (
     <div className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
       <header className="bg-white border-b border-gray-200">

@@ -4,6 +4,7 @@ import { create } from "zustand";
 import { jwtDecode } from "jwt-decode";
 import { useEffect } from "react";
 import { AuthToken } from "@/src/models/auth_token";
+import { axiosInstance } from "../services/axiosInstance";
 
 interface StateStore {
   accessToken: string | null;
@@ -12,6 +13,7 @@ interface StateStore {
   organizationSlug?: string;
   setAccessToken: (accessToken: string | null) => void;
   initializeAuth: () => void;
+  refreshToken: () => Promise<string | null>;
 }
 
 const useStore = create<StateStore>((set) => ({
@@ -32,15 +34,40 @@ const useStore = create<StateStore>((set) => ({
     set({ accessToken: newToken });
   },
 
-  initializeAuth: () => {
+  refreshToken: async () => {
+    const response = await axiosInstance.post<{ access: string }>('/v1/refreshtoken')
+    if (response.status !== 200) {
+      return null;
+    }
+    const newToken = response.data.access;
+    if (newToken) {
+      const newDecoded = jwtDecode<AuthToken>(newToken);
+      set({
+        accessToken: newToken,
+        email: newDecoded.email,
+        role: newDecoded.role,
+        organizationSlug: newDecoded.organizationId,
+      });
+      localStorage.setItem("accessToken", newToken);
+      return newToken;
+    } else {
+      // Could not refresh — clear auth
+      set({ accessToken: null, email: null, role: undefined, organizationSlug: undefined });
+      localStorage.removeItem("accessToken");
+    }
+    return null;
+  },
+
+  initializeAuth: async () => {
     const savedAccessToken = localStorage.getItem("accessToken");
     if (savedAccessToken) {
       const decoded = jwtDecode<AuthToken>(savedAccessToken);
       const currentTime = Math.floor(Date.now() / 1000);
 
-      if (decoded.exp < currentTime) {
-        localStorage.removeItem("accessToken");
-        set({ accessToken: null, email: null, role: undefined });
+      if (decoded.exp < (currentTime + 60)) {
+        // Try refreshing token
+        await useStore.getState().refreshToken();
+
       } else {
         set({
           accessToken: savedAccessToken,
