@@ -111,8 +111,8 @@ class CondisconAttributeAdmin(admin.ModelAdmin):
 # Relying Party Admin
 @admin.register(RelyingParty)
 class RelyingPartyAdmin(admin.ModelAdmin):
-    list_display = ("organization", "yivi_tme")
-    search_fields = ("organization__name_en", "hostname__hostname")
+    list_display = ("organization", "rp_slug", "yivi_tme")
+    search_fields = ("organization__name_en", "hostnames__hostname")
     list_filter = ("yivi_tme",)
 
 

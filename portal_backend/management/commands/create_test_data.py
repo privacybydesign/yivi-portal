@@ -53,7 +53,7 @@ class Command(BaseCommand):
 
         # Create test organization
         org_id = uuid.uuid4()
-        org, _ = Organization.objects.update_or_create(
+        org, _ = Organization.objects.get_or_create(
             id=org_id,
             defaults={
                 "name_en": "Test Organization",

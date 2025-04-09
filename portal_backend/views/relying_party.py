@@ -66,7 +66,8 @@ class RelyingPartyRegisterView(APIView):
         credential_attributes: Dict[int, List[str]] = {}
 
         for attr in attributes_data:
-            credential_attribute = CredentialAttribute.objects.get(
+            credential_attribute = get_object_or_404(
+                CredentialAttribute,
                 credential__credential_tag=attr["credential_attribute_tag"],
                 name=attr["credential_attribute_name"],
             )
@@ -84,7 +85,9 @@ class RelyingPartyRegisterView(APIView):
 
     def save_rp(self, request: Any, org_slug: str, rp_slug: str) -> RelyingParty:
         yivi_tme = get_object_or_404(
-            YiviTrustModelEnv, environment=request.data.get("trust_model_env")
+            YiviTrustModelEnv,
+            environment=request.data.get("trust_model_env"),
+            trust_model__name="yivi",
         )
         organization = get_object_or_404(Organization, slug=org_slug)
         relying_party = RelyingParty(
@@ -165,14 +168,6 @@ class RelyingPartyRegisterView(APIView):
             condiscon_attr.full_clean()
             condiscon_attr.save()
 
-    def check_existing_rp(self, request: Request, org_slug: str) -> Optional[Response]:
-        if RelyingParty.objects.filter(organization__slug=org_slug).exists():
-            return Response(
-                {"error": "The organization already has a relying party registered"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        return None
-
     @swagger_auto_schema(
         responses={
             201: "Created",
@@ -212,9 +207,6 @@ class RelyingPartyRegisterView(APIView):
     )
     @transaction.atomic
     def post(self, request: Request, org_slug: str) -> Response:
-        existing_rp = self.check_existing_rp(request, org_slug)
-        if existing_rp:
-            return existing_rp
         existing_hostname = check_existing_hostname(request)
         if existing_hostname:
             return existing_hostname
