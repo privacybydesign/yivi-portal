@@ -16,9 +16,8 @@ class Command(BaseCommand):
     help = "Creates test data for development and testing"
 
     def handle(self, *args, **options):
-        # Create test trust model
         trust_model, _ = TrustModel.objects.get_or_create(
-            name="Yivi",
+            name="yivi",
             defaults={
                 "description": "Test trust model for development",
                 "eudi_compliant": False,
@@ -28,7 +27,6 @@ class Command(BaseCommand):
             self.style.SUCCESS(f"Created trust model: {trust_model.name}")
         )
 
-        # Create trust model environments
         yivi_tme, _ = YiviTrustModelEnv.objects.get_or_create(
             trust_model=trust_model,
             environment="production",
@@ -51,7 +49,6 @@ class Command(BaseCommand):
             )
         )
 
-        # Create test organization
         org_id = uuid.uuid4()
         org, _ = Organization.objects.get_or_create(
             id=org_id,
@@ -60,22 +57,23 @@ class Command(BaseCommand):
                 "name_nl": "Testorganisatie",
                 "slug": "test-organization",
                 "registration_number": "12345678",
-                "contact_address": "123 Test Street\nTest City\nTest Country",
+                "country": "NL",
+                "city": "Utrecht",
+                "house_number": "54",
+                "postal_code": "24343",
+                "street": "test",
                 "is_verified": True,
                 "verified_at": timezone.now(),
-                "trade_names": ["Test Inc.", "Test LLC"],
             },
         )
         self.stdout.write(self.style.SUCCESS(f"Created organization: {org.name_en}"))
 
-        # Create test user
         user_email = "test@example.com"
         user, _ = User.objects.get_or_create(
             email=user_email, defaults={"organization": org, "role": "admin"}
         )
         self.stdout.write(self.style.SUCCESS(f"Created user: {user.email}"))
 
-        # Create test attestation provider
         provider, _ = AttestationProvider.objects.get_or_create(
             organization=org,
             yivi_tme=yivi_tme,
@@ -85,14 +83,17 @@ class Command(BaseCommand):
                 "shortname_nl": "Test Provider NL",
                 "contact_email": f"contact-{org.id}@example.com",
                 "base_url": "https://test.example.com",
+                "ready": True,
+                "ready_at": timezone.now(),
+                "reviewed_accepted": True,
+                "reviewed_at": timezone.now(),
+                "published_at": timezone.now(),
             },
         )
-
         self.stdout.write(
             self.style.SUCCESS(f"Created attestation provider: {provider}")
         )
 
-        # Create test credentials
         email_credential, _ = Credential.objects.get_or_create(
             attestation_provider=provider,
             credential_tag="email",
@@ -115,7 +116,6 @@ class Command(BaseCommand):
             },
         )
 
-        # Create test credential attributes
         email_attr, _ = CredentialAttribute.objects.get_or_create(
             credential=email_credential, name="pbdf.pbdf.email.email"
         )
@@ -143,7 +143,6 @@ class Command(BaseCommand):
             )
         )
 
-        # Print test details
         self.stdout.write(self.style.SUCCESS("=" * 50))
         self.stdout.write(self.style.SUCCESS("TEST DATA CREATED SUCCESSFULLY"))
         self.stdout.write(self.style.SUCCESS(f"Organization ID: {org.id}"))

@@ -22,7 +22,6 @@ from ..models.models import (
     Condiscon,
     CondisconAttribute,
     CredentialAttribute,
-    Status,
 )
 
 
@@ -214,7 +213,13 @@ class RelyingPartyRegisterView(APIView):
         relying_party = self.save_rp(
             request, org_slug, rp_slug=request.data.get("rp_slug")
         )
-        rp_status = Status.objects.get(relying_party=relying_party).rp_status
+        relying_party.ready = False
+        relying_party.reviewed_accepted = None
+        relying_party.reviewed_at = None
+        relying_party.rejection_remarks = None
+        relying_party.published_at = None
+        relying_party.save()
+
         hostnames = self.save_hostname(request, relying_party)
         attributes_data = request.data.get("attributes", [])
         condiscon = self.save_condiscon(request, attributes_data, relying_party)
@@ -231,7 +236,11 @@ class RelyingPartyRegisterView(APIView):
                 "slug": str(relying_party.rp_slug),
                 "message": "Relying party registration successful",
                 "hostnames": hostname_data,
-                "current_status": rp_status,
+                "current_status": {
+                    "ready": relying_party.ready,
+                    "reviewed_accepted": relying_party.reviewed_accepted,
+                    "published_at": relying_party.published_at,
+                },
             },
             status=status.HTTP_201_CREATED,
         )
@@ -272,9 +281,6 @@ class RelyingPartyDetailView(APIView):
         for condiscon in condiscons:
             CondisconAttribute.objects.filter(condiscon=condiscon).delete()
         condiscons.delete()
-
-        Status.objects.filter(relying_party=relying_party).delete()
-
         relying_party.delete()
 
         return Response(status=status.HTTP_204_NO_CONTENT)
@@ -323,7 +329,6 @@ class RelyingPartyUpdateView(APIView):
     )
     def patch(self, request: Request, org_slug: str, rp_slug: str) -> Response:
         environment: Optional[str] = request.data.get("environment")
-        print(rp_slug, environment, org_slug)
 
         relying_party: RelyingParty = get_object_or_404(
             RelyingParty,
@@ -342,12 +347,9 @@ class RelyingPartyUpdateView(APIView):
                 return existing_hostname
 
             if isinstance(hostname_data, list):
-                # delete existing hostnames
                 RelyingPartyHostname.objects.filter(
                     relying_party=relying_party
                 ).delete()
-
-                # create new hostnames
                 hostnames: List[RelyingPartyHostname] = []
                 for hostname_text in hostname_data:
                     hostname_obj: RelyingPartyHostname = (
@@ -404,65 +406,84 @@ class RelyingPartyUpdateView(APIView):
                         ". Hostname added. Please add a DNS record with the challenge."
                     )
 
-            if (
-                request.data.get("context_description_en") is not None
-                or request.data.get("context_description_nl") is not None
-            ):
-                condiscon: Condiscon = get_object_or_404(
-                    Condiscon, relying_party=relying_party
+        if (
+            request.data.get("context_description_en") is not None
+            or request.data.get("context_description_nl") is not None
+        ):
+            condiscon: Condiscon = get_object_or_404(
+                Condiscon, relying_party=relying_party
+            )
+            if request.data.get("context_description_en") is not None:
+                condiscon.context_description_en = request.data.get(
+                    "context_description_en"
                 )
-                if request.data.get("context_description_en") is not None:
-                    condiscon.context_description_en = request.data.get(
-                        "context_description_en"
-                    )
-                if request.data.get("context_description_nl") is not None:
-                    condiscon.context_description_nl = request.data.get(
-                        "context_description_nl"
-                    )
-                condiscon.save()
-
-            if request.data.get("attributes") is not None:
-                attributes_data: List[Dict[str, str]] = request.data.get("attributes")
-                condiscon = get_object_or_404(Condiscon, relying_party=relying_party)
-                CondisconAttribute.objects.filter(condiscon=condiscon).delete()
-                self.save_condiscon_attributes(condiscon, attributes_data)
-                condiscon.condiscon = self.make_condiscon_from_attributes(
-                    attributes_data
+            if request.data.get("context_description_nl") is not None:
+                condiscon.context_description_nl = request.data.get(
+                    "context_description_nl"
                 )
-                condiscon.save()
+            condiscon.save()
 
-            if request.data.get("trust_model_env") is not None:
-                yivi_tme: YiviTrustModelEnv = get_object_or_404(
-                    YiviTrustModelEnv, environment=request.data.get("trust_model_env")
-                )
-                relying_party.yivi_tme = yivi_tme
-                relying_party.save()
+        if request.data.get("attributes") is not None:
+            attributes_data: List[Dict[str, str]] = request.data.get("attributes")
+            condiscon = get_object_or_404(Condiscon, relying_party=relying_party)
+            CondisconAttribute.objects.filter(condiscon=condiscon).delete()
+            self.save_condiscon_attributes(condiscon, attributes_data)
+            condiscon.condiscon = self.make_condiscon_from_attributes(attributes_data)
+            condiscon.save()
 
-            if "ready" in request.data:
-                rp_status: Status = Status.objects.get(relying_party=relying_party)
-                rp_status.ready = request.data.get("ready")
-                rp_status.ready_at = (
-                    timezone.now() if request.data.get("ready") else None
-                )
-                rp_status.save()
+        if request.data.get("trust_model_env") is not None:
+            yivi_tme: YiviTrustModelEnv = get_object_or_404(
+                YiviTrustModelEnv, environment=request.data.get("trust_model_env")
+            )
+            relying_party.yivi_tme = yivi_tme
+            relying_party.save()
 
-            # if any of these fields are updated, set ready to False. User must explicitly set ready to make status PENDING FOR REVIEW
-            elif any(
-                field in request.data
-                for field in [
-                    "hostname",
-                    "context_description_en",
-                    "context_description_nl",
-                    "attributes",
-                    "trust_model_env",
-                ]
-            ):
-                rp_status = Status.objects.get(relying_party=relying_party)
-                rp_status.ready = False
-                rp_status.save()
+        if "ready" in request.data:
+            relying_party.ready = request.data.get("ready")
+            relying_party.ready_at = timezone.now() if relying_party.ready else None
+            relying_party.reviewed_accepted = None
+            relying_party.reviewed_at = None
+            relying_party.rejection_remarks = None
+            relying_party.published_at = None
+            relying_party.save()
 
-            response_data["message"] = response_message
-            return Response(response_data, status=status.HTTP_200_OK)
+        # if any of these fields are updated, set ready to False. User must explicitly set ready to make status PENDING FOR REVIEW
+        elif any(
+            field in request.data
+            for field in [
+                "hostname",
+                "context_description_en",
+                "context_description_nl",
+                "attributes",
+                "trust_model_env",
+            ]
+        ):
+            relying_party.ready = False
+            relying_party.ready_at = None
+            relying_party.reviewed_accepted = None
+            relying_party.reviewed_at = None
+            relying_party.rejection_remarks = None
+            relying_party.published_at = None
+            relying_party.save()
+
+        response_data["message"] = response_message
+        return Response(response_data, status=status.HTTP_200_OK)
+
+
+class RelyingPartyListView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request: Request, org_slug: str):
+        organization = get_object_or_404(Organization, slug=org_slug)
+        relying_parties = RelyingParty.objects.filter(organization=organization)
+        serialized = {
+            "relying_parties": [
+                {"rp_slug": rp.rp_slug, "environment": rp.yivi_tme.environment}
+                for rp in relying_parties
+            ]
+        }
+
+        return Response(serialized)
 
 
 class RelyingPartyHostnameStatusView(APIView):

@@ -18,6 +18,7 @@ from portal_backend.views.relying_party import (
     RelyingPartyDetailView,
     RelyingPartyHostnameStatusView,
     RelyingPartyUpdateView,
+    RelyingPartyListView,
 )
 from rest_framework import permissions
 from drf_yasg.views import get_schema_view  # type: ignore
@@ -59,6 +60,11 @@ urlpatterns = [
         name="organization-maintainers",
     ),
     # Relying Party
+    path(
+        "v1/yivi/organizations/<str:org_slug>/relying-party/info",
+        RelyingPartyListView.as_view(),
+        name="organization-register-rp",
+    ),
     path(
         "v1/yivi/organizations/<str:org_slug>/relying-party/",
         RelyingPartyRegisterView.as_view(),

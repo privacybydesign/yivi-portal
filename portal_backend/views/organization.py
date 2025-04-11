@@ -92,9 +92,12 @@ class OrganizationListView(APIView):
     @transaction.atomic
     def post(self, request: Request) -> Response:
         """Creates an organization."""
+
         email = request.user.email
         logger.info("Creating a new organization")
         serializer = OrganizationSerializer(data=request.data)
+        print(request.data, "serialierorg")
+
         if not serializer.is_valid():
             logger.warning("Invalid organization data: %s", serializer.errors)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -171,7 +174,6 @@ class OrganizationMaintainersView(APIView):
     def post(self, request: Request, pk: int) -> Response:
         """Add a maintainer to an organization"""
         organization = get_object_or_404(Organization, pk=pk)
-
         email: Optional[str] = request.data.get("email")
 
         if not email:

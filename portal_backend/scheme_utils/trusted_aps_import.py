@@ -1,14 +1,14 @@
-import xmltodict
+import xmltodict  # type: ignore
 import json
 import os
-from dotenv import load_dotenv
+from dotenv import load_dotenv  # type: ignore
 from portal_backend.models.models import (
     YiviTrustModelEnv,
     AttestationProvider,
 )
 from django.db import transaction
 import logging
-import portal_backend.import_schemes.import_utils as import_utils
+import portal_backend.scheme_utils.import_utils as import_utils
 
 
 logger = logging.getLogger(__name__)

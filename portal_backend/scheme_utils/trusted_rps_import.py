@@ -5,8 +5,9 @@ from portal_backend.models.models import (
     RelyingParty,
     RelyingPartyHostname,
 )
+from django.utils import timezone
 import logging
-import portal_backend.import_schemes.import_utils as import_utils
+import portal_backend.scheme_utils.import_utils as import_utils
 
 
 logger = logging.getLogger(__name__)
@@ -47,12 +48,18 @@ def create_rp(
     rp_dict: dict,
     environment: str,
 ) -> RelyingParty:
-    """
-    Create or update a RelyingParty object in the database and return the object"""
     if not org or not yivi_tme:
         raise ValueError("Missing organization or trust model environment")
 
+    if not org.pk:
+        org.save()
+    if not yivi_tme.pk:
+        yivi_tme.save()
+
     try:
+        now = timezone.now()
+        print("org", org)
+        print("yivitme", yivi_tme)
         rp, rp_created = RelyingParty.objects.update_or_create(
             organization=org,
             rp_slug=org.slug,
@@ -60,8 +67,14 @@ def create_rp(
             defaults={
                 "approved_rp_details": rp_dict,
                 "published_rp_details": rp_dict,
+                "ready": True,
+                "ready_at": now,
+                "reviewed_accepted": None,
+                "reviewed_at": now,
+                "published_at": now,
             },
         )
+        rp.save(skip_import_approve=True)
 
         logger.info(
             f"{'Created' if rp_created else 'Updated'} Relying Party: {org} in environment {environment}"
