@@ -39,6 +39,7 @@ class OrganizationSerializer(CountryFieldMixin, serializers.ModelSerializer):
             "house_number",
             "street",
             "postal_code",
+            "city",
         ]
         read_only_fields = ["is_verified"]
 

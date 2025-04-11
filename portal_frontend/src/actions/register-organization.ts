@@ -10,7 +10,7 @@ export type RegistrationInputs = {
   slug: string;
   registration_number: string;
   street: string;
-  housenumber: string;
+  house_number: string;
   postal_code: string;
   city: string;
   country: string;
