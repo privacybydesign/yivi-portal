@@ -4,7 +4,6 @@ from .models import (
     TrustModel,
     User,
     YiviTrustModelEnv,
-    Status,
     RelyingPartyHostname,
     Condiscon,
     AttestationProvider,
@@ -53,12 +52,6 @@ class TrustModelSerializer(serializers.ModelSerializer):
 class YiviTrustModelEnvSerializer(serializers.ModelSerializer):
     class Meta:
         model = YiviTrustModelEnv
-        fields = "__all__"
-
-
-class StatusSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Status
         fields = "__all__"
 
 

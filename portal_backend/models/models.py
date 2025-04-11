@@ -149,9 +149,14 @@ class AttestationProvider(models.Model):
     shortname_nl = models.CharField(max_length=100, null=True, blank=True)
     contact_email = models.EmailField(max_length=255, null=True, blank=True)
     base_url = models.URLField(null=True, blank=True)
-    # what will be added to issuers scheme
+    ready = models.BooleanField(default=False)
+    ready_at = models.DateTimeField(null=True, blank=True)
+    reviewed_accepted = models.BooleanField(null=True, default=False)
+    reviewed_at = models.DateTimeField(null=True, blank=True)
+    rejection_remarks = models.TextField(blank=True, null=True)
+    published_at = models.DateTimeField(null=True, blank=True)
     approved_ap_details = models.JSONField(null=True)
-    published_ap_details = models.JSONField(null=True)  # what is actually published
+    published_ap_details = models.JSONField(null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     last_updated_at = models.DateTimeField(auto_now=True)
 
@@ -160,19 +165,54 @@ class AttestationProvider(models.Model):
 
     @property
     def new_ap_details(self):
-        requestor_scheme_entry = {
+        ap_scheme_entry = {
             "id": self.id,
             "name": {"en": self.organization.name_en, "nl": self.organization.name_nl},
             "shortname": {"en": self.shortname_en, "nl": self.shortname_nl},
-            "logo": self.organization.logo.url,  # will need to be the hash of the logo
+            "logo": (
+                self.organization.logo.url
+                if self.organization.logo and self.organization.logo.name
+                else None
+            ),
             "base_url": self.base_url,
             "scheme": self.yivi_tme.environment,
         }
-        return requestor_scheme_entry
+        return ap_scheme_entry
 
     @property
-    def published(self):
-        pass
+    def status(self) -> str:
+        if self.reviewed_accepted is True and self.published_at:
+            return StatusChoices.PUBLISHED
+        if self.reviewed_accepted is True:
+            return StatusChoices.ACCEPTED
+        if self.reviewed_accepted is False:
+            return StatusChoices.REJECTED
+        if self.ready:
+            return StatusChoices.PENDING_FOR_REVIEW
+        return StatusChoices.DRAFT
+
+    def save(self, *args, **kwargs):
+        if self.ready and not self.ready_at:
+            self.ready_at = timezone.now()
+        elif not self.ready:
+            self.ready_at = None
+            self.reviewed_accepted = None
+            self.reviewed_at = None
+            self.rejection_remarks = None
+            self.published_at = None
+
+        previous = (
+            AttestationProvider.objects.filter(pk=self.pk).first() if self.pk else None
+        )
+
+        if previous and not previous.reviewed_accepted and self.reviewed_accepted:
+            self.approved_ap_details = self.new_ap_details
+            self.reviewed_at = timezone.now()
+        elif not previous and self.reviewed_accepted:
+            self.approved_ap_details = self.new_ap_details
+            self.reviewed_at = timezone.now()
+
+        super().save(*args, **kwargs)
 
 
 class RelyingParty(models.Model):
@@ -187,7 +227,12 @@ class RelyingParty(models.Model):
     organization = models.ForeignKey(
         Organization, on_delete=models.CASCADE, related_name="relying_parties"
     )
-    # what will be added to requestors scheme (formerly called scheme data)
+    ready = models.BooleanField(default=False)
+    ready_at = models.DateTimeField(null=True, blank=True)
+    reviewed_accepted = models.BooleanField(null=True, default=None)
+    reviewed_at = models.DateTimeField(null=True, blank=True)
+    rejection_remarks = models.TextField(blank=True, null=True)
+    published_at = models.DateTimeField(null=True, blank=True)
     approved_rp_details = models.JSONField(null=True, default=None, blank=True)
     published_rp_details = models.JSONField(null=True, default=None, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -197,34 +242,53 @@ class RelyingParty(models.Model):
         return f"{self.organization.name_en}"
 
     @property
-    def new_rp_details(self):
+    def rp_details(self):
         hostname = RelyingPartyHostname.objects.filter(relying_party=self).first()
         requestor_scheme_entry = {
             "id": self.id,
             "name": {"en": self.organization.name_en, "nl": self.organization.name_nl},
-            "logo": self.organization.logo.url,  # will need to be the hash of the logo
-            # right now the verifier can only have one hostname
+            "logo": (
+                self.organization.logo.url
+                if self.organization.logo and self.organization.logo.name
+                else None
+            ),
             "hostnames": [hostname.hostname],
             "scheme": self.yivi_tme.environment,
         }
         return requestor_scheme_entry
 
-    # construct new rp details based on RP hostname , condiscon and rest of needed data
-
-    def approve(self):
-        if not self.status.ready:
-            raise ValidationError(
-                "Relying Party must be marked as ready before approving."
-            )
-
-        self.approved_rp_details = self.new_rp_details
-        self.status.reviewed_accepted = True
-        self.status.reviewed_at = timezone.now()
-
     @property
-    def published(self):
-        # check requestors json and see if the rp with approved_rp_details is in there
-        pass
+    def status(self) -> str:
+        if self.reviewed_accepted is True and self.published_at:
+            return StatusChoices.PUBLISHED
+        if self.reviewed_accepted is True:
+            return StatusChoices.ACCEPTED
+        if self.reviewed_accepted is False:
+            return StatusChoices.REJECTED
+        if self.ready:
+            return StatusChoices.PENDING_FOR_REVIEW
+        return StatusChoices.DRAFT
+
+    def save(self, *args, skip_import_approve=False, **kwargs):
+        if self.ready and not self.ready_at:
+            self.ready_at = timezone.now()
+        elif not self.ready:
+            self.ready_at = None
+            self.reviewed_accepted = None
+            self.reviewed_at = None
+            self.rejection_remarks = None
+            self.published_at = None
+
+        previous = RelyingParty.objects.filter(pk=self.pk).first() if self.pk else None
+
+        if previous and not previous.reviewed_accepted and self.reviewed_accepted:
+            self.approved_rp_details = self.rp_details
+            self.reviewed_at = timezone.now()
+        elif not previous and self.reviewed_accepted:
+            self.approved_rp_details = self.rp_details
+            self.reviewed_at = timezone.now()
+
+        super().save(*args, **kwargs)
 
 
 class StatusChoices(models.TextChoices):
@@ -237,113 +301,6 @@ class StatusChoices(models.TextChoices):
     PUBLISHED = "published", "Published"
     # the ap or rp became invalid after being published, possibly due to a failure in dns_challenge  (for the rp)
     INVALIDATED = "invalidated", "Invalidated"
-
-
-class Status(models.Model):
-    class Meta:
-        verbose_name = "Status"
-        verbose_name_plural = "Statuses"
-        constraints = [
-            CheckConstraint(
-                check=Q(relying_party__isnull=False, attestation_provider__isnull=True)
-                | Q(relying_party__isnull=True, attestation_provider__isnull=False),
-                name="either_rp_or_ap",
-            )
-        ]
-
-    ready = models.BooleanField(default=False)
-    ready_at = models.DateTimeField(null=True, blank=True)
-    reviewed_accepted = models.BooleanField(null=True, default=None)
-    reviewed_at = models.DateTimeField(null=True, blank=True)
-    rejection_remarks = models.TextField(blank=True, null=True)
-    published_at = models.DateTimeField(null=True, blank=True)
-    relying_party = models.OneToOneField(
-        RelyingParty,
-        on_delete=models.CASCADE,
-        related_name="status",
-        null=True,
-        blank=True,
-    )
-    attestation_provider = models.OneToOneField(
-        AttestationProvider,
-        on_delete=models.CASCADE,
-        related_name="status",
-        null=True,
-        blank=True,
-    )
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self._initial_ready = self.ready
-        self._initial_reviewed_accepted = self.reviewed_accepted
-        self._initial_rejection_remarks = None
-
-    def clean(self):
-        if self.ready:
-            if self.relying_party:
-                has_hostname = RelyingPartyHostname.objects.filter(
-                    relying_party=self.relying_party
-                ).exists()
-                if not has_hostname:
-                    raise ValidationError(
-                        "No hostname specified for the Relying Party."
-                    )
-
-                has_condiscon = Condiscon.objects.filter(
-                    relying_party=self.relying_party
-                ).exists()
-                if not has_condiscon:
-                    raise ValidationError(
-                        "No condiscon specified for the Relying Party."
-                    )
-
-            elif self.attestation_provider:
-                pass
-
-    def save(self, *args, **kwargs):
-        if self.ready and not self._initial_ready:
-            self.ready_at = timezone.now()
-        elif self._initial_ready and not self.ready:  # marked as draft again
-            self.ready_at = None
-            self.reviewed_accepted = None
-            self.reviewed_at = None
-            self.rejection_remarks = None
-            self.published_at = None
-        super().save(*args, **kwargs)
-
-    def __str__(self):
-        if self.relying_party:
-            entity_name = self.relying_party.organization.name_en
-        elif self.attestation_provider:
-            entity_name = self.attestation_provider.organization.name_en
-        else:
-            entity_name = "Unknown"
-
-        return f"Status {entity_name} - Ready: {self.ready}"
-
-    @property
-    def rp_status(self):
-        rphostname = RelyingPartyHostname.objects.filter(
-            relying_party=self.relying_party
-        ).first()
-        if not rphostname:
-            return StatusChoices.DRAFT
-        # if rp is published and then dns_challenge is invalidated
-        elif rphostname and self.relying_party.published and rphostname.invalidated:
-            return StatusChoices.INVALIDATED
-        elif self.ready and self.relying_party.published:
-            return StatusChoices.PUBLISHED
-        elif self.reviewed_accepted is False:
-            return StatusChoices.REJECTED
-        elif self.reviewed_accepted is True:
-            return StatusChoices.ACCEPTED
-        elif self.ready:
-            return StatusChoices.PENDING_FOR_REVIEW
-        return StatusChoices.DRAFT
-
-    @property
-    def ap_status(self):
-        pass
 
 
 class Credential(models.Model):
