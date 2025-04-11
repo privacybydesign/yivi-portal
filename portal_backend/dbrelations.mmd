@@ -53,8 +53,16 @@ erDiagram
         string shortname_nl
         string contact_email
         string base_url
+        boolean ready
+        time ready_at 
+        boolean reviewed_accepted 
+        time reviewed_at 
+        text rejection_remarks
+        time published_at  
         JSON approved_ap_details
         JSON published_ap_details
+        time created_at 
+        time last_updated_at 
     }
 
     Credential {
@@ -88,23 +96,17 @@ erDiagram
         string rp_slug
         int yivi_tme_id FK
         int org_id FK     
+        boolean ready
+        time ready_at
+        boolean reviewed_accepted
+        time reviewed_at
+        text rejection_remarks  
         JSON approved_rp_details
         JSON published_rp_details
+        time created_at
+        time last_updated_at
     }
 
-    Status {
-        int id PK
-        int AP_id FK
-        int RP_id FK
-        datetime created_at
-        datetime last_updated_at
-        boolean ready
-        datetime ready_at
-        boolean reviewed_accepted
-        datetime reviewed_at
-        text rejection_remarks
-        datetime published_at
-    }
 
     Organization {
         uuid id PK
@@ -112,8 +114,10 @@ erDiagram
         string name_nl
         string slug 
         string registration_number
-        text contact_address
-        json trade_names
+        string country
+        string city
+        string street
+        string postal_code
         image logo
         verified boolean
         datetime verified_at 

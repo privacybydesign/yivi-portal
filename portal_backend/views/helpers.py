@@ -34,16 +34,19 @@ class BelongsToOrganization(permissions.BasePermission):
 
     def has_permission(self, request: Request, view: View) -> bool:
         logger.info(view.kwargs)
-        org_pk: str | None = view.kwargs.get("pk")
-        if org_pk is None:
+        org_slug: str | None = view.kwargs.get("org_slug")
+        if org_slug is None:
+            logger.info(org_slug)
             return False
 
-        logger.info("Checking if user belongs to organization with id: " + str(org_pk))
+        logger.info(
+            "Checking if user belongs to organization with id: " + str(org_slug)
+        )
 
         user_obj: User = get_object_or_404(User, email=request.user.email)
         if user_obj.role == "admin":
             return True
-        if user_obj.organization.id == int(org_pk):
+        if user_obj.organization.slug == str(org_slug):
             return True
 
         return False

@@ -1,8 +1,10 @@
 from django.contrib.auth import get_user_model
 from django.conf import settings
+from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.permissions import AllowAny
+from datetime import datetime, timezone
 import logging
 from drf_yasg.utils import swagger_auto_schema  # type: ignore
 from drf_yasg import openapi  # type: ignore
@@ -85,9 +87,25 @@ class YiviSessionProxyResultView(APIView):
 
             refresh = CustomTokenObtainPairSerializer.get_token(user)
             access_token = str(refresh.access_token)
-            return Response(
-                {"refresh": str(refresh), "access": access_token}, status=200
+            response = Response(
+                {"access": access_token}, status=200
             )
+            # Cookie expires when refresh token does
+            refresh_lifetime = settings.SIMPLE_JWT['REFRESH_TOKEN_LIFETIME']
+            expires_at = datetime.now(timezone.utc) + refresh_lifetime
+            print(expires_at)
+
+            response.set_cookie(
+                key="refresh_token",
+                value=str(refresh),
+                httponly=True,
+                secure=not settings.DEBUG,  # Set True in production
+                samesite="Lax",          # Or "Lax" depending on your app flow
+                expires=expires_at,
+                path="/"
+            )
+            return response
+
         except YiviException as e:
             return Response(status=e.http_status, data=e.msg)
 
@@ -97,15 +115,45 @@ class GetTokenView(APIView):
 
 
 class RefreshTokenView(APIView):
-    pass  # Uses default JWT token response
+    permission_classes = [AllowAny]
+
+    @swagger_auto_schema(
+        responses={
+            200: openapi.Response(
+                description="Access token",
+                examples={
+                    "application/json": {
+                        "access": "string",
+                    }
+                },
+            ),
+            401: "Unauthorized",
+        }
+    )
+    def post(self, request: Request):
+        refresh_token = request.COOKIES.get("refresh_token")
+        if not refresh_token:
+            return Response({"detail": "Refresh token missing."}, status=401)
+
+        try:
+            token = RefreshToken(refresh_token)
+            access_token = str(token.access_token)
+            return Response({"access": access_token})
+        except Exception as e:
+            return Response({"error": str(e)}, status=400)
 
 
 class LogoutView(APIView):
-    def post(request):
+    def post(self, request: Request):
         try:
-            refresh_token = request.data["refresh"]
-            token = RefreshToken(refresh_token)
-            token.blacklist()
-            return Response({"message": "Successfully logged out"}, status=200)
+            refresh_token = request.COOKIES.get("refresh_token")
+            if refresh_token:
+                token = RefreshToken(refresh_token)
+                token.blacklist()
+
+            response = Response({"message": "Successfully logged out"}, status=200)
+            response.delete_cookie("refresh_token")
+            return response
+
         except Exception as e:
             return Response({"error": str(e)}, status=400)

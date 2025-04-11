@@ -59,7 +59,10 @@ def create_org(slug: str, name_en: str, name_nl: str, logo_path: str) -> Organiz
                 "name_en": name_en,
                 "name_nl": name_nl,
                 "registration_number": None,
-                "contact_address": None,
+                "city": None,
+                "street": None,
+                "postal_code": None,
+                "house_number": None,
             },
         )
         logger.info(f"{'Created' if org_created else 'Updated'} Organization: {slug}")

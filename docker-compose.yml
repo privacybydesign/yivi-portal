@@ -45,6 +45,8 @@ services:
       - DJANGO_SETTINGS_MODULE=yivi_portal.settings.development
       - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
       - DJANGO_ALLOWED_HOSTS=${DJANGO_ALLOWED_HOSTS:-localhost}
+      - ALLOWED_HOSTS=${ALLOWED_HOSTS:-*,localhost,127.0.0.1}
+      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:-http://localhost:9000,http://localhost:3000}
     healthcheck:
       test: ['CMD', 'python', 'manage.py', 'check']
       interval: 60s
@@ -87,6 +89,9 @@ services:
       - POSTGRES_PORT=5432
       - DJANGO_SETTINGS_MODULE=yivi_portal.settings.development
       - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
+      - DJANGO_ALLOWED_HOSTS=${DJANGO_ALLOWED_HOSTS:-localhost}
+      - ALLOWED_HOSTS=${ALLOWED_HOSTS:-*,localhost,127.0.0.1}
+      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:-http://localhost:9000}
 
 networks:
   web:

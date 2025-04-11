@@ -2,7 +2,12 @@
 
 import Image from "next/image";
 import { Button } from "../components/ui/button";
-import { Card, CardHeader, CardTitle, CardContent } from "../components/ui/card";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+} from "../components/ui/card";
 import Link from "next/link";
 
 export default function Home() {
@@ -23,43 +28,20 @@ export default function Home() {
         <p className="text-sm sm:text-base text-center sm:text-left">
           Explore the Yivi ecosystem and discover how you can participate.
         </p>
-        
+
         <div className="grid gap-4 sm:grid-cols-2 w-full max-w-2xl">
           <Card>
             <CardHeader>
-              <CardTitle>I am a Yivi user, where can I use Yivi?</CardTitle>
+              <CardTitle>I want to join Yivi ecosystem</CardTitle>
             </CardHeader>
             <CardContent>
-              Find out where you can authenticate using Yivi.
+              You can register your organization as a relying party or a
+              attestation provider through the Yivi Portal.
               <div className="mt-4">
                 <Button variant="outline" asChild>
-                  <Link href="/organizations">Explore relying parties</Link>
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader>
-              <CardTitle>I want to become a relying party.</CardTitle>
-            </CardHeader>
-            <CardContent>
-              Integrate Yivi authentication into your services.
-              <div className="mt-4">
-                <Button variant="outline" asChild>
-                  <Link href="/organizations">Register relying party</Link>
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader>
-              <CardTitle>I want to become an attestation provider.</CardTitle>
-            </CardHeader>
-            <CardContent>
-              Issue credentials for the Yivi ecosystem.
-              <div className="mt-4">
-                <Button variant="outline" asChild>
-                  <Link href="/organizations">Register attestation provider</Link>
+                  <Link href="/organizations/register">
+                    Register Organization
+                  </Link>
                 </Button>
               </div>
             </CardContent>
@@ -69,7 +51,8 @@ export default function Home() {
               <CardTitle>I want to manage my organization.</CardTitle>
             </CardHeader>
             <CardContent>
-              Administer your organization’s role in the Yivi ecosystem.
+              Already registered? Log in to administer your organization’s role
+              in the Yivi ecosystem.
               <div className="mt-4">
                 <Button variant="outline" asChild>
                   <Link href="/manage-organization">Manage organization</Link>
@@ -77,6 +60,14 @@ export default function Home() {
               </div>
             </CardContent>
           </Card>
+          <div className="sm:col-span-2 flex flex-col items-center gap-2 mt-4">
+            <p className="text-sm text-muted-foreground text-center">
+              Discover your favorite organizations that use Yivi.
+            </p>
+            <Button variant="outline" className="w-full max-w-sm">
+              <Link href="/organizations">View Organizations</Link>
+            </Button>
+          </div>
         </div>
       </main>
     </div>

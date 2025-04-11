@@ -3,7 +3,6 @@ from portal_backend.models.models import (
     Organization,
     TrustModel,
     YiviTrustModelEnv,
-    Status,
     RelyingPartyHostname,
     Condiscon,
     AttestationProvider,
@@ -15,7 +14,6 @@ from portal_backend.models.models import (
 )
 
 
-# Organization Admin
 @admin.register(Organization)
 class OrganizationAdmin(admin.ModelAdmin):
     list_display = ("name_en", "registration_number", "created_at", "last_updated_at")
@@ -25,7 +23,6 @@ class OrganizationAdmin(admin.ModelAdmin):
     readonly_fields = ("created_at", "last_updated_at")
 
 
-# TrustModel Admin
 @admin.register(TrustModel)
 class TrustModelAdmin(admin.ModelAdmin):
     list_display = ("name", "eudi_compliant")
@@ -33,7 +30,6 @@ class TrustModelAdmin(admin.ModelAdmin):
     list_filter = ("eudi_compliant",)
 
 
-# YiviTrustModelEnv Admin
 @admin.register(YiviTrustModelEnv)
 class YiviTrustModelEnvAdmin(admin.ModelAdmin):
     list_display = ("trust_model", "environment", "timestamp_server", "keyshare_server")
@@ -41,28 +37,6 @@ class YiviTrustModelEnvAdmin(admin.ModelAdmin):
     list_filter = ("environment",)
 
 
-# Status Admin
-@admin.register(Status)
-class StatusAdmin(admin.ModelAdmin):
-    list_display = (
-        "id",
-        "ready",
-        "reviewed_accepted",
-        "published_at",
-        "relying_party",
-        "attestation_provider",
-        "rp_status_display",
-    )
-    list_filter = ("ready", "reviewed_accepted", "published_at")
-
-    @admin.display(description="RP Status")
-    def rp_status_display(self, obj):
-        if obj.relying_party:
-            return obj.rp_status
-        return "-"
-
-
-# RelyingPartyHostname Admin
 @admin.register(RelyingPartyHostname)
 class RelyingPartyHostnameAdmin(admin.ModelAdmin):
     list_display = ("hostname", "dns_challenge_verified", "manually_verified")
@@ -70,28 +44,32 @@ class RelyingPartyHostnameAdmin(admin.ModelAdmin):
     search_fields = ("hostname",)
 
 
-# Condiscon Admin
 @admin.register(Condiscon)
 class CondisconAdmin(admin.ModelAdmin):
     list_display = ("context_description_en", "context_description_nl")
     search_fields = ("context_description_en", "context_description_nl")
 
 
-# AttestationProvider Admin
 @admin.register(AttestationProvider)
 class AttestationProviderAdmin(admin.ModelAdmin):
-    list_display = ("organization", "yivi_tme", "version")
+    list_display = (
+        "organization",
+        "yivi_tme",
+        "version",
+        "ready",
+        "reviewed_accepted",
+        "published_at",
+    )
     search_fields = ("organization__name_en", "version")
-    list_filter = ("yivi_tme",)
+    list_filter = ("yivi_tme", "ready", "reviewed_accepted", "published_at")
+    readonly_fields = ("created_at", "last_updated_at")
 
 
-# Inline model for Credential Attributes
 class CredentialAttributeInline(admin.TabularInline):
     model = CredentialAttribute
     extra = 1
 
 
-# Credential Admin
 @admin.register(Credential)
 class CredentialAdmin(admin.ModelAdmin):
     list_display = ("name_en", "attestation_provider", "credential_tag")
@@ -99,7 +77,6 @@ class CredentialAdmin(admin.ModelAdmin):
     inlines = [CredentialAttributeInline]
 
 
-# CondisconAttribute Admin
 @admin.register(CondisconAttribute)
 class CondisconAttributeAdmin(admin.ModelAdmin):
     list_display = ("credential_attribute", "condiscon_id", "reason_en", "reason_nl")
@@ -108,15 +85,34 @@ class CondisconAttributeAdmin(admin.ModelAdmin):
     exclude = ("credential_attribute",)
 
 
-# Relying Party Admin
 @admin.register(RelyingParty)
 class RelyingPartyAdmin(admin.ModelAdmin):
-    list_display = ("organization", "yivi_tme")
-    search_fields = ("organization__name_en", "hostname__hostname")
-    list_filter = ("yivi_tme",)
+    list_display = (
+        "organization",
+        "rp_slug",
+        "yivi_tme",
+        "ready",
+        "reviewed_accepted",
+        "published_at",
+        "created_at",
+        "last_updated_at",
+        "get_hostnames",
+    )
+    search_fields = (
+        "organization__name_en",
+        "organization__name_nl",
+        "rp_slug",
+        "hostnames__hostname",
+    )
+    list_filter = ("yivi_tme", "ready", "reviewed_accepted", "published_at")
+    readonly_fields = ("created_at", "last_updated_at")
+
+    def get_hostnames(self, obj):
+        return ", ".join(obj.hostnames.values_list("hostname", flat=True))
+
+    get_hostnames.short_description = "Hostnames"
 
 
-# User Admin
 @admin.register(User)
 class UserAdmin(admin.ModelAdmin):
     list_display = ("email", "organization", "role")
