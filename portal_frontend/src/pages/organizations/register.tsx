@@ -76,7 +76,7 @@ export default function RegisterOrganization() {
   }: {
     control: Control<RegistrationInputs>;
     setValue: UseFormSetValue<RegistrationInputs>;
-    name: string;
+    name: string | undefined;
   }) => {
     const logo = useWatch({ control, name: "logo" });
 
