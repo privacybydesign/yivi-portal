@@ -57,10 +57,13 @@ class Command(BaseCommand):
                 "name_nl": "Testorganisatie",
                 "slug": "test-organization",
                 "registration_number": "12345678",
-                "contact_address": "123 Test Street\nTest City\nTest Country",
+                "country": "NL",
+                "city": "Utrecht",
+                "house_number": "54",
+                "postal_code": "24343",
+                "street": "test",
                 "is_verified": True,
                 "verified_at": timezone.now(),
-                "trade_names": ["Test Inc.", "Test LLC"],
             },
         )
         self.stdout.write(self.style.SUCCESS(f"Created organization: {org.name_en}"))

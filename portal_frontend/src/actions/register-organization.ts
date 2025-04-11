@@ -14,7 +14,6 @@ export type RegistrationInputs = {
   postal_code: string;
   city: string;
   country: string;
-  trade_names: string[];
   logo: File | undefined;
 };
 

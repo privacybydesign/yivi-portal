@@ -10,6 +10,7 @@ from django.conf import settings
 from django.utils import timezone
 from django.utils.text import slugify
 from django.core.exceptions import ValidationError
+from django_countries.fields import CountryField  # type: ignore
 
 
 class LogoStorage(FileSystemStorage):
@@ -40,10 +41,13 @@ class Organization(models.Model):
     name_nl = models.CharField(max_length=255)
     slug = models.SlugField(unique=True)
     registration_number = models.CharField(max_length=100, null=True, blank=True)
-    contact_address = models.CharField(max_length=255, null=True, blank=True)
+    street = models.CharField(max_length=35, null=True, blank=True)
+    house_number = models.CharField(max_length=35, null=True, blank=True)
+    postal_code = models.CharField(max_length=35, null=True, blank=True)
+    city = models.CharField(max_length=35, null=True, blank=True)
+    country = CountryField()
     is_verified = models.BooleanField(default=False)
     verified_at = models.DateTimeField(null=True)
-    trade_names = models.JSONField(default=list)
     logo = ProcessedImageField(
         upload_to=LogoStorage.get_logo_path,
         storage=LogoStorage(),

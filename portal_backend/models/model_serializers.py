@@ -13,9 +13,10 @@ from .models import (
     RelyingParty,
 )
 from typing import Optional
+from django_countries.serializers import CountryFieldMixin  # type: ignore
 
 
-class OrganizationSerializer(serializers.ModelSerializer):
+class OrganizationSerializer(CountryFieldMixin, serializers.ModelSerializer):
     trust_model = serializers.SerializerMethodField()
 
     class Meta:
@@ -26,16 +27,18 @@ class OrganizationSerializer(serializers.ModelSerializer):
             "name_nl",
             "slug",
             "registration_number",
-            "contact_address",
             "is_verified",
             "verified_at",
-            "trade_names",
             "logo",
             "created_at",
             "last_updated_at",
             "is_RP",
             "is_AP",
             "trust_model",
+            "country",
+            "house_number",
+            "street",
+            "postal_code",
         ]
         read_only_fields = ["is_verified"]
 
