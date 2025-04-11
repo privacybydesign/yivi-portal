@@ -108,7 +108,7 @@ def create_ap(
     environment,
 ) -> AttestationProvider:
     try:
-        ap, ap_created = AttestationProvider.objects.get_or_create(
+        ap, ap_created = AttestationProvider.objects.update_or_create(
             organization=org,
             yivi_tme=yivi_tme,
             defaults={
@@ -119,6 +119,8 @@ def create_ap(
                 "shortname_nl": apfields.shortname_nl,
                 "contact_email": apfields.contact_email,
                 "base_url": apfields.base_url,
+                "ready": True,
+                "reviewed_accepted": True,
             },
         )
 

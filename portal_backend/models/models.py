@@ -168,7 +168,7 @@ class AttestationProvider(models.Model):
         return self.organization.name_en
 
     @property
-    def new_ap_details(self):
+    def ap_details(self):
         ap_scheme_entry = {
             "id": self.id,
             "name": {"en": self.organization.name_en, "nl": self.organization.name_nl},
@@ -210,10 +210,10 @@ class AttestationProvider(models.Model):
         )
 
         if previous and not previous.reviewed_accepted and self.reviewed_accepted:
-            self.approved_ap_details = self.new_ap_details
+            self.approved_ap_details = self.ap_details
             self.reviewed_at = timezone.now()
         elif not previous and self.reviewed_accepted:
-            self.approved_ap_details = self.new_ap_details
+            self.approved_ap_details = self.ap_details
             self.reviewed_at = timezone.now()
 
         super().save(*args, **kwargs)
