@@ -27,7 +27,7 @@ python-dotenv = "1.0.1"
 django_countries = "7.6.1"
 
 [tool.poetry.group.dev.dependencies]
-black = "^23.12.1"
+black = "^24.3.0"
 
 [tool.poetry.group.prod.dependencies]
 uwsgi = "^2.0.23"
