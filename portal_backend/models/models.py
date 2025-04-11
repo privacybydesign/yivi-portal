@@ -1,5 +1,4 @@
 from django.db import models
-from django.db.models import CheckConstraint, Q
 from django.core.validators import URLValidator, RegexValidator, FileExtensionValidator
 from django.core.files.storage import FileSystemStorage
 import uuid
@@ -9,7 +8,6 @@ from imagekit.models import ProcessedImageField  # type: ignore
 from django.conf import settings
 from django.utils import timezone
 from django.utils.text import slugify
-from django.core.exceptions import ValidationError
 from django_countries.fields import CountryField  # type: ignore
 
 
