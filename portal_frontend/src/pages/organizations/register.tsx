@@ -29,7 +29,7 @@ const defaultFormInput: RegistrationInputs = {
   slug: "",
   registration_number: "",
   street: "",
-  housenumber: "",
+  house_number: "",
   postal_code: "",
   city: "",
   country: "",
@@ -287,7 +287,7 @@ export default function RegisterOrganization() {
 
               <FormField
                 control={form.control}
-                name="housenumber"
+                name="house_number"
                 render={({ field }) => (
                   <FormItem className="grid md:grid-cols-2 items-start md:gap-4">
                     <div className="py-1">
