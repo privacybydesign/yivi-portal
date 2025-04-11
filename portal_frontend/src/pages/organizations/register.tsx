@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/src/components/ui/button";
 import { Input } from "@/src/components/ui/input";
@@ -19,19 +19,9 @@ import {
   RegistrationInputs,
 } from "@/src/actions/register-organization";
 import { generateSlug } from "@/lib/utils";
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@/src/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage, } from "@/src/components/ui/avatar";
 import { UploadIcon, XIcon } from "lucide-react";
-import {
-  Control,
-  UseFormSetValue,
-  useFieldArray,
-  useForm,
-  useWatch,
-} from "react-hook-form";
+import { Control, UseFormSetValue, useForm, useWatch } from "react-hook-form";
 
 const defaultFormInput: RegistrationInputs = {
   name_en: "",
@@ -43,7 +33,6 @@ const defaultFormInput: RegistrationInputs = {
   postal_code: "",
   city: "",
   country: "",
-  trade_names: [],
   logo: undefined,
 };
 
@@ -62,20 +51,16 @@ export default function RegisterOrganization() {
   }
 
   const form = useForm<RegistrationInputs>({
-    defaultValues: formState?.values ?? defaultFormInput,
+    defaultValues: defaultFormInput,
   });
 
   useEffect(() => {
     form.clearErrors();
+
     if (formState?.errors) {
-      (
-        Object.entries(formState.errors) as [
-          keyof RegistrationInputs,
-          { message?: string }
-        ][]
-      ).forEach(([field, error]) => {
+      Object.entries(formState.errors).forEach(([field, error]) => {
         if (error?.message) {
-          form.setError(field, {
+          form.setError((field as keyof RegistrationInputs), {
             type: "server",
             message: error.message,
           });
@@ -84,19 +69,14 @@ export default function RegisterOrganization() {
     }
   }, [formState?.errors, form]);
 
-  const tradeNames = useFieldArray<RegistrationInputs>({
-    control: form.control,
-    name: "trade_names" as never,
-  });
-
-  const [tradeNameInput, setTradeNameInput] = useState("");
-
   const LogoPreview = ({
     control,
     setValue,
+    name,
   }: {
     control: Control<RegistrationInputs>;
     setValue: UseFormSetValue<RegistrationInputs>;
+    name: string;
   }) => {
     const logo = useWatch({ control, name: "logo" });
 
@@ -104,10 +84,10 @@ export default function RegisterOrganization() {
       <div className="relative size-24">
         <Avatar className="!size-24">
           <AvatarImage
-            src={logo ? URL.createObjectURL(logo) : "/logo-placeholder.svg"}
+            src={logo ? URL.createObjectURL(logo as unknown as File) : "/logo-placeholder.svg"}
             className="rounded-full border object-contain"
           />
-          <AvatarFallback></AvatarFallback>
+          <AvatarFallback>{name}</AvatarFallback>
         </Avatar>
 
         {logo && (
@@ -122,13 +102,6 @@ export default function RegisterOrganization() {
       </div>
     );
   };
-  const addTradeName = (): void => {
-    const trimmed = tradeNameInput.trim();
-    if (trimmed) {
-      tradeNames.append(trimmed);
-    }
-    setTradeNameInput("");
-  };
 
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8">
@@ -139,18 +112,18 @@ export default function RegisterOrganization() {
             <FormField
               control={form.control}
               name="logo"
-              render={({ field: { onChange } }) => (
+              render={({ field: { onChange, value, ...field } }) => (
                 <FormItem className="grid md:grid-cols-2 items-center md:gap-4">
                   <div className="py-1">
-                    <Label className="">Organization Logo</Label>
+                    <Label>Organization Logo</Label>
                     <FormDescription>
                       Upload your logo (PNG or JPEG).
                     </FormDescription>
                   </div>
                   <div className="flex items-center justify-between w-full">
-                    <LogoPreview {...form} />
+                    <LogoPreview {...form} name={value?.name} />
                     <Label>
-                      <div className="inline-block cursor-pointer whitespace-nowrap rounded-md text-sm font-medium transition-colors bg-primary text-primary-foreground shadow hover:bg-primary/90 h-9 px-4 py-2 flex items-center gap-2">
+                      <div className="cursor-pointer whitespace-nowrap rounded-md text-sm font-medium transition-colors bg-primary text-primary-foreground shadow hover:bg-primary/90 h-9 px-4 py-2 flex items-center gap-2">
                         <UploadIcon size={12} strokeWidth={3} />
                         Select logo
                       </div>
@@ -159,9 +132,8 @@ export default function RegisterOrganization() {
                           type="file"
                           accept="image/png,image/jpeg"
                           className="hidden"
-                          onChange={(event) =>
-                            onChange(event.target.files?.[0])
-                          }
+                          onChange={(event) => onChange(event.target.files?.[0])}
+                          {...field}
                         />
                       </FormControl>
                     </Label>
@@ -286,63 +258,6 @@ export default function RegisterOrganization() {
                 </FormItem>
               )}
             />
-
-            <FormField
-              control={form.control}
-              name="trade_names"
-              render={() => (
-                <FormItem className="grid md:grid-cols-2 items-start md:gap-4">
-                  <div className="py-1">
-                    <Label>Trade Names</Label>
-                    <FormDescription>
-                      Click &quot;Add&quot; to insert trade names. You can
-                      remove them below.
-                    </FormDescription>
-                  </div>
-                  <div className="flex gap-2">
-                    <FormControl>
-                      <Input
-                        placeholder="Enter a trade name"
-                        value={tradeNameInput}
-                        onChange={(event) =>
-                          setTradeNameInput(event.target.value)
-                        }
-                      />
-                    </FormControl>
-                    <Button type="button" onClick={addTradeName}>
-                      Add
-                    </Button>
-                    {formState.errors.trade_names && (
-                      <FormMessage className="text-sm text-red-600 mt-1">
-                        {!formState.errors.trade_names.message}
-                      </FormMessage>
-                    )}
-                  </div>
-                </FormItem>
-              )}
-            />
-
-            {tradeNames.fields.map((item, index) => (
-              <FormField
-                key={item.id}
-                control={form.control}
-                name={`trade_names.${index}`}
-                render={({ field }) => (
-                  <div className="md:w-1/2 md:pl-2 md:ml-auto flex gap-2 relative">
-                    <FormControl>
-                      <Input className="pr-10" {...field} />
-                    </FormControl>
-                    <Button
-                      type="button"
-                      className="absolute inset-y-1.5 right-1.5 !h-auto my-auto !p-1"
-                      onClick={() => tradeNames.remove(index)}
-                    >
-                      <XIcon />
-                    </Button>
-                  </div>
-                )}
-              />
-            ))}
 
             <fieldset className="border border-primary-light rounded-lg p-4">
               <legend className="font-medium">Contact Address</legend>

@@ -14,7 +14,6 @@ export type RegistrationInputs = {
   postal_code: string;
   city: string;
   country: string;
-  trade_names: string[];
   logo: File | undefined;
 };
 
@@ -32,30 +31,32 @@ export const registerOrganization = async (
 ): Promise<RegistrationFormState> => {
   try {
     await axiosInstance.post("/v1/organizations/", formData);
+
     return {
-      values: formState.values,
+      values: { ...formState.values, logo: formData.get('logo') as File },
       errors: {},
       success: true,
       redirectTo: `/organizations/success`,
     };
   } catch (e: unknown) {
-    console.log(e);
     if (e instanceof AxiosError && e.response?.status === 400) {
-      const NewErrors: Partial<FieldErrors<RegistrationInputs>> = {};
+      const serverErrors: Partial<FieldErrors<RegistrationInputs>> = {};
 
       Object.entries(e.response.data).forEach(([key, value]) => {
-        NewErrors[key as keyof RegistrationInputs] = {
+        serverErrors[key as keyof RegistrationInputs] = {
           type: "server",
           message: String(value),
         };
       });
+
       return {
-        values: formState.values,
-        errors: NewErrors,
+        values: { ...formState.values, logo: formData.get('logo') as File },
+        errors: serverErrors,
       };
     }
+
     return {
-      values: formState.values,
+      values: { ...formState.values, logo: formData.get('logo') as File },
       errors: {},
       globalError: "Something went wrong.",
     };
