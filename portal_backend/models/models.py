@@ -56,13 +56,6 @@ class Organization(models.Model):
     approved_logo = models.ImageField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     last_updated_at = models.DateTimeField(auto_now=True)
-    trust_model = models.ForeignKey(
-        "TrustModel",
-        on_delete=models.CASCADE,
-        related_name="organizations",
-        null=True,
-        blank=True,
-    )
 
     def __str__(self):
         return self.name_en
@@ -107,6 +100,7 @@ class TrustModel(models.Model):
     name = models.CharField(max_length=255)
     description = models.TextField()
     eudi_compliant = models.BooleanField(default=False)
+    organizations = models.ManyToManyField("Organization", related_name="trust_models")
 
     def __str__(self):
         return self.name
@@ -231,7 +225,7 @@ class RelyingParty(models.Model):
     )
     ready = models.BooleanField(default=False)
     ready_at = models.DateTimeField(null=True, blank=True)
-    reviewed_accepted = models.BooleanField(null=True, default=None)
+    reviewed_accepted = models.BooleanField(null=True, default=False)
     reviewed_at = models.DateTimeField(null=True, blank=True)
     rejection_remarks = models.TextField(blank=True, null=True)
     published_at = models.DateTimeField(null=True, blank=True)

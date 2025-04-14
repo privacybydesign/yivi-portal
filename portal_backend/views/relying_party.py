@@ -6,6 +6,7 @@ from django.utils import timezone
 from drf_yasg import openapi  # type: ignore
 from drf_yasg.utils import swagger_auto_schema  # type: ignore
 from rest_framework import permissions
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework import status
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -13,7 +14,9 @@ from rest_framework.views import APIView
 
 from .helpers import IsMaintainerOrAdmin, BelongsToOrganization
 from ..dns_verification import generate_dns_challenge
-from ..models.model_serializers import RelyingPartySerializer
+from ..models.model_serializers import (
+    RelyingPartyHostnameSerializer,
+)
 from ..models.models import (
     RelyingParty,
     RelyingPartyHostname,
@@ -48,11 +51,15 @@ def check_existing_hostname(request: Request) -> Optional[Response]:
 
 
 class RelyingPartyListCreateView(APIView):
-    permission_classes = [
-        permissions.IsAuthenticated,
-        BelongsToOrganization,
-        IsMaintainerOrAdmin,
-    ]
+
+    def get_permissions(self):
+        if self.request.method == "GET":
+            return [AllowAny()]
+        return [
+            IsAuthenticated(),
+            BelongsToOrganization(),
+            IsMaintainerOrAdmin(),
+        ]
 
     def make_condiscon_from_attributes(
         self, attributes_data: List[Dict[str, str]]
@@ -268,8 +275,17 @@ class RelyingPartyDetailView(APIView):
             yivi_tme__environment=environment,
             rp_slug=rp_slug,
         )
-        serializer = RelyingPartySerializer(relying_party)
-        return Response(serializer.data)
+        hostnames = RelyingPartyHostname.objects.filter(
+            relying_party__rp_slug=rp_slug,
+        )
+        hostname_serializer = RelyingPartyHostnameSerializer(hostnames, many=True)
+        hostnames_data = hostname_serializer.data
+        serialized = {
+            "rp_slug": relying_party.rp_slug,
+            "hostnames": hostnames_data,
+            "published_at": relying_party.published_at,
+        }
+        return Response(serialized, status=status.HTTP_200_OK)
 
     @swagger_auto_schema(
         responses={

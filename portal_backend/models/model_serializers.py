@@ -16,8 +16,14 @@ from typing import Optional
 from django_countries.serializers import CountryFieldMixin  # type: ignore
 
 
+class TrustModelSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TrustModel
+        fields = ["id", "name", "description", "eudi_compliant"]
+
+
 class OrganizationSerializer(CountryFieldMixin, serializers.ModelSerializer):
-    trust_model = serializers.SerializerMethodField()
+    trust_models = TrustModelSerializer(many=True, read_only=True)
 
     class Meta:
         model = Organization
@@ -34,7 +40,7 @@ class OrganizationSerializer(CountryFieldMixin, serializers.ModelSerializer):
             "last_updated_at",
             "is_RP",
             "is_AP",
-            "trust_model",
+            "trust_models",
             "country",
             "house_number",
             "street",
@@ -42,15 +48,6 @@ class OrganizationSerializer(CountryFieldMixin, serializers.ModelSerializer):
             "city",
         ]
         read_only_fields = ["is_verified"]
-
-    def get_trust_model(self, obj: Organization) -> Optional[str]:
-        return obj.trust_model.name if obj.trust_model else None
-
-
-class TrustModelSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = TrustModel
-        fields = ["id", "name", "description", "eudi_compliant"]
 
 
 class YiviTrustModelEnvSerializer(serializers.ModelSerializer):
