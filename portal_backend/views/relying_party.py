@@ -47,7 +47,7 @@ def check_existing_hostname(request: Request) -> Optional[Response]:
     return None
 
 
-class RelyingPartyRegisterView(APIView):
+class RelyingPartyListCreateView(APIView):
     permission_classes = [
         permissions.IsAuthenticated,
         BelongsToOrganization,
@@ -244,6 +244,18 @@ class RelyingPartyRegisterView(APIView):
             },
             status=status.HTTP_201_CREATED,
         )
+
+    def get(self, request: Request, org_slug: str):
+        organization = get_object_or_404(Organization, slug=org_slug)
+        relying_parties = RelyingParty.objects.filter(organization=organization)
+        serialized = {
+            "relying_parties": [
+                {"rp_slug": rp.rp_slug, "environment": rp.yivi_tme.environment}
+                for rp in relying_parties
+            ]
+        }
+
+        return Response(serialized)
 
 
 class RelyingPartyDetailView(APIView):

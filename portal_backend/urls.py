@@ -14,11 +14,10 @@ from portal_backend.views.attestation_provider import (
     AttestationProviderListView,
 )
 from portal_backend.views.relying_party import (
-    RelyingPartyRegisterView,
     RelyingPartyDetailView,
     RelyingPartyHostnameStatusView,
     RelyingPartyUpdateView,
-    RelyingPartyListView,
+    RelyingPartyListCreateView,
 )
 from rest_framework import permissions
 from drf_yasg.views import get_schema_view  # type: ignore
@@ -61,24 +60,19 @@ urlpatterns = [
     ),
     # Relying Party
     path(
-        "v1/yivi/organizations/<str:org_slug>/relying-party/info",
-        RelyingPartyListView.as_view(),
-        name="organization-register-rp",
-    ),
-    path(
         "v1/yivi/organizations/<str:org_slug>/relying-party/",
-        RelyingPartyRegisterView.as_view(),
-        name="organization-register-rp",
+        RelyingPartyListCreateView.as_view(),
+        name="rp-list-create",
     ),
     path(
         "v1/yivi/organizations/<str:org_slug>/relying-party/<str:environment>/<str:rp_slug>/",
         RelyingPartyDetailView.as_view(),
-        name="organization-rp-list",
+        name="single-rp-details",
     ),
     path(
         "v1/yivi/organizations/<str:org_slug>/relying-party/<str:rp_slug>/",
         RelyingPartyUpdateView.as_view(),
-        name="organization-rp-manage",
+        name="rp-manage",
     ),
     path(
         "v1/yivi/organizations/<str:org_slug>/relying-party/<str:environment>/<str:rp_slug>/dns-verification/",
