@@ -25,6 +25,15 @@ class TrustModelSerializer(serializers.ModelSerializer):
 class OrganizationSerializer(CountryFieldMixin, serializers.ModelSerializer):
     trust_models = TrustModelSerializer(many=True, read_only=True)
 
+    is_RP = serializers.SerializerMethodField()
+    is_AP = serializers.SerializerMethodField()
+
+    def get_is_RP(self, obj):
+        return RelyingParty.objects.filter(organization=obj).exists()
+
+    def get_is_AP(self, obj):
+        return AttestationProvider.objects.filter(organization=obj).exists()
+
     class Meta:
         model = Organization
         fields = [

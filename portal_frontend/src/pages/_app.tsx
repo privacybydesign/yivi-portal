@@ -1,7 +1,7 @@
 import type { AppProps } from "next/app";
 import { Geist, Geist_Mono } from "next/font/google";
 import "../styles/globals.css";
-import { useEffect, useState } from "react";
+import { ReactElement, ReactNode, useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import useStore from "@/src/store";
@@ -9,6 +9,15 @@ import { useRouter } from "next/navigation";
 import { initials } from "@dicebear/collection";
 import { createAvatar } from "@dicebear/core";
 import { axiosInstance } from "../services/axiosInstance";
+import { NextPage } from 'next';
+
+export type NextPageWithLayout<P = object, IP = P> = NextPage<P, IP> & {
+  getLayout?: (page: ReactElement) => ReactNode;
+};
+
+type AppPropsWithLayout = AppProps & {
+  Component: NextPageWithLayout;
+};
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -20,13 +29,18 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export default function MyApp({ Component, pageProps }: AppProps) {
+
+export default function MyApp({ Component, pageProps }: AppPropsWithLayout) {
   const initializeAuth = useStore((state) => state.initializeAuth);
   const router = useRouter();
 
   useEffect(() => {
     initializeAuth();
   }, [initializeAuth]);
+
+
+  // Use the layout defined at the page level, if available
+  const getLayout = Component.getLayout ?? ((page) => page);
 
   const email = useStore((state) => state.email);
   const setAccessToken = useStore((state) => state.setAccessToken);
@@ -73,7 +87,7 @@ export default function MyApp({ Component, pageProps }: AppProps) {
 
             {email ? (
               <div className="flex items-center gap-3 px-4 py-1 rounded-xl backdrop-blur-md bg-white/30 border border-white/50 shadow-sm">
-                <img
+                <Image
                   src={`data:image/svg+xml;utf8,${encodeURIComponent(svg)}`}
                   alt="User Avatar"
                   width={32}
@@ -106,7 +120,7 @@ export default function MyApp({ Component, pageProps }: AppProps) {
         </div>
       </header>
 
-      <Component {...pageProps} />
+      {getLayout(<Component {...pageProps} />)}
     </div>
   );
 }

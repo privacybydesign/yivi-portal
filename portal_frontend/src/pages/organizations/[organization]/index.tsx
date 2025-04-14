@@ -21,7 +21,7 @@ export default function OrganizationPage() {
   const params = useParams();
   const userOrgSlug = useStore((state) => state.organizationSlug);
   const userRole = useStore((state) => state.role);
-  const organizationSlug = params?.organizationSlug;
+  const organizationSlug = params?.organization;
 
   const { publicRuntimeConfig } = getConfig();
   const [organization, setOrganization] = useState<Organization | null>(null);

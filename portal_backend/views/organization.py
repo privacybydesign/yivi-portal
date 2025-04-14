@@ -123,15 +123,15 @@ class OrganizationDetailView(APIView):
         request_body=OrganizationSerializer,
         responses={201: "Success", 400: "Bad Request", 404: "Not Found"},
     )
-    def patch(self, request: Request, pk: int) -> Response:
+    def patch(self, request: Request, org_slug: str) -> Response:
         """Updates an organization, given the uuid."""
-        organization = get_object_or_404(Organization, pk=pk)
+        organization = get_object_or_404(Organization, slug=org_slug)
         serializer = OrganizationSerializer(
             organization, data=request.data, partial=True
         )
         if not serializer.is_valid():
             return Response(
-                {"Your Organization registration was updated.", serializer.data},
+                serializer.errors,
                 status=status.HTTP_400_BAD_REQUEST,
             )
         serializer.save()
