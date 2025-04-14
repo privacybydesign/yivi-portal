@@ -331,15 +331,15 @@ export default function OrganizationsPage() {
             RPSelected ||
             selectedTrustModel !== "all" ||
             searchQuery) && (
-            <div className="mt-4 text-sm text-blue-600">
-              Filtering:
-              {searchQuery && ` Search: "${searchQuery}"`}
-              {selectedTrustModel !== "all" &&
-                ` Trust Model: ${selectedTrustModel}`}
-              {APSelected && " | Attestation Providers"}
-              {RPSelected && " | Relying Parties"}
-            </div>
-          )}
+              <div className="mt-4 text-sm text-blue-600">
+                Filtering:
+                {searchQuery && ` Search: "${searchQuery}"`}
+                {selectedTrustModel !== "all" &&
+                  ` Trust Model: ${selectedTrustModel}`}
+                {APSelected && " | Attestation Providers"}
+                {RPSelected && " | Relying Parties"}
+              </div>
+            )}
         </div>
       </div>
 
@@ -385,9 +385,9 @@ export default function OrganizationsPage() {
                             height={32}
                             alt={`${org.name_en} logo`}
                             className="object-cover w-full h-full"
-                            // onError={(e) => {
-                            //   // e.currentTarget.src = "/placeholder-logo.png";
-                            // }}
+                          // onError={(e) => {
+                          //   // e.currentTarget.src = "/placeholder-logo.png";
+                          // }}
                           />
                         </div>
                       ) : (
