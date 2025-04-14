@@ -180,11 +180,10 @@ export default function OrganizationPage() {
 
       <div className="flex mb-6 border-b">
         <button
-          className={`px-4 py-2 font-medium ${
-            activeSection === "overview"
-              ? "border-b-2 border-blue-500 text-blue-600"
-              : "text-gray-600"
-          }`}
+          className={`px-4 py-2 font-medium ${activeSection === "overview"
+            ? "border-b-2 border-blue-500 text-blue-600"
+            : "text-gray-600"
+            }`}
           onClick={() => handleSectionChange("overview")}
         >
           Overview
@@ -192,11 +191,10 @@ export default function OrganizationPage() {
 
         {organization.is_AP === true && (
           <button
-            className={`px-4 py-2 font-medium ${
-              activeSection === "ap-details"
-                ? "border-b-2 border-blue-500 text-blue-600"
-                : "text-gray-600"
-            }`}
+            className={`px-4 py-2 font-medium ${activeSection === "ap-details"
+              ? "border-b-2 border-blue-500 text-blue-600"
+              : "text-gray-600"
+              }`}
             onClick={() => handleSectionChange("ap-details")}
           >
             Attestation Provider
@@ -205,11 +203,10 @@ export default function OrganizationPage() {
 
         {organization.is_RP === true && (
           <button
-            className={`px-4 py-2 font-medium ${
-              activeSection === "rp-details"
-                ? "border-b-2 border-blue-500 text-blue-600"
-                : "text-gray-600"
-            }`}
+            className={`px-4 py-2 font-medium ${activeSection === "rp-details"
+              ? "border-b-2 border-blue-500 text-blue-600"
+              : "text-gray-600"
+              }`}
             onClick={() => handleSectionChange("rp-details")}
           >
             Relying Party
@@ -336,7 +333,7 @@ export default function OrganizationPage() {
                           <span className="font-medium">State:</span>{" "}
                           <Badge className="bg-blue-100 text-blue-800">
                             {JSON.stringify(rp.approved_rp_details) ===
-                            JSON.stringify(rp.published_rp_details)
+                              JSON.stringify(rp.published_rp_details)
                               ? "Published"
                               : "Changes Pending"}
                           </Badge>
