@@ -1,8 +1,9 @@
 "use server";
 
-import { AxiosError } from "axios";
+import { AxiosError, AxiosResponse } from "axios";
 import { axiosInstance } from "../services/axiosInstance";
 import { FieldErrors } from "react-hook-form";
+import { RelyingParty } from "../models/relying-party";
 
 export interface RelyingPartyInputs {
   rp_slug: string;
@@ -26,15 +27,53 @@ export type RelyingPartyFormState = {
   redirectTo?: string;
 };
 
-export async function fetchRelyingPartiesForOrganization(orgSlug: string) {
-  return await fetch(`/api/organizations/${orgSlug}/relying-parties`).then(
-    (res) => res.json()
-  );
-}
+export const fetchRelyingPartiesForOrganization = async (
+  organizationSlug: string
+): Promise<AxiosResponse | undefined> => {
+  try {
+    return await axiosInstance.get(
+      `/v1/yivi/organizations/${organizationSlug}/relying-party`
+    );
+  } catch (error) {
+    console.error(error);
+  }
+};
 
-export async function fetchRelyingParty(slug: string) {
-  return await fetch(`/api/relying-parties/${slug}`).then((res) => res.json());
-}
+export const fetchDetailedRelyingPartiesForOrganization = async (
+  organizationSlug: string
+): Promise<RelyingParty[]> => {
+  try {
+    const listResponse = await fetchRelyingPartiesForOrganization(
+      organizationSlug
+    );
+    const relyingPartyList = listResponse?.data?.relying_parties ?? [];
+
+    const detailedParties = await Promise.all(
+      relyingPartyList.map(
+        async (rp: { rp_slug: string; environment: string }) => {
+          try {
+            const detailResponse = await axiosInstance.get(
+              `/v1/yivi/organizations/${organizationSlug}/relying-party/${rp.environment}/${rp.rp_slug}`
+            );
+
+            return {
+              ...detailResponse.data,
+              environment: rp.environment,
+            };
+          } catch (err) {
+            console.warn(`Failed to fetch detail for ${rp.rp_slug}`, err);
+            return null;
+          }
+        }
+      )
+    );
+
+    return detailedParties.filter(Boolean) as RelyingParty[];
+  } catch (err) {
+    console.error("Failed to fetch relying party list or details", err);
+    return [];
+  }
+};
 
 export const updateRelyingParty = async (
   formState: RelyingPartyFormState,
@@ -56,8 +95,10 @@ export const updateRelyingParty = async (
       const serverErrors: Partial<FieldErrors<RelyingPartyInputs>> = {};
 
       Object.entries(e.response.data).forEach(([key, value]) => {
-        if (key !== "slug") {
-          serverErrors[key as keyof Omit<RelyingPartyInputs, "slug">] = {
+        if (key !== "relyingPartySlug") {
+          serverErrors[
+            key as keyof Omit<RelyingPartyInputs, "relyingPartySlug">
+          ] = {
             type: "server",
             message: String(value),
           };
