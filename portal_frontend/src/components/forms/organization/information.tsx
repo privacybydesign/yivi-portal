@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect } from "react";
+import { useActionState, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/src/components/ui/button";
 import { Input } from "@/src/components/ui/input";
@@ -15,23 +15,20 @@ import { updateOrganization } from '@/src/actions/manage-organization';
 import { Organization } from '@/src/models/organization';
 import getConfig from 'next/config';
 
-const defaultFormInput: RegistrationInputs = {
-    name_en: '',
-    name_nl: '',
-    slug: '',
-    registration_number: '',
-    street: '',
-    house_number: '',
-    postal_code: '',
-    city: '',
-    country: '',
-    logo: undefined,
-};
-
 export default function ManageOrganizationInformationForm({ organization }: { organization?: Organization; }) {
-    Object.entries(organization ?? {}).forEach(([key, value]: [string, string & File]) => {
-        defaultFormInput[key as keyof RegistrationInputs] = value;
-    });
+    const [defaultFormInput, setDefaultFormInput] = useState({
+        name_en: '',
+        name_nl: '',
+        slug: '',
+        registration_number: '',
+        street: '',
+        house_number: '',
+        postal_code: '',
+        city: '',
+        country: '',
+        logo: undefined,
+        ...(organization || {})
+    } as RegistrationInputs);
 
     const [formState, formSubmit, pending] = useActionState<
         RegistrationFormState,
@@ -97,7 +94,10 @@ export default function ManageOrganizationInformationForm({ organization }: { or
                 {logo && (
                     <button
                         type="button"
-                        onClick={() => setValue("logo", undefined)}
+                        onClick={() => {
+                            setValue("logo", undefined);
+                            setDefaultFormInput({ ...defaultFormInput, logo: undefined });
+                        }}
                         className="bg-red-400 rounded-full p-1 absolute top-0 right-0"
                     >
                         <XIcon size={12} strokeWidth={3} />
@@ -122,7 +122,7 @@ export default function ManageOrganizationInformationForm({ organization }: { or
                                 </FormDescription>
                             </div>
                             <div className="flex items-center justify-between w-full">
-                                <LogoPreview {...form} name={value?.name} />
+                                <LogoPreview {...form} name={typeof value === 'string' ? value : value?.name} />
                                 <Label>
                                     <div className="cursor-pointer whitespace-nowrap rounded-md text-sm font-medium transition-colors bg-primary text-primary-foreground shadow hover:bg-primary/90 h-9 px-4 py-2 flex items-center gap-2">
                                         <UploadIcon size={12} strokeWidth={3} />

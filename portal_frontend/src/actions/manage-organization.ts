@@ -14,7 +14,7 @@ export type RegistrationInputs = {
     postal_code: string;
     city: string;
     country: string;
-    logo: File | undefined;
+    logo: File | string | undefined;
 };
 
 export type RegistrationFormState = {
@@ -37,11 +37,15 @@ export const updateOrganization = async (
     formState: RegistrationFormState,
     formData: FormData
 ): Promise<RegistrationFormState> => {
+    if (!!formState.values['logo'] && (formData.get('logo') as File)?.size === 0) {
+        formData.delete('logo');
+    }
+
     try {
         await axiosInstance.patch(`/v1/organizations/${formState.values.slug}/`, formData);
 
         return {
-            values: { ...formState.values, logo: formData.get('logo') as File },
+            values: { ...formState.values },
             errors: {},
             success: true,
         };
@@ -59,13 +63,13 @@ export const updateOrganization = async (
             });
 
             return {
-                values: { ...formState.values, logo: formData.get('logo') as File },
+                values: { ...formState.values },
                 errors: serverErrors,
             };
         }
 
         return {
-            values: { ...formState.values, logo: formData.get('logo') as File },
+            values: { ...formState.values },
             errors: {},
             globalError: "Something went wrong.",
         };

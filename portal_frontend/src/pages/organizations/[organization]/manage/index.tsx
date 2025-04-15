@@ -28,7 +28,7 @@ export default function ManageLayout() {
                 </p>
             </div>
             <Separator />
-            <ManageOrganizationInformationForm organization={organization}></ManageOrganizationInformationForm>
+            {organization && <ManageOrganizationInformationForm organization={organization}></ManageOrganizationInformationForm>}
         </div>
     );
 }
