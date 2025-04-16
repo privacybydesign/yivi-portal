@@ -1,6 +1,6 @@
 "use server";
 
-import { AxiosError, AxiosResponse } from "axios";
+import { AxiosError } from "axios";
 import { axiosInstance } from "../services/axiosInstance";
 import { FieldErrors } from "react-hook-form";
 import { RelyingParty } from "../models/relying-party";
@@ -8,7 +8,7 @@ import { RelyingParty } from "../models/relying-party";
 export interface RelyingPartyInputs {
   rp_slug: string;
   hostnames: { hostname: string }[];
-  trust_model_env: string;
+  environment: string;
   context_description_en: string;
   context_description_nl: string;
   attributes: {
@@ -24,36 +24,46 @@ export type RelyingPartyFormState = {
   errors: Partial<FieldErrors<RelyingPartyInputs>>;
   globalError?: string;
   success?: boolean;
-  redirectTo?: string;
 };
 
 export const fetchRelyingPartiesForOrganization = async (
   organizationSlug: string
-): Promise<AxiosResponse | undefined> => {
+) => {
   try {
-    return await axiosInstance.get(
+    const response = await axiosInstance.get(
       `/v1/yivi/organizations/${organizationSlug}/relying-party`
     );
+    return response;
   } catch (error) {
-    console.error(error);
+    console.error("Error fetching relying parties:", error);
+    return undefined;
   }
 };
 
-export const fetchDetailedRelyingPartiesForOrganization = async (
+export const fetchDetailedRelyingParties = async (
   organizationSlug: string
 ): Promise<RelyingParty[]> => {
   try {
     const listResponse = await fetchRelyingPartiesForOrganization(
       organizationSlug
     );
-    const relyingPartyList = listResponse?.data?.relying_parties ?? [];
+
+    if (
+      !listResponse ||
+      !listResponse.data ||
+      !listResponse.data.relying_parties
+    ) {
+      return [];
+    }
+
+    const relyingPartyList = listResponse.data.relying_parties;
 
     const detailedParties = await Promise.all(
       relyingPartyList.map(
         async (rp: { rp_slug: string; environment: string }) => {
           try {
             const detailResponse = await axiosInstance.get(
-              `/v1/yivi/organizations/${organizationSlug}/relying-party/${rp.environment}/${rp.rp_slug}`
+              `/v1/yivi/organizations/${organizationSlug}/relying-party/${rp.environment}/${rp.rp_slug}/`
             );
 
             return {
@@ -76,66 +86,33 @@ export const fetchDetailedRelyingPartiesForOrganization = async (
 };
 
 export const updateRelyingParty = async (
-  formState: RelyingPartyFormState,
-  formData: FormData
+  values: RelyingPartyInputs
 ): Promise<RelyingPartyFormState> => {
   try {
+    // Extract hostname strings for the API - it expects a string array
+    const hostnameStrings = values.hostnames
+      .map((h) => h.hostname)
+      .filter(Boolean);
+
+    // Prepare the payload with flat hostnames array
+    const payload = {
+      ...values,
+      hostnames: hostnameStrings,
+    };
+
+    const organizationSlug = "test-organization"; // TODO:
+
     await axiosInstance.patch(
-      `/v1/organizations/[organization]/relying-party`,
-      formData
+      `/v1/yivi/organizations/${organizationSlug}/relying-party/${values.rp_slug}/`,
+      payload
     );
 
     return {
-      values: { ...formState.values },
+      values,
       errors: {},
       success: true,
     };
-  } catch (e: unknown) {
-    if (e instanceof AxiosError && e.response?.status === 400) {
-      const serverErrors: Partial<FieldErrors<RelyingPartyInputs>> = {};
-
-      Object.entries(e.response.data).forEach(([key, value]) => {
-        if (key !== "relyingPartySlug") {
-          serverErrors[
-            key as keyof Omit<RelyingPartyInputs, "relyingPartySlug">
-          ] = {
-            type: "server",
-            message: String(value),
-          };
-        }
-      });
-
-      return {
-        values: { ...formState.values },
-        errors: serverErrors,
-      };
-    }
-
-    return {
-      values: { ...formState.values },
-      errors: {},
-      globalError: "Something went wrong.",
-    };
-  }
-};
-
-export const registerRelyingParty = async (
-  formState: RelyingPartyFormState,
-  formData: FormData
-): Promise<RelyingPartyFormState> => {
-  try {
-    await axiosInstance.post(
-      "/v1/organizations/[organization]/relying-party",
-      formData
-    );
-
-    return {
-      values: { ...formState.values },
-      errors: {},
-      success: true,
-      redirectTo: `/organizations/success`,
-    };
-  } catch (e: unknown) {
+  } catch (e) {
     if (e instanceof AxiosError && e.response?.status === 400) {
       const serverErrors: Partial<FieldErrors<RelyingPartyInputs>> = {};
 
@@ -147,15 +124,64 @@ export const registerRelyingParty = async (
       });
 
       return {
-        values: { ...formState.values },
+        values,
+        errors: serverErrors,
+      };
+    }
+    return {
+      values,
+      errors: {},
+      globalError: "Something went wrong. Please try again.",
+    };
+  }
+};
+
+export const registerRelyingParty = async (
+  values: RelyingPartyInputs
+): Promise<RelyingPartyFormState> => {
+  try {
+    const hostnameStrings = values.hostnames
+      .map((h) => h.hostname)
+      .filter(Boolean);
+
+    const payload = {
+      ...values,
+      hostnames: hostnameStrings,
+    };
+
+    const organizationSlug = "test-organization";
+
+    await axiosInstance.post(
+      `/v1/yivi/organizations/${organizationSlug}/relying-party`,
+      payload
+    );
+
+    return {
+      values,
+      errors: {},
+      success: true,
+    };
+  } catch (e) {
+    if (e instanceof AxiosError && e.response?.status === 400) {
+      const serverErrors: Partial<FieldErrors<RelyingPartyInputs>> = {};
+
+      Object.entries(e.response.data).forEach(([key, value]) => {
+        serverErrors[key as keyof RelyingPartyInputs] = {
+          type: "server",
+          message: String(value),
+        };
+      });
+
+      return {
+        values,
         errors: serverErrors,
       };
     }
 
     return {
-      values: { ...formState.values },
+      values,
       errors: {},
-      globalError: "Something went wrong.",
+      globalError: "Something went wrong. Please try again.",
     };
   }
 };

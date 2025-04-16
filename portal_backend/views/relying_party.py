@@ -29,25 +29,12 @@ from ..models.models import (
 
 
 def check_existing_hostname(request: Request) -> Optional[Response]:
-    hostname_data = request.data.get("hostname")
-    if isinstance(hostname_data, list):
-        for hostname in hostname_data:
-            if RelyingPartyHostname.objects.filter(hostname=hostname).exists():
-                return Response(
-                    {
-                        "error": f"Hostname '{hostname}' is already registered by another relying party"
-                    },
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
-    else:
-        if RelyingPartyHostname.objects.filter(hostname=hostname_data).exists():
-            return Response(
-                {
-                    "error": "This hostname is already registered by another relying party"
-                },
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-    return None
+    hostname_data = request.data.get("hostnames")
+
+    if not isinstance(hostname_data, list):
+        hostname_data = [hostname_data]
+
+        #  TODO: better check for existing hostnames
 
 
 class RelyingPartyListCreateView(APIView):
@@ -108,7 +95,7 @@ class RelyingPartyListCreateView(APIView):
     def save_hostname(
         self, request: Any, rp: RelyingParty
     ) -> List[RelyingPartyHostname]:
-        hostname_text = request.data.get("hostname")
+        hostname_text = request.data.get("hostnames")
         if isinstance(hostname_text, list):
             hostnames = []
             for hostname in hostname_text:
@@ -321,6 +308,53 @@ class RelyingPartyUpdateView(APIView):
         IsMaintainerOrAdmin,
     ]
 
+    def save_condiscon_attributes(
+        self, condiscon: Condiscon, attributes_data: List[Dict[str, str]]
+    ) -> None:
+        for attr_data in attributes_data:
+            credential_attribute = get_object_or_404(
+                CredentialAttribute,
+                credential__credential_tag=attr_data["credential_attribute_tag"],
+                name=attr_data["credential_attribute_name"],
+            )
+
+            condiscon_attr = CondisconAttribute(
+                credential_attribute=credential_attribute,
+                condiscon=condiscon,
+                reason_en=attr_data["reason_en"],
+                reason_nl=attr_data["reason_nl"],
+            )
+            condiscon_attr.full_clean()
+            condiscon_attr.save()
+
+    def make_condiscon_from_attributes(
+        self, attributes_data: List[Dict[str, str]]
+    ) -> Dict[str, Any]:
+        condiscon_json = {
+            "@context": "https://irma.app/ld/request/disclosure/v2",
+            "disclose": [[]],
+        }
+
+        credential_attributes: Dict[int, List[str]] = {}
+
+        for attr in attributes_data:
+            credential_attribute = get_object_or_404(
+                CredentialAttribute,
+                credential__credential_tag=attr["credential_attribute_tag"],
+                name=attr["credential_attribute_name"],
+            )
+            credential_id = credential_attribute.credential.id
+
+            if credential_id not in credential_attributes:
+                credential_attributes[credential_id] = []
+
+            credential_attributes[credential_id].append(credential_attribute.name)
+
+        for credential_id, attribute_list in credential_attributes.items():
+            condiscon_json["disclose"][0].append(attribute_list)
+
+        return condiscon_json
+
     @swagger_auto_schema(
         responses={
             200: "Success",
@@ -367,8 +401,8 @@ class RelyingPartyUpdateView(APIView):
         response_message: str = "Relying party updated successfully"
         response_data: Dict[str, str] = {"slug": str(relying_party.rp_slug)}
 
-        if request.data.get("hostname") is not None:
-            hostname_data: Union[str, List[str]] = request.data.get("hostname")
+        if request.data.get("hostnames") is not None:
+            hostname_data: Union[str, List[str]] = request.data.get("hostnames")
 
             existing_hostname: Optional[Response] = check_existing_hostname(request)
             if existing_hostname:

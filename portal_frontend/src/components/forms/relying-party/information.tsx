@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/src/components/ui/button";
 import { Input } from "@/src/components/ui/input";
@@ -14,87 +14,106 @@ import {
 import { Label } from "@/src/components/ui/label";
 import {
   registerRelyingParty,
-  RelyingPartyFormState,
+  updateRelyingParty,
   RelyingPartyInputs,
 } from "@/src/actions/manage-relying-party";
 import { generateSlug } from "@/lib/utils";
-import { useForm } from "react-hook-form";
+import { useForm, useFieldArray } from "react-hook-form";
 import { RelyingParty } from "@/src/models/relying-party";
-import { useFieldArray } from "react-hook-form";
 
-const defaultFormInput: RelyingPartyInputs = {
-  rp_slug: "",
-  hostnames: [{ hostname: "" }],
-  trust_model_env: "",
-  context_description_en: "",
-  context_description_nl: "",
-  attributes: [],
+type ManageRelyingPartyInformationFormProps = {
+  relying_party?: RelyingParty;
+  onCancel: () => void;
 };
-import { updateRelyingParty } from "@/src/actions/manage-relying-party";
 
 export default function ManageRelyingPartyInformationForm({
   relying_party,
-}: {
-  relying_party?: RelyingParty;
-}) {
-  if (relying_party) {
-    defaultFormInput.rp_slug = relying_party.rp_slug ?? "";
-    defaultFormInput.hostnames = relying_party.hostnames ?? [{ hostname: "" }];
-    defaultFormInput.trust_model_env = relying_party.environment ?? "";
-    defaultFormInput.context_description_en = "";
-    defaultFormInput.context_description_nl = "";
-    defaultFormInput.attributes = [];
-  }
-
-  const [formState, formSubmit, pending] = useActionState<
-    RelyingPartyFormState,
-    FormData
-  >(relying_party ? updateRelyingParty : registerRelyingParty, {
-    values: defaultFormInput,
-    errors: {},
-  });
-
+  onCancel,
+}: ManageRelyingPartyInformationFormProps) {
   const router = useRouter();
-  if (formState?.success && formState?.redirectTo) {
-    router.push(formState.redirectTo);
-  }
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
+  const [, setFormSuccess] = useState(false);
+
+  // Prepare initial form data
+  const initialFormInput: RelyingPartyInputs = {
+    rp_slug: relying_party?.rp_slug ?? "",
+    hostnames: relying_party?.hostnames
+      ? Array.isArray(relying_party.hostnames)
+        ? relying_party.hostnames.map((h) =>
+            typeof h === "string"
+              ? { hostname: h }
+              : (h as { hostname: string })
+          )
+        : []
+      : [],
+    environment: relying_party?.environment ?? "",
+    context_description_en: "", // Setting default empty value
+    context_description_nl: "", // Setting default empty value
+    attributes: [], // Setting default empty array for attributes
+  };
 
   const form = useForm<RelyingPartyInputs>({
-    defaultValues: defaultFormInput,
+    defaultValues: initialFormInput,
   });
-
-  const { fields, append, remove } = useFieldArray({
-    control: form.control,
-    name: "attributes",
-  });
-
-  useEffect(() => {
-    form.clearErrors();
-
-    if (formState?.errors) {
-      Object.entries(formState.errors).forEach(([field, error]) => {
-        if (error?.message) {
-          form.setError(field as keyof RelyingPartyInputs, {
-            type: "server",
-            message: error.message,
-          });
-        }
-      });
-    }
-  }, [formState?.errors, form]);
 
   const {
     fields: hostnameFields,
-    append: appendHostname,
+    append: addHostname,
     remove: removeHostname,
   } = useFieldArray({
     control: form.control,
     name: "hostnames",
   });
 
+  const {
+    fields: attributeFields,
+    append: appendAttribute,
+    remove: removeAttribute,
+  } = useFieldArray({
+    control: form.control,
+    name: "attributes",
+  });
+
+  const handleSubmit = async (values: RelyingPartyInputs) => {
+    setIsSubmitting(true);
+    setFormError(null);
+
+    try {
+      const result = relying_party
+        ? await updateRelyingParty(values)
+        : await registerRelyingParty(values);
+
+      if (result.globalError) {
+        setFormError(result.globalError);
+      } else if (result.errors && Object.keys(result.errors).length > 0) {
+        // Handle field-specific errors
+        Object.entries(result.errors).forEach(([field, error]) => {
+          if (error?.message) {
+            form.setError(field as keyof RelyingPartyInputs, {
+              type: "server",
+              message: error.message,
+            });
+          }
+        });
+      } else if (result.success) {
+        setFormSuccess(true);
+        if (result) {
+          console.log("Form submitted successfully:", result);
+        }
+      }
+    } catch (error) {
+      console.error("Form submission error:", error);
+      setFormError("An unexpected error occurred. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <Form {...form}>
-      <form action={formSubmit} className="space-y-4">
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+        {/* Slug */}
         <FormField
           control={form.control}
           name="rp_slug"
@@ -103,8 +122,7 @@ export default function ManageRelyingPartyInformationForm({
               <div className="py-1">
                 <Label>Slug</Label>
                 <FormDescription>
-                  Slug you want to use for this relying party. This must be
-                  different than your other relying parties.
+                  Slug you want to use for this relying party.
                 </FormDescription>
               </div>
               <div>
@@ -126,19 +144,26 @@ export default function ManageRelyingPartyInformationForm({
             </FormItem>
           )}
         />
+
+        {/* Environment */}
         <FormField
           control={form.control}
-          name="trust_model_env"
+          name="environment"
           render={({ field }) => (
             <FormItem className="grid md:grid-cols-2 items-start md:gap-4">
               <div className="py-1">
-                <Label>Trust Model Environment</Label>
-                <FormDescription>Select the environment.</FormDescription>
+                <Label>Environment</Label>
+                <FormDescription>
+                  Choose where this RP will run.
+                </FormDescription>
               </div>
               <div>
                 <FormControl>
-                  <select {...field} className="input">
-                    <option value=" ">Select environment</option>
+                  <select
+                    {...field}
+                    className="input w-full border px-3 py-2 rounded"
+                  >
+                    <option value="">Select environment</option>
                     <option value="production">Production</option>
                     <option value="staging">Staging</option>
                     <option value="demo">Demo</option>
@@ -149,6 +174,7 @@ export default function ManageRelyingPartyInformationForm({
           )}
         />
 
+        {/* Context Descriptions */}
         <FormField
           control={form.control}
           name="context_description_en"
@@ -156,7 +182,6 @@ export default function ManageRelyingPartyInformationForm({
             <FormItem className="grid md:grid-cols-2 items-start md:gap-4">
               <div className="py-1">
                 <Label>Context Description (EN)</Label>
-                <FormDescription>English context description.</FormDescription>
               </div>
               <div>
                 <FormControl>
@@ -174,7 +199,6 @@ export default function ManageRelyingPartyInformationForm({
             <FormItem className="grid md:grid-cols-2 items-start md:gap-4">
               <div className="py-1">
                 <Label>Context Description (NL)</Label>
-                <FormDescription>Dutch context description.</FormDescription>
               </div>
               <div>
                 <FormControl>
@@ -184,6 +208,8 @@ export default function ManageRelyingPartyInformationForm({
             </FormItem>
           )}
         />
+
+        {/* Hostnames */}
         <div className="space-y-4">
           <Label>Hostnames</Label>
           {hostnameFields.map((field, index) => (
@@ -210,14 +236,15 @@ export default function ManageRelyingPartyInformationForm({
           <Button
             type="button"
             variant="outline"
-            onClick={() => appendHostname({ hostname: "" })}
+            onClick={() => addHostname({ hostname: "" })}
           >
             Add Hostname
           </Button>
         </div>
 
+        {/* Attributes */}
         <div className="space-y-6">
-          {fields.map((field, index) => (
+          {attributeFields.map((field, index) => (
             <div
               key={field.id}
               className="grid grid-cols-1 md:grid-cols-2 gap-4 border p-4 rounded-md"
@@ -274,18 +301,17 @@ export default function ManageRelyingPartyInformationForm({
                 <Button
                   type="button"
                   variant="destructive"
-                  onClick={() => remove(index)}
+                  onClick={() => removeAttribute(index)}
                 >
                   Remove Attribute
                 </Button>
               </div>
             </div>
           ))}
-
           <Button
             type="button"
             onClick={() =>
-              append({
+              appendAttribute({
                 credential_attribute_tag: "",
                 credential_attribute_name: "",
                 reason_en: "",
@@ -297,15 +323,20 @@ export default function ManageRelyingPartyInformationForm({
           </Button>
         </div>
 
-        <Button type="submit" disabled={pending} className="col-span-2">
-          {pending ? "Submitting..." : "Submit"}
-        </Button>
-
-        {formState?.globalError && (
-          <div className="col-span-2 text-sm text-red-600 font-medium">
-            {formState.globalError}
-          </div>
+        {/* Error message */}
+        {formError && (
+          <div className="text-sm text-red-600 font-medium">{formError}</div>
         )}
+
+        {/* Buttons */}
+        <div className="flex gap-4">
+          <Button type="button" variant="ghost" onClick={onCancel}>
+            Cancel
+          </Button>
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? "Submitting..." : "Submit"}
+          </Button>
+        </div>
       </form>
     </Form>
   );
