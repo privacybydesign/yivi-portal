@@ -4,6 +4,14 @@ export interface RelyingParty {
   hostnames: { hostname: string }[];
   published_at: string | null;
   status?: string;
+  context_description_en?: string;
+  context_description_nl?: string;
+  attributes: {
+    credential_attribute_tag: string;
+    credential_attribute_name: string;
+    reason_en: string;
+    reason_nl: string;
+  }[];
   approved_rp_details?: {
     hostnames: string[];
     id: string;

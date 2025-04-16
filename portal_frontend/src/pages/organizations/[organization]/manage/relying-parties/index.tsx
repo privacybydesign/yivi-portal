@@ -10,6 +10,7 @@ import { Button } from "@/src/components/ui/button";
 import { Separator } from "@/src/components/ui/separator";
 
 export default function RelyingParties() {
+  const [message, setMessage] = useState<string | null>(null);
   const slug = useParams()?.organization;
   const [relyingParties, setRelyingParties] = useState<RelyingParty[]>([]);
   const [selectedRelyingParty, setSelectedRelyingParty] =
@@ -35,12 +36,18 @@ export default function RelyingParties() {
   const handleCancel = () => {
     setSelectedRelyingParty(undefined);
     setIsCreatingNew(false);
+    console.log("Cancelled");
   };
 
   return (
     <div className="space-y-6">
       <h2 className="text-lg font-medium">Relying Parties</h2>
       <Separator />
+      {message && (
+        <div className="text-green-700 bg-green-100 border border-green-300 px-4 py-2 rounded-md">
+          {message}
+        </div>
+      )}
 
       <div className="grid md:grid-cols-2 gap-8">
         {relyingParties.map((rp) => (
@@ -66,8 +73,18 @@ export default function RelyingParties() {
           {isCreatingNew ? (
             <FormCard>
               <ManageRelyingPartyInformationForm
-                relying_party={undefined}
+                relying_party={selectedRelyingParty}
                 onCancel={handleCancel}
+                onSuccess={(type) => {
+                  if (type === "nochange") {
+                    handleCancel();
+                    setMessage("No changes detected.");
+                  } else if (type === "updated") {
+                    handleCancel();
+                    setMessage("Changes applied successfully.");
+                  }
+                  setTimeout(() => setMessage(null), 3000);
+                }}
               />
             </FormCard>
           ) : (
@@ -84,6 +101,13 @@ export default function RelyingParties() {
           <ManageRelyingPartyInformationForm
             relying_party={selectedRelyingParty}
             onCancel={handleCancel}
+            onSuccess={(type) => {
+              if (type === "created") {
+                setMessage("New relying party created successfully.");
+                handleCancel();
+              }
+              setTimeout(() => setMessage(null), 3000);
+            }}
           />
         </FormCard>
       )}

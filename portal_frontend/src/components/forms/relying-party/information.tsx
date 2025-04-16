@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { Button } from "@/src/components/ui/button";
 import { Input } from "@/src/components/ui/input";
 import {
@@ -24,18 +23,39 @@ import { RelyingParty } from "@/src/models/relying-party";
 type ManageRelyingPartyInformationFormProps = {
   relying_party?: RelyingParty;
   onCancel: () => void;
+  onSuccess: (type: "updated" | "created" | "nochange") => void;
 };
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function getChangedFields<T extends Record<string, any>>(
+  original: T,
+  updated: T
+): Partial<T> {
+  const diff: Partial<T> = {};
+  for (const key in updated) {
+    const originalVal = original[key];
+    const updatedVal = updated[key];
+
+    if (Array.isArray(originalVal) && Array.isArray(updatedVal)) {
+      if (JSON.stringify(originalVal) !== JSON.stringify(updatedVal)) {
+        diff[key] = updatedVal;
+      }
+    } else if (originalVal !== updatedVal) {
+      diff[key] = updatedVal;
+    }
+  }
+  return diff;
+}
 
 export default function ManageRelyingPartyInformationForm({
   relying_party,
   onCancel,
+  onSuccess,
 }: ManageRelyingPartyInformationFormProps) {
-  const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [, setFormSuccess] = useState(false);
 
-  // Prepare initial form data
   const initialFormInput: RelyingPartyInputs = {
     rp_slug: relying_party?.rp_slug ?? "",
     hostnames: relying_party?.hostnames
@@ -48,10 +68,12 @@ export default function ManageRelyingPartyInformationForm({
         : []
       : [],
     environment: relying_party?.environment ?? "",
-    context_description_en: "", // Setting default empty value
-    context_description_nl: "", // Setting default empty value
-    attributes: [], // Setting default empty array for attributes
+    context_description_en: relying_party?.context_description_en ?? "",
+    context_description_nl: relying_party?.context_description_nl ?? "",
+    attributes: relying_party?.attributes ?? [],
   };
+
+  const [initialValues] = useState(initialFormInput);
 
   const form = useForm<RelyingPartyInputs>({
     defaultValues: initialFormInput,
@@ -80,26 +102,56 @@ export default function ManageRelyingPartyInformationForm({
     setFormError(null);
 
     try {
-      const result = relying_party
-        ? await updateRelyingParty(values)
-        : await registerRelyingParty(values);
+      if (relying_party) {
+        const diff = getChangedFields(initialValues, values);
 
-      if (result.globalError) {
-        setFormError(result.globalError);
-      } else if (result.errors && Object.keys(result.errors).length > 0) {
-        // Handle field-specific errors
-        Object.entries(result.errors).forEach(([field, error]) => {
-          if (error?.message) {
-            form.setError(field as keyof RelyingPartyInputs, {
-              type: "server",
-              message: error.message,
-            });
-          }
+        if (Object.keys(diff).length === 0) {
+          setFormSuccess(true);
+          onSuccess("nochange");
+          return;
+        }
+
+        const response = await updateRelyingParty({
+          ...initialValues,
+          ...diff,
         });
-      } else if (result.success) {
-        setFormSuccess(true);
-        if (result) {
-          console.log("Form submitted successfully:", result);
+
+        if (response.success) {
+          setFormSuccess(true);
+          onSuccess("updated");
+        }
+
+        if (response.globalError) {
+          setFormError(response.globalError);
+        } else if (response.errors) {
+          Object.entries(response.errors).forEach(([field, error]) => {
+            if (error?.message) {
+              form.setError(field as keyof RelyingPartyInputs, {
+                type: "server",
+                message: error.message,
+              });
+            }
+          });
+        }
+      } else {
+        const response = await registerRelyingParty(values);
+
+        if (response.success) {
+          setFormSuccess(true);
+          onSuccess("created");
+        }
+
+        if (response.globalError) {
+          setFormError(response.globalError);
+        } else if (response.errors) {
+          Object.entries(response.errors).forEach(([field, error]) => {
+            if (error?.message) {
+              form.setError(field as keyof RelyingPartyInputs, {
+                type: "server",
+                message: error.message,
+              });
+            }
+          });
         }
       }
     } catch (error) {

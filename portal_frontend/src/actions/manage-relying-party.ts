@@ -152,7 +152,7 @@ export const registerRelyingParty = async (
     const organizationSlug = "test-organization";
 
     await axiosInstance.post(
-      `/v1/yivi/organizations/${organizationSlug}/relying-party`,
+      `/v1/yivi/organizations/${organizationSlug}/relying-party/`,
       payload
     );
 
