@@ -21,6 +21,7 @@ import { useForm, useFieldArray } from "react-hook-form";
 import { RelyingParty } from "@/src/models/relying-party";
 
 type ManageRelyingPartyInformationFormProps = {
+  organizationSlug: string;
   relying_party?: RelyingParty;
   onCancel: () => void;
   onSuccess: (type: "updated" | "created" | "nochange") => void;
@@ -48,6 +49,7 @@ function getChangedFields<T extends Record<string, any>>(
 }
 
 export default function ManageRelyingPartyInformationForm({
+  organizationSlug,
   relying_party,
   onCancel,
   onSuccess,
@@ -61,19 +63,45 @@ export default function ManageRelyingPartyInformationForm({
     hostnames: relying_party?.hostnames
       ? Array.isArray(relying_party.hostnames)
         ? relying_party.hostnames.map((h) =>
-            typeof h === "string"
-              ? { hostname: h }
-              : (h as { hostname: string })
+            typeof h === "string" ? { hostname: h } : h
           )
         : []
       : [],
     environment: relying_party?.environment ?? "",
     context_description_en: relying_party?.context_description_en ?? "",
     context_description_nl: relying_party?.context_description_nl ?? "",
-    attributes: relying_party?.attributes ?? [],
+    attributes:
+      (relying_party?.attributes ?? []).length > 0
+        ? relying_party?.attributes ?? []
+        : [
+            {
+              credential_attribute_name: "",
+              reason_en: "",
+              reason_nl: "",
+            },
+          ],
   };
 
-  const [initialValues] = useState(initialFormInput);
+  const initialValues: RelyingPartyInputs = {
+    rp_slug: relying_party?.rp_slug ?? "",
+    hostnames:
+      relying_party?.hostnames?.map((h) =>
+        typeof h === "string" ? { hostname: h } : h
+      ) ?? [],
+    environment: relying_party?.environment ?? "",
+    context_description_en: relying_party?.context_description_en ?? "",
+    context_description_nl: relying_party?.context_description_nl ?? "",
+    attributes:
+      relying_party?.attributes && relying_party.attributes.length > 0
+        ? relying_party.attributes
+        : [
+            {
+              credential_attribute_name: "",
+              reason_en: "",
+              reason_nl: "",
+            },
+          ],
+  };
 
   const form = useForm<RelyingPartyInputs>({
     defaultValues: initialFormInput,
@@ -111,7 +139,7 @@ export default function ManageRelyingPartyInformationForm({
           return;
         }
 
-        const response = await updateRelyingParty({
+        const response = await updateRelyingParty(organizationSlug, {
           ...initialValues,
           ...diff,
         });
@@ -134,7 +162,7 @@ export default function ManageRelyingPartyInformationForm({
           });
         }
       } else {
-        const response = await registerRelyingParty(values);
+        const response = await registerRelyingParty(organizationSlug, values);
 
         if (response.success) {
           setFormSuccess(true);
@@ -262,8 +290,10 @@ export default function ManageRelyingPartyInformationForm({
         />
 
         {/* Hostnames */}
-        <div className="space-y-4">
+        <div className="space-y-2">
           <Label>Hostnames</Label>
+        </div>
+        <div className="space-y-3">
           {hostnameFields.map((field, index) => (
             <FormField
               key={field.id}
@@ -295,61 +325,58 @@ export default function ManageRelyingPartyInformationForm({
         </div>
 
         {/* Attributes */}
-        <div className="space-y-6">
+        <div className="space-y-4">
+          <Label>Attributes</Label>
           {attributeFields.map((field, index) => (
             <div
               key={field.id}
-              className="grid grid-cols-1 md:grid-cols-2 gap-4 border p-4 rounded-md"
+              className="space-y-4 rounded-xl border p-4 shadow-sm bg-white"
             >
-              <FormField
-                control={form.control}
-                name={`attributes.${index}.credential_attribute_tag`}
-                render={({ field }) => (
-                  <FormItem>
-                    <Label>Attribute Tag</Label>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name={`attributes.${index}.credential_attribute_name`}
-                render={({ field }) => (
-                  <FormItem>
-                    <Label>Attribute Name</Label>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name={`attributes.${index}.reason_en`}
-                render={({ field }) => (
-                  <FormItem>
-                    <Label>Reason (EN)</Label>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name={`attributes.${index}.reason_nl`}
-                render={({ field }) => (
-                  <FormItem>
-                    <Label>Reason (NL)</Label>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-              <div className="col-span-2">
+              <div className="grid md:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name={`attributes.${index}.credential_attribute_name`}
+                  render={({ field }) => (
+                    <FormItem>
+                      <Label>Attribute Name</Label>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          placeholder="e.g. pbdf.pbdf.email.email"
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name={`attributes.${index}.reason_en`}
+                  render={({ field }) => (
+                    <FormItem>
+                      <Label>Reason (EN)</Label>
+                      <FormControl>
+                        <Input {...field} placeholder="Why it's needed (EN)" />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name={`attributes.${index}.reason_nl`}
+                  render={({ field }) => (
+                    <FormItem>
+                      <Label>Reason (NL)</Label>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          placeholder="Waarom het nodig is (NL)"
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+              </div>
+              <div className="flex justify-end">
                 <Button
                   type="button"
                   variant="destructive"
@@ -360,11 +387,12 @@ export default function ManageRelyingPartyInformationForm({
               </div>
             </div>
           ))}
+
           <Button
             type="button"
+            variant="outline"
             onClick={() =>
               appendAttribute({
-                credential_attribute_tag: "",
                 credential_attribute_name: "",
                 reason_en: "",
                 reason_nl: "",

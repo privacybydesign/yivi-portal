@@ -96,13 +96,17 @@ class CredentialSerializer(serializers.ModelSerializer):
 class CredentialAttributeSerializer(serializers.ModelSerializer):
     class Meta:
         model = CredentialAttribute
-        fields = "__all__"
+        fields = ""
 
 
 class CondisconAttributeSerializer(serializers.ModelSerializer):
+    credential_attribute = serializers.CharField(
+        source="credential_attribute.credential.", read_only=True
+    )
+
     class Meta:
         model = CondisconAttribute
-        fields = "__all__"
+        fields = ["reason-en", "credential_attribute"]
 
 
 class RelyingPartySerializer(serializers.ModelSerializer):

@@ -12,7 +12,6 @@ export interface RelyingPartyInputs {
   context_description_en: string;
   context_description_nl: string;
   attributes: {
-    credential_attribute_tag: string;
     credential_attribute_name: string;
     reason_en: string;
     reason_nl: string;
@@ -86,6 +85,7 @@ export const fetchDetailedRelyingParties = async (
 };
 
 export const updateRelyingParty = async (
+  organizationSlug: string,
   values: RelyingPartyInputs
 ): Promise<RelyingPartyFormState> => {
   try {
@@ -99,8 +99,6 @@ export const updateRelyingParty = async (
       ...values,
       hostnames: hostnameStrings,
     };
-
-    const organizationSlug = "test-organization"; // TODO:
 
     await axiosInstance.patch(
       `/v1/yivi/organizations/${organizationSlug}/relying-party/${values.rp_slug}/`,
@@ -137,6 +135,7 @@ export const updateRelyingParty = async (
 };
 
 export const registerRelyingParty = async (
+  organizationSlug: string,
   values: RelyingPartyInputs
 ): Promise<RelyingPartyFormState> => {
   try {
@@ -148,8 +147,6 @@ export const registerRelyingParty = async (
       ...values,
       hostnames: hostnameStrings,
     };
-
-    const organizationSlug = "test-organization";
 
     await axiosInstance.post(
       `/v1/yivi/organizations/${organizationSlug}/relying-party/`,

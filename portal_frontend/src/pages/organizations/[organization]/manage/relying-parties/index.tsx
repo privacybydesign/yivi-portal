@@ -8,6 +8,7 @@ import ManageRelyingPartyInformationForm from "@/src/components/forms/relying-pa
 import ManageOrganizationLayout from "@/src/components/layout/manage-organization";
 import { Button } from "@/src/components/ui/button";
 import { Separator } from "@/src/components/ui/separator";
+import { fetchOrganization } from "@/src/actions/manage-organization";
 
 export default function RelyingParties() {
   const [message, setMessage] = useState<string | null>(null);
@@ -19,6 +20,7 @@ export default function RelyingParties() {
 
   useEffect(() => {
     if (slug) {
+      fetchOrganization(slug as string).then();
       fetchDetailedRelyingParties(slug as string).then(setRelyingParties);
     }
   }, [slug]);
@@ -49,6 +51,7 @@ export default function RelyingParties() {
         </div>
       )}
 
+      {/* Grid of Relying Parties */}
       <div className="grid md:grid-cols-2 gap-8">
         {relyingParties.map((rp) => (
           <div key={rp.rp_slug} className="space-y-2">
@@ -68,38 +71,44 @@ export default function RelyingParties() {
             </div>
           </div>
         ))}
-
-        <div className="space-y-4">
-          {isCreatingNew ? (
-            <FormCard>
-              <ManageRelyingPartyInformationForm
-                relying_party={selectedRelyingParty}
-                onCancel={handleCancel}
-                onSuccess={(type) => {
-                  if (type === "nochange") {
-                    handleCancel();
-                    setMessage("No changes detected.");
-                  } else if (type === "updated") {
-                    handleCancel();
-                    setMessage("Changes applied successfully.");
-                  }
-                  setTimeout(() => setMessage(null), 3000);
-                }}
-              />
-            </FormCard>
-          ) : (
-            <Button variant="secondary" onClick={handleCreate}>
-              + New Relying Party
-            </Button>
-          )}
-        </div>
       </div>
 
-      {/* Edit form below the grid */}
+      <div>
+        <Button variant="secondary" onClick={handleCreate}>
+          Create New Relying Party
+        </Button>
+      </div>
+
+      {isCreatingNew && (
+        <FormCard>
+          <ManageRelyingPartyInformationForm
+            organizationSlug={slug as string}
+            key={"new"}
+            relying_party={undefined}
+            onCancel={handleCancel}
+            onSuccess={(type) => {
+              if (type === "nochange") {
+                setMessage("No changes detected.");
+                handleCancel();
+              } else if (type === "updated" || type === "created") {
+                setMessage(
+                  type === "updated"
+                    ? "Changes applied successfully."
+                    : "New relying party created successfully."
+                );
+                handleCancel();
+              }
+              setTimeout(() => setMessage(null), 3000);
+            }}
+          />
+        </FormCard>
+      )}
+
       {selectedRelyingParty && (
         <FormCard>
           <ManageRelyingPartyInformationForm
             relying_party={selectedRelyingParty}
+            organizationSlug={slug as string}
             onCancel={handleCancel}
             onSuccess={(type) => {
               if (type === "created") {

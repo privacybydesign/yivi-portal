@@ -15,7 +15,9 @@ from rest_framework.views import APIView
 from .helpers import IsMaintainerOrAdmin, BelongsToOrganization
 from ..dns_verification import generate_dns_challenge
 from ..models.model_serializers import (
+    CondisconSerializer,
     RelyingPartyHostnameSerializer,
+    CondisconAttributeSerializer,
 )
 from ..models.models import (
     RelyingParty,
@@ -61,7 +63,6 @@ class RelyingPartyListCreateView(APIView):
         for attr in attributes_data:
             credential_attribute = get_object_or_404(
                 CredentialAttribute,
-                credential__credential_tag=attr["credential_attribute_tag"],
                 name=attr["credential_attribute_name"],
             )
             credential_id = credential_attribute.credential.id
@@ -148,7 +149,6 @@ class RelyingPartyListCreateView(APIView):
         for attr_data in attributes_data:
             credential_attribute = get_object_or_404(
                 CredentialAttribute,
-                credential__credential_tag=attr_data["credential_attribute_tag"],
                 name=attr_data["credential_attribute_name"],
             )
 
@@ -263,13 +263,34 @@ class RelyingPartyDetailView(APIView):
             rp_slug=rp_slug,
         )
         hostnames = RelyingPartyHostname.objects.filter(
-            relying_party__rp_slug=rp_slug,
+            relying_party=relying_party,
         )
         hostname_serializer = RelyingPartyHostnameSerializer(hostnames, many=True)
         hostnames_data = hostname_serializer.data
+
+        condiscon = get_object_or_404(Condiscon, relying_party=relying_party)
+        condiscon_serializer = CondisconSerializer(condiscon)
+        condiscon_data = condiscon_serializer.data
+        # TODO: should return attributes dict with credential_attribute_name and reason
+
+        condiscon_attributes = CondisconAttribute.objects.filter(condiscon=condiscon)
+
+        condiscon_attributes_serialized = [
+            {
+                "credential_attribute_name": condiscon_attribute.credential_attribute.name,
+                "reason_en": condiscon_attribute.reason_en,
+                "reason_nl": condiscon_attribute.reason_nl,
+            }
+            for condiscon_attribute in condiscon_attributes
+        ]
+
         serialized = {
             "rp_slug": relying_party.rp_slug,
             "hostnames": hostnames_data,
+            "context_description_en": condiscon_data["context_description_en"],
+            "context_description_nl": condiscon_data["context_description_nl"],
+            "attributes": condiscon_attributes_serialized,
+            "trust_model_env": relying_party.yivi_tme.environment,
             "published_at": relying_party.published_at,
         }
         return Response(serialized, status=status.HTTP_200_OK)
@@ -314,7 +335,6 @@ class RelyingPartyUpdateView(APIView):
         for attr_data in attributes_data:
             credential_attribute = get_object_or_404(
                 CredentialAttribute,
-                credential__credential_tag=attr_data["credential_attribute_tag"],
                 name=attr_data["credential_attribute_name"],
             )
 
@@ -340,7 +360,6 @@ class RelyingPartyUpdateView(APIView):
         for attr in attributes_data:
             credential_attribute = get_object_or_404(
                 CredentialAttribute,
-                credential__credential_tag=attr["credential_attribute_tag"],
                 name=attr["credential_attribute_name"],
             )
             credential_id = credential_attribute.credential.id
@@ -374,9 +393,6 @@ class RelyingPartyUpdateView(APIView):
                     items=openapi.Schema(
                         type=openapi.TYPE_OBJECT,
                         properties={
-                            "credential_attribute_tag": openapi.Schema(
-                                type=openapi.TYPE_STRING
-                            ),
                             "credential_attribute_name": openapi.Schema(
                                 type=openapi.TYPE_STRING
                             ),
