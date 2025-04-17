@@ -83,21 +83,18 @@ export default function RelyingParties() {
         <FormCard>
           <ManageRelyingPartyInformationForm
             organizationSlug={slug as string}
-            key={"new"}
+            key="new"
             relying_party={undefined}
             onCancel={handleCancel}
             onSuccess={(type) => {
               if (type === "nochange") {
                 setMessage("No changes detected.");
-                handleCancel();
-              } else if (type === "updated" || type === "created") {
-                setMessage(
-                  type === "updated"
-                    ? "Changes applied successfully."
-                    : "New relying party created successfully."
-                );
-                handleCancel();
+              } else if (type === "created") {
+                setMessage("New relying party created successfully.");
+              } else {
+                setMessage(`Unexpected result: ${type}`);
               }
+              handleCancel();
               setTimeout(() => setMessage(null), 3000);
             }}
           />
@@ -109,12 +106,17 @@ export default function RelyingParties() {
           <ManageRelyingPartyInformationForm
             relying_party={selectedRelyingParty}
             organizationSlug={slug as string}
+            key={selectedRelyingParty.rp_slug}
             onCancel={handleCancel}
             onSuccess={(type) => {
-              if (type === "created") {
-                setMessage("New relying party created successfully.");
-                handleCancel();
+              if (type === "nochange") {
+                setMessage("No changes detected.");
+              } else if (type === "updated") {
+                setMessage("Changes applied successfully.");
+              } else {
+                setMessage(`Unexpected result: ${type}`);
               }
+              handleCancel();
               setTimeout(() => setMessage(null), 3000);
             }}
           />

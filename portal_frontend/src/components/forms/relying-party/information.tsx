@@ -27,8 +27,7 @@ type ManageRelyingPartyInformationFormProps = {
   onSuccess: (type: "updated" | "created" | "nochange") => void;
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function getChangedFields<T extends Record<string, any>>(
+function getChangedFields<T extends RelyingPartyInputs>(
   original: T,
   updated: T
 ): Partial<T> {
