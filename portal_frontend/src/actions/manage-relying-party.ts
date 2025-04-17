@@ -7,7 +7,7 @@ import { RelyingParty } from "../models/relying-party";
 
 export interface RelyingPartyInputs {
   rp_slug: string;
-  hostnames: { hostname: string }[];
+  hostnames: { hostname: string; dns_challenge?: string }[];
   environment: string;
   context_description_en: string;
   context_description_nl: string;
@@ -23,6 +23,17 @@ export type RelyingPartyFormState = {
   errors: Partial<FieldErrors<RelyingPartyInputs>>;
   globalError?: string;
   success?: boolean;
+  message?: string;
+  slug?: string;
+  hostnames: {
+    hostname: string;
+    dns_challenge?: string;
+    dns_challenge_created_at?: string;
+    dns_challenge_verified?: boolean;
+    dns_challenge_verified_at?: string;
+    dns_challenge_invalidated_at?: string;
+    manually_verified?: boolean;
+  }[];
 };
 
 export const fetchRelyingPartiesForOrganization = async (
@@ -100,7 +111,7 @@ export const updateRelyingParty = async (
       hostnames: hostnameStrings,
     };
 
-    await axiosInstance.patch(
+    const response = await axiosInstance.patch(
       `/v1/yivi/organizations/${organizationSlug}/relying-party/${values.rp_slug}/`,
       payload
     );
@@ -109,6 +120,9 @@ export const updateRelyingParty = async (
       values,
       errors: {},
       success: true,
+      message: response.data.message,
+      hostnames: response.data.hostnames,
+      slug: response.data.slug,
     };
   } catch (e) {
     if (e instanceof AxiosError && e.response?.status === 400) {
@@ -124,12 +138,14 @@ export const updateRelyingParty = async (
       return {
         values,
         errors: serverErrors,
+        hostnames: values.hostnames,
       };
     }
     return {
       values,
       errors: {},
       globalError: "Something went wrong. Please try again.",
+      hostnames: values.hostnames,
     };
   }
 };
@@ -148,7 +164,7 @@ export const registerRelyingParty = async (
       hostnames: hostnameStrings,
     };
 
-    await axiosInstance.post(
+    const response = await axiosInstance.post(
       `/v1/yivi/organizations/${organizationSlug}/relying-party/`,
       payload
     );
@@ -157,6 +173,9 @@ export const registerRelyingParty = async (
       values,
       errors: {},
       success: true,
+      message: response.data.message,
+      hostnames: response.data.hostnames,
+      slug: response.data.slug,
     };
   } catch (e) {
     if (e instanceof AxiosError && e.response?.status === 400) {
@@ -172,10 +191,12 @@ export const registerRelyingParty = async (
       return {
         values,
         errors: serverErrors,
+        hostnames: values.hostnames,
       };
     }
 
     return {
+      hostnames: values.hostnames,
       values,
       errors: {},
       globalError: "Something went wrong. Please try again.",

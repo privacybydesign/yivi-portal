@@ -80,7 +80,7 @@ class RelyingPartyListCreateView(APIView):
     def save_rp(self, request: Any, org_slug: str, rp_slug: str) -> RelyingParty:
         yivi_tme = get_object_or_404(
             YiviTrustModelEnv,
-            environment=request.data.get("trust_model_env"),
+            environment=request.data.get("environment"),
             trust_model__name="yivi",
         )
         organization = get_object_or_404(Organization, slug=org_slug)
@@ -172,14 +172,14 @@ class RelyingPartyListCreateView(APIView):
             type=openapi.TYPE_OBJECT,
             required=[
                 "hostname",
-                "trust_model_env",
+                "environment",
                 "attributes",
                 "context_description_en",
                 "context_description_nl",
             ],
             properties={
                 "hostname": openapi.Schema(type=openapi.TYPE_STRING),
-                "trust_model_env": openapi.Schema(type=openapi.TYPE_STRING),
+                "environment": openapi.Schema(type=openapi.TYPE_STRING),
                 "context_description_en": openapi.Schema(type=openapi.TYPE_STRING),
                 "context_description_nl": openapi.Schema(type=openapi.TYPE_STRING),
                 "attributes": openapi.Schema(
@@ -290,7 +290,7 @@ class RelyingPartyDetailView(APIView):
             "context_description_en": condiscon_data["context_description_en"],
             "context_description_nl": condiscon_data["context_description_nl"],
             "attributes": condiscon_attributes_serialized,
-            "trust_model_env": relying_party.yivi_tme.environment,
+            "environment": relying_party.yivi_tme.environment,
             "published_at": relying_party.published_at,
         }
         return Response(serialized, status=status.HTTP_200_OK)
@@ -385,7 +385,7 @@ class RelyingPartyUpdateView(APIView):
             type=openapi.TYPE_OBJECT,
             properties={
                 "hostname": openapi.Schema(type=openapi.TYPE_STRING),
-                "trust_model_env": openapi.Schema(type=openapi.TYPE_STRING),
+                "environment": openapi.Schema(type=openapi.TYPE_STRING),
                 "context_description_en": openapi.Schema(type=openapi.TYPE_STRING),
                 "context_description_nl": openapi.Schema(type=openapi.TYPE_STRING),
                 "attributes": openapi.Schema(
@@ -411,7 +411,6 @@ class RelyingPartyUpdateView(APIView):
         relying_party: RelyingParty = get_object_or_404(
             RelyingParty,
             organization__slug=org_slug,
-            yivi_tme__environment=environment,
             rp_slug=rp_slug,
         )
         response_message: str = "Relying party updated successfully"
@@ -509,9 +508,9 @@ class RelyingPartyUpdateView(APIView):
             condiscon.condiscon = self.make_condiscon_from_attributes(attributes_data)
             condiscon.save()
 
-        if request.data.get("trust_model_env") is not None:
+        if request.data.get("environment") is not None:
             yivi_tme: YiviTrustModelEnv = get_object_or_404(
-                YiviTrustModelEnv, environment=request.data.get("trust_model_env")
+                YiviTrustModelEnv, environment=request.data.get("environment")
             )
             relying_party.yivi_tme = yivi_tme
             relying_party.save()
@@ -533,7 +532,7 @@ class RelyingPartyUpdateView(APIView):
                 "context_description_en",
                 "context_description_nl",
                 "attributes",
-                "trust_model_env",
+                "environment",
             ]
         ):
             relying_party.ready = False

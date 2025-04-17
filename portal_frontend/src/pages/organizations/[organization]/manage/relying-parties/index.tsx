@@ -7,7 +7,6 @@ import { fetchDetailedRelyingParties } from "@/src/actions/manage-relying-party"
 import ManageRelyingPartyInformationForm from "@/src/components/forms/relying-party/information";
 import ManageOrganizationLayout from "@/src/components/layout/manage-organization";
 import { Button } from "@/src/components/ui/button";
-import { Separator } from "@/src/components/ui/separator";
 import { fetchOrganization } from "@/src/actions/manage-organization";
 
 export default function RelyingParties() {
@@ -43,32 +42,46 @@ export default function RelyingParties() {
 
   return (
     <div className="space-y-6">
-      <h2 className="text-lg font-medium">Relying Parties</h2>
-      <Separator />
       {message && (
         <div className="text-green-700 bg-green-100 border border-green-300 px-4 py-2 rounded-md">
           {message}
         </div>
       )}
 
-      {/* Grid of Relying Parties */}
-      <div className="grid md:grid-cols-2 gap-8">
+      <div className="space-y-4">
         {relyingParties.map((rp) => (
           <div key={rp.rp_slug} className="space-y-2">
             <div
-              className="flex justify-between items-center border p-3 rounded hover:bg-muted cursor-pointer"
+              className="border rounded p-4 hover:bg-muted cursor-pointer w-full"
               onClick={() => handleEdit(rp)}
             >
-              <div>
-                <div className="font-medium">{rp.rp_slug}</div>
-                <div className="text-sm text-muted-foreground">
-                  {rp.hostnames?.[0]?.hostname}
-                </div>
+              <div className="font-medium text-lg">{rp.rp_slug}</div>
+              <div className="text-sm text-muted-foreground">
+                {rp.hostnames?.[0]?.hostname}
               </div>
-              <Button variant="outline" size="sm">
-                Edit
-              </Button>
             </div>
+
+            {selectedRelyingParty?.rp_slug === rp.rp_slug && (
+              <FormCard>
+                <ManageRelyingPartyInformationForm
+                  relying_party={rp}
+                  organizationSlug={slug as string}
+                  key={rp.rp_slug}
+                  onCancel={handleCancel}
+                  onSuccess={(type) => {
+                    if (type === "nochange") {
+                      setMessage("No changes detected.");
+                    } else if (type === "updated") {
+                      setMessage("Changes applied successfully.");
+                    } else {
+                      setMessage(`Unexpected result: ${type}`);
+                    }
+                    handleCancel();
+                    setTimeout(() => setMessage(null), 3000);
+                  }}
+                />
+              </FormCard>
+            )}
           </div>
         ))}
       </div>
@@ -94,29 +107,7 @@ export default function RelyingParties() {
               } else {
                 setMessage(`Unexpected result: ${type}`);
               }
-              handleCancel();
-              setTimeout(() => setMessage(null), 3000);
-            }}
-          />
-        </FormCard>
-      )}
-
-      {selectedRelyingParty && (
-        <FormCard>
-          <ManageRelyingPartyInformationForm
-            relying_party={selectedRelyingParty}
-            organizationSlug={slug as string}
-            key={selectedRelyingParty.rp_slug}
-            onCancel={handleCancel}
-            onSuccess={(type) => {
-              if (type === "nochange") {
-                setMessage("No changes detected.");
-              } else if (type === "updated") {
-                setMessage("Changes applied successfully.");
-              } else {
-                setMessage(`Unexpected result: ${type}`);
-              }
-              handleCancel();
+              // handleCancel();
               setTimeout(() => setMessage(null), 3000);
             }}
           />
