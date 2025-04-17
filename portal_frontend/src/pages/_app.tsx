@@ -10,6 +10,7 @@ import { initials } from "@dicebear/collection";
 import { createAvatar } from "@dicebear/core";
 import { axiosInstance } from "../services/axiosInstance";
 import { NextPage } from 'next';
+import { Toaster } from '@/src/components/ui/toaster';
 
 export type NextPageWithLayout<P = object, IP = P> = NextPage<P, IP> & {
   getLayout?: (page: ReactElement) => ReactNode;
@@ -121,6 +122,8 @@ export default function MyApp({ Component, pageProps }: AppPropsWithLayout) {
       </header>
 
       {getLayout(<Component {...pageProps} />)}
+
+      <Toaster />
     </div>
   );
 }
