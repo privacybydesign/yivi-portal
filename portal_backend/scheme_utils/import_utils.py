@@ -52,7 +52,6 @@ def create_org(slug: str, name_en: str, name_nl: str, logo_path: str) -> Organiz
         logo_image_file = load_logo_if_exists(logo_path)
         org, org_created = Organization.objects.update_or_create(
             slug=slug,
-            trust_model=trust_model,
             defaults={
                 "is_verified": True,
                 "logo": logo_image_file,
@@ -65,6 +64,9 @@ def create_org(slug: str, name_en: str, name_nl: str, logo_path: str) -> Organiz
                 "house_number": None,
             },
         )
+
+        org.trust_models.add(trust_model)
+
         logger.info(f"{'Created' if org_created else 'Updated'} Organization: {slug}")
     except Exception as org_error:
         logger.error(f"Failed to create/update Organization {slug}: {org_error}")

@@ -1,6 +1,6 @@
 erDiagram
     TrustModel ||--|{ YiviTrustModelEnv : "has_environments"
-    TrustModel ||--|{ Organization : "has_organizations"
+    TrustModel }|--|{ Organization : "has_organizations"
     YiviTrustModelEnv ||--o{ AttestationProvider : "has_providers"
     YiviTrustModelEnv ||--o{ RelyingParty : "has_Relying_parties"
     

@@ -5,7 +5,7 @@ from rest_framework.response import Response
 from drf_yasg.utils import swagger_auto_schema  # type: ignore
 from rest_framework import status
 from ..models.model_serializers import MaintainerSerializer, OrganizationSerializer
-from ..models.models import AttestationProvider, Organization, RelyingParty
+from ..models.models import AttestationProvider, Organization, RelyingParty, TrustModel
 from rest_framework import permissions
 from ..models.models import User
 from .helpers import BelongsToOrganization, IsMaintainerOrAdmin
@@ -72,8 +72,7 @@ class OrganizationListView(APIView):
                 name_en__icontains=search_query
             )
         if trust_model:
-            trust_model = trust_model.lower()
-            orgs = orgs.filter(trust_model__name=trust_model)
+            orgs = Organization.objects.filter(trust_models__name=trust_model)
 
         paginator = LimitOffsetPagination()
         paginator.default_limit = 20

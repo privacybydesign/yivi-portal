@@ -14,6 +14,11 @@ from portal_backend.models.models import (
 )
 
 
+@admin.register(CredentialAttribute)
+class CredentialAttributeAdmin(admin.ModelAdmin):
+    list_display = ("name",)
+
+
 @admin.register(Organization)
 class OrganizationAdmin(admin.ModelAdmin):
     list_display = ("name_en", "registration_number", "created_at", "last_updated_at")
@@ -65,24 +70,33 @@ class AttestationProviderAdmin(admin.ModelAdmin):
     readonly_fields = ("created_at", "last_updated_at")
 
 
-class CredentialAttributeInline(admin.TabularInline):
-    model = CredentialAttribute
-    extra = 1
-
-
 @admin.register(Credential)
 class CredentialAdmin(admin.ModelAdmin):
-    list_display = ("name_en", "attestation_provider", "credential_tag")
+    list_display = (
+        "name_en",
+        "attestation_provider",
+        "credential_tag",
+        "get_full_path",
+    )
     search_fields = ("name_en", "credential_tag")
-    inlines = [CredentialAttributeInline]
+
+    def get_full_path(self, obj):
+        return obj.full_path
+
+    get_full_path.short_description = "Full Credential Path"
+
+
+class CondisconAttributeInline(admin.TabularInline):
+    model = CondisconAttribute
+    extra = 1
+    autocomplete_fields = ["credential_attribute"]
 
 
 @admin.register(CondisconAttribute)
 class CondisconAttributeAdmin(admin.ModelAdmin):
-    list_display = ("credential_attribute", "condiscon_id", "reason_en", "reason_nl")
+    list_display = ("credential_attribute", "condiscon", "reason_en", "reason_nl")
     search_fields = ("credential_attribute__name", "reason_en", "reason_nl")
     list_filter = ("condiscon",)
-    exclude = ("credential_attribute",)
 
 
 @admin.register(RelyingParty)
