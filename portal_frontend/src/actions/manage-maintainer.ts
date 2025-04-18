@@ -72,7 +72,7 @@ export const deleteMaintainerFromOrganization = async (maintainer: Maintainer, o
     }
 
     try {
-        await axiosInstance.delete(`/v1/organizations/${organization.slug}/maintainers?maintainer_id=${maintainer.id}`);
+        await axiosInstance.delete(`/v1/organizations/${organization.slug}/maintainers/${maintainer.id}/`);
 
         return { success: true, message: 'User has been removed as maintainer from this organization' };
     } catch (e: unknown) {

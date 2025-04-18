@@ -199,15 +199,17 @@ class OrganizationMaintainersView(APIView):
             status=status.HTTP_201_CREATED,
         )
 
+
+class OrganizationMaintainerView(APIView):
+    permission_classes = [
+        permissions.IsAuthenticated,
+        BelongsToOrganization,
+        IsMaintainerOrAdmin,
+    ]
+
     @swagger_auto_schema(
         request_body=openapi.Schema(
             type=openapi.TYPE_OBJECT,
-            required=["email"],
-            properties={
-                "email": openapi.Schema(
-                    type=openapi.TYPE_STRING, format=openapi.FORMAT_EMAIL
-                ),
-            },
         ),
         responses={
             200: "Success",
@@ -216,9 +218,8 @@ class OrganizationMaintainersView(APIView):
             404: "Not Found",
         },
     )
-    def delete(self, request: Request, org_slug: str) -> Response:
+    def delete(self, request: Request, org_slug: str, maintainer_id: str) -> Response:
         """Remove a maintainer from an organization"""
-        maintainer_id: Optional[int] = request.query_params.get("maintainer_id")
 
         if not maintainer_id:
             return Response(
