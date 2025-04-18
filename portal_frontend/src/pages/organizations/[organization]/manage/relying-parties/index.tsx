@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { RelyingParty } from "@/src/models/relying-party";
-import { fetchDetailedRelyingParties } from "@/src/actions/manage-relying-party";
+import { fetchRelyingPartiesDetails } from "@/src/actions/manage-relying-party";
 import ManageRelyingPartyInformationForm from "@/src/components/forms/relying-party/information";
 import ManageOrganizationLayout from "@/src/components/layout/manage-organization";
 import { Button } from "@/src/components/ui/button";
@@ -11,18 +11,18 @@ import { fetchOrganization } from "@/src/actions/manage-organization";
 
 export default function RelyingParties() {
   const [message, setMessage] = useState<string | null>(null);
-  const slug = useParams()?.organization;
+  const org_slug = useParams()?.organization;
   const [relyingParties, setRelyingParties] = useState<RelyingParty[]>([]);
   const [selectedRelyingParty, setSelectedRelyingParty] =
     useState<RelyingParty>();
   const [isCreatingNew, setIsCreatingNew] = useState(false);
 
   useEffect(() => {
-    if (slug) {
-      fetchOrganization(slug as string).then();
-      fetchDetailedRelyingParties(slug as string).then(setRelyingParties);
+    if (org_slug) {
+      fetchOrganization(org_slug as string).then();
+      fetchRelyingPartiesDetails(org_slug as string).then(setRelyingParties);
     }
-  }, [slug]);
+  }, [org_slug]);
 
   const handleEdit = (rp: RelyingParty) => {
     setSelectedRelyingParty(rp);
@@ -57,7 +57,9 @@ export default function RelyingParties() {
             >
               <div className="font-medium text-lg">{rp.rp_slug}</div>
               <div className="text-sm text-muted-foreground">
-                {rp.hostnames?.[0]?.hostname}
+                {rp.hostnames?.map((h, i) => (
+                  <div key={i}>{typeof h === "string" ? h : h.hostname}</div>
+                ))}
               </div>
             </div>
 
@@ -65,7 +67,7 @@ export default function RelyingParties() {
               <FormCard>
                 <ManageRelyingPartyInformationForm
                   relying_party={rp}
-                  organizationSlug={slug as string}
+                  organizationSlug={org_slug as string}
                   key={rp.rp_slug}
                   onCancel={handleCancel}
                   onSuccess={(type) => {
@@ -95,7 +97,7 @@ export default function RelyingParties() {
       {isCreatingNew && (
         <FormCard>
           <ManageRelyingPartyInformationForm
-            organizationSlug={slug as string}
+            organizationSlug={org_slug as string}
             key="new"
             relying_party={undefined}
             onCancel={handleCancel}
@@ -107,7 +109,6 @@ export default function RelyingParties() {
               } else {
                 setMessage(`Unexpected result: ${type}`);
               }
-              // handleCancel();
               setTimeout(() => setMessage(null), 3000);
             }}
           />

@@ -16,10 +16,6 @@ const menuItems = [
     href: "/organizations/[organization]/manage/attestation-providers",
     title: "Attestation providers",
   },
-  {
-    href: "/organizations/[organization]/manage/dns-verification",
-    title: "DNS verification",
-  },
 ];
 
 export default function ManageOrganizationLayout(page: ReactElement) {

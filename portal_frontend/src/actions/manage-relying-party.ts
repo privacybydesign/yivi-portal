@@ -7,7 +7,7 @@ import { RelyingParty } from "../models/relying-party";
 
 export interface RelyingPartyInputs {
   rp_slug: string;
-  hostnames: { hostname: string; dns_challenge?: string }[];
+  hostnames: { hostname: string }[];
   environment: string;
   context_description_en: string;
   context_description_nl: string;
@@ -24,21 +24,10 @@ export type RelyingPartyFormState = {
   globalError?: string;
   success?: boolean;
   message?: string;
-  slug?: string;
-  hostnames: {
-    hostname: string;
-    dns_challenge?: string;
-    dns_challenge_created_at?: string;
-    dns_challenge_verified?: boolean;
-    dns_challenge_verified_at?: string;
-    dns_challenge_invalidated_at?: string;
-    manually_verified?: boolean;
-  }[];
+  hostnames: RelyingParty["hostnames"];
 };
 
-export const fetchRelyingPartiesForOrganization = async (
-  organizationSlug: string
-) => {
+export const fetchRelyingParties = async (organizationSlug: string) => {
   try {
     const response = await axiosInstance.get(
       `/v1/yivi/organizations/${organizationSlug}/relying-party`
@@ -50,13 +39,11 @@ export const fetchRelyingPartiesForOrganization = async (
   }
 };
 
-export const fetchDetailedRelyingParties = async (
+export const fetchRelyingPartiesDetails = async (
   organizationSlug: string
 ): Promise<RelyingParty[]> => {
   try {
-    const listResponse = await fetchRelyingPartiesForOrganization(
-      organizationSlug
-    );
+    const listResponse = await fetchRelyingParties(organizationSlug);
 
     if (
       !listResponse ||
@@ -78,9 +65,13 @@ export const fetchDetailedRelyingParties = async (
 
             return {
               ...detailResponse.data,
-              environment: rp.environment,
+              environment: rp.environment, //TODO:
             };
-          } catch (err) {
+          } catch (err: unknown) {
+            if (err instanceof AxiosError) {
+              if (err.response?.status === 404) {
+              }
+            }
             console.warn(`Failed to fetch detail for ${rp.rp_slug}`, err);
             return null;
           }
@@ -100,12 +91,10 @@ export const updateRelyingParty = async (
   values: RelyingPartyInputs
 ): Promise<RelyingPartyFormState> => {
   try {
-    // Extract hostname strings for the API - it expects a string array
     const hostnameStrings = values.hostnames
       .map((h) => h.hostname)
       .filter(Boolean);
 
-    // Prepare the payload with flat hostnames array
     const payload = {
       ...values,
       hostnames: hostnameStrings,
@@ -122,7 +111,6 @@ export const updateRelyingParty = async (
       success: true,
       message: response.data.message,
       hostnames: response.data.hostnames,
-      slug: response.data.slug,
     };
   } catch (e) {
     if (e instanceof AxiosError && e.response?.status === 400) {
@@ -175,7 +163,6 @@ export const registerRelyingParty = async (
       success: true,
       message: response.data.message,
       hostnames: response.data.hostnames,
-      slug: response.data.slug,
     };
   } catch (e) {
     if (e instanceof AxiosError && e.response?.status === 400) {

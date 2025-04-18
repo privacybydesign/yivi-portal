@@ -20,6 +20,7 @@ import {
 import { generateSlug } from "@/lib/utils";
 import { useForm, useFieldArray } from "react-hook-form";
 import { RelyingParty } from "@/src/models/relying-party";
+import DnsChallenges from "@/src/components/forms/relying-party/dnscheck";
 
 type ManageRelyingPartyInformationFormProps = {
   organizationSlug: string;
@@ -59,6 +60,7 @@ export default function ManageRelyingPartyInformationForm({
   const [formResult, setFormResult] = useState<RelyingPartyFormState | null>(
     null
   );
+  const hostnames = formResult?.hostnames ?? relying_party?.hostnames ?? [];
 
   const isEdit = Boolean(relying_party);
 
@@ -131,10 +133,6 @@ export default function ManageRelyingPartyInformationForm({
 
       setFormResult({
         ...response,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        message: (response as any).message, // fallback type-safe way
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        hostnames: (response as any).hostnames,
       });
       setActiveTab("result");
 
@@ -191,7 +189,6 @@ export default function ManageRelyingPartyInformationForm({
             onSubmit={form.handleSubmit(handleSubmit)}
             className="space-y-6"
           >
-            {/* Slug */}
             <FormField
               control={form.control}
               name="rp_slug"
@@ -223,7 +220,6 @@ export default function ManageRelyingPartyInformationForm({
               )}
             />
 
-            {/* Environment */}
             <FormField
               control={form.control}
               name="environment"
@@ -243,7 +239,6 @@ export default function ManageRelyingPartyInformationForm({
                       >
                         <option value="">Select environment</option>
                         <option value="production">Production</option>
-                        <option value="staging">Staging</option>
                         <option value="demo">Demo</option>
                       </select>
                     </FormControl>
@@ -252,7 +247,6 @@ export default function ManageRelyingPartyInformationForm({
               )}
             />
 
-            {/* Context Descriptions */}
             {["context_description_en", "context_description_nl"].map(
               (langKey) => (
                 <FormField
@@ -263,8 +257,8 @@ export default function ManageRelyingPartyInformationForm({
                     <FormItem className="grid md:grid-cols-2 items-start md:gap-4">
                       <div className="py-1">
                         <Label>
-                          Context Description (
-                          {langKey.endsWith("en") ? "EN" : "NL"})
+                          {langKey.endsWith("en") ? "English" : "Dutch"} Context
+                          Description
                         </Label>
                       </div>
                       <div>
@@ -283,7 +277,6 @@ export default function ManageRelyingPartyInformationForm({
               )
             )}
 
-            {/* Hostnames */}
             <div className="space-y-2">
               <Label>Hostnames</Label>
               <div className="space-y-3">
@@ -321,7 +314,6 @@ export default function ManageRelyingPartyInformationForm({
               </div>
             </div>
 
-            {/* Attributes */}
             <div className="space-y-4">
               <Label>Attributes</Label>
               {attributeFields.map((field, index) => (
@@ -350,12 +342,9 @@ export default function ManageRelyingPartyInformationForm({
                       name={`attributes.${index}.reason_en`}
                       render={({ field }) => (
                         <FormItem>
-                          <Label>Reason (EN)</Label>
+                          <Label>English Reason </Label>
                           <FormControl>
-                            <Input
-                              {...field}
-                              placeholder="Why it's needed (EN)"
-                            />
+                            <Input {...field} placeholder="Why it's needed" />
                           </FormControl>
                         </FormItem>
                       )}
@@ -365,11 +354,11 @@ export default function ManageRelyingPartyInformationForm({
                       name={`attributes.${index}.reason_nl`}
                       render={({ field }) => (
                         <FormItem>
-                          <Label>Reason (NL)</Label>
+                          <Label> Dutch Reason</Label>
                           <FormControl>
                             <Input
                               {...field}
-                              placeholder="Waarom het nodig is (NL)"
+                              placeholder="Waarom het nodig is"
                             />
                           </FormControl>
                         </FormItem>
@@ -408,7 +397,6 @@ export default function ManageRelyingPartyInformationForm({
               </div>
             )}
 
-            {/* Form buttons */}
             <div className="flex justify-between items-center">
               <Button variant="ghost" onClick={onCancel}>
                 Close
@@ -421,100 +409,7 @@ export default function ManageRelyingPartyInformationForm({
         </Form>
       )}
 
-      {activeTab === "result" && (
-        <div className="space-y-6">
-          {(formResult?.hostnames ?? relying_party?.hostnames)?.some(
-            (h) => h.dns_challenge
-          ) && (
-            <div className="space-y-4 border border-muted rounded-md p-4 bg-muted/50">
-              <h4 className="text-base font-semibold text-muted-foreground">
-                DNS Challenges
-              </h4>
-
-              <div className="space-y-3">
-                {(formResult?.hostnames ?? relying_party?.hostnames)?.map(
-                  (host, index) =>
-                    host.dns_challenge ? (
-                      <div
-                        key={index}
-                        className="p-4 border rounded-lg bg-white shadow-sm space-y-2"
-                      >
-                        <div className="flex flex-col md:flex-row md:justify-between md:items-start">
-                          <div>
-                            <div className="text-sm font-semibold text-gray-800">
-                              {host.hostname}
-                            </div>
-                            <div className="text-xs text-gray-500">
-                              Created at:{" "}
-                              {new Date(
-                                host.dns_challenge_created_at
-                                  ? new Date(host.dns_challenge_created_at)
-                                  : "N/A"
-                              ).toLocaleString()}
-                            </div>
-                          </div>
-
-                          <div className="mt-2 md:mt-0">
-                            {host.dns_challenge_verified ? (
-                              <span className="inline-flex items-center gap-1 text-green-700 bg-green-100 border border-green-300 text-xs px-2 py-1 rounded">
-                                Verified
-                              </span>
-                            ) : host.dns_challenge_invalidated_at ? (
-                              <span className="inline-flex items-center gap-1 text-red-700 bg-red-100 border border-red-300 text-xs px-2 py-1 rounded">
-                                Invalidated
-                              </span>
-                            ) : (
-                              <span className="inline-flex items-center gap-1 text-yellow-800 bg-yellow-100 border border-yellow-300 text-xs px-2 py-1 rounded">
-                                Pending Verification
-                              </span>
-                            )}
-
-                            {host.manually_verified && (
-                              <span className="ml-2 text-xs text-blue-700 bg-blue-100 border border-blue-300 px-2 py-1 rounded">
-                                Manually Verified
-                              </span>
-                            )}
-                          </div>
-                        </div>
-
-                        <div className="text-sm">
-                          <span className="font-medium">TXT Record:</span>{" "}
-                          <code className="bg-gray-100 px-1 py-0.5 rounded text-xs">
-                            {host.dns_challenge.replace(/(^"|"$)/g, "")}
-                          </code>
-                        </div>
-
-                        {host.dns_challenge_verified_at && (
-                          <div className="text-xs text-gray-500">
-                            Verified at:{" "}
-                            {new Date(
-                              host.dns_challenge_verified_at
-                            ).toLocaleString()}
-                          </div>
-                        )}
-
-                        {host.dns_challenge_invalidated_at && (
-                          <div className="text-xs text-red-500">
-                            Invalidated at:{" "}
-                            {new Date(
-                              host.dns_challenge_invalidated_at
-                            ).toLocaleString()}
-                          </div>
-                        )}
-                      </div>
-                    ) : null
-                )}
-              </div>
-            </div>
-          )}
-
-          <div className="flex justify-end">
-            <Button variant="ghost" onClick={onCancel}>
-              Close
-            </Button>
-          </div>
-        </div>
-      )}
+      {activeTab === "result" && <DnsChallenges hostnames={hostnames} />}
     </>
   );
 }

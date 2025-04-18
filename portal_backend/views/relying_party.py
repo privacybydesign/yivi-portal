@@ -271,10 +271,7 @@ class RelyingPartyDetailView(APIView):
         condiscon = get_object_or_404(Condiscon, relying_party=relying_party)
         condiscon_serializer = CondisconSerializer(condiscon)
         condiscon_data = condiscon_serializer.data
-        # TODO: should return attributes dict with credential_attribute_name and reason
-
         condiscon_attributes = CondisconAttribute.objects.filter(condiscon=condiscon)
-
         condiscon_attributes_serialized = [
             {
                 "credential_attribute_name": condiscon_attribute.credential_attribute.name,
