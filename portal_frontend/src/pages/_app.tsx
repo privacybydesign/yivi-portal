@@ -9,7 +9,8 @@ import { useRouter } from "next/navigation";
 import { initials } from "@dicebear/collection";
 import { createAvatar } from "@dicebear/core";
 import { axiosInstance } from "../services/axiosInstance";
-import { NextPage } from 'next';
+import { NextPage } from "next";
+import { Toaster } from "@/src/components/ui/toaster";
 
 export type NextPageWithLayout<P = object, IP = P> = NextPage<P, IP> & {
   getLayout?: (page: ReactElement) => ReactNode;
@@ -29,7 +30,6 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-
 export default function MyApp({ Component, pageProps }: AppPropsWithLayout) {
   const initializeAuth = useStore((state) => state.initializeAuth);
   const router = useRouter();
@@ -37,7 +37,6 @@ export default function MyApp({ Component, pageProps }: AppPropsWithLayout) {
   useEffect(() => {
     initializeAuth();
   }, [initializeAuth]);
-
 
   // Use the layout defined at the page level, if available
   const getLayout = Component.getLayout ?? ((page) => page);
@@ -53,13 +52,11 @@ export default function MyApp({ Component, pageProps }: AppPropsWithLayout) {
   }).toString();
 
   const handleLogout = () => {
-    axiosInstance
-      .post('/v1/logout')
-      .then(() => {
-        // Redirect to login page
-        setAccessToken(null);
-        router.push("/login");
-      });
+    axiosInstance.post("/v1/logout").then(() => {
+      // Redirect to login page
+      setAccessToken(null);
+      router.push("/login");
+    });
   };
 
   return (
@@ -121,6 +118,8 @@ export default function MyApp({ Component, pageProps }: AppPropsWithLayout) {
       </header>
 
       {getLayout(<Component {...pageProps} />)}
+
+      <Toaster />
     </div>
   );
 }

@@ -10,11 +10,15 @@ const menuItems = [
   },
   {
     href: "/organizations/[organization]/manage/relying-parties",
-    title: "Relying Parties",
+    title: "Relying parties",
   },
   {
     href: "/organizations/[organization]/manage/attestation-providers",
     title: "Attestation providers",
+  },
+  {
+    href: "/organizations/[organization]/manage/dns-verification",
+    title: "DNS verification",
   },
 ];
 

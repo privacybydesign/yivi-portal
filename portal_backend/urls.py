@@ -9,6 +9,7 @@ from portal_backend.views.organization import (
     OrganizationListView,
     OrganizationDetailView,
     OrganizationMaintainersView,
+    OrganizationMaintainerView,
 )
 from portal_backend.views.attestation_provider import (
     AttestationProviderListView,
@@ -58,6 +59,12 @@ urlpatterns = [
         OrganizationMaintainersView.as_view(),
         name="organization-maintainers",
     ),
+    path(
+        "v1/organizations/<str:org_slug>/maintainers/<str:maintainer_id>/",
+        OrganizationMaintainerView.as_view(),
+        name="organization-maintainers",
+    ),
+
     # Relying Party
     path(
         "v1/yivi/organizations/<str:org_slug>/relying-party/",
