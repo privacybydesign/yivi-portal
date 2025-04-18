@@ -238,13 +238,13 @@ class OrganizationMaintainerView(APIView):
 
         if deleted:
             return Response(
-                {"message": f"User removed from organization"},
+                {"message": "User removed from organization"},
                 status=status.HTTP_200_OK,
             )
         else:
             return Response(
                 {
-                    "error": f"User is not a maintainer of this organization"
+                    "error": "User is not a maintainer of this organization"
                 },
                 status=status.HTTP_404_NOT_FOUND,
             )
