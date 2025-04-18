@@ -19,20 +19,14 @@ export type RegistrationFormState = {
     redirectTo?: string;
 };
 
-export const fetchMaintainersForOrganization = async (organizationSlug: string): Promise<AxiosResponse | undefined> => {
-    try {
-        return await axiosInstance.get(`/v1/organizations/${organizationSlug}/maintainers/`);
-    } catch (error) {
-        console.error(error);
-    }
+export const fetchMaintainersForOrganization = (organizationSlug: string): Promise<AxiosResponse> => {
+    return axiosInstance.get(`/v1/organizations/${organizationSlug}/maintainers/`);
 };
 
 export const addMaintainerForOrganization = async (
     formState: RegistrationFormState,
     formData: FormData
 ): Promise<RegistrationFormState> => {
-    console.log(formState);
-
     try {
         await axiosInstance.post(`/v1/organizations/${formState.values.organizationSlug}/maintainers/`, formData);
 

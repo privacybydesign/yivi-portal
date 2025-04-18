@@ -9,6 +9,7 @@ import { Button } from '@/src/components/ui/button';
 import { Separator } from '@/src/components/ui/separator';
 import { Maintainer } from '@/src/models/maintainer';
 import { Organization } from '@/src/models/organization';
+import { AxiosError } from 'axios';
 import { X } from 'lucide-react';
 import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -19,8 +20,21 @@ export default function ManageMaintainers() {
     const [organization, setOrganization] = useState<Organization>();
     const { toast } = useToast();
 
-    const refreshMaintersForOrganization = (organisationSlug: string) => {
-        fetchMaintainersForOrganization(organisationSlug).then((response) => setMaintainers(response?.data ?? []));
+    const refreshMaintersForOrganization = async (organisationSlug: string) => {
+        try {
+            const response = await fetchMaintainersForOrganization(organisationSlug);
+            setMaintainers(response?.data ?? []);
+        } catch (e: unknown) {
+            setMaintainers([]);
+
+            toast({
+                variant: 'destructive',
+                title: 'Something went wrong',
+                description: (e instanceof AxiosError) ? e.message : 'Please try again at a later time.',
+            });
+
+            console.error(e);
+        }
     };
 
     useEffect(() => {
@@ -38,7 +52,6 @@ export default function ManageMaintainers() {
             title: success ? 'Success' : 'Something went wrong',
             description: message
         });
-
     };
 
     return (
@@ -50,9 +63,9 @@ export default function ManageMaintainers() {
                         Update your organization&apos;s maintainers.
                     </p>
                 </div>
-                {organization &&
-                    <AddOrganizationMaintainerInformationForm organization={organization} onCreate={refreshMaintersForOrganization}></AddOrganizationMaintainerInformationForm>
-                }
+                {
+                    organization &&
+                    <AddOrganizationMaintainerInformationForm organization={organization} onCreate={refreshMaintersForOrganization}></AddOrganizationMaintainerInformationForm>}
             </div>
 
             <Separator />
@@ -60,9 +73,7 @@ export default function ManageMaintainers() {
             <div className="space-y-4">
                 {maintainers.map(maintainer => (
                     <div key={maintainer.id} className="space-y-2">
-                        <div
-                            className="flex justify-between items-center border p-3 rounded hover:bg-muted cursor-pointer"
-                        >
+                        <div className="flex justify-between items-center border p-3 rounded hover:bg-muted cursor-pointer">
                             <div>
                                 <div className="font-medium">{maintainer.email}</div>
                                 <div className="text-sm text-muted-foreground">
