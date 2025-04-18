@@ -35,7 +35,7 @@ const useStore = create<StateStore>((set) => ({
   },
 
   refreshToken: async () => {
-    const response = await axiosInstance.post<{ access: string }>('/v1/refreshtoken')
+    const response = await axiosInstance.post<{ access: string; }>('/v1/refreshtoken');
     if (response.status !== 200) {
       return null;
     }
