@@ -24,11 +24,11 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         logger.info("User with email: " + user.email + " logged in.")
         # # Add custom claims
         token["email"] = user.email
-        
+
         db_usr = User.objects.filter(email=user.email).first()
         if db_usr is not None:
             token['role'] = db_usr.role
-            token['organizationId'] = str(db_usr.organization.id)
+            token['organizationId'] = str(db_usr.organization.slug)
 
         return token
 
