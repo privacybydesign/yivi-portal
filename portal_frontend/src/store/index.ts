@@ -10,7 +10,7 @@ interface StateStore {
   accessToken: string | null;
   email: string | null;
   role?: "admin" | "maintainer";
-  organizationSlug?: string;
+  organizationId?: string;
   setAccessToken: (accessToken: string | null) => void;
   initializeAuth: () => void;
   refreshToken: () => Promise<string | null>;
@@ -46,13 +46,13 @@ const useStore = create<StateStore>((set) => ({
         accessToken: newToken,
         email: newDecoded.email,
         role: newDecoded.role,
-        organizationSlug: newDecoded.organizationId,
+        organizationId: newDecoded.organizationId,
       });
       localStorage.setItem("accessToken", newToken);
       return newToken;
     } else {
       // Could not refresh — clear auth
-      set({ accessToken: null, email: null, role: undefined, organizationSlug: undefined });
+      set({ accessToken: null, email: null, role: undefined, organizationId: undefined });
       localStorage.removeItem("accessToken");
     }
     return null;
@@ -73,7 +73,7 @@ const useStore = create<StateStore>((set) => ({
           accessToken: savedAccessToken,
           email: decoded.email,
           role: decoded.role,
-          organizationSlug: decoded.organizationId,
+          organizationId: decoded.organizationId,
         });
       }
     }

@@ -28,6 +28,7 @@ export default function Header() {
 
     const email = useStore((state) => state.email);
     const role = useStore((state) => state.role);
+    const organizationSlug = useStore((state) => state.organizationId);
     const setAccessToken = useStore((state) => state.setAccessToken);
 
     const svg = createAvatar(initials, {
@@ -88,7 +89,7 @@ export default function Header() {
                                 <DropdownMenuSeparator />
 
                                 <DropdownMenuGroup>
-                                    <Link href="/manage-organization">
+                                    <Link href={`/organizations/${organizationSlug}/manage`}>
                                         <DropdownMenuItem className="!cursor-pointer">
                                             Your organization
                                         </DropdownMenuItem>
