@@ -1,16 +1,16 @@
 import { ReactElement, ReactNode, useEffect } from "react";
+import { NextPage } from 'next';
 import Image from "next/image";
 import Link from "next/link";
-import useStore from "@/src/store";
 import { usePathname, useRouter } from "next/navigation";
-import { initials } from "@dicebear/collection";
 import { createAvatar } from "@dicebear/core";
+import { initials } from "@dicebear/collection";
+import useStore from "@/src/store";
 import { axiosInstance } from '@/src/services/axiosInstance';
-import { NextPage } from 'next';
-import { Avatar, AvatarImage } from '../../ui/avatar';
+import { Avatar, AvatarImage } from '@/src/components/ui/avatar';
 import { cn } from '@/lib/utils';
-import { Button, buttonVariants } from '../../ui/button';
-import { DropdownMenu, DropdownMenuShortcut, DropdownMenuTrigger, DropdownMenuGroup, DropdownMenuItem, DropdownMenuContent, DropdownMenuSeparator, DropdownMenuLabel } from '../../ui/dropdown-menu';
+import { Button, buttonVariants } from '@/src/components/ui/button';
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuGroup, DropdownMenuItem, DropdownMenuContent, DropdownMenuSeparator, DropdownMenuLabel } from '@/src/components/ui/dropdown-menu';
 import { } from '@radix-ui/react-dropdown-menu';
 
 export type NextPageWithLayout<P = object, IP = P> = NextPage<P, IP> & {
@@ -88,9 +88,11 @@ export default function Header() {
                                 <DropdownMenuSeparator />
 
                                 <DropdownMenuGroup>
-                                    <DropdownMenuItem className="!cursor-pointer">
-                                        Your organization
-                                    </DropdownMenuItem>
+                                    <Link href="/manage-organization">
+                                        <DropdownMenuItem className="!cursor-pointer">
+                                            Your organization
+                                        </DropdownMenuItem>
+                                    </Link>
                                 </DropdownMenuGroup>
 
                                 <DropdownMenuSeparator />
