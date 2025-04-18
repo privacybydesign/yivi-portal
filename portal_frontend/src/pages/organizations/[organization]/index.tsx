@@ -21,7 +21,7 @@ export default function OrganizationPage() {
   const params = useParams();
   const userOrgSlug = useStore((state) => state.organizationSlug);
   const userRole = useStore((state) => state.role);
-  const organizationSlug = params?.organizationSlug;
+  const organizationSlug = params?.organization;
 
   const { publicRuntimeConfig } = getConfig();
   const [organization, setOrganization] = useState<Organization | null>(null);
@@ -160,11 +160,10 @@ export default function OrganizationPage() {
 
       <div className="flex mb-6 border-b">
         <button
-          className={`px-4 py-2 font-medium ${
-            activeSection === "overview"
-              ? "border-b-2 border-blue-500 text-blue-600"
-              : "text-gray-600"
-          }`}
+          className={`px-4 py-2 font-medium ${activeSection === "overview"
+            ? "border-b-2 border-blue-500 text-blue-600"
+            : "text-gray-600"
+            }`}
           onClick={() => handleSectionChange("overview")}
         >
           Overview
@@ -172,11 +171,10 @@ export default function OrganizationPage() {
 
         {organization.is_AP === true && (
           <button
-            className={`px-4 py-2 font-medium ${
-              activeSection === "ap-details"
-                ? "border-b-2 border-blue-500 text-blue-600"
-                : "text-gray-600"
-            }`}
+            className={`px-4 py-2 font-medium ${activeSection === "ap-details"
+              ? "border-b-2 border-blue-500 text-blue-600"
+              : "text-gray-600"
+              }`}
             onClick={() => handleSectionChange("ap-details")}
           >
             AP Details
@@ -185,11 +183,10 @@ export default function OrganizationPage() {
 
         {organization.is_RP === true && (
           <button
-            className={`px-4 py-2 font-medium ${
-              activeSection === "rp-details"
-                ? "border-b-2 border-blue-500 text-blue-600"
-                : "text-gray-600"
-            }`}
+            className={`px-4 py-2 font-medium ${activeSection === "rp-details"
+              ? "border-b-2 border-blue-500 text-blue-600"
+              : "text-gray-600"
+              }`}
             onClick={() => handleSectionChange("rp-details")}
           >
             RP Details
@@ -371,7 +368,7 @@ export default function OrganizationPage() {
                       <h4 className="text-sm font-medium">Publication State</h4>
                       <Badge className="bg-blue-100 text-blue-800">
                         {JSON.stringify(rpDetails.approved_rp_details) ===
-                        JSON.stringify(rpDetails.published_rp_details)
+                          JSON.stringify(rpDetails.published_rp_details)
                           ? "Published"
                           : "Changes Pending"}
                       </Badge>
