@@ -5,7 +5,7 @@ from rest_framework.response import Response
 from drf_yasg.utils import swagger_auto_schema  # type: ignore
 from rest_framework import status
 from ..models.model_serializers import MaintainerSerializer, OrganizationSerializer
-from ..models.models import AttestationProvider, Organization, RelyingParty, TrustModel
+from ..models.models import AttestationProvider, Organization, RelyingParty
 from rest_framework import permissions
 from ..models.models import User
 from .helpers import BelongsToOrganization, IsMaintainerOrAdmin
@@ -222,7 +222,8 @@ class OrganizationMaintainerView(APIView):
 
         if not maintainer_id:
             return Response(
-                {"error": "Maintainer id is required"}, status=status.HTTP_400_BAD_REQUEST
+                {"error": "Maintainer id is required"},
+                status=status.HTTP_400_BAD_REQUEST,
             )
         if maintainer_id == request.user.id:
             return Response(
@@ -242,8 +243,6 @@ class OrganizationMaintainerView(APIView):
             )
         else:
             return Response(
-                {
-                    "error": "User is not a maintainer of this organization"
-                },
+                {"error": "User is not a maintainer of this organization"},
                 status=status.HTTP_404_NOT_FOUND,
             )

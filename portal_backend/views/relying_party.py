@@ -17,7 +17,6 @@ from ..dns_verification import generate_dns_challenge
 from ..models.model_serializers import (
     CondisconSerializer,
     RelyingPartyHostnameSerializer,
-    CondisconAttributeSerializer,
 )
 from ..models.models import (
     RelyingParty,
@@ -478,7 +477,7 @@ class RelyingPartyUpdateView(APIView):
     )
     def patch(self, request: Request, org_slug: str, rp_slug: str) -> Response:
         environment: Optional[str] = request.data.get("environment")
-
+        # TODO: use environment to filter the relying party
         relying_party: RelyingParty = get_object_or_404(
             RelyingParty,
             organization__slug=org_slug,

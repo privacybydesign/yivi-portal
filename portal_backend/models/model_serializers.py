@@ -12,7 +12,6 @@ from .models import (
     CondisconAttribute,
     RelyingParty,
 )
-from typing import Optional
 from django_countries.serializers import CountryFieldMixin  # type: ignore
 
 
