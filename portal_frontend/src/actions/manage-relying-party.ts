@@ -108,7 +108,7 @@ export async function registerRelyingParty(
       hostnames: data.hostnames.map((h) => h.hostname),
     };
     const response = await axiosInstance.post(
-      `/v1/yivi/organizations/${organizationSlug}/relying-party/`,
+      `/v1/yivi/organizations/${organizationSlug}/relying-party/create/`,
       payload
     );
     return { success: true, data: response.data };

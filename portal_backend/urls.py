@@ -15,10 +15,13 @@ from portal_backend.views.attestation_provider import (
     AttestationProviderListView,
 )
 from portal_backend.views.relying_party import (
-    RelyingPartyDetailView,
     RelyingPartyHostnameStatusView,
     RelyingPartyUpdateView,
-    RelyingPartyListCreateView,
+    RelyingPartyListView,
+    RelyingPartyCreateView,
+    RelyingPartyUpdateView,
+    RelyingPartyRetrieveView,
+    RelyingPartyDeleteView,
 )
 from rest_framework import permissions
 from drf_yasg.views import get_schema_view  # type: ignore
@@ -64,22 +67,31 @@ urlpatterns = [
         OrganizationMaintainerView.as_view(),
         name="organization-maintainers",
     ),
-
     # Relying Party
     path(
         "v1/yivi/organizations/<str:org_slug>/relying-party/",
-        RelyingPartyListCreateView.as_view(),
-        name="rp-list-create",
+        RelyingPartyListView.as_view(),
+        name="rp-list",
     ),
     path(
-        "v1/yivi/organizations/<str:org_slug>/relying-party/<str:environment>/<str:rp_slug>/",
-        RelyingPartyDetailView.as_view(),
-        name="single-rp-details",
+        "v1/yivi/organizations/<str:org_slug>/relying-party/create/",
+        RelyingPartyCreateView.as_view(),
+        name="rp-create",
     ),
     path(
         "v1/yivi/organizations/<str:org_slug>/relying-party/<str:rp_slug>/",
         RelyingPartyUpdateView.as_view(),
-        name="rp-manage",
+        name="rp-update",
+    ),
+    path(
+        "v1/yivi/organizations/<str:org_slug>/relying-party/<str:environment>/<str:rp_slug>/",
+        RelyingPartyRetrieveView.as_view(),
+        name="rp-detail",
+    ),
+    path(
+        "v1/yivi/organizations/<str:org_slug>/relying-party/<str:environment>/<str:rp_slug>/delete/",
+        RelyingPartyDeleteView.as_view(),
+        name="rp-delete",
     ),
     path(
         "v1/yivi/organizations/<str:org_slug>/relying-party/<str:environment>/<str:rp_slug>/dns-verification/",
