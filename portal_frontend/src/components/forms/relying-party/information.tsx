@@ -1,386 +1,352 @@
 "use client";
 
-import { useState } from "react";
-import { Button } from "@/src/components/ui/button";
-import { Input } from "@/src/components/ui/input";
+import { useForm, useFieldArray } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { RelyingPartySchema, RelyingPartyFormData } from "./validation-schema";
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
-} from "@/src/components/ui/form";
-import { Label } from "@/src/components/ui/label";
+  FormLabel,
+  FormMessage,
+} from "../../ui/form";
+import { Input } from "../../ui/input";
+import { Textarea } from "../../ui/textarea";
+import { Button } from "../../ui/button";
+import { useToast } from "@/hooks/use-toast";
 import {
-  registerRelyingParty,
-  updateRelyingParty,
-  RelyingPartyInputs,
-  RelyingPartyFormState,
-} from "@/src/actions/manage-relying-party";
-import { generateSlug } from "@/lib/utils";
-import { useForm, useFieldArray } from "react-hook-form";
-import { RelyingParty } from "@/src/models/relying-party";
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "../../ui/select";
+import { useEffect, useState } from "react";
 import DnsChallenges from "@/src/components/forms/relying-party/dnscheck";
 
-type ManageRelyingPartyInformationFormProps = {
-  organizationSlug: string;
-  relying_party?: RelyingParty;
-  onCancel: () => void;
-  onSuccess: (type: "updated" | "created" | "nochange") => void;
-};
-
-function getChangedFields<T extends RelyingPartyInputs>(
-  original: T,
-  updated: T
-): Partial<T> {
-  const diff: Partial<T> = {};
-  for (const key in updated) {
-    const originalVal = original[key];
-    const updatedVal = updated[key];
-    if (Array.isArray(originalVal) && Array.isArray(updatedVal)) {
-      if (JSON.stringify(originalVal) !== JSON.stringify(updatedVal)) {
-        diff[key] = updatedVal;
-      }
-    } else if (originalVal !== updatedVal) {
-      diff[key] = updatedVal;
+type RelyingPartyProps =
+  | {
+      isEditMode: true;
+      originalSlug: string;
+      defaultValues: RelyingPartyFormData;
+      onSubmit: (
+        data: Partial<RelyingPartyFormData>,
+        originalSlug: string
+      ) => void;
+      serverErrors?: Partial<Record<keyof RelyingPartyFormData, string>>;
+      globalError?: string;
+      isSaving: boolean;
+      onClose?: () => void;
     }
-  }
-  return diff;
-}
+  | {
+      isEditMode: false;
+      originalSlug?: never; // ✅ Enforce that it can't be passed
+      defaultValues: RelyingPartyFormData;
+      onSubmit: (data: RelyingPartyFormData) => void;
+      serverErrors?: Partial<Record<keyof RelyingPartyFormData, string>>;
+      globalError?: string;
+      isSaving: boolean;
+      onClose?: () => void;
+    };
 
-export default function ManageRelyingPartyInformationForm({
-  organizationSlug,
-  relying_party,
-  onCancel,
-  onSuccess,
-}: ManageRelyingPartyInformationFormProps) {
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [formError, setFormError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<"form" | "result">("form");
-  const [formResult, setFormResult] = useState<RelyingPartyFormState | null>(
-    null
-  );
-  const hostnames = formResult?.hostnames ?? relying_party?.hostnames ?? [];
+export default function RelyingPartyForm({
+  defaultValues,
+  onSubmit,
+  serverErrors = {},
+  globalError,
+  isSaving,
+  originalSlug,
+  isEditMode,
+  onClose,
+}: RelyingPartyProps) {
+  const form = useForm<RelyingPartyFormData>({
+    resolver: zodResolver(RelyingPartySchema),
+    defaultValues,
+  });
+  const hasValidHostnames =
+    isEditMode &&
+    Array.isArray(defaultValues.hostnames) &&
+    defaultValues.hostnames.some((h) => h.hostname?.trim() !== "");
 
-  const isEdit = Boolean(relying_party);
-
-  const initialValues: RelyingPartyInputs = {
-    rp_slug: relying_party?.rp_slug ?? "",
-    hostnames:
-      relying_party?.hostnames?.map((h) =>
-        typeof h === "string" ? { hostname: h } : h
-      ) ?? [],
-    environment: relying_party?.environment ?? "",
-    context_description_en: relying_party?.context_description_en ?? "",
-    context_description_nl: relying_party?.context_description_nl ?? "",
-    attributes: relying_party?.attributes?.length
-      ? relying_party.attributes
-      : [{ credential_attribute_name: "", reason_en: "", reason_nl: "" }],
-  };
-
-  const form = useForm<RelyingPartyInputs>({ defaultValues: initialValues });
+  const {
+    control,
+    handleSubmit,
+    register,
+    formState: { errors },
+  } = form;
+  const { toast } = useToast();
 
   const {
     fields: hostnameFields,
-    append: addHostname,
+    append: appendHostname,
     remove: removeHostname,
-  } = useFieldArray({
-    control: form.control,
-    name: "hostnames",
-  });
+  } = useFieldArray({ control, name: "hostnames" });
 
   const {
-    fields: attributeFields,
-    append: addAttribute,
-    remove: removeAttribute,
-  } = useFieldArray({
-    control: form.control,
-    name: "attributes",
-  });
+    fields: attrFields,
+    append: appendAttr,
+    remove: removeAttr,
+  } = useFieldArray({ control, name: "attributes" });
 
-  const handleSubmit = async (values: RelyingPartyInputs) => {
-    setIsSubmitting(true);
-    setFormError(null);
+  const [activeTab, setActiveTab] = useState<"form-tab" | "dns-tab">(
+    "form-tab"
+  );
 
-    try {
-      let response: RelyingPartyFormState;
-
-      if (isEdit) {
-        const diff = getChangedFields(initialValues, values);
-
-        if (Object.keys(diff).length === 0) {
-          setFormResult({
-            values,
-            errors: {},
-            success: true,
-            hostnames: values.hostnames,
-          });
-          setActiveTab("result");
-          onSuccess("nochange");
-          return;
-        }
-
-        response = await updateRelyingParty(organizationSlug, {
-          ...initialValues,
-          ...diff,
-        });
-
-        if (response.success) onSuccess("updated");
-      } else {
-        response = await registerRelyingParty(organizationSlug, values);
-        if (response.success) onSuccess("created");
-      }
-
-      setFormResult({
-        ...response,
+  useEffect(() => {
+    if (globalError) {
+      toast({
+        title: "Error",
+        description: globalError,
+        variant: "destructive",
       });
-      setActiveTab("result");
-
-      if (response.globalError) {
-        setFormError(response.globalError);
-      } else if (response.errors) {
-        Object.entries(response.errors).forEach(([field, error]) => {
-          if (error?.message) {
-            form.setError(field as keyof RelyingPartyInputs, {
-              type: "server",
-              message: error.message,
-            });
-          }
-        });
-      }
-    } catch (error) {
-      console.error("Form submission error:", error);
-      setFormError("An unexpected error occurred. Please try again.");
-    } finally {
-      setIsSubmitting(false);
     }
-  };
+  }, [globalError, toast]);
+  function getChangedFormData(
+    original: RelyingPartyFormData,
+    current: RelyingPartyFormData
+  ): Partial<RelyingPartyFormData> {
+    const result: Partial<RelyingPartyFormData> = {};
+
+    for (const key in current) {
+      const typedKey = key as keyof RelyingPartyFormData;
+
+      if (typedKey === "hostnames") {
+        const originalHostnames = original.hostnames
+          .map((h) => h.hostname)
+          .sort();
+        const currentHostnames = current.hostnames
+          .map((h) => h.hostname)
+          .sort();
+        const isSame =
+          JSON.stringify(originalHostnames) ===
+          JSON.stringify(currentHostnames);
+        if (!isSame) {
+          result.hostnames = current.hostnames;
+        }
+      } else if (typedKey === "attributes") {
+        const isSame =
+          JSON.stringify(original.attributes) ===
+          JSON.stringify(current.attributes);
+        if (!isSame) {
+          result.attributes = current.attributes;
+        }
+      } else if (
+        JSON.stringify(original[typedKey]) !== JSON.stringify(current[typedKey])
+      ) {
+        result[typedKey] = current[typedKey];
+      }
+    }
+
+    return result;
+  }
 
   return (
     <>
       <div className="flex gap-4 mb-6">
-        <button
-          onClick={() => setActiveTab("form")}
-          className={`rounded-lg px-4 py-2 border shadow-sm text-sm font-medium ${
-            activeTab === "form"
-              ? "bg-white border-blue-500 text-blue-700"
-              : "bg-muted text-muted-foreground"
-          }`}
+        <Button
+          variant={activeTab === "form-tab" ? "default" : "outline"}
+          onClick={() => setActiveTab("form-tab")}
         >
           Relying Party Details
-        </button>
-
-        <button
-          onClick={() => relying_party && setActiveTab("result")}
-          className={`rounded-lg px-4 py-2 border shadow-sm text-sm font-medium ${
-            activeTab === "result"
-              ? "bg-white border-blue-500 text-blue-700"
-              : "bg-muted text-muted-foreground"
-          } ${!relying_party ? "opacity-50 cursor-not-allowed" : ""}`}
-          disabled={!relying_party}
+        </Button>
+        <Button
+          variant={activeTab === "dns-tab" ? "default" : "outline"}
+          onClick={() => setActiveTab("dns-tab")}
+          disabled={!hasValidHostnames}
         >
           DNS Check
-        </button>
+        </Button>
       </div>
 
-      {activeTab === "form" && (
+      {activeTab === "form-tab" ? (
         <Form {...form}>
           <form
-            onSubmit={form.handleSubmit(handleSubmit)}
-            className="space-y-6"
+            onSubmit={handleSubmit((formData) => {
+              if (isEditMode) {
+                const payload = getChangedFormData(defaultValues, formData);
+                if (Object.keys(payload).length === 0) {
+                  toast({
+                    title: "No changes detected",
+                    description: "Nothing was modified.",
+                  });
+                  setTimeout(() => {
+                    if (typeof onClose === "function") {
+                      onClose();
+                    }
+                  }, 100);
+                  return;
+                }
+                (
+                  onSubmit as (
+                    data: Partial<RelyingPartyFormData>,
+                    originalSlug: string
+                  ) => void
+                )(payload, originalSlug);
+              } else {
+                (onSubmit as (data: RelyingPartyFormData) => void)(formData);
+              }
+            })}
           >
             <FormField
-              control={form.control}
-              name="rp_slug"
-              render={({ field: { onBlur, ...field } }) => (
-                <FormItem className="grid md:grid-cols-2 items-start md:gap-4">
-                  <div className="py-1">
-                    <Label>Slug</Label>
-                    <FormDescription>
-                      Slug you want to use for this relying party.
-                    </FormDescription>
-                  </div>
-                  <div>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        onBlur={(event) => {
-                          if (!form.control.getFieldState("rp_slug").isDirty) {
-                            form.setValue(
-                              "rp_slug",
-                              generateSlug(event.target.value.trim())
-                            );
-                          }
-                          onBlur();
-                        }}
-                      />
-                    </FormControl>
-                  </div>
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
+              control={control}
               name="environment"
               render={({ field }) => (
-                <FormItem className="grid md:grid-cols-2 items-start md:gap-4">
-                  <div className="py-1">
-                    <Label>Environment</Label>
-                    <FormDescription>
-                      Choose where this RP will run.
-                    </FormDescription>
-                  </div>
-                  <div>
+                <FormItem>
+                  <FormLabel>Environment</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
-                      <select
-                        {...field}
-                        className="input w-full border px-3 py-2 rounded"
-                      >
-                        <option value="">Select environment</option>
-                        <option value="production">Production</option>
-                        <option value="demo">Demo</option>
-                      </select>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select an environment" />
+                      </SelectTrigger>
                     </FormControl>
-                  </div>
+                    <SelectContent>
+                      <SelectItem value="demo">Demo</SelectItem>
+                      <SelectItem value="production">Production</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage>{serverErrors.environment}</FormMessage>
                 </FormItem>
               )}
             />
 
-            {["context_description_en", "context_description_nl"].map(
-              (langKey) => (
-                <FormField
-                  key={langKey}
-                  control={form.control}
-                  name={langKey as keyof RelyingPartyInputs}
-                  render={({ field }) => (
-                    <FormItem className="grid md:grid-cols-2 items-start md:gap-4">
-                      <div className="py-1">
-                        <Label>
-                          {langKey.endsWith("en") ? "English" : "Dutch"} Context
-                          Description
-                        </Label>
-                      </div>
-                      <div>
-                        <FormControl>
-                          <Input
-                            {...field}
-                            value={
-                              typeof field.value === "string" ? field.value : ""
-                            }
-                          />
-                        </FormControl>
-                      </div>
-                    </FormItem>
-                  )}
-                />
-              )
-            )}
+            <div className="space-y-2 mt-4">
+              <FormLabel className="text-base font-medium">
+                Context Description
+              </FormLabel>
 
-            <div className="space-y-2">
-              <Label>Hostnames</Label>
-              <div className="space-y-3">
-                {hostnameFields.map((field, index) => (
-                  <FormField
-                    key={field.id}
-                    control={form.control}
-                    name={`hostnames.${index}.hostname`}
-                    render={({ field }) => (
-                      <FormItem className="flex items-center gap-2">
-                        <FormControl>
-                          <Input
-                            {...field}
-                            placeholder={`Hostname ${index + 1}`}
-                          />
-                        </FormControl>
-                        <Button
-                          type="button"
-                          variant="destructive"
-                          onClick={() => removeHostname(index)}
-                        >
-                          Remove
-                        </Button>
-                      </FormItem>
-                    )}
-                  />
-                ))}
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => addHostname({ hostname: "" })}
-                >
-                  Add Hostname
-                </Button>
-              </div>
+              <FormField
+                control={control}
+                name="context_description_en"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-sm">English</FormLabel>
+                    <FormControl>
+                      <Textarea {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={control}
+                name="context_description_nl"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-sm">Dutch</FormLabel>
+                    <FormControl>
+                      <Textarea {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
 
-            <div className="space-y-4">
-              <Label>Attributes</Label>
-              {attributeFields.map((field, index) => (
-                <div
-                  key={field.id}
-                  className="space-y-4 rounded-xl border p-4 shadow-sm bg-white"
-                >
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name={`attributes.${index}.credential_attribute_name`}
-                      render={({ field }) => (
-                        <FormItem>
-                          <Label>Attribute Name</Label>
-                          <FormControl>
-                            <Input
-                              {...field}
-                              placeholder="e.g. pbdf.pbdf.email.email"
-                            />
-                          </FormControl>
-                        </FormItem>
-                      )}
+            <div className="space-y-2 mt-4">
+              <FormLabel className="font-medium">Hostnames</FormLabel>
+
+              <div className="space-y-2  p-1 rounded-md">
+                {hostnameFields.map((field, index) => (
+                  <div key={field.id} className="flex gap-2 items-start">
+                    <Input
+                      {...register(`hostnames.${index}.hostname`)}
+                      defaultValue={field.hostname} // ✅ Use string directly
+                      className="w-full"
                     />
-                    <FormField
-                      control={form.control}
-                      name={`attributes.${index}.reason_en`}
-                      render={({ field }) => (
-                        <FormItem>
-                          <Label>English Reason </Label>
-                          <FormControl>
-                            <Input {...field} placeholder="Why it's needed" />
-                          </FormControl>
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name={`attributes.${index}.reason_nl`}
-                      render={({ field }) => (
-                        <FormItem>
-                          <Label> Dutch Reason</Label>
-                          <FormControl>
-                            <Input
-                              {...field}
-                              placeholder="Waarom het nodig is"
-                            />
-                          </FormControl>
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                  <div className="flex justify-end">
                     <Button
                       type="button"
-                      variant="destructive"
-                      onClick={() => removeAttribute(index)}
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => removeHostname(index)}
+                    >
+                      Remove
+                    </Button>
+                    <FormMessage>
+                      {errors.hostnames?.[index]?.hostname?.message}
+                    </FormMessage>
+                  </div>
+                ))}
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => appendHostname({ hostname: "" })}
+              >
+                Add Hostname
+              </Button>
+            </div>
+
+            <div className="space-y-2 mt-4">
+              <FormLabel className="font-bold">Credential Attributes</FormLabel>
+
+              <div className="space-y-2">
+                {attrFields.map((field, index) => (
+                  <div
+                    key={field.id}
+                    className="border p-4 rounded-md space-y-3"
+                  >
+                    <div>
+                      <FormLabel>Attribute Name</FormLabel>
+                      <Input
+                        {...register(
+                          `attributes.${index}.credential_attribute_name`
+                        )}
+                      />
+                      <FormMessage>
+                        {
+                          errors.attributes?.[index]?.credential_attribute_name
+                            ?.message
+                        }
+                      </FormMessage>
+                    </div>
+
+                    <div>
+                      <FormLabel className="font-medium">Reason</FormLabel>
+                      <div className="grid md:grid-cols-2 gap-4 mt-2">
+                        <div>
+                          <FormLabel className="text-sm">English</FormLabel>
+                          <Input
+                            {...register(`attributes.${index}.reason_en`)}
+                          />
+                          <FormMessage>
+                            {errors.attributes?.[index]?.reason_en?.message}
+                          </FormMessage>
+                        </div>
+
+                        <div>
+                          <FormLabel className="text-sm">Dutch</FormLabel>
+                          <Input
+                            {...register(`attributes.${index}.reason_nl`)}
+                          />
+                          <FormMessage>
+                            {errors.attributes?.[index]?.reason_nl?.message}
+                          </FormMessage>
+                        </div>
+                      </div>
+                    </div>
+
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => removeAttr(index)}
                     >
                       Remove Attribute
                     </Button>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
+
               <Button
                 type="button"
                 variant="outline"
+                size="sm"
+                className="mt-2"
                 onClick={() =>
-                  addAttribute({
+                  appendAttr({
                     credential_attribute_name: "",
                     reason_en: "",
                     reason_nl: "",
@@ -391,25 +357,16 @@ export default function ManageRelyingPartyInformationForm({
               </Button>
             </div>
 
-            {formError && (
-              <div className="text-sm text-red-600 font-medium">
-                {formError}
-              </div>
-            )}
-
-            <div className="flex justify-between items-center">
-              <Button variant="ghost" onClick={onCancel}>
-                Close
-              </Button>
-              <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? "Submitting..." : "Submit"}
+            <div className="space-y-2 mt-4">
+              <Button type="submit" disabled={isSaving}>
+                {isSaving ? "Saving..." : "Save"}
               </Button>
             </div>
           </form>
         </Form>
+      ) : (
+        <DnsChallenges hostnames={defaultValues.hostnames} />
       )}
-
-      {activeTab === "result" && <DnsChallenges hostnames={hostnames} />}
     </>
   );
 }

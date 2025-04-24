@@ -1,33 +1,96 @@
-'use client';
+"use client";
 
-import { fetchOrganization } from '@/src/actions/manage-organization';
-import ManageOrganizationLayout from '@/src/components/layout/manage-organization';
-import { Separator } from '@/src/components/ui/separator';
-import { Organization } from '@/src/models/organization';
-import { useParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useState } from "react";
+import { useParams } from "next/navigation";
+import RelyingPartyForm from "@/src/components/forms/relying-party/information";
+import { RelyingPartyFormData } from "@/src/components/forms/relying-party/validation-schema";
+import { registerRelyingParty } from "@/src/actions/manage-relying-party";
+import ManageOrganizationLayout from "@/src/components/layout/manage-organization";
+import RelyingPartyList from "@/src/components/forms/relying-party/relying-party-list";
+import { Button } from "@/src/components/ui/button";
 
-export default function RelyingParties() {
-    const slug = useParams()?.organization;
-    const [organization, setOrganization] = useState<Organization>();
+const initialData: RelyingPartyFormData = {
+  rp_slug: "",
+  environment: "",
+  context_description_en: "",
+  context_description_nl: "",
+  hostnames: [{ hostname: "" }],
+  attributes: [
+    {
+      credential_attribute_name: "",
+      reason_en: "",
+      reason_nl: "",
+    },
+  ],
+};
 
-    useEffect(() => {
-        if (slug) {
-            fetchOrganization(slug as string).then((response) => setOrganization(response?.data));
-        }
-    }, [slug]);
+export default function RelyingPartyManager() {
+  const params = useParams();
+  const organizationSlug = params?.organization as string;
+  const [saving, setSaving] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState({});
+  const [globalError, setGlobalError] = useState<string | undefined>();
+  const [isCreating, setIsCreating] = useState(false);
 
-    return (
-        <div className="space-y-6">
-            <div>
-                <h2 className="text-lg font-medium">Relying parties (TODO)</h2>
-            </div>
-            <Separator />
-            <div>
-                {organization?.name_en}
-            </div>
+  const handleCreateRP = () => {
+    setIsCreating(true);
+    setFieldErrors({});
+    setGlobalError(undefined);
+  };
+
+  const handleCancel = () => {
+    setIsCreating(false);
+    setFieldErrors({});
+    setGlobalError(undefined);
+  };
+
+  const handleSave = async (data: RelyingPartyFormData) => {
+    setSaving(true);
+    const result = await registerRelyingParty(organizationSlug, data);
+    setSaving(false);
+
+    if (!result.success) {
+      setFieldErrors(result.fieldErrors || {});
+      setGlobalError(result.globalError);
+    } else {
+      alert("Saved!");
+      setFieldErrors({});
+      setGlobalError(undefined);
+      setIsCreating(false);
+    }
+  };
+
+  return (
+    <>
+      <RelyingPartyList />
+
+      {!isCreating && (
+        <div className="mt-6">
+          <Button variant="default" onClick={handleCreateRP}>
+            Create New Relying Party
+          </Button>
         </div>
-    );
+      )}
+
+      {isCreating && (
+        <div className="mt-6 border rounded p-4 bg-muted/30">
+          <RelyingPartyForm
+            defaultValues={initialData}
+            onSubmit={handleSave}
+            serverErrors={fieldErrors}
+            globalError={globalError}
+            isSaving={saving}
+            isEditMode={false}
+          />
+          <div className="mt-4">
+            <Button variant="outline" onClick={handleCancel}>
+              Cancel
+            </Button>
+          </div>
+        </div>
+      )}
+    </>
+  );
 }
 
-RelyingParties.getLayout = ManageOrganizationLayout;
+RelyingPartyManager.getLayout = ManageOrganizationLayout;

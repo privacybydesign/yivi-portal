@@ -262,31 +262,38 @@ class RelyingPartyDetailView(APIView):
             yivi_tme__environment=environment,
             rp_slug=rp_slug,
         )
-        hostnames = RelyingPartyHostname.objects.filter(
-            relying_party=relying_party,
-        )
-        hostname_serializer = RelyingPartyHostnameSerializer(hostnames, many=True)
-        hostnames_data = hostname_serializer.data
 
-        condiscon = get_object_or_404(Condiscon, relying_party=relying_party)
-        condiscon_serializer = CondisconSerializer(condiscon)
-        condiscon_data = condiscon_serializer.data
-        condiscon_attributes = CondisconAttribute.objects.filter(condiscon=condiscon)
-        condiscon_attributes_serialized = [
-            {
-                "credential_attribute_name": condiscon_attribute.credential_attribute.name,
-                "reason_en": condiscon_attribute.reason_en,
-                "reason_nl": condiscon_attribute.reason_nl,
-            }
-            for condiscon_attribute in condiscon_attributes
-        ]
+        hostnames = RelyingPartyHostname.objects.filter(relying_party=relying_party)
+        hostnames_data = RelyingPartyHostnameSerializer(hostnames, many=True).data
+
+        condiscon = Condiscon.objects.filter(relying_party=relying_party).first()
+
+        if condiscon:
+            condiscon_data = CondisconSerializer(condiscon).data
+            condiscon_attributes = CondisconAttribute.objects.filter(
+                condiscon=condiscon
+            )
+            attributes = [
+                {
+                    "credential_attribute_name": attr.credential_attribute.name,
+                    "reason_en": attr.reason_en,
+                    "reason_nl": attr.reason_nl,
+                }
+                for attr in condiscon_attributes
+            ]
+            context_description_en = condiscon_data.get("context_description_en", "")
+            context_description_nl = condiscon_data.get("context_description_nl", "")
+        else:
+            attributes = []
+            context_description_en = ""
+            context_description_nl = ""
 
         serialized = {
             "rp_slug": relying_party.rp_slug,
             "hostnames": hostnames_data,
-            "context_description_en": condiscon_data["context_description_en"],
-            "context_description_nl": condiscon_data["context_description_nl"],
-            "attributes": condiscon_attributes_serialized,
+            "context_description_en": context_description_en,
+            "context_description_nl": context_description_nl,
+            "attributes": attributes,
             "environment": relying_party.yivi_tme.environment,
             "published_at": relying_party.published_at,
         }
@@ -325,6 +332,64 @@ class RelyingPartyUpdateView(APIView):
         BelongsToOrganization,
         IsMaintainerOrAdmin,
     ]
+
+    def save_updated_rp(
+        self,
+        request: Request,
+        relying_party: RelyingParty,
+        response_data: Dict[str, str],
+    ) -> Optional[Response]:
+        hostnames_raw = request.data.get("hostnames")
+
+        existing_hostname = check_existing_hostname(request)
+        if existing_hostname:
+            return existing_hostname
+
+        # Normalize: extract `hostname` from each dict
+        if isinstance(hostnames_raw, list) and all(
+            isinstance(h, dict) and "hostname" in h for h in hostnames_raw
+        ):
+            hostname_values = [h["hostname"] for h in hostnames_raw]
+        elif isinstance(hostnames_raw, dict) and "hostname" in hostnames_raw:
+            hostname_values = [hostnames_raw["hostname"]]
+        elif isinstance(hostnames_raw, str):
+            hostname_values = [hostnames_raw]
+        else:
+            hostname_values = []
+
+        # Clear existing hostnames and create new ones
+        RelyingPartyHostname.objects.filter(relying_party=relying_party).delete()
+
+        hostnames: List[RelyingPartyHostname] = []
+        for hostname_text in hostname_values:
+            hostname_obj: RelyingPartyHostname = RelyingPartyHostname.objects.create(
+                relying_party=relying_party,
+                hostname=hostname_text,
+                dns_challenge=generate_dns_challenge(),
+                dns_challenge_created_at=timezone.now(),
+                dns_challenge_verified=False,
+            )
+            hostnames.append(hostname_obj)
+
+        response_data["hostnames"] = [
+            {"hostname": h.hostname, "dns_challenge": h.dns_challenge}
+            for h in hostnames
+        ]
+        response_data["message"] = "Relying party updated successfully"
+        return None  # Explicitly return None for clarity
+
+    def save_updated_condiscon(
+        self, request: Request, condiscon: Condiscon, relying_party: RelyingParty
+    ) -> None:
+        if request.data.get("context_description_en") is not None:
+            condiscon.context_description_en = request.data.get(
+                "context_description_en"
+            )
+        if request.data.get("context_description_nl") is not None:
+            condiscon.context_description_nl = request.data.get(
+                "context_description_nl"
+            )
+        condiscon.save()
 
     def save_condiscon_attributes(
         self, condiscon: Condiscon, attributes_data: List[Dict[str, str]]
@@ -381,7 +446,16 @@ class RelyingPartyUpdateView(APIView):
         request_body=openapi.Schema(
             type=openapi.TYPE_OBJECT,
             properties={
-                "hostname": openapi.Schema(type=openapi.TYPE_STRING),
+                "hostnames": openapi.Schema(
+                    type=openapi.TYPE_ARRAY,
+                    items=openapi.Schema(
+                        type=openapi.TYPE_OBJECT,
+                        properties={
+                            "hostname": openapi.Schema(type=openapi.TYPE_STRING)
+                        },
+                        required=["hostname"],
+                    ),
+                ),
                 "environment": openapi.Schema(type=openapi.TYPE_STRING),
                 "context_description_en": openapi.Schema(type=openapi.TYPE_STRING),
                 "context_description_nl": openapi.Schema(type=openapi.TYPE_STRING),
@@ -410,94 +484,26 @@ class RelyingPartyUpdateView(APIView):
             organization__slug=org_slug,
             rp_slug=rp_slug,
         )
+        condiscon: Condiscon = get_object_or_404(Condiscon, relying_party=relying_party)
         response_message: str = "Relying party updated successfully"
         response_data: Dict[str, str] = {"slug": str(relying_party.rp_slug)}
-
-        if request.data.get("hostnames") is not None:
-            hostname_data: Union[str, List[str]] = request.data.get("hostnames")
-
-            existing_hostname: Optional[Response] = check_existing_hostname(request)
-            if existing_hostname:
-                return existing_hostname
-
-            if isinstance(hostname_data, list):
-                RelyingPartyHostname.objects.filter(
-                    relying_party=relying_party
-                ).delete()
-                hostnames: List[RelyingPartyHostname] = []
-                for hostname_text in hostname_data:
-                    hostname_obj: RelyingPartyHostname = (
-                        RelyingPartyHostname.objects.create(
-                            relying_party=relying_party,
-                            hostname=hostname_text,
-                            dns_challenge=generate_dns_challenge(),
-                            dns_challenge_created_at=timezone.now(),
-                            dns_challenge_verified=False,
-                        )
-                    )
-                    hostnames.append(hostname_obj)
-
-                hostname_data_response: List[Dict[str, str]] = []
-                for hostname in hostnames:
-                    hostname_data_response.append(
-                        {
-                            "hostname": hostname.hostname,
-                            "dns_challenge": hostname.dns_challenge,
-                        }
-                    )
-
-                response_data["hostnames"] = hostname_data_response
-                response_message += ". Hostnames updated. Please update your DNS records with the new challenges."
-            else:
-                hostname_obj: Optional[RelyingPartyHostname] = (
-                    RelyingPartyHostname.objects.filter(
-                        relying_party=relying_party
-                    ).first()
-                )
-
-                if hostname_obj:
-                    if hostname_obj.hostname != hostname_data:
-                        hostname_obj.hostname = hostname_data
-                        hostname_obj.dns_challenge = generate_dns_challenge()
-                        hostname_obj.dns_challenge_created_at = timezone.now()
-                        hostname_obj.dns_challenge_verified = False
-                        hostname_obj.dns_challenge_verified_at = None
-                        hostname_obj.save()
-                        response_data["hostname"] = hostname_obj.hostname
-                        response_data["dns_challenge"] = hostname_obj.dns_challenge
-                        response_message += ". Hostname updated. Please update your DNS record with the new challenge."
-                else:
-                    hostname_obj = RelyingPartyHostname.objects.create(
-                        relying_party=relying_party,
-                        hostname=hostname_data,
-                        dns_challenge=generate_dns_challenge(),
-                        dns_challenge_created_at=timezone.now(),
-                        dns_challenge_verified=False,
-                    )
-                    response_data["hostname"] = hostname_obj.hostname
-                    response_data["dns_challenge"] = hostname_obj.dns_challenge
-                    response_message += (
-                        ". Hostname added. Please add a DNS record with the challenge."
-                    )
 
         if (
             request.data.get("context_description_en") is not None
             or request.data.get("context_description_nl") is not None
         ):
-            condiscon: Condiscon = get_object_or_404(
-                Condiscon, relying_party=relying_party
+            self.save_updated_condiscon(
+                request,
+                condiscon,
+                relying_party,
             )
-            if request.data.get("context_description_en") is not None:
-                condiscon.context_description_en = request.data.get(
-                    "context_description_en"
-                )
-            if request.data.get("context_description_nl") is not None:
-                condiscon.context_description_nl = request.data.get(
-                    "context_description_nl"
-                )
-            condiscon.save()
 
         if request.data.get("attributes") is not None:
+            self.save_updated_attributes(
+                request,
+                condiscon,
+                relying_party,
+            )
             attributes_data: List[Dict[str, str]] = request.data.get("attributes")
             condiscon = get_object_or_404(Condiscon, relying_party=relying_party)
             CondisconAttribute.objects.filter(condiscon=condiscon).delete()
@@ -505,12 +511,27 @@ class RelyingPartyUpdateView(APIView):
             condiscon.condiscon = self.make_condiscon_from_attributes(attributes_data)
             condiscon.save()
 
+        if request.data.get("hostnames") is not None:
+            self.save_updated_rp(
+                request,
+                relying_party,
+                response_data,
+            )
+
         if request.data.get("environment") is not None:
             yivi_tme: YiviTrustModelEnv = get_object_or_404(
                 YiviTrustModelEnv, environment=request.data.get("environment")
             )
             relying_party.yivi_tme = yivi_tme
             relying_party.save()
+
+        if request.data.get("rp_slug") is not None:
+            new_slug = request.data.get("rp_slug")
+            if new_slug != relying_party.rp_slug:
+                relying_party.rp_slug = new_slug
+                relying_party.save()
+                response_data["rp_slug"] = relying_party.rp_slug
+                response_message += ". RP slug updated."
 
         if "ready" in request.data:
             relying_party.ready = request.data.get("ready")
