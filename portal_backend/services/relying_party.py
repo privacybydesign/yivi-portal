@@ -96,14 +96,17 @@ def create_hostnames(
     return create_hostname_objects(new_hostnames, relying_party)
 
 
+# TODO: right now we are making a condiscon with OR for each credential type, we will need a more advanced
+# condiscon maker that can handle full possibilities of the condiscon supported by the frontend
 def make_condiscon_json(
-    attributes_data: List[List[Dict[str, str]]],
-) -> List[List[List[str]]]:
+    attributes_data: List[Dict[str, str]],
+) -> Dict[str, List[List[List[str]]]]:
     condiscon_json = {
         "@context": "https://irma.app/ld/request/disclosure/v2",
-        "disclose": [[]],
+        "disclose": [],
     }
     credential_attributes: Dict[str, List[str]] = {}
+
     for attr in attributes_data:
         cred_attr = get_object_or_404(
             CredentialAttribute, name=attr["credential_attribute_name"]
@@ -112,7 +115,8 @@ def make_condiscon_json(
         credential_attributes.setdefault(cred_id, []).append(cred_attr.name)
 
     for attr_list in credential_attributes.values():
-        condiscon_json["disclose"][0].append(attr_list)
+        condiscon_json["disclose"].append([attr_list])
+
     return condiscon_json
 
 
