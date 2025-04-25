@@ -67,13 +67,13 @@ def check_duplicate_hostnames(
 
 
 def parse_and_validate_hostnames(
-    hostnames: HostnameEntry, current_rp: RelyingParty
+    hostnames: HostnameEntry,
 ) -> List[str]:
     filtered = [h for h in hostnames if h]
     new_hostnames = [
         h.get("hostname") for h in filtered if isinstance(h, dict) and h.get("hostname")
     ]
-    check_duplicate_hostnames(new_hostnames, current_rp=current_rp)
+    check_duplicate_hostnames(new_hostnames)
     return new_hostnames
 
 
@@ -127,9 +127,6 @@ def make_condiscon_json(
     return condiscon_json
 
 
-# data: {'rp_slug': 'test-rp5', 'environment': 'demo', 'context_description_en': 'dfx', 'context_description_nl': 'fds',
-# 'hostnames': ['verifier.example.nl'], 'attributes':
-# [{'credential_attribute_name': 'pbdf.pbdf.email.email', 'reason_en': 'something new now', 'reason_nl': ' te sturen'}]}
 def create_condiscon(
     data: RelyingPartyResponse, relying_party: RelyingParty
 ) -> Condiscon:
@@ -147,9 +144,7 @@ def create_condiscon(
 
 def create_condiscon_attributes(
     condiscon: Condiscon,
-    attributes_data: List[
-        AttributeEntry
-    ],  # TODO: maybe it would be nicer to create a type model for this
+    attributes_data: List[AttributeEntry],
 ) -> None:
     for attr in attributes_data:
         cred_attr = get_object_or_404(
@@ -168,7 +163,7 @@ def update_relying_party_hostnames(
     hostnames: List[HostnameEntry],
     response: Dict[str, str],
 ) -> None:
-    new_hostnames = parse_and_validate_hostnames(hostnames, current_rp=relying_party)
+    new_hostnames = parse_and_validate_hostnames(hostnames)
 
     RelyingPartyHostname.objects.filter(relying_party=relying_party).delete()
     created = create_hostname_objects(new_hostnames, relying_party)
