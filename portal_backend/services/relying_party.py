@@ -1,4 +1,4 @@
-from typing import List, Dict, Optional
+from typing import List, Dict
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django.core.exceptions import ValidationError
@@ -13,10 +13,17 @@ from ..models.models import (
     CredentialAttribute,
 )
 from ..dns_verification import generate_dns_challenge
+from ..types import (
+    HostnameEntry,
+    AttributeEntry,
+    CredentialAttributesEntry,
+    CondisconJSON,
+    RelyingPartyResponse,
+)
 
 
 def create_relying_party(
-    data: dict[str, list[dict[str, str]] | str], org_slug: str, rp_slug: str
+    data: RelyingPartyResponse, org_slug: str, rp_slug: str
 ) -> RelyingParty:
     organization = get_object_or_404(Organization, slug=org_slug)
     yivi_tme = get_object_or_404(
@@ -29,7 +36,7 @@ def create_relying_party(
         organization=organization,
         yivi_tme=yivi_tme,
         ready=False,
-        reviewed_accepted=None,
+        reviewed_accepted=False,
         reviewed_at=None,
         rejection_remarks=None,
         published_at=None,
@@ -40,7 +47,7 @@ def create_relying_party(
 
 
 def check_duplicate_hostnames(
-    hostnames: List[str], current_rp: RelyingParty = None
+    hostnames: List[str],
 ) -> None:
     """
     Raises ValidationError if any of the hostnames already exists in the database.
@@ -60,7 +67,7 @@ def check_duplicate_hostnames(
 
 
 def parse_and_validate_hostnames(
-    hostnames: List[Dict[str, str]], current_rp: Optional[RelyingParty] = None
+    hostnames: HostnameEntry, current_rp: RelyingParty
 ) -> List[str]:
     filtered = [h for h in hostnames if h]
     new_hostnames = [
@@ -89,7 +96,7 @@ def create_hostname_objects(
 
 
 def create_hostnames(
-    data: dict[str, str | list[dict[str, str]]], relying_party: RelyingParty
+    data: HostnameEntry, relying_party: RelyingParty
 ) -> List[RelyingPartyHostname]:
     hostnames = data.get("hostnames", [])
     new_hostnames = parse_and_validate_hostnames(hostnames)
@@ -99,13 +106,13 @@ def create_hostnames(
 # TODO: right now we are making a condiscon with OR for each credential type, we will need a more advanced
 # condiscon maker that can handle full possibilities of the condiscon supported by the frontend
 def make_condiscon_json(
-    attributes_data: List[Dict[str, str]],
-) -> Dict[str, List[List[List[str]]]]:
+    attributes_data: List[AttributeEntry],
+) -> CondisconJSON:
     condiscon_json = {
         "@context": "https://irma.app/ld/request/disclosure/v2",
         "disclose": [],
     }
-    credential_attributes: Dict[str, List[str]] = {}
+    credential_attributes: CredentialAttributesEntry = {}
 
     for attr in attributes_data:
         cred_attr = get_object_or_404(
@@ -120,9 +127,14 @@ def make_condiscon_json(
     return condiscon_json
 
 
+# data: {'rp_slug': 'test-rp5', 'environment': 'demo', 'context_description_en': 'dfx', 'context_description_nl': 'fds',
+# 'hostnames': ['verifier.example.nl'], 'attributes':
+# [{'credential_attribute_name': 'pbdf.pbdf.email.email', 'reason_en': 'something new now', 'reason_nl': ' te sturen'}]}
 def create_condiscon(
-    data: dict[str, str | list[dict[str, str]]], relying_party: RelyingParty
+    data: RelyingPartyResponse, relying_party: RelyingParty
 ) -> Condiscon:
+    print(f"data: {data}")
+
     condiscon_json = make_condiscon_json(data.get("attributes", []))
     condiscon = Condiscon.objects.create(
         condiscon=condiscon_json,
@@ -136,7 +148,7 @@ def create_condiscon(
 def create_condiscon_attributes(
     condiscon: Condiscon,
     attributes_data: List[
-        Dict[str, str]
+        AttributeEntry
     ],  # TODO: maybe it would be nicer to create a type model for this
 ) -> None:
     for attr in attributes_data:
@@ -153,29 +165,27 @@ def create_condiscon_attributes(
 
 def update_relying_party_hostnames(
     relying_party: RelyingParty,
-    hostnames: List[Dict[str, str]],
-    response_data: Dict[str, str],
+    hostnames: List[HostnameEntry],
+    response: Dict[str, str],
 ) -> None:
     new_hostnames = parse_and_validate_hostnames(hostnames, current_rp=relying_party)
 
     RelyingPartyHostname.objects.filter(relying_party=relying_party).delete()
     created = create_hostname_objects(new_hostnames, relying_party)
 
-    response_data["hostnames"] = [
+    response["hostnames"] = [
         {"hostname": h.hostname, "dns_challenge": h.dns_challenge} for h in created
     ]
 
 
 def update_condiscon_attributes(
-    condiscon: Condiscon, attributes_data: List[Dict[str, str]]
+    condiscon: Condiscon, attributes_data: List[AttributeEntry]
 ) -> None:
     CondisconAttribute.objects.filter(condiscon=condiscon).delete()
     create_condiscon_attributes(condiscon, attributes_data)
 
 
-def update_condiscon_context(
-    condiscon: Condiscon, data: dict[str, str | list[dict[str, str]]]
-) -> None:
+def update_condiscon_context(condiscon: Condiscon, data: RelyingPartyResponse) -> None:
     if "context_description_en" in data:
         condiscon.context_description_en = data["context_description_en"]
     if "context_description_nl" in data:
@@ -192,9 +202,9 @@ def update_rp_environment(relying_party: RelyingParty, environment: str) -> None
 def update_rp_slug(
     relying_party: RelyingParty,
     new_slug: str,
-    response_data: Dict[str, str | list[dict[str, str]]],
+    response: Dict[str, str | list[dict[str, str]]],
 ) -> None:
     if new_slug != relying_party.rp_slug:
         relying_party.rp_slug = new_slug
         relying_party.save()
-        response_data["rp_slug"] = relying_party.rp_slug
+        response["rp_slug"] = relying_party.rp_slug

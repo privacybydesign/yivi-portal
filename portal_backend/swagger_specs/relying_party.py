@@ -11,7 +11,7 @@ relying_party_create_schema = swagger_auto_schema(
     request_body=openapi.Schema(
         type=openapi.TYPE_OBJECT,
         required=[
-            "hostname",
+            "hostnames",
             "environment",
             "attributes",
             "context_description_en",
@@ -80,6 +80,7 @@ relying_party_patch_schema = swagger_auto_schema(
                     },
                 ),
             ),
+            "rp_slug": openapi.Schema(type=openapi.TYPE_STRING),
             "ready": openapi.Schema(type=openapi.TYPE_BOOLEAN),
         },
     ),

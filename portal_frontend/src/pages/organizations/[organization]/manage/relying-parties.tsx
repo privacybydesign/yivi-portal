@@ -8,6 +8,7 @@ import { registerRelyingParty } from "@/src/actions/manage-relying-party";
 import ManageOrganizationLayout from "@/src/components/layout/manage-organization";
 import RelyingPartyList from "@/src/components/forms/relying-party/relying-party-list";
 import { Button } from "@/src/components/ui/button";
+import { toast } from "@/hooks/use-toast";
 
 const initialData: RelyingPartyFormData = {
   rp_slug: "",
@@ -53,10 +54,17 @@ export default function RelyingPartyManager() {
       setFieldErrors(result.fieldErrors || {});
       setGlobalError(result.globalError);
     } else {
-      alert("Saved!");
       setFieldErrors({});
       setGlobalError(undefined);
       setIsCreating(false);
+      toast({
+        title: "Relying Party Created",
+        description: "The relying party has been created successfully.",
+        variant: "default",
+      });
+      setTimeout(() => {
+        window.location.reload();
+      }, 2000);
     }
   };
 
