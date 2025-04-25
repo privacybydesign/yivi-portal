@@ -130,7 +130,6 @@ def make_condiscon_json(
 def create_condiscon(
     data: RelyingPartyResponse, relying_party: RelyingParty
 ) -> Condiscon:
-    print(f"data: {data}")
 
     condiscon_json = make_condiscon_json(data.get("attributes", []))
     condiscon = Condiscon.objects.create(

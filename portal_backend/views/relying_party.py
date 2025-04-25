@@ -246,7 +246,6 @@ class RelyingPartyUpdateView(APIView):
             relying_party.save()
 
         response_data["message"] = "Relying party updated successfully"
-        print(f"response_data: {response_data}")
         return Response(response_data, status=200)
 
 
