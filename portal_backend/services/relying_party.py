@@ -1,4 +1,4 @@
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Optional
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django.core.exceptions import ValidationError
@@ -16,7 +16,7 @@ from ..dns_verification import generate_dns_challenge
 
 
 def create_relying_party(
-    data: Dict[str, Any], org_slug: str, rp_slug: str
+    data: dict[str, list[dict[str, str]] | str], org_slug: str, rp_slug: str
 ) -> RelyingParty:
     organization = get_object_or_404(Organization, slug=org_slug)
     yivi_tme = get_object_or_404(
@@ -89,7 +89,7 @@ def create_hostname_objects(
 
 
 def create_hostnames(
-    data: Dict[str, Any], relying_party: RelyingParty
+    data: dict[str, str | list[dict[str, str]]], relying_party: RelyingParty
 ) -> List[RelyingPartyHostname]:
     hostnames = data.get("hostnames", [])
     new_hostnames = parse_and_validate_hostnames(hostnames)
@@ -116,7 +116,9 @@ def make_condiscon_json(
     return condiscon_json
 
 
-def create_condiscon(data: Dict[str, str], relying_party: RelyingParty) -> Condiscon:
+def create_condiscon(
+    data: dict[str, str | list[dict[str, str]]], relying_party: RelyingParty
+) -> Condiscon:
     condiscon_json = make_condiscon_json(data.get("attributes", []))
     condiscon = Condiscon.objects.create(
         condiscon=condiscon_json,
@@ -167,7 +169,9 @@ def update_condiscon_attributes(
     create_condiscon_attributes(condiscon, attributes_data)
 
 
-def update_condiscon_context(condiscon: Condiscon, data: Dict[str, Any]) -> None:
+def update_condiscon_context(
+    condiscon: Condiscon, data: dict[str, str | list[dict[str, str]]]
+) -> None:
     if "context_description_en" in data:
         condiscon.context_description_en = data["context_description_en"]
     if "context_description_nl" in data:
@@ -182,7 +186,9 @@ def update_rp_environment(relying_party: RelyingParty, environment: str) -> None
 
 
 def update_rp_slug(
-    relying_party: RelyingParty, new_slug: str, response_data: Dict[str, Any]
+    relying_party: RelyingParty,
+    new_slug: str,
+    response_data: Dict[str, str | list[dict[str, str]]],
 ) -> None:
     if new_slug != relying_party.rp_slug:
         relying_party.rp_slug = new_slug

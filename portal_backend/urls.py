@@ -16,7 +16,6 @@ from portal_backend.views.attestation_provider import (
 )
 from portal_backend.views.relying_party import (
     RelyingPartyHostnameStatusView,
-    RelyingPartyUpdateView,
     RelyingPartyListView,
     RelyingPartyCreateView,
     RelyingPartyUpdateView,

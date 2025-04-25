@@ -1,5 +1,5 @@
 "use client";
-
+import React from "react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { RelyingPartySchema, RelyingPartyFormData } from "./validation-schema";
@@ -41,7 +41,7 @@ type RelyingPartyProps =
     }
   | {
       isEditMode: false;
-      originalSlug?: never; // ✅ Enforce that it can't be passed
+      originalSlug?: never;
       defaultValues: RelyingPartyFormData;
       onSubmit: (data: RelyingPartyFormData) => void;
       serverErrors?: Partial<Record<keyof RelyingPartyFormData, string>>;
@@ -188,27 +188,44 @@ export default function RelyingPartyForm({
               }
             })}
           >
-            <FormField
-              control={control}
-              name="environment"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Environment</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
+            <div className="space-y-2 mt-4">
+              <FormField
+                control={control}
+                name="rp_slug"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Relying Party Slug</FormLabel>
                     <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select an environment" />
-                      </SelectTrigger>
+                      <Input {...field} />
                     </FormControl>
-                    <SelectContent>
-                      <SelectItem value="demo">Demo</SelectItem>
-                      <SelectItem value="production">Production</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage>{serverErrors.environment}</FormMessage>
-                </FormItem>
-              )}
-            />
+                    <FormMessage>{serverErrors.rp_slug}</FormMessage>
+                  </FormItem>
+                )}
+              />
+            </div>
+            <div className="space-y-2 mt-4">
+              <FormField
+                control={control}
+                name="environment"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Environment</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select an environment" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="demo">Demo</SelectItem>
+                        <SelectItem value="production">Production</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
 
             <div className="space-y-2 mt-4">
               <FormLabel className="text-base font-medium">
@@ -252,7 +269,7 @@ export default function RelyingPartyForm({
                   <div key={field.id} className="flex gap-2 items-start">
                     <Input
                       {...register(`hostnames.${index}.hostname`)}
-                      defaultValue={field.hostname} // ✅ Use string directly
+                      defaultValue={field.hostname}
                       className="w-full"
                     />
                     <Button
