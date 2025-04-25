@@ -10,10 +10,10 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "../../ui/form";
-import { Input } from "../../ui/input";
-import { Textarea } from "../../ui/textarea";
-import { Button } from "../../ui/button";
+} from "@/src/components/ui/form";
+import { Input } from "@/src/components/ui/input";
+import { Textarea } from "@/src/components/ui/textarea";
+import { Button } from "@/src/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import {
   Select,
@@ -41,7 +41,7 @@ type RelyingPartyProps =
     }
   | {
       isEditMode: false;
-      originalSlug?: never; // ✅ Enforce that it can't be passed
+      originalSlug?: never;
       defaultValues: RelyingPartyFormData;
       onSubmit: (data: RelyingPartyFormData) => void;
       serverErrors?: Partial<Record<keyof RelyingPartyFormData, string>>;
@@ -252,7 +252,7 @@ export default function RelyingPartyForm({
                   <div key={field.id} className="flex gap-2 items-start">
                     <Input
                       {...register(`hostnames.${index}.hostname`)}
-                      defaultValue={field.hostname} // ✅ Use string directly
+                      defaultValue={field.hostname}
                       className="w-full"
                     />
                     <Button
