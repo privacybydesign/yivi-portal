@@ -7,19 +7,34 @@ export const RelyingPartySchema = z.object({
     .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, {
       message: "Slug must be lowercase, hyphen-separated",
     }),
-  environment: z.string().min(1, "Environment is required"),
-  context_description_en: z.string().min(1),
-  context_description_nl: z.string().min(1),
+
+  environment: z.string().nonempty("Environment is required"),
+
+  context_description_en: z
+    .string()
+    .nonempty("English context description is required"),
+  context_description_nl: z
+    .string()
+    .nonempty("Dutch context description is required"),
+
   hostnames: z.array(
     z.object({
-      hostname: z.string().url(),
+      hostname: z
+        .string()
+        .regex(
+          /^(?!:\/\/)([a-zA-Z0-9-_]+\.)+[a-zA-Z]{2,}$/,
+          "Hostname must be a valid domain (e.g. example.com, sub.domain.dev)"
+        ),
     })
   ),
+
   attributes: z.array(
     z.object({
-      credential_attribute_name: z.string(),
-      reason_en: z.string(),
-      reason_nl: z.string(),
+      credential_attribute_name: z
+        .string()
+        .nonempty("Credential attribute name is required"),
+      reason_en: z.string().nonempty("English reason is required"),
+      reason_nl: z.string().nonempty("Dutch reason is required"),
     })
   ),
 });
