@@ -72,8 +72,7 @@ class OrganizationListView(APIView):
                 name_en__icontains=search_query
             )
         if trust_model:
-            trust_model = trust_model.lower()
-            orgs = orgs.filter(trust_model__name=trust_model)
+            orgs = Organization.objects.filter(trust_models__name=trust_model)
 
         paginator = LimitOffsetPagination()
         paginator.default_limit = 20
@@ -223,7 +222,8 @@ class OrganizationMaintainerView(APIView):
 
         if not maintainer_id:
             return Response(
-                {"error": "Maintainer id is required"}, status=status.HTTP_400_BAD_REQUEST
+                {"error": "Maintainer id is required"},
+                status=status.HTTP_400_BAD_REQUEST,
             )
         if maintainer_id == request.user.id:
             return Response(
@@ -243,8 +243,6 @@ class OrganizationMaintainerView(APIView):
             )
         else:
             return Response(
-                {
-                    "error": "User is not a maintainer of this organization"
-                },
+                {"error": "User is not a maintainer of this organization"},
                 status=status.HTTP_404_NOT_FOUND,
             )

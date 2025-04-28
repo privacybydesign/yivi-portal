@@ -12,12 +12,26 @@ from .models import (
     CondisconAttribute,
     RelyingParty,
 )
-from typing import Optional
 from django_countries.serializers import CountryFieldMixin  # type: ignore
 
 
+class TrustModelSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TrustModel
+        fields = ["id", "name", "description", "eudi_compliant"]
+
+
 class OrganizationSerializer(CountryFieldMixin, serializers.ModelSerializer):
-    trust_model = serializers.SerializerMethodField()
+    trust_models = TrustModelSerializer(many=True, read_only=True)
+
+    is_RP = serializers.SerializerMethodField()
+    is_AP = serializers.SerializerMethodField()
+
+    def get_is_RP(self, obj):
+        return RelyingParty.objects.filter(organization=obj).exists()
+
+    def get_is_AP(self, obj):
+        return AttestationProvider.objects.filter(organization=obj).exists()
 
     class Meta:
         model = Organization
@@ -34,7 +48,7 @@ class OrganizationSerializer(CountryFieldMixin, serializers.ModelSerializer):
             "last_updated_at",
             "is_RP",
             "is_AP",
-            "trust_model",
+            "trust_models",
             "country",
             "house_number",
             "street",
@@ -42,15 +56,6 @@ class OrganizationSerializer(CountryFieldMixin, serializers.ModelSerializer):
             "city",
         ]
         read_only_fields = ["is_verified"]
-
-    def get_trust_model(self, obj: Organization) -> Optional[str]:
-        return obj.trust_model.name if obj.trust_model else None
-
-
-class TrustModelSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = TrustModel
-        fields = ["id", "name", "description", "eudi_compliant"]
 
 
 class YiviTrustModelEnvSerializer(serializers.ModelSerializer):
@@ -90,13 +95,17 @@ class CredentialSerializer(serializers.ModelSerializer):
 class CredentialAttributeSerializer(serializers.ModelSerializer):
     class Meta:
         model = CredentialAttribute
-        fields = "__all__"
+        fields = ""
 
 
 class CondisconAttributeSerializer(serializers.ModelSerializer):
+    credential_attribute = serializers.CharField(
+        source="credential_attribute.credential.", read_only=True
+    )
+
     class Meta:
         model = CondisconAttribute
-        fields = "__all__"
+        fields = ["reason-en", "credential_attribute"]
 
 
 class RelyingPartySerializer(serializers.ModelSerializer):

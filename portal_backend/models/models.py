@@ -56,13 +56,6 @@ class Organization(models.Model):
     approved_logo = models.ImageField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     last_updated_at = models.DateTimeField(auto_now=True)
-    trust_model = models.ForeignKey(
-        "TrustModel",
-        on_delete=models.CASCADE,
-        related_name="organizations",
-        null=True,
-        blank=True,
-    )
 
     def __str__(self):
         return self.name_en
@@ -94,19 +87,12 @@ class Organization(models.Model):
 
         super().delete(*args, **kwargs)
 
-    @property
-    def is_RP(self):
-        return RelyingParty.objects.filter(organization=self).exists()
-
-    @property
-    def is_AP(self):
-        return AttestationProvider.objects.filter(organization=self).exists()
-
 
 class TrustModel(models.Model):
     name = models.CharField(max_length=255)
     description = models.TextField()
     eudi_compliant = models.BooleanField(default=False)
+    organizations = models.ManyToManyField("Organization", related_name="trust_models")
 
     def __str__(self):
         return self.name
@@ -135,6 +121,16 @@ class YiviTrustModelEnv(models.Model):
 
     def __str__(self):
         return f"{self.trust_model.name} - {self.environment}"
+
+    @property
+    def scheme_manager(self):
+        env_mapping = {
+            "production": "pbdf",
+            "demo": "irma-demo",
+            "development": "pbdf-staging",
+            "staging": "pbdf-staging",  # Optional: support alias
+        }
+        return env_mapping.get(self.environment, "unknown")
 
 
 class AttestationProvider(models.Model):
@@ -231,7 +227,7 @@ class RelyingParty(models.Model):
     )
     ready = models.BooleanField(default=False)
     ready_at = models.DateTimeField(null=True, blank=True)
-    reviewed_accepted = models.BooleanField(null=True, default=None)
+    reviewed_accepted = models.BooleanField(null=True, default=False)
     reviewed_at = models.DateTimeField(null=True, blank=True)
     rejection_remarks = models.TextField(blank=True, null=True)
     published_at = models.DateTimeField(null=True, blank=True)
@@ -318,6 +314,12 @@ class Credential(models.Model):
     def __str__(self):
         return self.name_en
 
+    @property
+    def full_path(self):
+        scheme = self.attestation_provider.yivi_tme.scheme_manager
+        issuer = self.attestation_provider.organization.slug
+        return f"{scheme}.{issuer}.{self.credential_tag}"
+
 
 class CredentialAttribute(models.Model):
     name = models.CharField(max_length=255)
@@ -330,6 +332,10 @@ class CredentialAttribute(models.Model):
 
     def __str__(self):
         return self.name
+
+    @property
+    def full_path(self):
+        return f"{self.credential.full_path}.{self.name}"
 
 
 class RelyingPartyHostname(models.Model):
@@ -377,7 +383,7 @@ class Condiscon(models.Model):
     )
 
     def __str__(self):
-        return str(self.condiscon)
+        return str(self.context_description_en)
 
 
 class CondisconAttribute(models.Model):
