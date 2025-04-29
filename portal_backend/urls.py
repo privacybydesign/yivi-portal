@@ -7,6 +7,8 @@ from portal_backend.views.trust_model import (
 )
 from portal_backend.views.organization import (
     OrganizationListView,
+    OrganizationCreateView,
+    OrganizationUpdateView,
     OrganizationDetailView,
     OrganizationMaintainersView,
     OrganizationMaintainerView,
@@ -50,6 +52,16 @@ urlpatterns = [
         "v1/organizations/",
         OrganizationListView.as_view(),
         name="organization-list",
+    ),
+    path(
+        "v1/organizations/create/",
+        OrganizationCreateView.as_view(),  # TODO: update frontend to use this endpoint
+        name="organization-create",
+    ),
+    path(
+        "v1/organizations/<str:org_slug>/update/",  # TODO: update frontend to use this endpoint
+        OrganizationUpdateView.as_view(),
+        name="organization-update",
     ),
     path(
         "v1/organizations/<str:org_slug>/",
