@@ -131,6 +131,7 @@ export default function RelyingPartyList() {
   return (
     <div>
       <div className="mb-6">
+        <div className="mb-3 font-semibold">Select Environment</div>
         <Select
           value={environment}
           onValueChange={(val) => setEnvironment(val)}

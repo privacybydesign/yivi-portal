@@ -27,8 +27,8 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
 
         db_usr = User.objects.filter(email=user.email).first()
         if db_usr is not None:
-            token['role'] = db_usr.role
-            token['organizationSlug'] = str(db_usr.organization.slug)
+            token["role"] = db_usr.role
+            token["organizationSlug"] = str(db_usr.organization.slug)
 
         return token
 
@@ -52,8 +52,11 @@ class YiviSessionProxyStartView(APIView):
         )
         try:
             session_request = {
-                "@context":"https://irma.app/ld/request/disclosure/v2",
-                "disclose":[[["pbdf.pbdf.email.email"],["pbdf.sidn-pbdf.email.email"]]]}
+                "@context": "https://irma.app/ld/request/disclosure/v2",
+                "disclose": [
+                    [["pbdf.pbdf.email.email"], ["pbdf.sidn-pbdf.email.email"]]
+                ],
+            }
             response = yivi_server.start_session(session_request)
         except YiviException as e:
             return Response(status=e.http_status, data=e.msg)
@@ -87,11 +90,9 @@ class YiviSessionProxyResultView(APIView):
 
             refresh = CustomTokenObtainPairSerializer.get_token(user)
             access_token = str(refresh.access_token)
-            response = Response(
-                {"access": access_token}, status=200
-            )
+            response = Response({"access": access_token}, status=200)
             # Cookie expires when refresh token does
-            refresh_lifetime = settings.SIMPLE_JWT['REFRESH_TOKEN_LIFETIME']
+            refresh_lifetime = settings.SIMPLE_JWT["REFRESH_TOKEN_LIFETIME"]
             expires_at = datetime.now(timezone.utc) + refresh_lifetime
             print(expires_at)
 
@@ -100,9 +101,9 @@ class YiviSessionProxyResultView(APIView):
                 value=str(refresh),
                 httponly=True,
                 secure=not settings.DEBUG,  # Set True in production
-                samesite="Lax",          # Or "Lax" depending on your app flow
+                samesite="Lax",  # Or "Lax" depending on your app flow
                 expires=expires_at,
-                path="/"
+                path="/",
             )
             return response
 
