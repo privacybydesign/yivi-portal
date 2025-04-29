@@ -28,7 +28,7 @@ logger = logging.getLogger(__name__)
 
 class OrganizationCreateView(APIView):
     permission_classes = [permissions.IsAuthenticated]
-    parser_classes = FormParser
+    parser_classes = [MultiPartParser, FormParser]
 
     @organization_create_schema
     @transaction.atomic
