@@ -10,7 +10,7 @@ interface StateStore {
   accessToken: string | null;
   email: string | null;
   role?: "admin" | "maintainer";
-  organizationId?: string;
+  organizationSlug?: string;
   setAccessToken: (accessToken: string | null) => void;
   initializeAuth: () => void;
   refreshToken: () => Promise<string | null>;
@@ -20,7 +20,7 @@ const useStore = create<StateStore>((set) => ({
   accessToken: null,
   email: null,
   role: undefined,
-  organizationId: undefined,
+  organizationSlug: undefined,
 
   setAccessToken: (newToken: string | null) => {
     if (newToken) {
@@ -28,11 +28,11 @@ const useStore = create<StateStore>((set) => ({
       set({
         email: decoded.email,
         role: decoded.role,
-        organizationId: decoded.organizationId
+        organizationSlug: decoded.organizationSlug
       });
       localStorage.setItem("accessToken", newToken);
     } else {
-      set({ email: null, role: undefined, organizationId: undefined });
+      set({ email: null, role: undefined, organizationSlug: undefined });
       localStorage.removeItem("accessToken");
     }
     set({ accessToken: newToken });
@@ -50,13 +50,13 @@ const useStore = create<StateStore>((set) => ({
         accessToken: newToken,
         email: newDecoded.email,
         role: newDecoded.role,
-        organizationId: newDecoded.organizationId,
+        organizationSlug: newDecoded.organizationSlug,
       });
       localStorage.setItem("accessToken", newToken);
       return newToken;
     } else {
       // Could not refresh — clear auth
-      set({ accessToken: null, email: null, role: undefined, organizationId: undefined });
+      set({ accessToken: null, email: null, role: undefined, organizationSlug: undefined });
       localStorage.removeItem("accessToken");
     }
     return null;
@@ -77,7 +77,7 @@ const useStore = create<StateStore>((set) => ({
           accessToken: savedAccessToken,
           email: decoded.email,
           role: decoded.role,
-          organizationId: decoded.organizationId,
+          organizationSlug: decoded.organizationSlug,
         });
       }
     }

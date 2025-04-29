@@ -28,7 +28,7 @@ export default function Header() {
 
     const email = useStore((state) => state.email);
     const role = useStore((state) => state.role);
-    const organizationSlug = useStore((state) => state.organizationId);
+    const organizationSlug = useStore((state) => state.organizationSlug);
     const setAccessToken = useStore((state) => state.setAccessToken);
 
     const svg = createAvatar(initials, {

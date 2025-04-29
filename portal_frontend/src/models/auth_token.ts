@@ -6,5 +6,5 @@ export interface AuthToken {
     user_id: string; // User identifier (could be an email or a UUID)
     email: string; // User email
     role?: "admin" | "maintainer"; // User role (e.g., "user", "admin")
-    organizationId?: string; // Organization identifier
+    organizationSlug?: string; // Organization identifier
 }

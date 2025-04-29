@@ -28,7 +28,7 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         db_usr = User.objects.filter(email=user.email).first()
         if db_usr is not None:
             token['role'] = db_usr.role
-            token['organizationId'] = str(db_usr.organization.slug)
+            token['organizationSlug'] = str(db_usr.organization.slug)
 
         return token
 
