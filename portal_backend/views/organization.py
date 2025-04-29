@@ -8,7 +8,7 @@ from portal_backend.services.organizaion import filter_organizations
 from ..models.model_serializers import MaintainerSerializer, OrganizationSerializer
 from ..models.models import Organization
 from rest_framework import permissions
-from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework.parsers import FormParser, MultiPartParser
 from ..models.models import User
 from rest_framework.pagination import LimitOffsetPagination
 from .helpers import IsOrganizationMaintainerOrAdmin
@@ -28,7 +28,7 @@ logger = logging.getLogger(__name__)
 
 class OrganizationCreateView(APIView):
     permission_classes = [permissions.IsAuthenticated]
-    parser_classes = (MultiPartParser, FormParser)
+    parser_classes = FormParser
 
     @organization_create_schema
     @transaction.atomic
@@ -85,16 +85,19 @@ class OrganizationUpdateView(APIView):
         permissions.IsAuthenticated,
         IsOrganizationMaintainerOrAdmin,
     ]
-    parser_classes = (MultiPartParser, FormParser)
+    parser_classes = [MultiPartParser, FormParser]
 
     @organization_update_schema
     def patch(self, request: Request, org_slug: str) -> Response:
         """Updates an organization, given the uuid."""
         organization = get_object_or_404(Organization, slug=org_slug)
         serializer = OrganizationSerializer(
-            organization, data=request.data, partial=True, files=request.FILES
+            organization,
+            data=request.data,
+            partial=True,
         )
         if not serializer.is_valid():
+            logger.error(f"Validation errors: {serializer.errors}")
             return Response(
                 serializer.errors,
                 status=status.HTTP_400_BAD_REQUEST,
