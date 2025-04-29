@@ -8,15 +8,14 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormMessage } 
 import { Label } from "@/src/components/ui/label";
 import { registerOrganization, RegistrationFormState, RegistrationInputs } from "@/src/actions/manage-organization";
 import { generateSlug } from "@/lib/utils";
-import { Avatar, AvatarFallback, AvatarImage, } from "@/src/components/ui/avatar";
-import { UploadIcon, XIcon } from "lucide-react";
-import { Control, UseFormSetValue, useForm, useWatch } from "react-hook-form";
+import { UploadIcon } from "lucide-react";
+import { useForm } from "react-hook-form";
 import { updateOrganization } from '@/src/actions/manage-organization';
 import { Organization } from '@/src/models/organization';
-import getConfig from 'next/config';
+import { LogoPreview } from "../../ui/logo-preview";
 
 export default function ManageOrganizationInformationForm({ organization }: { organization?: Organization; }) {
-    const [defaultFormInput, setDefaultFormInput] = useState({
+    const [defaultFormInput] = useState({
         name_en: '',
         name_nl: '',
         slug: '',
@@ -62,51 +61,6 @@ export default function ManageOrganizationInformationForm({ organization }: { or
         }
     }, [formState?.errors, form]);
 
-    const LogoPreview = ({
-        control,
-        setValue,
-        name,
-    }: {
-        control: Control<RegistrationInputs>;
-        setValue: UseFormSetValue<RegistrationInputs>;
-        name: string | undefined;
-    }) => {
-        const { publicRuntimeConfig } = getConfig();
-
-        const logo = useWatch({ control, name: "logo" });
-        let logoURL = '/logo-placeholder.svg';
-        if (typeof logo === 'string') {
-            logoURL = publicRuntimeConfig.API_ENDPOINT + logo;
-        } else if (logo) {
-            logoURL = URL.createObjectURL(logo as unknown as File);
-        }
-
-        return (
-            <div className="relative size-24">
-                <Avatar className="!size-24">
-                    <AvatarImage
-                        src={logoURL}
-                        className="rounded-full border object-contain"
-                    />
-                    <AvatarFallback>{name}</AvatarFallback>
-                </Avatar>
-
-                {logo && (
-                    <button
-                        type="button"
-                        onClick={() => {
-                            setValue("logo", undefined);
-                            setDefaultFormInput({ ...defaultFormInput, logo: undefined });
-                        }}
-                        className="bg-red-400 rounded-full p-1 absolute top-0 right-0"
-                    >
-                        <XIcon size={12} strokeWidth={3} />
-                    </button>
-                )}
-            </div>
-        );
-    };
-
     return (
         <Form {...form}>
             <form action={formSubmit} className="space-y-4">
@@ -122,7 +76,10 @@ export default function ManageOrganizationInformationForm({ organization }: { or
                                 </FormDescription>
                             </div>
                             <div className="flex items-center justify-between w-full">
-                                <LogoPreview {...form} name={typeof value === 'string' ? value : value?.name} />
+                                <LogoPreview 
+                                    control={form.control}
+                                    setValue={form.setValue}
+                                    name={typeof value === 'string' ? value : value?.name} />
                                 <Label>
                                     <div className="cursor-pointer whitespace-nowrap rounded-md text-sm font-medium transition-colors bg-primary text-primary-foreground shadow hover:bg-primary/90 h-9 px-4 py-2 flex items-center gap-2">
                                         <UploadIcon size={12} strokeWidth={3} />
