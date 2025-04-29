@@ -86,15 +86,18 @@ export default function Header() {
                                     </div>
                                 </DropdownMenuLabel>
 
-                                <DropdownMenuSeparator />
+                                {organizationSlug && <>
+                                    <DropdownMenuSeparator />
 
-                                <DropdownMenuGroup>
-                                    <Link href={`/organizations/${organizationSlug}/manage`}>
-                                        <DropdownMenuItem className="!cursor-pointer">
-                                            Your organization
-                                        </DropdownMenuItem>
-                                    </Link>
-                                </DropdownMenuGroup>
+                                    <DropdownMenuGroup>
+                                        <Link href={`/organizations/${organizationSlug}/manage`}>
+                                            <DropdownMenuItem className="!cursor-pointer">
+                                                Your organization
+                                            </DropdownMenuItem>
+                                        </Link>
+                                    </DropdownMenuGroup>
+                                </>
+                                }
 
                                 <DropdownMenuSeparator />
 

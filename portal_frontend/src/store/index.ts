@@ -25,10 +25,14 @@ const useStore = create<StateStore>((set) => ({
   setAccessToken: (newToken: string | null) => {
     if (newToken) {
       const decoded = jwtDecode<AuthToken>(newToken);
-      set({ email: decoded.email, role: decoded.role });
+      set({
+        email: decoded.email,
+        role: decoded.role,
+        organizationId: decoded.organizationId
+      });
       localStorage.setItem("accessToken", newToken);
     } else {
-      set({ email: null, role: undefined });
+      set({ email: null, role: undefined, organizationId: undefined });
       localStorage.removeItem("accessToken");
     }
     set({ accessToken: newToken });
