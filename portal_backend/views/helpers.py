@@ -2,7 +2,6 @@ import logging
 from rest_framework import permissions
 from rest_framework.request import Request
 from rest_framework.views import View
-from django.shortcuts import get_object_or_404
 from ..models.models import User
 from rest_framework_simplejwt.tokens import AccessToken  # type: ignore
 
@@ -32,8 +31,7 @@ class IsOrganizationMaintainerOrAdmin(permissions.BasePermission):
         if request_org_slug is None:  # checking if org slug is present in the request
             return False
         logger.info(
-            "Checking if user is maintainer to organization with slug: "
-            + str(request_org_slug)
+            f"Checking if user is maintainer to organization with slug: {request_org_slug}"
         )
 
         token_org_slug: str | None = None
@@ -42,11 +40,15 @@ class IsOrganizationMaintainerOrAdmin(permissions.BasePermission):
             token = AccessToken(raw_token)
             token_org_slug = token.get("organizationSlug")
 
-        user_obj: User = get_object_or_404(User, email=request.user.email)
-        if user_obj.role == "maintainer":
-            if token_org_slug == request_org_slug:
-                return True
-            else:
-                return False
-        elif user_obj.role == "admin":
+        try:
+            user_obj = User.objects.get(email=request.user.email)
+        except User.DoesNotExist:
+            return False
+
+        if user_obj.role == "admin":
             return True
+
+        if user_obj.role == "maintainer":
+            return token_org_slug == request_org_slug
+
+        return False
