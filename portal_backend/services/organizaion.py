@@ -29,10 +29,6 @@ def create_user(organization: Organization, email: str) -> None:
 
 def filter_organizations(
     request: Request,
-    search_query: Optional[str] = None,
-    trust_model: Optional[str] = None,
-    select_aps: Optional[bool] = None,
-    select_rps: Optional[bool] = None,
 ) -> QuerySet:
     """Filter organizations based on query parameters"""
 

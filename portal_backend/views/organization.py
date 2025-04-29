@@ -59,7 +59,7 @@ class OrganizationListView(APIView):
 
         logger.info("Fetching all registered organizations")
 
-        orgs = filter_organizations()
+        orgs = filter_organizations(request)
         paginator = LimitOffsetPagination()
         paginator.default_limit = 20
         result_page = paginator.paginate_queryset(orgs, request)
