@@ -2,8 +2,8 @@ import logging
 from rest_framework import permissions
 from rest_framework.request import Request
 from rest_framework.views import View
-from django.shortcuts import get_object_or_404
 from ..models.models import User
+from rest_framework_simplejwt.tokens import AccessToken  # type: ignore
 
 logger = logging.getLogger(__name__)
 
@@ -21,32 +21,34 @@ class ORPermission(permissions.BasePermission):
         )
 
 
-class IsMaintainerOrAdmin(permissions.BasePermission):
-    message: str = "Unauthorized: User does not have maintainer permissions"
+class IsOrganizationMaintainerOrAdmin(permissions.BasePermission):
+    message: str = (
+        "Unauthorized: User does not have organization maintainer permissions"
+    )
 
     def has_permission(self, request: Request, view: View) -> bool:
-        user_obj: User = get_object_or_404(User, email=request.user.email)
-        return user_obj.role == "maintainer" or user_obj.role == "admin"
-
-
-class BelongsToOrganization(permissions.BasePermission):
-    message: str = "Unauthorized: User does not belong to this organization"
-
-    def has_permission(self, request: Request, view: View) -> bool:
-        logger.info(view.kwargs)
-        org_slug: str | None = view.kwargs.get("org_slug")
-        if org_slug is None:
-            logger.info(org_slug)
+        request_org_slug: str | None = view.kwargs.get("org_slug")
+        if request_org_slug is None:  # checking if org slug is present in the request
             return False
-
         logger.info(
-            "Checking if user belongs to organization with id: " + str(org_slug)
+            f"Checking if user is maintainer to organization with slug: {request_org_slug}"
         )
 
-        user_obj: User = get_object_or_404(User, email=request.user.email)
+        token_org_slug: str | None = None
+        if hasattr(request, "auth"):
+            raw_token: AccessToken = str(request.auth)
+            token = AccessToken(raw_token)
+            token_org_slug = token.get("organizationSlug")
+
+        try:
+            user_obj = User.objects.get(email=request.user.email)
+        except User.DoesNotExist:
+            return False
+
         if user_obj.role == "admin":
             return True
-        if user_obj.organization.slug == str(org_slug):
-            return True
+
+        if user_obj.role == "maintainer":
+            return token_org_slug == request_org_slug
 
         return False

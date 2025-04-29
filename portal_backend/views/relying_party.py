@@ -25,7 +25,7 @@ from ..swagger_specs.relying_party import (
     relying_party_dns_status_schema,
     relying_party_list_schema,
 )
-from .helpers import IsMaintainerOrAdmin, BelongsToOrganization
+from .helpers import IsOrganizationMaintainerOrAdmin
 from ..models.model_serializers import (
     CondisconSerializer,
     RelyingPartyHostnameSerializer,
@@ -42,8 +42,7 @@ from ..models.models import (
 class RelyingPartyCreateView(APIView):
     permission_classes = [
         permissions.IsAuthenticated,
-        BelongsToOrganization,
-        IsMaintainerOrAdmin,
+        IsOrganizationMaintainerOrAdmin,
     ]
 
     @relying_party_create_schema
@@ -75,11 +74,7 @@ class RelyingPartyCreateView(APIView):
 
 
 class RelyingPartyListView(APIView):
-    permission_classes = [
-        permissions.IsAuthenticated,
-        BelongsToOrganization,
-        IsMaintainerOrAdmin,
-    ]
+    permission_classes = [permissions.AllowAny]
 
     @relying_party_list_schema
     def get(self, request: Request, org_slug: str) -> Response:
@@ -96,11 +91,7 @@ class RelyingPartyListView(APIView):
 
 
 class RelyingPartyRetrieveView(APIView):
-    permission_classes = [
-        permissions.IsAuthenticated,
-        BelongsToOrganization,
-        IsMaintainerOrAdmin,
-    ]
+    permission_classes = [permissions.AllowAny]
 
     def get(
         self, request: Request, org_slug: str, environment: str, rp_slug: str
@@ -112,7 +103,7 @@ class RelyingPartyRetrieveView(APIView):
             rp_slug=rp_slug,
         )
         hostnames = RelyingPartyHostname.objects.filter(relying_party=relying_party)
-        condiscon = get_object_or_404(Condiscon, relying_party=relying_party)
+        condiscon = Condiscon.objects.filter(relying_party=relying_party).first()
         attributes, context_description_en, context_description_nl = [], "", ""
 
         if condiscon:
@@ -147,8 +138,7 @@ class RelyingPartyRetrieveView(APIView):
 class RelyingPartyDeleteView(APIView):
     permission_classes = [
         permissions.IsAuthenticated,
-        BelongsToOrganization,
-        IsMaintainerOrAdmin,
+        IsOrganizationMaintainerOrAdmin,
     ]
 
     @relying_party_delete_schema
@@ -173,11 +163,7 @@ class RelyingPartyDeleteView(APIView):
 
 
 class RelyingPartyUpdateView(APIView):
-    permission_classes = [
-        permissions.IsAuthenticated,
-        BelongsToOrganization,
-        IsMaintainerOrAdmin,
-    ]
+    permission_classes = [permissions.IsAuthenticated, IsOrganizationMaintainerOrAdmin]
 
     @relying_party_patch_schema
     def patch(self, request: Request, org_slug: str, rp_slug: str) -> Response:
@@ -252,8 +238,7 @@ class RelyingPartyUpdateView(APIView):
 class RelyingPartyHostnameStatusView(APIView):
     permission_classes = [
         permissions.IsAuthenticated,
-        BelongsToOrganization,
-        IsMaintainerOrAdmin,
+        IsOrganizationMaintainerOrAdmin,
     ]
 
     @relying_party_dns_status_schema

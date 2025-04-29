@@ -8,7 +8,7 @@ from ..models.model_serializers import MaintainerSerializer, OrganizationSeriali
 from ..models.models import AttestationProvider, Organization, RelyingParty
 from rest_framework import permissions
 from ..models.models import User
-from .helpers import BelongsToOrganization, IsMaintainerOrAdmin
+from .helpers import IsOrganizationMaintainerOrAdmin
 from rest_framework.pagination import LimitOffsetPagination
 from drf_yasg import openapi  # type: ignore
 from django.shortcuts import get_object_or_404
@@ -141,8 +141,7 @@ class OrganizationDetailView(APIView):
 class OrganizationMaintainersView(APIView):
     permission_classes = [
         permissions.IsAuthenticated,
-        BelongsToOrganization,
-        IsMaintainerOrAdmin,
+        IsOrganizationMaintainerOrAdmin,
     ]
 
     @swagger_auto_schema(responses={200: "Success"})
@@ -202,8 +201,7 @@ class OrganizationMaintainersView(APIView):
 class OrganizationMaintainerView(APIView):
     permission_classes = [
         permissions.IsAuthenticated,
-        BelongsToOrganization,
-        IsMaintainerOrAdmin,
+        IsOrganizationMaintainerOrAdmin,
     ]
 
     @swagger_auto_schema(
