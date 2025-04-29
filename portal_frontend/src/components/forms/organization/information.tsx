@@ -15,7 +15,7 @@ import { Organization } from '@/src/models/organization';
 import { LogoPreview } from "../../ui/logo-preview";
 
 export default function ManageOrganizationInformationForm({ organization }: { organization?: Organization; }) {
-    const [defaultFormInput, setDefaultFormInput] = useState({
+    const [defaultFormInput] = useState({
         name_en: '',
         name_nl: '',
         slug: '',
