@@ -45,12 +45,6 @@ class IsOrganizationMaintainerOrAdmin(permissions.BasePermission):
 
         user_obj: User = get_object_or_404(User, email=request.user.email)
         if user_obj.role == "maintainer":
-            logger.info(
-                "organizationSlug from token: "
-                + token_org_slug
-                + " is maintainer to organization with slug: "
-                + str(request_org_slug)
-            )
             if token_org_slug == request_org_slug:
 
                 return True
