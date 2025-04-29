@@ -20,22 +20,26 @@ const useStore = create<StateStore>((set) => ({
   accessToken: null,
   email: null,
   role: undefined,
-  organizationId: undefined,
+  organizationSlug: undefined,
 
   setAccessToken: (newToken: string | null) => {
     if (newToken) {
       const decoded = jwtDecode<AuthToken>(newToken);
-      set({ email: decoded.email, role: decoded.role });
+      set({
+        email: decoded.email,
+        role: decoded.role,
+        organizationSlug: decoded.organizationSlug
+      });
       localStorage.setItem("accessToken", newToken);
     } else {
-      set({ email: null, role: undefined });
+      set({ email: null, role: undefined, organizationSlug: undefined });
       localStorage.removeItem("accessToken");
     }
     set({ accessToken: newToken });
   },
 
   refreshToken: async () => {
-    const response = await axiosInstance.post<{ access: string }>('/v1/refreshtoken')
+    const response = await axiosInstance.post<{ access: string; }>('/v1/refreshtoken');
     if (response.status !== 200) {
       return null;
     }
@@ -46,7 +50,7 @@ const useStore = create<StateStore>((set) => ({
         accessToken: newToken,
         email: newDecoded.email,
         role: newDecoded.role,
-        organizationSlug: newDecoded.organizationId,
+        organizationSlug: newDecoded.organizationSlug,
       });
       localStorage.setItem("accessToken", newToken);
       return newToken;
@@ -73,7 +77,7 @@ const useStore = create<StateStore>((set) => ({
           accessToken: savedAccessToken,
           email: decoded.email,
           role: decoded.role,
-          organizationSlug: decoded.organizationId,
+          organizationSlug: decoded.organizationSlug,
         });
       }
     }
