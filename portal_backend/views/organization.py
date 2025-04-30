@@ -11,8 +11,7 @@ from rest_framework import permissions
 from rest_framework.parsers import FormParser, MultiPartParser
 from ..models.models import User
 from rest_framework.pagination import LimitOffsetPagination
-from .helpers import IsOrganizationMaintainerOrAdmin
-from drf_yasg import openapi  # type: ignore
+from .permissions import IsOrganizationMaintainerOrAdmin
 from django.shortcuts import get_object_or_404
 from django.db import transaction
 from rest_framework.request import Request
@@ -36,22 +35,31 @@ class OrganizationCreateView(APIView):
         """Creates an organization."""
 
         email = request.user.email
-        logger.info("Creating a new organization")
-        serializer = OrganizationSerializer(data=request.data, files=request.FILES)
-        print(request.data, "serialierorg")
+        serializer = OrganizationSerializer(data=request.data)
 
         if not serializer.is_valid():
-            logger.warning("Invalid organization data: %s", serializer.errors)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        organization = serializer.save()
-        org_obj = Organization.objects.get(id=organization.id)
-        self.create_user(org_obj, email)
-        logger.info("Organization created with ID: %s", organization.id)
-        return Response({"id": organization.id}, status=status.HTTP_201_CREATED)
+
+        try:
+            organization = serializer.save()
+            User.objects.create(
+                email=email, organization=organization, role="maintainer"
+            )
+        except Exception as e:
+            logger.error(f"Error creating user: {e}")
+            return Response(
+                {"error": "Failed to create user"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+        return Response(
+            {"success": f"Created organization with ID {organization.id} for {email}"},
+            status=status.HTTP_201_CREATED,
+        )
 
 
 class OrganizationListView(APIView):
-    permission_class = permissions.AllowAny
+    permission_classes = [permissions.AllowAny]
 
     @swagger_auto_schema(responses={200: "Success", 404: "Not Found"})
     def get(self, request: Request) -> Response:

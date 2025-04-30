@@ -90,12 +90,13 @@ export const registerOrganization = async (
 ): Promise<RegistrationFormState> => {
   try {
     await axiosInstance.post("/v1/organizations/create/", formData);
+    const slug = formData.get("slug") as string;
 
     return {
       values: { ...formState.values, logo: formData.get("logo") as File },
       errors: {},
       success: true,
-      redirectTo: `/organizations/success`,
+      redirectTo: `/organizations/${slug}/manage`,
     };
   } catch (e: unknown) {
     if (e instanceof AxiosError && e.response?.status === 400) {

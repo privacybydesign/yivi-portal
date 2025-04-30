@@ -8,36 +8,38 @@ import getConfig from "next/config";
 
 export default function Login() {
   const { publicRuntimeConfig } = getConfig();
-  const setAccessToken = useStore((state) => state.setAccessToken)
+  const setAccessToken = useStore((state) => state.setAccessToken);
   const router = useRouter();
 
   useEffect(() => {
     import("@privacybydesign/yivi-frontend").then((yivi: any) => {
       const web = yivi.newWeb({
-        debugging: true,            // Enable to get helpful output in the browser console
-        element:   '#yivi-web-form', // Which DOM element to render to
-      
+        debugging: true, // Enable to get helpful output in the browser console
+        element: "#yivi-web-form", // Which DOM element to render to
+
         // Back-end options
         session: {
           // Point this to your controller:
-          url: publicRuntimeConfig.API_ENDPOINT + '/v1',
-      
+          url: publicRuntimeConfig.API_ENDPOINT + "/v1",
+
           start: {
             url: (o: any) => `${o.url}/session/`,
-            method: 'POST',
-            credentials: 'include'
+            method: "POST",
+            credentials: "include",
           },
           result: {
-            url: (o: any, { sessionToken}: any) => `${o.url}/token/${sessionToken}`,
-            method: 'GET',
-            credentials: 'include'
-          }
-        }
+            url: (o: any, { sessionToken }: any) =>
+              `${o.url}/token/${sessionToken}`,
+            method: "GET",
+            credentials: "include",
+          },
+        },
       });
-      web.start()
+      web
+        .start()
         .then((result: any) => {
           setAccessToken(result.access);
-          router.push('/organizations');
+          router.back();
         })
         .catch((err: any) => {
           alert(err);
@@ -48,8 +50,7 @@ export default function Login() {
   return (
     <div className="flex justify-center items-center">
       <div className="flex grow p-6 justify-center items-center">
-        <div id="yivi-web-form">
-        </div>
+        <div id="yivi-web-form"></div>
       </div>
     </div>
   );

@@ -15,6 +15,7 @@ organization_update_schema = swagger_auto_schema(
         400: "Bad Request",
         404: "Not Found",
         403: "Forbidden",
+        500: "Internal Server Error",
     },
 )
 

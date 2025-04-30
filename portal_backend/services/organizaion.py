@@ -1,12 +1,9 @@
 from typing import Optional
-from rest_framework.pagination import LimitOffsetPagination
 from django.db.models import Exists, OuterRef, Q, QuerySet
-from portal_backend.models.model_serializers import OrganizationSerializer
 from portal_backend.models.models import (
     AttestationProvider,
     Organization,
     RelyingParty,
-    User,
 )
 from rest_framework.request import Request
 
@@ -22,11 +19,6 @@ def to_nullable_bool(value: Optional[str]) -> Optional[bool]:
     return None
 
 
-def create_user(organization: Organization, email: str) -> None:
-    """Creates a maintainer user for the organization."""
-    User.objects.create(email=email, organization=organization, role="maintainer")
-
-
 def filter_organizations(
     request: Request,
 ) -> QuerySet:
@@ -39,12 +31,8 @@ def filter_organizations(
 
     # If both select_aps and select_rps are False, return an empty list
     if select_aps is False and select_rps is False:
-        paginator = LimitOffsetPagination()
-        paginator.default_limit = 20
-        result_page = paginator.paginate_queryset([], request)
-        serializer = OrganizationSerializer(result_page, many=True)
-        return paginator.get_paginated_response(serializer.data)
-    # TODO: org that is not rp and not ap should still show up in the list
+        return Organization.objects.none()
+
     orgs = (
         Organization.objects.annotate(
             is_rp=Exists(RelyingParty.objects.filter(organization=OuterRef("pk"))),
@@ -61,9 +49,11 @@ def filter_organizations(
     )
 
     if search_query:
-        orgs = orgs.filter(name_en__icontains=search_query) | orgs.filter(
-            name_nl__icontains=search_query
+        orgs = orgs.filter(
+            Q(name_en__icontains=search_query) | Q(name_nl__icontains=search_query)
         )
+
     if trust_model:
-        orgs = Organization.objects.filter(trust_models__name=trust_model)
+        orgs = orgs.filter(trust_models__name=trust_model)
+
     return orgs
