@@ -33,7 +33,7 @@ def filter_organizations(
     if select_aps is False and select_rps is False:
         return Organization.objects.none()
 
-    orgs = (
+    filtered_orgs = (
         Organization.objects.annotate(
             is_rp=Exists(RelyingParty.objects.filter(organization=OuterRef("pk"))),
             is_ap=Exists(
@@ -49,11 +49,11 @@ def filter_organizations(
     )
 
     if search_query:
-        orgs = orgs.filter(
+        filtered_orgs = filtered_orgs.filter(
             Q(name_en__icontains=search_query) | Q(name_nl__icontains=search_query)
         )
 
     if trust_model:
-        orgs = orgs.filter(trust_models__name=trust_model)
+        filtered_orgs = filtered_orgs.filter(trust_models__name=trust_model)
 
-    return orgs
+    return filtered_orgs
