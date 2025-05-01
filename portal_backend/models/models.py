@@ -43,7 +43,7 @@ class Organization(models.Model):
     house_number = models.CharField(max_length=35, null=True, blank=True)
     postal_code = models.CharField(max_length=35, null=True, blank=True)
     city = models.CharField(max_length=35, null=True, blank=True)
-    country = CountryField()
+    country = CountryField(null=True, blank=True)
     is_verified = models.BooleanField(default=False)
     verified_at = models.DateTimeField(null=True)
     logo = ProcessedImageField(

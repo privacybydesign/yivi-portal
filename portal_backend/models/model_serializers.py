@@ -26,6 +26,7 @@ class OrganizationSerializer(CountryFieldMixin, serializers.ModelSerializer):
 
     is_RP = serializers.SerializerMethodField()
     is_AP = serializers.SerializerMethodField()
+    logo = serializers.ImageField(required=False)
 
     def get_is_RP(self, obj):
         return RelyingParty.objects.filter(organization=obj).exists()

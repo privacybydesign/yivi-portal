@@ -4,132 +4,108 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from drf_yasg.utils import swagger_auto_schema  # type: ignore
 from rest_framework import status
+from portal_backend.services.organizaion import filter_organizations
 from ..models.model_serializers import MaintainerSerializer, OrganizationSerializer
-from ..models.models import AttestationProvider, Organization, RelyingParty
+from ..models.models import Organization
 from rest_framework import permissions
+from rest_framework.parsers import FormParser, MultiPartParser
 from ..models.models import User
-from .helpers import IsOrganizationMaintainerOrAdmin
 from rest_framework.pagination import LimitOffsetPagination
-from drf_yasg import openapi  # type: ignore
+from .permissions import IsOrganizationMaintainerOrAdmin
 from django.shortcuts import get_object_or_404
-from django.db.models import Exists, OuterRef, Q
 from django.db import transaction
 from rest_framework.request import Request
+from ..swagger_specs.organization import (
+    organization_create_schema,
+    organization_update_schema,
+    organization_maintainer_create_schama,
+    organization_maintainer_delete_schema,
+)
 
 logger = logging.getLogger(__name__)
 
 
-def to_nullable_bool(value: Optional[str]) -> Optional[bool]:
-    if value is None:
-        return None
-    value = value.lower()
-    if value == "true":
-        return True
-    if value == "false":
-        return False
-    return None
+class OrganizationCreateView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]
+
+    @organization_create_schema
+    @transaction.atomic
+    def post(self, request: Request) -> Response:
+        """Creates an organization."""
+
+        email = request.user.email
+        serializer = OrganizationSerializer(data=request.data)
+
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            organization = serializer.save()
+            User.objects.create(
+                email=email, organization=organization, role="maintainer"
+            )
+        except Exception as e:
+            logger.error(f"Error creating user: {e}")
+            return Response(
+                {"error": "Failed to create user"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+        return Response(
+            {"success": f"Created organization with ID {organization.id} for {email}"},
+            status=status.HTTP_201_CREATED,
+        )
 
 
 class OrganizationListView(APIView):
-    permission_class = permissions.AllowAny
+    permission_classes = [permissions.AllowAny]
 
-    @swagger_auto_schema(responses={200: "Success"})
+    @swagger_auto_schema(responses={200: "Success", 404: "Not Found"})
     def get(self, request: Request) -> Response:
         """Get all registered organizations"""
 
         logger.info("Fetching all registered organizations")
 
-        search_query: Optional[str] = request.query_params.get("search")
-        trust_model: Optional[str] = request.query_params.get("trust_model")
-        select_aps: Optional[bool] = to_nullable_bool(request.query_params.get("ap"))
-        select_rps: Optional[bool] = to_nullable_bool(request.query_params.get("rp"))
-
-        # If both select_aps and select_rps are False, return an empty list
-        if select_aps is False and select_rps is False:
-            paginator = LimitOffsetPagination()
-            paginator.default_limit = 20
-            result_page = paginator.paginate_queryset([], request)
-            serializer = OrganizationSerializer(result_page, many=True)
-            return paginator.get_paginated_response(serializer.data)
-
-        orgs = (
-            Organization.objects.annotate(
-                is_rp=Exists(RelyingParty.objects.filter(organization=OuterRef("pk"))),
-                is_ap=Exists(
-                    AttestationProvider.objects.filter(organization=OuterRef("pk"))
-                ),
-            )
-            .filter(is_verified=True)
-            .filter(
-                (Q(is_rp=select_rps) if select_rps is not None else Q())
-                | (Q(is_ap=select_aps) if select_aps is not None else Q())
-            )
-            .order_by("name_en")
-        )
-
-        if search_query:
-            orgs = orgs.filter(name_en__icontains=search_query) | orgs.filter(
-                name_en__icontains=search_query
-            )
-        if trust_model:
-            orgs = Organization.objects.filter(trust_models__name=trust_model)
-
+        orgs = filter_organizations(request)
         paginator = LimitOffsetPagination()
         paginator.default_limit = 20
         result_page = paginator.paginate_queryset(orgs, request)
         serializer = OrganizationSerializer(result_page, many=True)
         return paginator.get_paginated_response(serializer.data)
 
-    def create_user(self, organization: Organization, email: str) -> None:
-        """Creates a maintainer user for the organization."""
-        User.objects.create(email=email, organization=organization, role="maintainer")
-
-    @swagger_auto_schema(
-        request_body=OrganizationSerializer,
-        responses={201: "Success", 400: "Bad Request"},
-    )
-    @transaction.atomic
-    def post(self, request: Request) -> Response:
-        """Creates an organization."""
-
-        email = request.user.email
-        logger.info("Creating a new organization")
-        serializer = OrganizationSerializer(data=request.data)
-        print(request.data, "serialierorg")
-
-        if not serializer.is_valid():
-            logger.warning("Invalid organization data: %s", serializer.errors)
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        organization = serializer.save()
-        org_obj = Organization.objects.get(id=organization.id)
-        self.create_user(org_obj, email)
-        logger.info("Organization created with ID: %s", organization.id)
-        return Response({"id": organization.id}, status=status.HTTP_201_CREATED)
-
 
 class OrganizationDetailView(APIView):
     permission_classes = [permissions.AllowAny]
 
-    @swagger_auto_schema(responses={200: "Success"})
+    @swagger_auto_schema(responses={200: "Success", 404: "Not Found"})
     def get(self, request: Request, org_slug: str) -> Response:
         """Get organization by uuid"""
         logger.info("Fetching organization with slug: %s", org_slug)
 
-        org = Organization.objects.get(slug=org_slug)
+        org = get_object_or_404(Organization, slug=org_slug)
         serializer = OrganizationSerializer(org)
         return Response(serializer.data)
 
-    @swagger_auto_schema(
-        request_body=OrganizationSerializer,
-        responses={201: "Success", 400: "Bad Request", 404: "Not Found"},
-    )
+
+class OrganizationUpdateView(APIView):
+    permission_classes = [
+        permissions.IsAuthenticated,
+        IsOrganizationMaintainerOrAdmin,
+    ]
+    parser_classes = [MultiPartParser, FormParser]
+
+    @organization_update_schema
     def patch(self, request: Request, org_slug: str) -> Response:
         """Updates an organization, given the uuid."""
         organization = get_object_or_404(Organization, slug=org_slug)
         serializer = OrganizationSerializer(
-            organization, data=request.data, partial=True
+            organization,
+            data=request.data,
+            partial=True,
         )
         if not serializer.is_valid():
+            logger.error(f"Validation errors: {serializer.errors}")
             return Response(
                 serializer.errors,
                 status=status.HTTP_400_BAD_REQUEST,
@@ -152,23 +128,7 @@ class OrganizationMaintainersView(APIView):
         serializer = MaintainerSerializer(maintainers, many=True)
         return Response(serializer.data)
 
-    @swagger_auto_schema(
-        request_body=openapi.Schema(
-            type=openapi.TYPE_OBJECT,
-            required=["email"],
-            properties={
-                "email": openapi.Schema(
-                    type=openapi.TYPE_STRING, format=openapi.FORMAT_EMAIL
-                ),
-            },
-        ),
-        responses={
-            201: "Created",
-            400: "Bad Request",
-            403: "Forbidden - Not enough permissions",
-            404: "Organization not found",
-        },
-    )
+    @organization_maintainer_create_schama
     def post(self, request: Request, org_slug: str) -> Response:
         """Add a maintainer to an organization"""
         organization = get_object_or_404(Organization, slug=org_slug)
@@ -204,17 +164,7 @@ class OrganizationMaintainerView(APIView):
         IsOrganizationMaintainerOrAdmin,
     ]
 
-    @swagger_auto_schema(
-        request_body=openapi.Schema(
-            type=openapi.TYPE_OBJECT,
-        ),
-        responses={
-            200: "Success",
-            400: "Bad Request",
-            403: "Forbidden",
-            404: "Not Found",
-        },
-    )
+    @organization_maintainer_delete_schema
     def delete(self, request: Request, org_slug: str, maintainer_id: str) -> Response:
         """Remove a maintainer from an organization"""
 

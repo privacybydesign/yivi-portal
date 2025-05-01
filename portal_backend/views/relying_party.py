@@ -25,7 +25,7 @@ from ..swagger_specs.relying_party import (
     relying_party_dns_status_schema,
     relying_party_list_schema,
 )
-from .helpers import IsOrganizationMaintainerOrAdmin
+from .permissions import IsOrganizationMaintainerOrAdmin
 from ..models.model_serializers import (
     CondisconSerializer,
     RelyingPartyHostnameSerializer,
