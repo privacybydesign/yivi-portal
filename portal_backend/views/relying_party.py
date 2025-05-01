@@ -52,13 +52,10 @@ class RelyingPartyCreateView(APIView):
             request.data, org_slug, request.data.get("rp_slug")
         )
         hostnames = create_hostnames(request.data.get("hostnames", []), relying_party)
-        contexts = []
-        contexts.append(
-            {
-                "en": request.data.get("context_description_en", ""),
-                "nl": request.data.get("context_description_nl", ""),
-            }
-        )
+        contexts = {}
+        contexts["en"] = request.data.get("context_description_en", "")
+        contexts["nl"] = request.data.get("context_description_nl", "")
+
         condiscon = create_condiscon(
             request.data.get("attributes", []), contexts, relying_party
         )
