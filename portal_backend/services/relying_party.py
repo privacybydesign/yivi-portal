@@ -1,4 +1,4 @@
-from typing import List, Dict
+from typing import List
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django.core.exceptions import ValidationError
@@ -96,9 +96,8 @@ def create_hostname_objects(
 
 
 def create_hostnames(
-    data: HostnameEntry, relying_party: RelyingParty
+    hostnames: List[HostnameEntry], relying_party: RelyingParty
 ) -> List[RelyingPartyHostname]:
-    hostnames = data.get("hostnames", [])
     new_hostnames = parse_and_validate_hostnames(hostnames)
     return create_hostname_objects(new_hostnames, relying_party)
 
@@ -128,15 +127,17 @@ def make_condiscon_json(
 
 
 def create_condiscon(
-    data: RelyingPartyResponse, relying_party: RelyingParty
+    attributes: List[AttributeEntry],
+    contexts: dict[str, str],
+    relying_party: RelyingParty,
 ) -> Condiscon:
 
-    condiscon_json = make_condiscon_json(data.get("attributes", []))
+    condiscon_json = make_condiscon_json(attributes)
     condiscon = Condiscon.objects.create(
         condiscon=condiscon_json,
         relying_party=relying_party,
-        context_description_en=data.get("context_description_en"),
-        context_description_nl=data.get("context_description_nl"),
+        context_description_en=contexts["en"],
+        context_description_nl=contexts["nl"],
     )
     return condiscon
 
@@ -159,16 +160,50 @@ def create_condiscon_attributes(
 
 def update_relying_party_hostnames(
     relying_party: RelyingParty,
-    hostnames: List[HostnameEntry],
-    response: Dict[str, str],
-) -> None:
-    new_hostnames = parse_and_validate_hostnames(hostnames)
+    submitted_hostnames: List[HostnameEntry],
+) -> List[dict[str, str]]:
+    existing_hostnames = RelyingPartyHostname.objects.filter(
+        relying_party=relying_party
+    )
+    hostnames_with_id = {str(h.id): h for h in existing_hostnames}
+    update_or_add = []
 
-    RelyingPartyHostname.objects.filter(relying_party=relying_party).delete()
-    created = create_hostname_objects(new_hostnames, relying_party)
+    for entry in submitted_hostnames:
+        hostname_str = entry.get("hostname", "").strip()
+        if not hostname_str:
+            continue
 
-    response["hostnames"] = [
-        {"hostname": h.hostname, "dns_challenge": h.dns_challenge} for h in created
+        hostname_id = entry.get("id", "")
+        if str(hostname_id) in hostnames_with_id:
+            hostname_obj = hostnames_with_id.pop(str(hostname_id))
+            if hostname_obj.hostname != hostname_str:
+                hostname_obj.hostname = hostname_str
+                hostname_obj.dns_challenge = generate_dns_challenge()
+                hostname_obj.dns_challenge_created_at = timezone.now()
+                hostname_obj.dns_challenge_verified = False
+                hostname_obj.full_clean()
+                hostname_obj.save()
+            update_or_add.append(hostname_obj)
+        else:
+            new_obj = RelyingPartyHostname.objects.create(
+                relying_party=relying_party,
+                hostname=hostname_str,
+                dns_challenge=generate_dns_challenge(),
+                dns_challenge_created_at=timezone.now(),
+                dns_challenge_verified=False,
+            )
+            new_obj.full_clean()
+            new_obj.save()
+            update_or_add.append(new_obj)
+
+    # delete remaining hostnames not in the submitted list
+    for h in hostnames_with_id.values():
+        h.delete()
+
+    # return DNS challenges for the hostnames that were updated or added
+    return [
+        {"hostname": h.hostname, "dns_challenge": h.dns_challenge}
+        for h in update_or_add
     ]
 
 
@@ -195,10 +230,10 @@ def update_rp_environment(relying_party: RelyingParty, environment: str) -> None
 
 def update_rp_slug(
     relying_party: RelyingParty,
-    new_slug: str,
-    response: Dict[str, str | list[dict[str, str]]],
-) -> None:
-    if new_slug != relying_party.rp_slug:
-        relying_party.rp_slug = new_slug
+    updated_slug: str,
+) -> None | str:
+    if updated_slug != relying_party.rp_slug:
+        relying_party.rp_slug = updated_slug
         relying_party.save()
-        response["rp_slug"] = relying_party.rp_slug
+        return updated_slug
+    return None

@@ -51,8 +51,14 @@ class RelyingPartyCreateView(APIView):
         relying_party = create_relying_party(
             request.data, org_slug, request.data.get("rp_slug")
         )
-        hostnames = create_hostnames(request.data, relying_party)
-        condiscon = create_condiscon(request.data, relying_party)
+        hostnames = create_hostnames(request.data.get("hostnames", []), relying_party)
+        contexts = {}
+        contexts["en"] = request.data.get("context_description_en", "")
+        contexts["nl"] = request.data.get("context_description_nl", "")
+
+        condiscon = create_condiscon(
+            request.data.get("attributes", []), contexts, relying_party
+        )
         create_condiscon_attributes(condiscon, request.data.get("attributes", []))
 
         return Response(
@@ -187,9 +193,11 @@ class RelyingPartyUpdateView(APIView):
             updated_fields.add("attributes")
 
         def update_hostnames():
-            update_relying_party_hostnames(
-                relying_party, data["hostnames"], response_data
+            dns_challenges = update_relying_party_hostnames(
+                relying_party, data["hostnames"]
             )
+            if dns_challenges:
+                response_data["hostnames"] = dns_challenges
             updated_fields.add("hostnames")
 
         def update_environment():
@@ -197,7 +205,9 @@ class RelyingPartyUpdateView(APIView):
             updated_fields.add("environment")
 
         def update_slug():
-            update_rp_slug(relying_party, data["rp_slug"], response_data)
+            updated_slug = update_rp_slug(relying_party, data["rp_slug"])
+            if updated_slug:
+                response_data["rp_slug"] = updated_slug
             updated_fields.add("rp_slug")
 
         dispatcher = {

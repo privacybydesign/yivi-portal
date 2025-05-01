@@ -163,6 +163,7 @@ export default function RelyingPartyForm({
         <Form {...form}>
           <form
             onSubmit={handleSubmit((formData) => {
+              console.log("Form data submitted:", formData);
               if (isEditMode) {
                 const payload = getChangedFormData(defaultValues, formData);
                 if (Object.keys(payload).length === 0) {
@@ -266,7 +267,17 @@ export default function RelyingPartyForm({
 
               <div className="space-y-2  p-1 rounded-md">
                 {hostnameFields.map((field, index) => (
-                  <div key={field.id} className="flex gap-2 items-start">
+                  <div key={index} className="flex gap-2 items-start">
+                    {field.id !== undefined && typeof field.id === "number" && (
+                      <Input
+                        type="hidden"
+                        {...register(`hostnames.${index}.id`, {
+                          valueAsNumber: true,
+                        })}
+                        defaultValue={field.id}
+                      />
+                    )}
+
                     <Input
                       {...register(`hostnames.${index}.hostname`)}
                       defaultValue={field.hostname}

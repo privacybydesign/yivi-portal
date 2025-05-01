@@ -2,8 +2,8 @@ from typing import TypedDict, List, Union
 
 
 class HostnameEntry(TypedDict):
+    id: int
     hostname: str
-    dns_challenge: str
 
 
 class AttributeEntry(TypedDict):
