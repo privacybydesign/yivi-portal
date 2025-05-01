@@ -155,11 +155,6 @@ export default function RelyingPartyList() {
               <div className="flex justify-between items-center">
                 <div>
                   <div className="font-medium text-lg">{rp.rp_slug}</div>
-                  <div className="text-sm text-gray-500">
-                    {rp.hostnames?.map((h, i) => (
-                      <div key={i}>{h.hostname}</div>
-                    ))}
-                  </div>
                 </div>
                 <Button
                   variant="outline"
