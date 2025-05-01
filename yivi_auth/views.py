@@ -135,10 +135,17 @@ class RefreshTokenView(APIView):
         refresh_token = request.COOKIES.get("refresh_token")
         if not refresh_token:
             return Response({"detail": "Refresh token missing."}, status=401)
+        update_claims = request.data.get("update_claims", False)
 
         try:
             token = RefreshToken(refresh_token)
-            access_token = str(token.access_token)
+            if update_claims:
+                User = get_user_model()
+                user = User.objects.get(email=token["email"])
+                new_tokens = CustomTokenObtainPairSerializer.get_token(user)
+                access_token = str(new_tokens.access_token)
+            else:
+                access_token = str(token.access_token)
             return Response({"access": access_token})
         except Exception as e:
             return Response({"error": str(e)}, status=400)

@@ -3,6 +3,7 @@
 import { AxiosError, AxiosResponse } from "axios";
 import { axiosInstance } from "../services/axiosInstance";
 import { FieldErrors } from "react-hook-form";
+import useStore from "../store";
 
 export type RegistrationInputs = {
   name_en: string;
@@ -23,6 +24,21 @@ export type RegistrationFormState = {
   globalError?: string;
   success?: boolean;
   redirectTo?: string;
+};
+
+const updateClaims = async () => {
+  const response = await axiosInstance.post("v1/refreshtoken", {
+    update_claims: true,
+  });
+
+  axiosInstance.defaults.headers.common[
+    "Authorization"
+  ] = `Bearer ${response.data.access}`;
+
+  const { setAccessToken } = useStore.getState();
+  setAccessToken(response.data.access);
+
+  return response.data.access;
 };
 
 export const fetchOrganization = async (
@@ -91,6 +107,8 @@ export const registerOrganization = async (
   try {
     await axiosInstance.post("/v1/organizations/create/", formData);
     const slug = formData.get("slug") as string;
+
+    await updateClaims();
 
     return {
       values: { ...formState.values, logo: formData.get("logo") as File },
