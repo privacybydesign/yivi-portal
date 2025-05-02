@@ -124,7 +124,7 @@ export default function ManageOrganizationInformationForm({
         <FormField
           control={form.control}
           name="name_en"
-          render={({ field: { onBlur, ...field } }) => (
+          render={({ field: { ...field } }) => (
             <FormItem className="grid md:grid-cols-2 items-start md:gap-4">
               <div className="py-1">
                 <Label>English Name</Label>
@@ -143,7 +143,6 @@ export default function ManageOrganizationInformationForm({
                           generateSlug(event.target.value.trim())
                         );
                       }
-                      onBlur();
                     }}
                   />
                 </FormControl>
@@ -199,14 +198,13 @@ export default function ManageOrganizationInformationForm({
                   <Input
                     {...field}
                     pattern="[a-z0-9\-]+"
-                    onBlur={(e) => {
-                      if (!e.target.value && form.getValues("name_en")) {
+                    onBlur={(event) => {
+                      if (!event.target.value && form.getValues("name_en")) {
                         const newSlug = generateSlug(
                           form.getValues("name_en").trim()
                         );
                         form.setValue("slug", newSlug);
                       }
-                      field.onBlur();
                     }}
                   />
                 </FormControl>
