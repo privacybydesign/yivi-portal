@@ -31,7 +31,6 @@ services:
       - 8000:8000
     depends_on:
       - database
-      # - yivi
     volumes:
       - .:/app
     environment:
@@ -40,13 +39,13 @@ services:
       - POSTGRES_DB=${POSTGRES_DB:-postgres}
       - POSTGRES_HOST=database
       - POSTGRES_PORT=5432
-      - YIVI_SERVER_URL=${YIVI_SERVER_URL:-http://yivi:8080}
+      - YIVI_SERVER_URL=${YIVI_SERVER_URL:-https://is.staging.yivi.app}
       - YIVI_SERVER_TOKEN=${YIVI_SERVER_TOKEN}
       - DJANGO_SETTINGS_MODULE=yivi_portal.settings.development
       - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
-      - DJANGO_ALLOWED_HOSTS=${DJANGO_ALLOWED_HOSTS:-localhost}
-      - ALLOWED_HOSTS=${ALLOWED_HOSTS:-*,localhost,127.0.0.1}
-      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:-http://localhost:9000,http://localhost:3000}
+      - DJANGO_ALLOWED_HOSTS=${DJANGO_ALLOWED_HOSTS:-*}
+      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:-*} 
+
     healthcheck:
       test: ['CMD', 'python', 'manage.py', 'check']
       interval: 60s
@@ -89,9 +88,9 @@ services:
       - POSTGRES_PORT=5432
       - DJANGO_SETTINGS_MODULE=yivi_portal.settings.development
       - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
-      - DJANGO_ALLOWED_HOSTS=${DJANGO_ALLOWED_HOSTS:-localhost}
-      - ALLOWED_HOSTS=${ALLOWED_HOSTS:-*,localhost,127.0.0.1}
-      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:-http://localhost:9000}
+      - DJANGO_ALLOWED_HOSTS=${DJANGO_ALLOWED_HOSTS:-*,localhost,127.0.0.1}
+      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:-*}
+      
 
 networks:
   web:
