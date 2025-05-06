@@ -156,7 +156,7 @@ USE_SESSION_REQUEST_REGISTRATION = False
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
-STATICFILES_DIRS = [os.path.join(BASE_DIR, "static")]
+STATICFILES_DIRS = [BASE_DIR.parent / "portal_backend" / "static"]
 
 STATIC_URL = "/static/"  # Keep this default
 # MEDIA_URL = "/media/"

@@ -37,6 +37,6 @@ ENV DJANGO_MEDIA_URL=/media/
 
 RUN chown -R nobody:nogroup $DJANGO_MEDIA_ROOT
 
-EXPOSE 8080
+EXPOSE 8000
 
 CMD ["/bin/sh", "/app/entrypoint.sh"]
