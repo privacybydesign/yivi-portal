@@ -34,7 +34,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ghcr.io/django-portal
+          images: ghcr.io/privacybydesign/django-portal
           tags: |
             type=semver,pattern={{major}}.{{minor}}.{{patch}}
             type=edge,enable=${{ steps.is-head-main.outcome == 'success' }}
