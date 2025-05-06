@@ -58,7 +58,15 @@ export default function Home() {
               in the Yivi ecosystem.
               <div className="mt-4">
                 <Button variant="outline" asChild>
-                  <Link href={`/organizations/${organizationSlug}/manage`}>Manage organization</Link>
+                  <Link
+                    href={
+                      organizationSlug
+                        ? `/organizations/${organizationSlug}/manage`
+                        : "/login"
+                    }
+                  >
+                    Manage organization
+                  </Link>
                 </Button>
               </div>
             </CardContent>
