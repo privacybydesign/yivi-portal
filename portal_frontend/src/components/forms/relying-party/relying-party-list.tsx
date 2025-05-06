@@ -61,6 +61,16 @@ export default function RelyingPartyList() {
   }, [organizationSlug]);
 
   useEffect(() => {
+    if (globalError) {
+      toast({
+        title: "Error",
+        description: globalError,
+        variant: "destructive",
+      });
+    }
+  }, [globalError]);
+
+  useEffect(() => {
     fetchData();
   }, [fetchData]);
 
@@ -126,7 +136,6 @@ export default function RelyingPartyList() {
   };
 
   if (loading) return <p>Loading...</p>;
-  if (globalError) return <p className="text-red-600">Error: {globalError}</p>;
 
   return (
     <div>

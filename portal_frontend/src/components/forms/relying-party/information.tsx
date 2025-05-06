@@ -102,6 +102,7 @@ export default function RelyingPartyForm({
       });
     }
   }, [globalError, toast]);
+
   function getChangedFormData(
     original: RelyingPartyFormData,
     current: RelyingPartyFormData
@@ -265,7 +266,7 @@ export default function RelyingPartyForm({
             <div className="space-y-2 mt-4">
               <FormLabel className="font-medium">Hostnames</FormLabel>
 
-              <div className="space-y-2  p-1 rounded-md">
+              <div className="space-y-2 rounded-md">
                 {hostnameFields.map((field, index) => (
                   <div key={index} className="flex gap-2 items-start">
                     {field.id !== undefined && typeof field.id === "number" && (
@@ -356,14 +357,16 @@ export default function RelyingPartyForm({
                       </div>
                     </div>
 
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => removeAttr(index)}
-                    >
-                      Remove Attribute
-                    </Button>
+                    <div className="flex justify-end">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removeAttr(index)}
+                      >
+                        Remove Attribute
+                      </Button>
+                    </div>
                   </div>
                 ))}
               </div>
