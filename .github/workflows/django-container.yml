@@ -55,6 +55,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
+          file: portal_front/Dockerfile.django
           load: true
           tags: local/django-portal:scan
           cache-from: type=gha
@@ -81,6 +82,7 @@ jobs:
         if: ${{ github.event_name != 'pull_request' }}
         with:
           context: .
+          file: portal_front/Dockerfile.django
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
