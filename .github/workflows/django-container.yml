@@ -1,4 +1,4 @@
-name: Docker Image CI
+name: Build Django container
 
 on:
   pull_request:
@@ -55,7 +55,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: portal_frontend/Dockerfile.django
+          file: Dockerfile.django
           load: true
           tags: local/django-portal:scan
           cache-from: type=gha
@@ -82,7 +82,7 @@ jobs:
         if: ${{ github.event_name != 'pull_request' }}
         with:
           context: .
-          file: portal_frontend/Dockerfile.django
+          file: Dockerfile.django
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
