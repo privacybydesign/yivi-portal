@@ -159,5 +159,5 @@ USE_SESSION_REQUEST_REGISTRATION = False
 STATICFILES_DIRS = [BASE_DIR.parent / "portal_backend" / "static"]
 
 STATIC_URL = "/static/"  # Keep this default
-# MEDIA_URL = "/media/"
+
 MEDIA_ROOT = os.path.join(BASE_DIR, "assets")
