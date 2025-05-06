@@ -10,8 +10,8 @@ local_settings.py
 db.sqlite3
 db.sqlite3-journal
 media
-portal_backend/migrations/0*.py
 yivi_portal/assets
+portal_backend/static/
 .idea
 
 
