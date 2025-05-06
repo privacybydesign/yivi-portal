@@ -25,6 +25,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Create .env file
+        run: |
+          echo "NEXT_PUBLIC_API_ENDPOINT=https://api.staging.yivi.app" >> portal_frontend/.env
+
       - name: Check whether this event is the HEAD of main
         continue-on-error: true
         id: is-head-main
