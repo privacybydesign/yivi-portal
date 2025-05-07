@@ -22,20 +22,8 @@ RUN pip install poetry \
 # Copy the current directory contents into the container at /app
 COPY . /app
 
-RUN poetry install --with prod --no-interaction --no-ansi
-
-ENV STATIC_ROOT=/app/static
-ENV MEDIA_ROOT=/app/media
-
-RUN mkdir -p $STATIC_ROOT
-RUN mkdir -p $MEDIA_ROOT
-
-ENV STATIC_URL=/static/
-ENV MEDIA_URL=/media/
-
-
-RUN chown -R nobody:nogroup $MEDIA_ROOT
+RUN poetry install --with dev --no-interaction --no-ansi
 
 EXPOSE 8000
 
-CMD ["/bin/sh", "/app/entrypoint.sh"]
+CMD ["/bin/sh", "/app/entrypoint_dev.sh"]

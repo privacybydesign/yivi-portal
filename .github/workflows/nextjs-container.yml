@@ -38,7 +38,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ghcr.io/nextjs-portal
+          images: ghcr.io/privacybydesign/nextjs-portal
           tags: |
             type=semver,pattern={{major}}.{{minor}}.{{patch}}
             type=edge,enable=${{ steps.is-head-main.outcome == 'success' }}

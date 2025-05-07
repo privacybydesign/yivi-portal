@@ -17,9 +17,7 @@ REST_FRAMEWORK = {
 }
 
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(
-        minutes=15
-    ),
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=15),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
     "ROTATE_REFRESH_TOKENS": True,
     "BLACKLIST_AFTER_ROTATION": True,
@@ -127,6 +125,7 @@ DJANGO_CRON_DELETE_LOGS_OLDER_THAN = 7
 YIVI_SERVER_URL = os.environ.get("YIVI_SERVER_URL")
 YIVI_SERVER_TOKEN = os.environ.get("YIVI_SERVER_TOKEN")
 
+
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
@@ -150,14 +149,3 @@ LOGGING = {
         },
     },
 }
-
-# SPECIFIC SETTINGS FOR THE SCHEME MANAGER
-USE_SESSION_REQUEST_REGISTRATION = False
-
-STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, "static") 
-]
-
-STATIC_URL = "/static/"  # Keep this default
-MEDIA_URL = "/media/"
-MEDIA_ROOT = os.path.join(BASE_DIR, "assets")

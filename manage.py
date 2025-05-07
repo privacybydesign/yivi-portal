@@ -6,8 +6,18 @@ import sys
 
 def main():
     """Run administrative tasks."""
-    os.environ.setdefault("DJANGO_SETTINGS_MODULE",
-                          "yivi_portal.settings.development")
+    # Conditionally set the settings module
+    ENVIRONMENT = os.environ.get("ENVIRONMENT")
+
+    if ENVIRONMENT == "production":
+        os.environ.setdefault(
+            "DJANGO_SETTINGS_MODULE", "yivi_portal.settings.production"
+        )
+    elif ENVIRONMENT == "development":
+        os.environ.setdefault(
+            "DJANGO_SETTINGS_MODULE", "yivi_portal.settings.development"
+        )
+
     try:
         from django.core.management import execute_from_command_line
     except ImportError as exc:
