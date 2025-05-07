@@ -53,8 +53,8 @@ STATICFILES_DIRS = [BASE_DIR.parent / "portal_backend" / "static"]  # noqa: F405
 
 STATIC_ROOT = BASE_DIR / "static"  # noqa: F405
 MEDIA_ROOT = BASE_DIR / "assets"  # noqa: F405
-STATIC_URL = "static/"  # noqa: F405
-MEDIA_URL = "assets/"  # noqa: F405
+STATIC_URL = "/static/"  # noqa: F405
+MEDIA_URL = "/assets/"  # noqa: F405
 
 
 EMAIL_DISCLOSURE = [[["irma-demo.sidn-pbdf.email.email"]]]

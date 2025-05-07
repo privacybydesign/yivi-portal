@@ -33,7 +33,6 @@ RUN mkdir -p $MEDIA_ROOT
 ENV STATIC_URL=/static/
 ENV MEDIA_URL=/media/
 
-# RUN python manage.py collectstatic --noinput # Only necessary for production with a lot of static files
 
 RUN chown -R nobody:nogroup $MEDIA_ROOT
 
