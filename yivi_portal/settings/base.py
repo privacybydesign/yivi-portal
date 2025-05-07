@@ -125,6 +125,7 @@ DJANGO_CRON_DELETE_LOGS_OLDER_THAN = 7
 YIVI_SERVER_URL = os.environ.get("YIVI_SERVER_URL")
 YIVI_SERVER_TOKEN = os.environ.get("YIVI_SERVER_TOKEN")
 
+
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
@@ -148,16 +149,3 @@ LOGGING = {
         },
     },
 }
-
-# SPECIFIC SETTINGS FOR THE SCHEME MANAGER
-USE_SESSION_REQUEST_REGISTRATION = False
-
-
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/4.2/howto/static-files/
-
-STATICFILES_DIRS = [BASE_DIR.parent / "portal_backend" / "static"]
-
-STATIC_URL = "/static/"  # Keep this default
-
-MEDIA_ROOT = os.path.join(BASE_DIR, "assets")

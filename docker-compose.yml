@@ -7,10 +7,9 @@ services:
       - db
     volumes:
       - postgres-data:/var/lib/postgresql/data
-    environment:
-      - POSTGRES_USER=${POSTGRES_USER:-postgres}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
-      - POSTGRES_DB=${POSTGRES_DB:-postgres}
+    env_file:
+      - .env
+
     healthcheck:
       test: ['CMD', 'pg_isready', '-U', '${POSTGRES_USER:-postgres}']
       interval: 10s
@@ -21,7 +20,7 @@ services:
     container_name: django
     build:
       context: .
-      dockerfile: Dockerfile.django
+      dockerfile: Dockerfile.django.dev
     restart: unless-stopped
     command: /bin/sh /app/entrypoint_dev.sh
     networks:
@@ -29,24 +28,12 @@ services:
       - db
     ports:
       - 8000:8000
-      # - 8080:8080
     depends_on:
       - database
     volumes:
       - .:/app
-    environment:
-      - POSTGRES_USER=${POSTGRES_USER:-postgres}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
-      - POSTGRES_DB=${POSTGRES_DB:-postgres}
-      - POSTGRES_HOST=database
-      - POSTGRES_PORT=5432
-      - YIVI_SERVER_URL=${YIVI_SERVER_URL:-https://is.staging.yivi.app}
-      - YIVI_SERVER_TOKEN=${YIVI_SERVER_TOKEN}
-      - DJANGO_SETTINGS_MODULE=yivi_portal.settings.development
-      - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
-      - DJANGO_ALLOWED_HOSTS=${DJANGO_ALLOWED_HOSTS:-*}
-      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:-*} 
-
+    env_file:
+      - .env
     healthcheck:
       test: ['CMD', 'python', 'manage.py', 'check']
       interval: 60s
@@ -70,7 +57,7 @@ services:
     container_name: yivi-portal-cron
     build:
       context: .
-      dockerfile: Dockerfile.django
+      dockerfile: Dockerfile.django.dev
     entrypoint: ['/bin/sh', '/app/entrypoint_cron.sh']
     restart: unless-stopped
     networks:
@@ -81,16 +68,8 @@ services:
       - django
     volumes:
       - .:/app
-    environment:
-      - POSTGRES_USER=${POSTGRES_USER:-postgres}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
-      - POSTGRES_DB=${POSTGRES_DB:-postgres}
-      - POSTGRES_HOST=database
-      - POSTGRES_PORT=5432
-      - DJANGO_SETTINGS_MODULE=yivi_portal.settings.development
-      - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
-      - DJANGO_ALLOWED_HOSTS=${DJANGO_ALLOWED_HOSTS:-*,localhost,127.0.0.1}
-      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:-*}
+    env_file:
+      - ./.env
       
 
 networks:
