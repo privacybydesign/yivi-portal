@@ -46,7 +46,10 @@ function HomePage() {
               in the Yivi ecosystem.
               <div className="mt-4">
                 <Button variant="outline" asChild>
-                  <Link to={`/organizations/manage`}> Manage organization</Link>
+                  <Link to={`/organizations/test-organization/manage`}>
+                    {/* TODO: make url dynamic once store is moved */}
+                    Manage organization
+                  </Link>
                 </Button>
               </div>
             </CardContent>
