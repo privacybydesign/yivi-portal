@@ -1,5 +1,3 @@
-"use client";
-
 import { fetchOrganization } from "@/actions/manage-organization";
 import ManageOrganizationLayout from "@/components/layout/organization/manage-organization";
 import { Separator } from "@/components/ui/separator";

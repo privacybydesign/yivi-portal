@@ -1,5 +1,3 @@
-"use client";
-
 import type { Control, UseFormSetValue } from "react-hook-form";
 import { useWatch } from "react-hook-form";
 import { useEffect, useState } from "react";
