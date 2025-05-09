@@ -1,7 +1,8 @@
 node_modules/
 npm
 debug.log
-Dockerfile
+Dockerfile.react
+Dockerfile.react.dev
 README.md
 .dockerignore
 .git/
