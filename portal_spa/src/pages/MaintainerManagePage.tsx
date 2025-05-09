@@ -1,4 +1,4 @@
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import {
   fetchMaintainersForOrganization,
   deleteMaintainerFromOrganization,
@@ -19,7 +19,6 @@ export default function MaintainerManagePage() {
   const slug = useParams()?.organization;
   const [maintainers, setMaintainers] = useState<Maintainer[]>([]);
   const [organization, setOrganization] = useState<Organization>();
-  const { toast } = useToast();
 
   const refreshMaintersForOrganization = async (organisationSlug: string) => {
     try {
@@ -28,9 +27,7 @@ export default function MaintainerManagePage() {
     } catch (e: unknown) {
       setMaintainers([]);
 
-      toast({
-        variant: "destructive",
-        title: "Something went wrong",
+      toast.error("Something went wrong", {
         description:
           e instanceof AxiosError
             ? e.message
@@ -57,10 +54,13 @@ export default function MaintainerManagePage() {
     );
     refreshMaintersForOrganization(organization?.slug ?? "");
 
-    toast({
-      title: success ? "Success" : "Something went wrong",
-      description: message,
-    });
+    if (success) {
+      toast.success("Maintainer deleted successfully");
+    } else {
+      toast.error("Something went wrong", {
+        description: message,
+      });
+    }
   };
 
   return (

@@ -1,11 +1,11 @@
 import AppRoutes from "./routes";
-import { Toaster } from "@/components/ui/toaster";
+import { Toaster } from "sonner";
 
 function App() {
   return (
     <div>
       <AppRoutes />
-      <Toaster />
+      <Toaster richColors />
     </div>
   );
 }

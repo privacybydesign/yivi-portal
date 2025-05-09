@@ -13,7 +13,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import {
   Select,
   SelectTrigger,
@@ -74,7 +74,6 @@ export default function RelyingPartyForm({
     register,
     formState: { errors },
   } = form;
-  const { toast } = useToast();
 
   const {
     fields: hostnameFields,
@@ -94,10 +93,8 @@ export default function RelyingPartyForm({
 
   useEffect(() => {
     if (globalError) {
-      toast({
-        title: "Error",
+      toast.error("Error", {
         description: globalError,
-        variant: "destructive",
       });
     }
   }, [globalError, toast]);
@@ -167,8 +164,7 @@ export default function RelyingPartyForm({
               if (isEditMode) {
                 const payload = getChangedFormData(defaultValues, formData);
                 if (Object.keys(payload).length === 0) {
-                  toast({
-                    title: "No changes detected",
+                  toast("No changes detected", {
                     description: "Nothing was modified.",
                   });
                   setTimeout(() => {
