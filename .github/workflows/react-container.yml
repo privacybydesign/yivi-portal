@@ -55,8 +55,8 @@ jobs:
         uses: docker/build-push-action@v5
         if: ${{ github.event_name != 'pull_request' }}
         with:
-          context: portal_frontend
-          file: portal_frontend/Dockerfile.react
+          context: portal_spa
+          file: portal_spa/Dockerfile.react
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
