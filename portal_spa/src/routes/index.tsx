@@ -4,6 +4,7 @@ import OrganizationsListPage from "@/pages/OrganizationsListPage";
 import OrgzanizationManagePage from "@/pages/OrganizationManagePage";
 import MaintainerManagePage from "@/pages/MaintainerManagePage";
 import OrganizationDetailsPage from "@/pages/OrganizationDetailsPage";
+import RelyingPartiesManagePage from "@/pages/RelyingPartiesManagePage";
 import LoginPage from "@/pages/LoginPage";
 import OrganizationRegisterPage from "@/pages/OrganizationRegisterPage";
 import Layout from "@/components/layout/Layout";
@@ -33,6 +34,10 @@ export default function AppRoutes() {
         {
           path: "/organizations/:organization/manage/maintainers",
           element: <MaintainerManagePage />,
+        },
+        {
+          path: "/organizations/:organization/manage/relying-parties",
+          element: <RelyingPartiesManagePage />,
         },
       ],
     },
