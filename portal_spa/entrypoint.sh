@@ -1,5 +1,6 @@
 if [ -z $VITE_API_ENDPOINT ]; then
-    echo "No API endpoint given. Exiting."
+    echo "No API endpoint given. Please define VITE_API_ENDPOINT in the environment."
+    echo "Exiting."
     exit 1
 fi
 
