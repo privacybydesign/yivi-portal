@@ -3,17 +3,17 @@ import { SidebarNavigation } from "@/components/ui/sidebar-navigation";
 import { Separator } from "@/components/ui/separator";
 
 const menuItems = [
-  { href: "/organizations/[organization]/manage", title: "Basic information" },
+  { href: "/organizations/:organization/manage", title: "Basic information" },
   {
-    href: "/organizations/[organization]/manage/maintainers",
+    href: "/organizations/:organization/manage/maintainers",
     title: "Maintainers",
   },
   {
-    href: "/organizations/[organization]/manage/relying-parties",
+    href: "/organizations/:organization/manage/relying-parties",
     title: "Relying parties",
   },
   {
-    href: "/organizations/[organization]/manage/attestation-providers",
+    href: "/organizations/:organization/manage/attestation-providers",
     title: "Attestation providers",
   },
 ];
