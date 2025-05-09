@@ -1,6 +1,4 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-"use client";
-
 import useStore from "@/store";
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
