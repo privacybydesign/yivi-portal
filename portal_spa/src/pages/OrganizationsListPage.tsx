@@ -17,7 +17,7 @@ import type { PaginationResponse } from "@/models/paginated-response";
 import type { Organization } from "@/models/organization";
 
 export default function OrganizationsListPage() {
-  const apiEndpoint = import.meta.env.VITE_API_ENDPOINT;
+  const apiEndpoint = import.meta.env.VITE_API_ENDPOINT ?? "%VITE_API_ENDPOINT%";
   const [searchParams, setSearchParams] = useSearchParams();
 
   const [searchQuery, setSearchQuery] = useState(
@@ -331,15 +331,15 @@ export default function OrganizationsListPage() {
             RPSelected ||
             selectedTrustModel !== "all" ||
             searchQuery) && (
-            <div className="mt-4 text-sm text-blue-600">
-              Filtering:
-              {searchQuery && ` Search: "${searchQuery}"`}
-              {selectedTrustModel !== "all" &&
-                ` Trust Model: ${selectedTrustModel}`}
-              {APSelected && " | Attestation Providers"}
-              {RPSelected && " | Relying Parties"}
-            </div>
-          )}
+              <div className="mt-4 text-sm text-blue-600">
+                Filtering:
+                {searchQuery && ` Search: "${searchQuery}"`}
+                {selectedTrustModel !== "all" &&
+                  ` Trust Model: ${selectedTrustModel}`}
+                {APSelected && " | Attestation Providers"}
+                {RPSelected && " | Relying Parties"}
+              </div>
+            )}
         </div>
       </div>
 
@@ -385,9 +385,9 @@ export default function OrganizationsListPage() {
                             height={32}
                             alt={`${org.name_en} logo`}
                             className="object-cover w-full h-full"
-                            // onError={(e) => {
-                            //   // e.currentTarget.src = "/placeholder-logo.png";
-                            // }}
+                          // onError={(e) => {
+                          //   // e.currentTarget.src = "/placeholder-logo.png";
+                          // }}
                           />
                         </div>
                       ) : (

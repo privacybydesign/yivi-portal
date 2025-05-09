@@ -6,7 +6,7 @@ import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
 export default function Login() {
-  const apiEndpoint = import.meta.env.VITE_API_ENDPOINT;
+  const apiEndpoint = import.meta.env.VITE_API_ENDPOINT ?? "%VITE_API_ENDPOINT%";
   const setAccessToken = useStore((state) => state.setAccessToken);
   const navigate = useNavigate();
 
