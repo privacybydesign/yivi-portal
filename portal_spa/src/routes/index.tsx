@@ -2,6 +2,7 @@ import { useRoutes } from "react-router-dom";
 import HomePage from "@/pages/HomePage";
 import OrganizationsListPage from "@/pages/OrganizationsListPage";
 import LoginPage from "@/pages/LoginPage";
+import OrganizationRegisterPage from "@/pages/OrganizationRegisterPage";
 import Layout from "@/components/layout/Layout";
 
 // We manage all routes here to keep App.tsx clean
@@ -14,6 +15,10 @@ export default function AppRoutes() {
         { path: "/", element: <HomePage /> },
         { path: "/organizations", element: <OrganizationsListPage /> },
         { path: "/login", element: <LoginPage /> },
+        {
+          path: "organizations/register",
+          element: <OrganizationRegisterPage />,
+        },
       ],
     },
   ]);
