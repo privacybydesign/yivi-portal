@@ -107,7 +107,7 @@ export default function AddOrganizationMaintainerInformationForm({
               name="email"
               render={({ field }) => (
                 <FormItem className="grid md:grid-cols-2 items-start md:gap-x-4">
-                  <div className="py-1">
+                  <div className="py-1 space-y-0.5">
                     <Label>Email address</Label>
                     <FormDescription>
                       Email address of the maintainer

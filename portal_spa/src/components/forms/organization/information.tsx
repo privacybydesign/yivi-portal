@@ -244,7 +244,7 @@ export default function ManageOrganizationInformationForm({
           )}
         />
 
-        <fieldset className="border border-primary-light rounded-lg p-4">
+        <fieldset className="border border-primary-light rounded-lg p-4 space-y-2">
           <legend className="font-medium">Contact Address</legend>
 
           <FormField
