@@ -5,6 +5,7 @@ docker-compose.yml
 .idea
 README.md
 .env
-Dockerfile
+Dockerfile.django
+Dockerfile.django.dev
 /assets
 portal_spa/
