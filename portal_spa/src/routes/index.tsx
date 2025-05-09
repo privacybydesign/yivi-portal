@@ -2,6 +2,7 @@ import { useRoutes } from "react-router-dom";
 import HomePage from "@/pages/HomePage";
 import OrganizationsListPage from "@/pages/OrganizationsListPage";
 import OrgzanizationManagePage from "@/pages/OrganizationManagePage";
+import MaintainerManagePage from "@/pages/MaintainerManagePage";
 import OrganizationDetailsPage from "@/pages/OrganizationDetailsPage";
 import LoginPage from "@/pages/LoginPage";
 import OrganizationRegisterPage from "@/pages/OrganizationRegisterPage";
@@ -28,6 +29,10 @@ export default function AppRoutes() {
         {
           path: "/organizations/:organization/manage",
           element: <OrgzanizationManagePage />,
+        },
+        {
+          path: "/organizations/:organization/manage/maintainers",
+          element: <MaintainerManagePage />,
         },
       ],
     },
