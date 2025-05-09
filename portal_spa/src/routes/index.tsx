@@ -1,6 +1,7 @@
 import { useRoutes } from "react-router-dom";
 import HomePage from "@/pages/HomePage";
 import OrganizationsListPage from "@/pages/OrganizationsListPage";
+import OrgzanizationManagePage from "@/pages/OrganizationManagePage";
 import LoginPage from "@/pages/LoginPage";
 import OrganizationRegisterPage from "@/pages/OrganizationRegisterPage";
 import Layout from "@/components/layout/Layout";
@@ -18,6 +19,10 @@ export default function AppRoutes() {
         {
           path: "organizations/register",
           element: <OrganizationRegisterPage />,
+        },
+        {
+          path: "/organizations/:organization/manage",
+          element: <OrgzanizationManagePage />,
         },
       ],
     },
