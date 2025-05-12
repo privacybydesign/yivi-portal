@@ -83,7 +83,7 @@ export default function RelyingPartyManager() {
               defaultValues={initialData}
               onSubmit={handleSave}
               serverErrors={fieldErrors}
-              globalError={globalError}
+              globalError={globalError || ""}
               isSaving={saving}
               isEditMode={false}
             />
