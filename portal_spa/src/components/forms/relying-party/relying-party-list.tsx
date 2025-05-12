@@ -8,7 +8,7 @@ import {
 import type { RelyingParty } from "@/models/relying-party";
 import { Button } from "@/components/ui/button";
 import RelyingPartyForm from "./information";
-import { toast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import {
   Select,
   SelectTrigger,
@@ -60,10 +60,8 @@ export default function RelyingPartyList() {
 
   useEffect(() => {
     if (globalError) {
-      toast({
-        title: "Error",
+      toast.error("Error", {
         description: globalError,
-        variant: "destructive",
       });
     }
   }, [globalError]);
@@ -85,10 +83,8 @@ export default function RelyingPartyList() {
 
     const rp = relyingParties.find((r) => r.rp_slug === slug);
     if (!rp) {
-      toast({
-        title: "Error",
+      toast.error("Error", {
         description: "Relying party not found.",
-        variant: "destructive",
       });
       return;
     }
@@ -103,10 +99,8 @@ export default function RelyingPartyList() {
     setEditingLoading(false);
 
     if (!result.success) {
-      toast({
-        title: "Error",
+      toast.error("Error", {
         description: result.globalError || "Failed to fetch RP details.",
-        variant: "destructive",
       });
       setEditingRPSlug(null);
       return;
@@ -121,14 +115,16 @@ export default function RelyingPartyList() {
 
   const handleSuccess = (type: "updated" | "nochange" | "error") => {
     if (type === "updated") {
-      toast({ title: "Success", description: "Changes saved." });
+      toast.success("Success", {
+        description: "Changes saved.",
+      });
     } else if (type === "nochange") {
-      toast({ title: "Info", description: "No changes detected." });
+      toast("Info", {
+        description: "No changes detected.",
+      });
     } else {
-      toast({
-        title: "Error",
+      toast.error("Error", {
         description: "Something went wrong.",
-        variant: "destructive",
       });
     }
   };
@@ -199,10 +195,8 @@ export default function RelyingPartyList() {
                         setSaving(false);
 
                         if (!result.success) {
-                          toast({
-                            title: "Error",
+                          toast.error("Error", {
                             description: result.globalError || "Update failed.",
-                            variant: "destructive",
                           });
                           return;
                         }

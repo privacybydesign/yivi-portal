@@ -26,7 +26,7 @@ import type {
 } from "@/actions/manage-maintainer";
 import type { Organization } from "@/models/organization";
 import { cn } from "@/lib/utils";
-import { toast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 
 export default function AddOrganizationMaintainerInformationForm({
   organization,
@@ -73,8 +73,7 @@ export default function AddOrganizationMaintainerInformationForm({
       setModalIsOpen(false);
       onCreate(organization.slug);
 
-      toast({
-        title: "Success",
+      toast.success("Success", {
         description: "The user was created and added to this organization.",
       });
 
