@@ -34,7 +34,7 @@ type RelyingPartyProps =
         originalSlug: string
       ) => void;
       serverErrors?: Partial<Record<keyof RelyingPartyFormData, string>>;
-      globalError?: string;
+      globalError?: string | undefined;
       isSaving: boolean;
       onClose?: () => void;
     }
@@ -44,7 +44,7 @@ type RelyingPartyProps =
       defaultValues: RelyingPartyFormData;
       onSubmit: (data: RelyingPartyFormData) => void;
       serverErrors?: Partial<Record<keyof RelyingPartyFormData, string>>;
-      globalError?: string;
+      globalError?: string | undefined;
       isSaving: boolean;
       onClose?: () => void;
     };
