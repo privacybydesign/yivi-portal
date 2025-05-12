@@ -4,7 +4,7 @@ import useStore from "@/store";
 import type { AuthToken } from "@/models/auth_token";
 
 export const axiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_ENDPOINT,
+  baseURL: import.meta.env.VITE_API_ENDPOINT ?? "%VITE_API_ENDPOINT%",
   withCredentials: true,
 });
 

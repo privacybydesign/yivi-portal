@@ -13,7 +13,7 @@ services:
       - POSTGRES_DB=${POSTGRES_DB:-postgres}
 
     healthcheck:
-      test: ['CMD', 'pg_isready', '-U', '${POSTGRES_USER:-postgres}']
+      test: ["CMD", "pg_isready", "-U", "${POSTGRES_USER:-postgres}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -36,21 +36,23 @@ services:
     env_file:
       - .env
     healthcheck:
-      test: ['CMD', 'python', 'manage.py', 'check']
+      test: ["CMD", "python", "manage.py", "check"]
       interval: 60s
       timeout: 20s
       retries: 3
 
-  nextjs:
+  react:
     build:
-      context: portal_frontend
-      dockerfile: Dockerfile.nextjs
-      # target: nextjs
-    container_name: nextjs
+      context: portal_spa
+      dockerfile: Dockerfile.react.dev
+    container_name: react
     ports:
-      - "9000:3000"
+      - 9000:5173
     depends_on:
       - django
+    volumes:
+      - ./portal_spa:/app
+      - /app/node_modules/ # This will exclude node_modules from syncing to the container and prevents a crash on a missing library when working on Mac.
     networks:
       - web
 
@@ -59,10 +61,9 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.django.dev
-    entrypoint: ['/bin/sh', '/app/entrypoint_cron.sh']
+    entrypoint: ["/bin/sh", "/app/entrypoint_cron.sh"]
     restart: unless-stopped
     networks:
-      - web
       - db
     depends_on:
       - database
@@ -71,7 +72,6 @@ services:
       - .:/app
     env_file:
       - .env
-
 
 networks:
   web:
