@@ -10,6 +10,7 @@ interface StateStore {
   email: string | null;
   role?: "admin" | "maintainer" | undefined;
   organizationSlug?: string | undefined;
+  initialized: boolean;
   setAccessToken: (accessToken: string | null) => void;
   initializeAuth: () => void;
   refreshToken: () => Promise<string | null>;
@@ -20,6 +21,7 @@ const useStore = create<StateStore>((set) => ({
   email: null,
   role: undefined,
   organizationSlug: undefined,
+  initialized: false,
 
   setAccessToken: (newToken: string | null) => {
     if (newToken) {
@@ -77,7 +79,7 @@ const useStore = create<StateStore>((set) => ({
     return null;
   },
 
-  initializeAuth: async () => {
+  initializeAuth: () => {
     const savedAccessToken = localStorage.getItem("accessToken");
     if (savedAccessToken) {
       const decoded = jwtDecode<AuthToken>(savedAccessToken);
@@ -85,26 +87,40 @@ const useStore = create<StateStore>((set) => ({
 
       if (decoded.exp < currentTime + 60) {
         // Try refreshing token
-        await useStore.getState().refreshToken();
+        useStore.getState().refreshToken();
       } else {
         set({
           accessToken: savedAccessToken,
           email: decoded.email,
           role: decoded.role,
           organizationSlug: decoded.organizationSlug,
+          initialized: true,
         });
+        return;
       }
     }
+
+    // No valid token - clear
+    set({
+      accessToken: null,
+      email: null,
+      role: undefined,
+      organizationSlug: undefined,
+      initialized: true,
+    });
   },
 }));
 
 // Hook to initialize authentication in a React component
 export function useAuthInit() {
   const initializeAuth = useStore((state) => state.initializeAuth);
+  const initialized = useStore((state) => state.initialized);
 
   useEffect(() => {
-    initializeAuth();
-  }, [initializeAuth]);
+    if (!initialized) {
+      initializeAuth();
+    }
+  }, [initializeAuth, initialized]);
 }
 
 export default useStore;

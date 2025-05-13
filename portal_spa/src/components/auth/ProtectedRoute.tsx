@@ -1,3 +1,4 @@
+// ProtectedRoute.tsx
 import React from "react";
 import { Navigate, Outlet, useLocation, useParams } from "react-router-dom";
 import useStore from "@/store/index";
@@ -5,10 +6,15 @@ import useStore from "@/store/index";
 const ProtectedRoute: React.FC<{ organizationSlug?: string }> = ({
   organizationSlug,
 }) => {
-  const { accessToken, organizationSlug: userOrgSlug } = useStore();
+  const {
+    accessToken,
+    organizationSlug: userOrgSlug,
+    initialized,
+  } = useStore();
   const location = useLocation();
   const { organization } = useParams();
 
+  if (!initialized) return null;
   if (!accessToken)
     return <Navigate to="/login" state={{ from: location }} replace />;
 
