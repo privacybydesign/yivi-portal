@@ -405,7 +405,7 @@ class User(models.Model):
         ("admin", "Admin"),
         ("maintainer", "Maintainer"),
     ]
-    email = models.EmailField(max_length=255, unique=True, null=False)
+    email = models.EmailField(max_length=255, null=False)
     organization = models.ForeignKey(
         Organization, on_delete=models.CASCADE, related_name="users", null=True
     )
@@ -414,6 +414,7 @@ class User(models.Model):
     class Meta:
         verbose_name = "User"
         verbose_name_plural = "Users"
+        unique_together = ("email", "organization")
 
     def __str__(self):
         return f"{self.email} - {self.role}"
