@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import {
+  deleteRelyingParty,
   fetchAllRelyingParties,
   fetchRelyingParty,
   updateRelyingParty,
@@ -17,6 +18,9 @@ import {
   SelectItem,
 } from "@/components/ui/select";
 import StatusBadge from "@/components/custom/StatusBadge";
+import DeleteRelyingPartyDialog, {
+  DeleteRelyingPartyButton,
+} from "@/components/custom/RelyingPartyDeleteDialogue";
 
 type FetchRelyingPartiesResponse = {
   relying_parties: RelyingParty[];
@@ -34,6 +38,8 @@ export default function RelyingPartyList() {
   const [editingRP, setEditingRP] = useState<RelyingParty | null>(null);
   const [editingLoading, setEditingLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState<string | null>(null);
+  const [showDeleteDialog, setShowDeleteDialog] = useState<string | null>(null);
 
   const fetchData = useCallback(async () => {
     if (!organizationSlug) return;
@@ -114,6 +120,39 @@ export default function RelyingPartyList() {
     setEditingRP(null);
   };
 
+  const handleDelete = async (rpSlug: string, environment: string) => {
+    if (!organizationSlug) return;
+
+    setDeleting(rpSlug);
+    setShowDeleteDialog(null);
+
+    const result = await deleteRelyingParty(
+      organizationSlug,
+      environment,
+      rpSlug
+    );
+
+    setDeleting(null);
+
+    if (!result.success) {
+      toast.error("Error", {
+        description:
+          result.globalError || "Failed to delete the relying party.",
+      });
+      return;
+    }
+
+    toast.success("Success", {
+      description: "Relying Party deleted successfully.",
+    });
+
+    setRelyingParties((prev) => prev.filter((rp) => rp.rp_slug !== rpSlug));
+  };
+
+  const handleOpenDeleteDialog = (rpSlug: string) => {
+    setShowDeleteDialog(rpSlug);
+  };
+
   const handleSuccess = (type: "updated" | "nochange" | "error") => {
     if (type === "updated") {
       toast.success("Success", {
@@ -154,70 +193,94 @@ export default function RelyingPartyList() {
         <p>No relying parties found for selected environment.</p>
       ) : (
         <ul className="space-y-4">
-          {filteredRelyingParties.map((rp) => (
-            <li key={rp.rp_slug} className="border p-4 rounded shadow-sm">
-              <div className="flex justify-between items-center">
-                <div>
-                  <div className="font-medium text-lg">{rp.rp_slug}</div>
-                </div>
-                <div className="flex items-center space-x-4">
-                  {rp.status ? <StatusBadge status={rp.status} /> : null}
-                  <Button
-                    variant="outline"
-                    onClick={() => handleEdit(rp.rp_slug)}
-                  >
-                    {editingSlug === rp.rp_slug ? "Cancel" : "Edit"}
-                  </Button>
-                </div>
-              </div>
-
-              {editingSlug === rp.rp_slug && (
-                <div className="mt-4">
-                  {editingLoading || !editingRP ? (
-                    <p>Loading form...</p>
-                  ) : (
-                    <RelyingPartyForm
-                      originalSlug={editingRP.rp_slug}
-                      defaultValues={{
-                        rp_slug: editingRP.rp_slug,
-                        environment: editingRP.environment,
-                        context_description_en:
-                          editingRP.context_description_en ?? "",
-                        context_description_nl:
-                          editingRP.context_description_nl ?? "",
-                        hostnames: editingRP.hostnames,
-                        attributes: editingRP.attributes,
-                      }}
-                      onSubmit={async (formData, originalSlug) => {
-                        setSaving(true);
-
-                        const result = await updateRelyingParty(
-                          organizationSlug,
-                          formData,
-                          originalSlug
-                        );
-                        setSaving(false);
-
-                        if (!result.success) {
-                          toast.error("Error", {
-                            description: result.globalError || "Update failed.",
-                          });
-                          return;
-                        }
-
-                        handleSuccess("updated");
-                        handleCancelEdit();
-                        fetchData();
-                      }}
-                      isSaving={saving}
-                      isEditMode={true}
-                      onClose={handleCancelEdit}
+          {filteredRelyingParties.map((rp) => {
+            const isCurrentRP = showDeleteDialog === rp.rp_slug;
+            const isPublished = rp.status === "published";
+            return (
+              <li key={rp.rp_slug} className="border p-4 rounded shadow-sm">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <div className="font-medium text-lg">{rp.rp_slug}</div>
+                  </div>
+                  <div className="flex items-center space-x-4">
+                    {rp.status ? <StatusBadge status={rp.status} /> : null}
+                    <Button
+                      variant="outline"
+                      onClick={() => handleEdit(rp.rp_slug)}
+                    >
+                      {editingSlug === rp.rp_slug ? "Cancel" : "Edit"}
+                    </Button>
+                    <DeleteRelyingPartyButton
+                      isPublished={isPublished}
+                      rpSlug={rp.rp_slug}
+                      onOpenDialog={handleOpenDeleteDialog}
                     />
-                  )}
+
+                    {isCurrentRP && (
+                      <DeleteRelyingPartyDialog
+                        open={isCurrentRP}
+                        onOpenChange={(open) => {
+                          if (!open) setShowDeleteDialog(null);
+                        }}
+                        onDelete={() =>
+                          handleDelete(rp.rp_slug, rp.environment)
+                        }
+                        rpSlug={rp.rp_slug}
+                        isDeleting={deleting === rp.rp_slug}
+                      />
+                    )}
+                  </div>
                 </div>
-              )}
-            </li>
-          ))}
+
+                {editingSlug === rp.rp_slug && (
+                  <div className="mt-4">
+                    {editingLoading || !editingRP ? (
+                      <p>Loading form...</p>
+                    ) : (
+                      <RelyingPartyForm
+                        originalSlug={editingRP.rp_slug}
+                        defaultValues={{
+                          rp_slug: editingRP.rp_slug,
+                          environment: editingRP.environment,
+                          context_description_en:
+                            editingRP.context_description_en ?? "",
+                          context_description_nl:
+                            editingRP.context_description_nl ?? "",
+                          hostnames: editingRP.hostnames,
+                          attributes: editingRP.attributes,
+                        }}
+                        onSubmit={async (formData, originalSlug) => {
+                          setSaving(true);
+
+                          const result = await updateRelyingParty(
+                            organizationSlug,
+                            formData,
+                            originalSlug
+                          );
+                          setSaving(false);
+
+                          if (!result.success) {
+                            toast.error("Error", {
+                              description:
+                                result.globalError || "Update failed.",
+                            });
+                            return;
+                          }
+
+                          handleSuccess("updated");
+                          handleCancelEdit();
+                          fetchData();
+                        }}
+                        isSaving={saving}
+                        isEditMode={true}
+                        onClose={handleCancelEdit}
+                      />
+                    )}
+                  </div>
+                )}
+              </li>
+            );
+          })}
         </ul>
       )}
     </div>
