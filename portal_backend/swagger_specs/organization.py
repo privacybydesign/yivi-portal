@@ -52,6 +52,6 @@ organization_maintainer_delete_schema = swagger_auto_schema(
         200: "Success",
         400: "Bad Request",
         403: "Forbidden",
-        404: "Organization not found",
+        404: "Organization not found / Maintainer not found",
     },
 )

@@ -173,7 +173,9 @@ class OrganizationMaintainerView(APIView):
                 {"error": "Maintainer id is required"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        if maintainer_id == request.user.id:
+        maintainer = get_object_or_404(User, pk=maintainer_id)
+
+        if maintainer.email == request.user.email:
             return Response(
                 {"error": "Cannot remove yourself from the organization"},
                 status=status.HTTP_400_BAD_REQUEST,
