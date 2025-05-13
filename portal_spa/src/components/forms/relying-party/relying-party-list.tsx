@@ -16,6 +16,7 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select";
+import StatusBadge from "@/components/custom/StatusBadge";
 
 type FetchRelyingPartiesResponse = {
   relying_parties: RelyingParty[];
@@ -159,12 +160,15 @@ export default function RelyingPartyList() {
                 <div>
                   <div className="font-medium text-lg">{rp.rp_slug}</div>
                 </div>
-                <Button
-                  variant="outline"
-                  onClick={() => handleEdit(rp.rp_slug)}
-                >
-                  {editingSlug === rp.rp_slug ? "Cancel" : "Edit"}
-                </Button>
+                <div className="flex items-center space-x-4">
+                  {rp.status ? <StatusBadge status={rp.status} /> : null}
+                  <Button
+                    variant="outline"
+                    onClick={() => handleEdit(rp.rp_slug)}
+                  >
+                    {editingSlug === rp.rp_slug ? "Cancel" : "Edit"}
+                  </Button>
+                </div>
               </div>
 
               {editingSlug === rp.rp_slug && (

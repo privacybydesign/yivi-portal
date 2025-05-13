@@ -89,7 +89,11 @@ class RelyingPartyListView(APIView):
         return Response(
             {
                 "relying_parties": [
-                    {"rp_slug": rp.rp_slug, "environment": rp.yivi_tme.environment}
+                    {
+                        "rp_slug": rp.rp_slug,
+                        "environment": rp.yivi_tme.environment,
+                        "status": rp.status,
+                    }
                     for rp in relying_parties
                 ]
             }
