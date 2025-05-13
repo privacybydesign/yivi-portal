@@ -167,8 +167,7 @@ class OrganizationMaintainerView(APIView):
     @organization_maintainer_delete_schema
     def delete(self, request: Request, org_slug: str, maintainer_id: str) -> Response:
         """Remove a maintainer from an organization"""
-        print(maintainer_id)
-        print(request.user.id)
+
         if not maintainer_id:
             return Response(
                 {"error": "Maintainer id is required"},
