@@ -9,6 +9,7 @@ import AttestationProvidersManagePage from "@/pages/AttestationProvidersManagePa
 import LoginPage from "@/pages/LoginPage";
 import OrganizationRegisterPage from "@/pages/OrganizationRegisterPage";
 import Layout from "@/components/layout/Layout";
+import ProtectedRoute from "@/components/auth/ProtectedRoute";
 
 // We manage all routes here to keep App.tsx clean
 export default function AppRoutes() {
@@ -18,31 +19,36 @@ export default function AppRoutes() {
       element: <Layout />,
       children: [
         { path: "/", element: <HomePage /> },
-        { path: "/organizations", element: <OrganizationsListPage /> },
         { path: "/login", element: <LoginPage /> },
-        {
-          path: "organizations/register",
-          element: <OrganizationRegisterPage />,
-        },
+        { path: "/organizations", element: <OrganizationsListPage /> },
         {
           path: "/organizations/:organization",
           element: <OrganizationDetailsPage />,
         },
         {
-          path: "/organizations/:organization/manage",
-          element: <OrgzanizationManagePage />,
-        },
-        {
-          path: "/organizations/:organization/manage/maintainers",
-          element: <MaintainerManagePage />,
-        },
-        {
-          path: "/organizations/:organization/manage/relying-parties",
-          element: <RelyingPartiesManagePage />,
-        },
-        {
-          path: "/organizations/:organization/manage/attestation-providers",
-          element: <AttestationProvidersManagePage />,
+          element: <ProtectedRoute organizationSlug=":organization" />,
+          children: [
+            {
+              path: "/organizations/register",
+              element: <OrganizationRegisterPage />,
+            },
+            {
+              path: "/organizations/:organization/manage",
+              element: <OrgzanizationManagePage />,
+            },
+            {
+              path: "/organizations/:organization/manage/maintainers",
+              element: <MaintainerManagePage />,
+            },
+            {
+              path: "/organizations/:organization/manage/relying-parties",
+              element: <RelyingPartiesManagePage />,
+            },
+            {
+              path: "/organizations/:organization/manage/attestation-providers",
+              element: <AttestationProvidersManagePage />,
+            },
+          ],
         },
       ],
     },
