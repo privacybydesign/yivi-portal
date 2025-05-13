@@ -195,6 +195,7 @@ export default function RelyingPartyList() {
         <ul className="space-y-4">
           {filteredRelyingParties.map((rp) => {
             const isCurrentRP = showDeleteDialog === rp.rp_slug;
+            const isPublished = rp.status === "published";
             return (
               <li key={rp.rp_slug} className="border p-4 rounded shadow-sm">
                 <div className="flex justify-between items-center">
@@ -210,6 +211,7 @@ export default function RelyingPartyList() {
                       {editingSlug === rp.rp_slug ? "Cancel" : "Edit"}
                     </Button>
                     <DeleteRelyingPartyButton
+                      isPublished={isPublished}
                       rpSlug={rp.rp_slug}
                       onOpenDialog={handleOpenDeleteDialog}
                     />

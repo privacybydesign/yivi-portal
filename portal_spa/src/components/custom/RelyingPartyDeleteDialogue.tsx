@@ -50,17 +50,21 @@ export default function RelyingPartyDeleteDialogue({
 export function DeleteRelyingPartyButton({
   rpSlug,
   onOpenDialog,
+  isPublished,
 }: {
   rpSlug: string;
   onOpenDialog: (rpSlug: string) => void;
+  isPublished: boolean;
 }) {
   return (
-    <Button
-      variant="destructive"
-      onClick={() => onOpenDialog(rpSlug)}
-      className="px-1.5 text-sm"
-    >
-      Remove
-    </Button>
+    !isPublished && (
+      <Button
+        variant="destructive"
+        onClick={() => onOpenDialog(rpSlug)}
+        className="px-1.5 text-sm"
+      >
+        Remove
+      </Button>
+    )
   );
 }
