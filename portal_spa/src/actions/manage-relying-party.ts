@@ -122,3 +122,27 @@ export async function registerRelyingParty(
     };
   }
 }
+export async function deleteRelyingParty(
+  organizationSlug: string,
+  environment: string,
+  rpSlug: string
+): Promise<RelyingPartyResponse<null>> {
+  try {
+    await axiosInstance.delete(
+      `/v1/yivi/organizations/${organizationSlug}/relying-party/${environment}/${rpSlug}/delete/`
+    );
+    return { success: true };
+  } catch (error) {
+    if (error instanceof AxiosError) {
+      return {
+        success: false,
+        globalError:
+          error.response?.data?.detail || "Failed to delete the relying party.",
+      };
+    }
+    return {
+      success: false,
+      globalError: "An unexpected error occurred.",
+    };
+  }
+}
