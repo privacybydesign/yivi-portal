@@ -90,7 +90,7 @@ export default function Header() {
                   </div>
                 </DropdownMenuLabel>
 
-                {organizationSlugs && organizationSlugs.length > 0 ? (
+                {organizationSlugs.length > 0 && (
                   <DropdownMenuGroup>
                     {organizationSlugs.map((organization) => (
                       <Link
@@ -103,7 +103,7 @@ export default function Header() {
                       </Link>
                     ))}
                   </DropdownMenuGroup>
-                ) : null}
+                )}
 
                 <DropdownMenuSeparator />
 
