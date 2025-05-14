@@ -129,6 +129,8 @@ class RelyingPartyAdmin(admin.ModelAdmin):
 
 @admin.register(User)
 class UserAdmin(admin.ModelAdmin):
-    list_display = ("email", "organization", "role")
-    search_fields = ("email", "organization__name_en", "role")
-    list_filter = ("role",)
+    list_display = ("email", "get_organizations", "role")
+
+    @admin.display(description="Organizations")
+    def get_organizations(self, obj):
+        return ", ".join([org.slug for org in obj.organizations.all()])

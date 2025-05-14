@@ -405,16 +405,13 @@ class User(models.Model):
         ("admin", "Admin"),
         ("maintainer", "Maintainer"),
     ]
-    email = models.EmailField(max_length=255, null=False)
-    organization = models.ForeignKey(
-        Organization, on_delete=models.CASCADE, related_name="users", null=True
-    )
+    email = models.EmailField(max_length=255, null=False, unique=True)
+    organizations = models.ManyToManyField(Organization, related_name="users")
     role = models.CharField(max_length=20, choices=ROLE_CHOICES)
 
     class Meta:
         verbose_name = "User"
         verbose_name_plural = "Users"
-        unique_together = ("email", "organization")
 
     def __str__(self):
         return f"{self.email} - {self.role}"

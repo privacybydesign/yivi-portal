@@ -42,9 +42,11 @@ class OrganizationCreateView(APIView):
 
         try:
             organization = serializer.save()
-            User.objects.create(
-                email=email, organization=organization, role="maintainer"
+            user, _ = User.objects.get_or_create(
+                email=email, defaults={"role": "maintainer"}
             )
+            user.organizations.add(organization)
+
         except Exception as e:
             logger.error(f"Error creating user: {e}")
             return Response(
