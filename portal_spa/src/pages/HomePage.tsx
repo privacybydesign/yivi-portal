@@ -39,7 +39,7 @@ function HomePage() {
           </Card>
           <Card>
             <CardHeader>
-              <CardTitle>I want to learn about the Yivi ecosystem</CardTitle>
+              <CardTitle>The Yivi Ecosystem</CardTitle>
             </CardHeader>
             <CardContent>
               Find out more about the organizations that participate in the Yivi
