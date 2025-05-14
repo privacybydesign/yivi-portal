@@ -5,6 +5,6 @@ export interface AuthToken {
   jti: string; // Unique identifier for the token
   user_id: string; // User identifier (could be an email or a UUID)
   email: string; // User email
-  role?: "admin" | "maintainer"; // User role (e.g., "user", "admin")
+  role?: "admin" | "maintainer" | undefined; // User role (e.g., "user", "admin")
   organizationSlugs?: string[]; // Organization identifier
 }
