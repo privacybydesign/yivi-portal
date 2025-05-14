@@ -61,6 +61,10 @@ export default function ManageOrganizationInformationForm({
   });
 
   useEffect(() => {
+    form.reset(organization);
+  }, [organization, form]);
+
+  useEffect(() => {
     form.clearErrors();
 
     if (formState?.errors) {
