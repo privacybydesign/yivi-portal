@@ -34,11 +34,10 @@ class IsOrganizationMaintainerOrAdmin(permissions.BasePermission):
             f"Checking if user is maintainer to organization with slug: {request_org_slug}"
         )
 
-        token_org_slug: str | None = None
         if hasattr(request, "auth"):
             raw_token: AccessToken = str(request.auth)
             token = AccessToken(raw_token)
-            token_org_slug = token.get("organizationSlug")
+            token_org_slugs = token.get("organizationSlugs")
 
         try:
             user_obj = User.objects.get(email=request.user.email)
@@ -49,6 +48,7 @@ class IsOrganizationMaintainerOrAdmin(permissions.BasePermission):
             return True
 
         if user_obj.role == "maintainer":
-            return token_org_slug == request_org_slug
+            if request_org_slug in token_org_slugs:
+                return True
 
         return False

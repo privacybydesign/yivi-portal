@@ -126,7 +126,9 @@ class OrganizationMaintainersView(APIView):
     def get(self, request: Request, org_slug: str) -> Response:
         """Get all maintainers for an organization"""
         organization = get_object_or_404(Organization, slug=org_slug)
-        maintainers = User.objects.filter(organization=organization)
+        maintainers = maintainers = User.objects.filter(
+            organizations=organization
+        ).distinct()
         serializer = MaintainerSerializer(maintainers, many=True)
         return Response(serializer.data)
 
@@ -142,7 +144,7 @@ class OrganizationMaintainersView(APIView):
             )
 
         existing_user = User.objects.filter(
-            email=email, organization=organization
+            email=email, organizations=organization
         ).first()
         if existing_user:
             return Response(
@@ -152,7 +154,8 @@ class OrganizationMaintainersView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        User.objects.create(email=email, organization=organization, role="maintainer")
+        user = User.objects.create(email=email, role="maintainer")
+        user.organizations.add(organization)
 
         return Response(
             {"message": f"User {email} added to organization as maintainer"},
@@ -185,7 +188,7 @@ class OrganizationMaintainerView(APIView):
 
         organization = get_object_or_404(Organization, slug=org_slug)
         deleted, _ = User.objects.filter(
-            pk=maintainer_id, organization=organization
+            pk=maintainer_id, organizations=organization
         ).delete()
 
         if deleted:
