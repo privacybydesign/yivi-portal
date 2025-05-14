@@ -124,15 +124,19 @@ export default function Header() {
                 </DropdownMenuLabel>
 
                 {organizationSlugs.length > 0 && (
-                  <DropdownMenuGroup>
-                    {organizationSlugs.map((slug) => (
-                      <Link key={slug} to={`/organizations/${slug}/manage`}>
-                        <DropdownMenuItem className="!cursor-pointer">
-                          {organizationNames[slug] || slug}
-                        </DropdownMenuItem>
-                      </Link>
-                    ))}
-                  </DropdownMenuGroup>
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuLabel>Your Organizations</DropdownMenuLabel>
+                    <DropdownMenuGroup>
+                      {organizationSlugs.map((slug) => (
+                        <Link key={slug} to={`/organizations/${slug}/manage`}>
+                          <DropdownMenuItem className="!cursor-pointer">
+                            {organizationNames[slug] || slug}
+                          </DropdownMenuItem>
+                        </Link>
+                      ))}
+                    </DropdownMenuGroup>
+                  </>
                 )}
 
                 <DropdownMenuSeparator />
