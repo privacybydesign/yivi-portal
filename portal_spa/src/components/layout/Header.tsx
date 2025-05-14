@@ -28,7 +28,7 @@ export default function Header() {
 
   const email = useStore((state) => state.email);
   const role = useStore((state) => state.role);
-  const organizationSlug = useStore((state) => state.organizationSlug);
+  const organizationSlugs = useStore((state) => state.organizationSlugs);
   const setAccessToken = useStore((state) => state.setAccessToken);
 
   const svg = createAvatar(initials, {
@@ -90,15 +90,20 @@ export default function Header() {
                   </div>
                 </DropdownMenuLabel>
 
-                {organizationSlug && (
+                {organizationSlugs && organizationSlugs.length > 0 ? (
                   <DropdownMenuGroup>
-                    <Link to={`/organizations/${organizationSlug}/manage`}>
-                      <DropdownMenuItem className="!cursor-pointer">
-                        Your organization
-                      </DropdownMenuItem>
-                    </Link>
+                    {organizationSlugs.map((organization) => (
+                      <Link
+                        key={organization}
+                        to={`/organizations/${organization}/manage`}
+                      >
+                        <DropdownMenuItem className="!cursor-pointer">
+                          {organization}
+                        </DropdownMenuItem>
+                      </Link>
+                    ))}
                   </DropdownMenuGroup>
-                )}
+                ) : null}
 
                 <DropdownMenuSeparator />
 
