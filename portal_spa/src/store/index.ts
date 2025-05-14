@@ -20,7 +20,7 @@ const useStore = create<StateStore>((set) => ({
   accessToken: null,
   email: null,
   role: undefined,
-  organizationSlugs: [""],
+  organizationSlugs: [],
   initialized: false,
 
   setAccessToken: (newToken: string | null) => {
@@ -29,11 +29,11 @@ const useStore = create<StateStore>((set) => ({
       set({
         email: decoded.email,
         role: decoded.role,
-        organizationSlugs: decoded.organizationSlugs || [""],
+        organizationSlugs: decoded.organizationSlugs || [],
       });
       localStorage.setItem("accessToken", newToken);
     } else {
-      set({ email: null, role: undefined, organizationSlugs: [""] });
+      set({ email: null, role: undefined, organizationSlugs: [] });
       localStorage.removeItem("accessToken");
     }
     set({ accessToken: newToken });
@@ -55,7 +55,7 @@ const useStore = create<StateStore>((set) => ({
           accessToken: newToken,
           email: newDecoded.email,
           role: newDecoded.role,
-          organizationSlugs: newDecoded.organizationSlugs || [""],
+          organizationSlugs: newDecoded.organizationSlugs || [],
         });
         localStorage.setItem("accessToken", newToken);
         return newToken;
@@ -66,7 +66,7 @@ const useStore = create<StateStore>((set) => ({
         accessToken: null,
         email: null,
         role: undefined,
-        organizationSlugs: [""],
+        organizationSlugs: [],
       });
       localStorage.removeItem("accessToken");
     } catch (error: unknown) {
@@ -93,7 +93,7 @@ const useStore = create<StateStore>((set) => ({
           accessToken: savedAccessToken,
           email: decoded.email,
           role: decoded.role,
-          organizationSlugs: decoded.organizationSlugs || [""],
+          organizationSlugs: decoded.organizationSlugs || [],
           initialized: true,
         });
         return;
@@ -105,7 +105,7 @@ const useStore = create<StateStore>((set) => ({
       accessToken: null,
       email: null,
       role: undefined,
-      organizationSlugs: [""],
+      organizationSlugs: [],
       initialized: true,
     });
   },
