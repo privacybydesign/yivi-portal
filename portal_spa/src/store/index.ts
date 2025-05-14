@@ -9,7 +9,7 @@ interface StateStore {
   accessToken: string | null;
   email: string | null;
   role?: "admin" | "maintainer" | undefined;
-  organizationSlug?: string | undefined;
+  organizationSlugs: string[];
   initialized: boolean;
   setAccessToken: (accessToken: string | null) => void;
   initializeAuth: () => void;
@@ -20,7 +20,7 @@ const useStore = create<StateStore>((set) => ({
   accessToken: null,
   email: null,
   role: undefined,
-  organizationSlug: undefined,
+  organizationSlugs: [],
   initialized: false,
 
   setAccessToken: (newToken: string | null) => {
@@ -29,11 +29,11 @@ const useStore = create<StateStore>((set) => ({
       set({
         email: decoded.email,
         role: decoded.role,
-        organizationSlug: decoded.organizationSlug,
+        organizationSlugs: decoded.organizationSlugs || [],
       });
       localStorage.setItem("accessToken", newToken);
     } else {
-      set({ email: null, role: undefined, organizationSlug: undefined });
+      set({ email: null, role: undefined, organizationSlugs: [] });
       localStorage.removeItem("accessToken");
     }
     set({ accessToken: newToken });
@@ -55,7 +55,7 @@ const useStore = create<StateStore>((set) => ({
           accessToken: newToken,
           email: newDecoded.email,
           role: newDecoded.role,
-          organizationSlug: newDecoded.organizationSlug,
+          organizationSlugs: newDecoded.organizationSlugs || [],
         });
         localStorage.setItem("accessToken", newToken);
         return newToken;
@@ -66,7 +66,7 @@ const useStore = create<StateStore>((set) => ({
         accessToken: null,
         email: null,
         role: undefined,
-        organizationSlug: undefined,
+        organizationSlugs: [],
       });
       localStorage.removeItem("accessToken");
     } catch (error: unknown) {
@@ -93,7 +93,7 @@ const useStore = create<StateStore>((set) => ({
           accessToken: savedAccessToken,
           email: decoded.email,
           role: decoded.role,
-          organizationSlug: decoded.organizationSlug,
+          organizationSlugs: decoded.organizationSlugs || [],
           initialized: true,
         });
         return;
@@ -105,7 +105,7 @@ const useStore = create<StateStore>((set) => ({
       accessToken: null,
       email: null,
       role: undefined,
-      organizationSlug: undefined,
+      organizationSlugs: [],
       initialized: true,
     });
   },

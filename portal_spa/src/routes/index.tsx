@@ -22,16 +22,16 @@ export default function AppRoutes() {
         { path: "/login", element: <LoginPage /> },
         { path: "/organizations", element: <OrganizationsListPage /> },
         {
+          path: "/organizations/register",
+          element: <OrganizationRegisterPage />,
+        },
+        {
           path: "/organizations/:organization",
           element: <OrganizationDetailsPage />,
         },
         {
-          element: <ProtectedRoute organizationSlug=":organization" />,
+          element: <ProtectedRoute />,
           children: [
-            {
-              path: "/organizations/register",
-              element: <OrganizationRegisterPage />,
-            },
             {
               path: "/organizations/:organization/manage",
               element: <OrgzanizationManagePage />,

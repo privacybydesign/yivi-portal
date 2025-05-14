@@ -28,7 +28,10 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         db_usr = User.objects.filter(email=user.email).first()
         if db_usr is not None:
             token["role"] = db_usr.role
-            token["organizationSlug"] = str(db_usr.organization.slug)
+            organization_slug = list(
+                db_usr.organizations.values_list("slug", flat=True)
+            )
+            token["organizationSlugs"] = organization_slug
 
         return token
 
@@ -139,14 +142,27 @@ class RefreshTokenView(APIView):
 
         try:
             token = RefreshToken(refresh_token)
+            user = get_user_model().objects.get(email=token["email"])
+
             if update_claims:
-                User = get_user_model()
-                user = User.objects.get(email=token["email"])
                 new_tokens = CustomTokenObtainPairSerializer.get_token(user)
                 access_token = str(new_tokens.access_token)
+                refresh_token = str(new_tokens)
+                response = Response({"access": access_token}, status=200)
+                response.set_cookie(
+                    key="refresh_token",
+                    value=refresh_token,
+                    httponly=True,
+                    secure=not settings.DEBUG,
+                    samesite="Lax",
+                    expires=datetime.now(timezone.utc)
+                    + settings.SIMPLE_JWT["REFRESH_TOKEN_LIFETIME"],
+                    path="/",
+                )
             else:
                 access_token = str(token.access_token)
-            return Response({"access": access_token})
+                response = Response({"access": access_token}, status=200)
+            return response
         except Exception as e:
             return Response({"error": str(e)}, status=400)
 

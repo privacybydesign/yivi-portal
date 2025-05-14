@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { createAvatar } from "@dicebear/core";
 import { initials } from "@dicebear/collection";
@@ -21,6 +21,9 @@ export default function Header() {
   const initializeAuth = useStore((state) => state.initializeAuth);
   const navigate = useNavigate();
   const location = useLocation();
+  const [organizationNames, setOrganizationNames] = useState<
+    Record<string, string>
+  >({});
 
   useEffect(() => {
     initializeAuth();
@@ -28,7 +31,7 @@ export default function Header() {
 
   const email = useStore((state) => state.email);
   const role = useStore((state) => state.role);
-  const organizationSlug = useStore((state) => state.organizationSlug);
+  const organizationSlugs = useStore((state) => state.organizationSlugs);
   const setAccessToken = useStore((state) => state.setAccessToken);
 
   const svg = createAvatar(initials, {
@@ -42,6 +45,36 @@ export default function Header() {
     setAccessToken(null);
     navigate("/login");
   };
+
+  const fetchFullOrganizationName = async (slug: string) => {
+    try {
+      const response = await axiosInstance.get(`/v1/organizations/${slug}`);
+      if (response.status === 200) {
+        return response.data.name_en;
+      }
+      return slug;
+    } catch (error) {
+      console.error(`Error fetching organization name for ${slug}:`, error);
+      return slug;
+    }
+  };
+
+  useEffect(() => {
+    const MapSlugstoNames = async () => {
+      const slugmap: Record<string, string> = {};
+
+      for (const slug of organizationSlugs) {
+        const name = await fetchFullOrganizationName(slug);
+        slugmap[slug] = name;
+      }
+
+      setOrganizationNames(slugmap);
+    };
+
+    if (organizationSlugs.length > 0) {
+      MapSlugstoNames();
+    }
+  }, [organizationSlugs]);
 
   return (
     <div className="bg-white border-b border-gray-200">
@@ -90,14 +123,20 @@ export default function Header() {
                   </div>
                 </DropdownMenuLabel>
 
-                {organizationSlug && (
-                  <DropdownMenuGroup>
-                    <Link to={`/organizations/${organizationSlug}/manage`}>
-                      <DropdownMenuItem className="!cursor-pointer">
-                        Your organization
-                      </DropdownMenuItem>
-                    </Link>
-                  </DropdownMenuGroup>
+                {organizationSlugs.length > 0 && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuLabel>Your Organizations</DropdownMenuLabel>
+                    <DropdownMenuGroup>
+                      {organizationSlugs.map((slug) => (
+                        <Link key={slug} to={`/organizations/${slug}/manage`}>
+                          <DropdownMenuItem className="!cursor-pointer">
+                            {organizationNames[slug] || slug}
+                          </DropdownMenuItem>
+                        </Link>
+                      ))}
+                    </DropdownMenuGroup>
+                  </>
                 )}
 
                 <DropdownMenuSeparator />
