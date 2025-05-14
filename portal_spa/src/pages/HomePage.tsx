@@ -1,11 +1,8 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import useStore from "@/store";
 import { Link } from "react-router-dom";
 
 function HomePage() {
-  const organizationSlug = useStore((state) => state.organizationSlug);
-
   return (
     <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
       <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
@@ -42,29 +39,18 @@ function HomePage() {
           </Card>
           <Card>
             <CardHeader>
-              <CardTitle>I want to manage my organization.</CardTitle>
+              <CardTitle>I want to learn about the Yivi ecosystem</CardTitle>
             </CardHeader>
             <CardContent>
-              Already registered? Log in to administer your organization’s role
-              in the Yivi ecosystem.
+              Find out more about the organizations that participate in the Yivi
+              ecosystem.
               <div className="mt-4">
                 <Button variant="outline" asChild>
-                  <Link to={`/organizations/${organizationSlug}/manage`}>
-                    {/* TODO: make url dynamic once store is moved */}
-                    Manage organization
-                  </Link>
+                  <Link to="/organizations">View Organizations</Link>
                 </Button>
               </div>
             </CardContent>
           </Card>
-          <div className="sm:col-span-2 flex flex-col items-center gap-2 mt-4">
-            <p className="text-sm text-muted-foreground text-center">
-              Discover your favorite organizations that use Yivi.
-            </p>
-            <Button variant="outline" className="w-full max-w-sm">
-              <Link to="/organizations">View Organizations</Link>
-            </Button>
-          </div>
         </div>
       </main>
     </div>
