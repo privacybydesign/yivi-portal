@@ -3,14 +3,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useParams, Link } from "react-router-dom";
 import { axiosInstance } from "@/services/axiosInstance";
-import useStore from "@/store";
 import type { Organization } from "@/models/organization";
 import type { RelyingParty } from "@/models/relying-party";
 
 export default function OrganizationPage() {
   const params = useParams();
-  const userOrgSlug = useStore((state) => state.organizationSlug);
-  const userRole = useStore((state) => state.role);
   const organizationSlug = params?.organization;
 
   const [organization, setOrganization] = useState<Organization | null>(null);
@@ -43,7 +40,7 @@ export default function OrganizationPage() {
     if (organizationSlug) {
       fetchOrganizationData();
     }
-  }, [organizationSlug, userOrgSlug, userRole]);
+  }, [organizationSlug]);
 
   const fetchRelyingPartyDetails = async () => {
     try {
