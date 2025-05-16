@@ -40,7 +40,7 @@ def filter_organizations(
             ),
             is_ap=Exists(
                 AttestationProvider.objects.filter(
-                    organization=OuterRef("pk", published=True)
+                    organization=OuterRef("pk"), published=True
                 )
             ),
         )
