@@ -10,12 +10,8 @@ export const RelyingPartySchema = z.object({
 
   environment: z.string().nonempty("Environment is required"),
 
-  context_description_en: z
-    .string()
-    .nonempty("English context description is required"),
-  context_description_nl: z
-    .string()
-    .nonempty("Dutch context description is required"),
+  context_description_en: z.string(),
+  context_description_nl: z.string(),
 
   hostnames: z.array(
     z.object({

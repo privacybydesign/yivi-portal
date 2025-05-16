@@ -255,9 +255,9 @@ class RelyingParty(models.Model):
             return StatusChoices.INVALIDATED
         if self.reviewed_accepted is True and self.published:
             return StatusChoices.PUBLISHED
-        if self.reviewed_accepted is True:
+        if self.reviewed_accepted is True and not self.published:
             return StatusChoices.ACCEPTED
-        if self.reviewed_accepted is False:
+        if self.reviewed_accepted is False and not self.published:
             return StatusChoices.REJECTED
         if self.ready:
             return StatusChoices.PENDING_FOR_REVIEW
@@ -358,8 +358,8 @@ class RelyingPartyHostname(models.Model):
 
 class Condiscon(models.Model):
     condiscon = models.JSONField()
-    context_description_en = models.CharField(max_length=255)
-    context_description_nl = models.CharField(max_length=255)
+    context_description_en = models.CharField(max_length=255, blank=True, null=True)
+    context_description_nl = models.CharField(max_length=255, blank=True, null=True)
     relying_party = models.ForeignKey(
         RelyingParty, on_delete=models.CASCADE, related_name="condiscons"
     )

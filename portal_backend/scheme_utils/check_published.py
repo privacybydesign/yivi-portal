@@ -30,7 +30,7 @@ def check_published_cron() -> None:
         config = load_config()
         repo_url = config["RP"]["environment"][environment]["repo-url"]
         repo_name = config["RP"]["environment"][environment]["name"]
-        repo_path = f"downloads/relying-party-repo"
+        repo_path = "downloads/relying-party-repo"
         download_extract_repo(repo_url, repo_name, repo_path)
         json_path = f"{repo_path}/{repo_name}-master/requestors.json"
         rps_dict = load_json_to_dict(json_path)
