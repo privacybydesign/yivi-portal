@@ -313,20 +313,10 @@ export default function OrganizationPage() {
                       </ul>
                     </div>
                     <div className="pt-4 border-t">
-                      <h4 className="font-medium">Publication</h4>
                       <div className="flex flex-col gap-2 text-sm">
                         <div>
                           <span className="font-medium">Published At:</span>{" "}
                           {formatDate(rp.published_at)}
-                        </div>
-                        <div>
-                          <span className="font-medium">State:</span>{" "}
-                          <Badge className="bg-blue-100 text-blue-800">
-                            {JSON.stringify(rp.approved_rp_details) ===
-                            JSON.stringify(rp.published_rp_details)
-                              ? "Published"
-                              : "Changes Pending"}
-                          </Badge>
                         </div>
                       </div>
                     </div>
