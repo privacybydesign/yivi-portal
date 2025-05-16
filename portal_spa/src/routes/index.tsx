@@ -10,6 +10,7 @@ import LoginPage from "@/pages/LoginPage";
 import OrganizationRegisterPage from "@/pages/OrganizationRegisterPage";
 import Layout from "@/components/layout/Layout";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
+import PrivacyPolicyPage from "@/pages/PrivacyPolicyPage";
 
 // We manage all routes here to keep App.tsx clean
 export default function AppRoutes() {
@@ -50,6 +51,7 @@ export default function AppRoutes() {
             },
           ],
         },
+        { path: "/privacy-policy", element: <PrivacyPolicyPage /> },
       ],
     },
   ]);
