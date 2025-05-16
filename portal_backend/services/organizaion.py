@@ -35,12 +35,15 @@ def filter_organizations(
 
     filtered_orgs = (
         Organization.objects.annotate(
-            is_rp=Exists(RelyingParty.objects.filter(organization=OuterRef("pk"))),
+            is_rp=Exists(
+                RelyingParty.objects.filter(organization=OuterRef("pk"), published=True)
+            ),
             is_ap=Exists(
-                AttestationProvider.objects.filter(organization=OuterRef("pk"))
+                AttestationProvider.objects.filter(
+                    organization=OuterRef("pk", published=True)
+                )
             ),
         )
-        .filter(is_verified=True)
         .filter(
             (Q(is_rp=select_rps) if select_rps is not None else Q())
             | (Q(is_ap=select_aps) if select_aps is not None else Q())
