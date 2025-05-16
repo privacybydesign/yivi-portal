@@ -157,6 +157,7 @@ class AttestationProvider(models.Model):
     published_ap_details = models.JSONField(null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     last_updated_at = models.DateTimeField(auto_now=True)
+    published = models.BooleanField(default=False)
 
     def __str__(self):
         return self.organization.name_en
@@ -240,14 +241,16 @@ class RelyingParty(models.Model):
 
     @property
     def has_invalidated_hostname(self):
-        return RelyingPartyHostname.objects.exists(
+        return RelyingPartyHostname.objects.filter(
             relying_party=self,
             dns_challenge_verified=False,
             dns_challenge_invalidated_at__isnull=False,
-        )
+        ).exists()
 
     @property
     def status(self) -> str:
+        if self.published and self.has_invalidated_hostname:
+            return StatusChoices.INVALIDATED
         if self.reviewed_accepted and self.has_invalidated_hostname:
             return StatusChoices.INVALIDATED
         if self.reviewed_accepted is True and self.published:
