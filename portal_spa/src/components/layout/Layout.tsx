@@ -1,4 +1,4 @@
-import { Outlet } from "react-router-dom";
+import { Link, Outlet } from "react-router-dom";
 import Header from "@/components/layout/Header";
 
 export default function Layout() {
@@ -8,8 +8,13 @@ export default function Layout() {
       <main className="flex-grow p-4">
         <Outlet />
       </main>
-      <footer className="bg-gray-100 text-center p-4">
-        &copy; 2025 Yivi Portal. All rights reserved.
+      <footer className="bg-gray-100 p-4">
+        <div className="flex justify-between max-w-5xl mx-auto">
+          <p>&copy; 2025 Yivi Portal. All rights reserved.</p>
+          <div className="grid gap-6">
+            <Link to="/privacy-policy">Privacy policy</Link>
+          </div>
+        </div>
       </footer>
     </div>
   );
