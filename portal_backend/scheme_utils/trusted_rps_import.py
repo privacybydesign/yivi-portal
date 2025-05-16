@@ -45,7 +45,6 @@ class RPFields:
 def create_rp(
     org: import_utils.Organization,
     yivi_tme: import_utils.YiviTrustModelEnv,
-    rp_dict: dict,
     environment: str,
 ) -> RelyingParty:
     if not org or not yivi_tme:
@@ -58,22 +57,20 @@ def create_rp(
 
     try:
         now = timezone.now()
-        print("org", org)
-        print("yivitme", yivi_tme)
         rp, rp_created = RelyingParty.objects.update_or_create(
             organization=org,
             rp_slug=org.slug,
             yivi_tme=yivi_tme,
             defaults={
-                "approved_rp_details": rp_dict,
-                "published_rp_details": rp_dict,
                 "ready": True,
-                "ready_at": now,
-                "reviewed_accepted": None,
-                "reviewed_at": now,
-                "published_at": now,
+                "reviewed_accepted": True,
+                "published": True,
             },
         )
+        if rp_created:
+            rp.ready_at = now
+            rp.reviewed_at = now
+            rp.published_at = now
         rp.save(skip_import_approve=True)
 
         logger.info(
@@ -138,7 +135,7 @@ def create_org_rp(all_RPs_dict: dict, environment: str, repo_path: str) -> None:
             rpfields.slug, rpfields.name_en, rpfields.name_nl, rpfields.logo_path
         )
         yivi_tme = import_utils.get_trust_model_env(environment)
-        rp = create_rp(org, yivi_tme, rp_dict, environment)
+        rp = create_rp(org, yivi_tme, environment)
         create_hostnames(rpfields, rp, environment)
 
 

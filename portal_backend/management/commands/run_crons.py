@@ -1,5 +1,6 @@
 from django.core.management.base import BaseCommand
 from portal_backend.crons import (
+    CheckPublishedRelyingParties,
     NewDNSVerification,
     ExistingDNSVerification,
     TrustedAPsImport,
@@ -20,6 +21,7 @@ class Command(BaseCommand):
             "existing_dns": ExistingDNSVerification,
             "trusted_aps": TrustedAPsImport,
             "trusted_rps": TrustedRPsImport,
+            "check_published_rps": CheckPublishedRelyingParties,
         }
 
         if job_name in jobs:

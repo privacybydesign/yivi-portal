@@ -179,6 +179,7 @@ def update_relying_party_hostnames(
             if hostname_obj.hostname != hostname_str:
                 hostname_obj.hostname = hostname_str
                 hostname_obj.dns_challenge = generate_dns_challenge()
+                hostname_obj.manually_verified = False
                 hostname_obj.dns_challenge_created_at = timezone.now()
                 hostname_obj.dns_challenge_verified = False
                 hostname_obj.full_clean()

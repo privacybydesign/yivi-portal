@@ -29,10 +29,12 @@ class OrganizationSerializer(CountryFieldMixin, serializers.ModelSerializer):
     logo = serializers.ImageField(required=False)
 
     def get_is_RP(self, obj):
-        return RelyingParty.objects.filter(organization=obj).exists()
+        return RelyingParty.objects.filter(organization=obj, published=True).exists()
 
     def get_is_AP(self, obj):
-        return AttestationProvider.objects.filter(organization=obj).exists()
+        return AttestationProvider.objects.filter(
+            organization=obj, published=True
+        ).exists()
 
     class Meta:
         model = Organization
