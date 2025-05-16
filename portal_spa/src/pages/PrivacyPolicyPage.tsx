@@ -1,10 +1,6 @@
-// import { Button } from "@/components/ui/button";
-// import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-// import { Link } from "react-router-dom";
-
 function PrivacyPolicyPage() {
   return (
-    <div className="font-[family-name:var(--font-geist-sans)] max-w-5xl container mx-auto grid p-4 gap-4">
+    <div className="font-[family-name:var(--font-geist-sans)] container md:max-w-5xl mx-auto grid p-4 gap-4 text-justify">
       <h1 className="text-2xl sm:text-4xl font-bold">Privacy</h1>
       <p className="font-bold">
         Your privacy is very important to us. We therefore adhere to privacy
@@ -25,13 +21,13 @@ function PrivacyPolicyPage() {
               <strong>Version November 1, 2024</strong>
             </p>
             <p>
-              The Privacy by Design Foundation, Caesar Group and SIDN Business
-              B.V. (hereafter: the administrators) process personal data for the
-              purpose of achieving attribute-based authentication and signing
-              via the system Yivi. The administrators are responsible for the
-              processing and consider your privacy very important. They
-              therefore comply with privacy legislation. This means that your
-              data is safe with them and that they handle it properly.
+              The Privacy by Design Foundation and Caesar Groep (hereafter: the
+              administrators) process personal data for the purpose of achieving
+              attribute-based authentication and signing via the system Yivi.
+              The administrators are responsible for the processing and consider
+              your privacy very important. They therefore comply with privacy
+              legislation. This means that your data is safe with them and that
+              they handle it properly.
             </p>
             <p>
               The design of Yivi is such that personal data, in the form of

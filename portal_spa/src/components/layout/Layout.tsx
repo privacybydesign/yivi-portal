@@ -9,7 +9,7 @@ export default function Layout() {
         <Outlet />
       </main>
       <footer className="bg-gray-100 p-4">
-        <div className="flex justify-between max-w-5xl mx-auto">
+        <div className="flex justify-between container px-4 mx-auto">
           <p>&copy; 2025 Yivi Portal. All rights reserved.</p>
           <div className="grid gap-6">
             <Link to="/privacy-policy">Privacy policy</Link>
