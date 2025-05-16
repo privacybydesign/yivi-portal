@@ -25,7 +25,7 @@ function PrivacyPolicyPage() {
               <strong>Versie 1 november 2024</strong>
             </p>
             <p>
-              De Stichting Privacy by Design, Caeser Groep en SIDN Business B.V.
+              De Stichting Privacy by Design, Caesar Groep en SIDN Business B.V.
               (hierna: de beheerder) verwerken persoonsgegevens voor het
               realiseren van attribuut-gebaseerde authenticatie en ondertekening
               via het systeem Yivi. De beheerders zijn daarbij verantwoordelijk
