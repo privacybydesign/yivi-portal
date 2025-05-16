@@ -7,107 +7,102 @@ function PrivacyPolicyPage() {
     <div className="font-[family-name:var(--font-geist-sans)] max-w-5xl container mx-auto grid p-4 gap-4">
       <h1 className="text-2xl sm:text-4xl font-bold">Privacy</h1>
       <p className="font-bold">
-        Jouw privacy vinden wij erg belangrijk. Wij houden ons dan ook aan de
-        privacywetgeving. Dit betekent dat je gegevens veilig zijn bij ons en
-        dat we er netjes mee omgaan. In deze privacyverklaring leggen we uit wat
-        we bij Yivi allemaal doen met informatie die we over jou te weten komen.
-        Als je vragen hebt, of wilt weten wat we precies van jou bijhouden, neem
-        dan contact met ons op.
+        Your privacy is very important to us. We therefore adhere to privacy
+        legislation. This means that your information is safe with us and that
+        we handle it properly. In this privacy statement, we explain everything
+        we do with the information we collect about you. If you have any
+        questions, or want to know exactly what we track about you, please
+        contact us.
       </p>
 
       <div className="grid gap-8">
         <div className="grid gap-4">
           <h3 className="text-xl sm:text-3xl font-bold">
-            Yivi Privacyverklaring
+            Yivi Privacy Statement
           </h3>
           <div>
             <p>
-              <strong>Versie 1 november 2024</strong>
+              <strong>Version November 1, 2024</strong>
             </p>
             <p>
-              De Stichting Privacy by Design, Caesar Groep en SIDN Business B.V.
-              (hierna: de beheerder) verwerken persoonsgegevens voor het
-              realiseren van attribuut-gebaseerde authenticatie en ondertekening
-              via het systeem Yivi. De beheerders zijn daarbij verantwoordelijk
-              voor de verwerking en vindt jouw privacy erg belangrijk. Zij
-              houden zich dan ook aan de privacywetgeving. Dit betekent dat je
-              gegevens veilig zijn bij hen en dat zij er netjes mee omgaan.
+              The Privacy by Design Foundation, Caesar Group and SIDN Business
+              B.V. (hereafter: the administrators) process personal data for the
+              purpose of achieving attribute-based authentication and signing
+              via the system Yivi. The administrators are responsible for the
+              processing and consider your privacy very important. They
+              therefore comply with privacy legislation. This means that your
+              data is safe with them and that they handle it properly.
             </p>
             <p>
-              De opzet van Yivi is zodanig dat persoonsgegevens, in de vorm van
-              attributen, exclusief bij de gebruiker zelf in de Yivi-app op de
-              eigen telefoon of tablet versleuteld worden opgeslagen en dat de
-              gebruiker zelf de controle heeft over met wie hij zijn
-              persoonsgegevens deelt.
+              The design of Yivi is such that personal data, in the form of
+              attributes, are stored encrypted exclusively with the user in the
+              Yivi app on their own phone or tablet and that the user has
+              control over who they share their personal data with.
             </p>
             <p>
-              Attributen zijn een klein stukje data dat doorgaans een verklaring
-              bevat over de eigenaar van het attribuut (bijv. ‘&gt; 18 jaar’).
-              Een attribuut is bijvoorbeeld je bankrekeningnummer, naam,
-              huisadres, e-mailadres, 06-nummer of Burgerservicenummer (BSN).
-              Niemand kan, ook beheerders niet, zien bij welke uitgever van
-              attributen de gebruiker attributen ophaalt of met wie de gebruiker
-              zijn attributen deelt. Welke attributen door de gebruiker worden
-              opgehaald of gedeeld kan eveneens niemand zien. Opgehaalde
-              attributen kunnen alleen via de Yivi-app geraadpleegd en gedeeld
-              worden. Het hele stelsel is op privacy by design gebaseerd.
+              Attributes are a small piece of data that usually contains a
+              statement about the owner of the attribute (e.g., “&gt; 18
+              years”). An attribute is, for example, your bank account number,
+              name, home address, e-mail address, 06 number or Citizen Service
+              Number (BSN). No one, including administrators, can see from which
+              attribute publisher the user retrieves attributes or with whom the
+              user shares their attributes. Nor can anyone see which attributes
+              are retrieved or shared by the user. Retrieved attributes can be
+              accessed and shared only through the Yivi app. The entire system
+              is based on privacy by design.
             </p>
             <p>
-              Het doel van Yivi is om veilig en vertrouwelijk, op basis van
-              dataminimalisatie te kunnen inloggen, toegang te kunnen
-              verschaffen, toe te stemmen en te ondertekenen bij derde partijen
-              die authenticatieprocessen via Yivi uitvoeren.
+              The purpose of Yivi is to allow secure and confidential, data
+              minimization-based login, access, consent and signature with
+              third-party authentication processes through Yivi.
             </p>
           </div>
         </div>
 
         <div className="grid gap-4">
           <h3 className="text-xl sm:text-3xl font-bold">
-            Wat doen de beheerders met jouw gegevens?
+            What do the administrators do with your data?
           </h3>
           <div>
             <p>
-              Hieronder lees je wat de beheerders doen met de gegevens die zij
-              van jou verzamelen via Yivi.
+              Below you can read what the administrators do with the data they
+              collect from you through Yivi.
             </p>
             <p>
-              Bij de registratie van nieuwe Yivi-gebruikers bewaren de
-              beheerders per gebruiker enkel een willekeurig gebruikersnaam (het
-              app-ID) en, alleen als de gebruiker deze zelf opgeeft, een
-              e-mailadres. Daarnaast slaan ze een zeer beperkte verzameling
-              historische gebruiksgegevens op, zoals hieronder nader beschreven
-              wordt.
+              When registering new Yivi users, the administrators store for each
+              user only a random username (the app ID) and, only if the user
+              provides it himself, an e-mail address. In addition, they store a
+              very limited collection of historical usage data, as described in
+              more detail below.
             </p>
           </div>
         </div>
 
         <div className="grid gap-4">
-          <h3 className="text-xl sm:text-3xl font-bold">Grondslag</h3>
+          <h3 className="text-xl sm:text-3xl font-bold">Basis</h3>
           <div>
             <p>
-              De wettelijke grondslagen voor de verwerkingen door beheerders als
-              verwerkingsverantwoordelijken, in het kader van Yivi, zijn
-              toestemming van de betrokkene en noodzakelijk voor het uitvoeren
-              van de gebruikersovereenkomst. De verwerking van persoonsgegevens
-              door de beheerders is noodzakelijk om de functionaliteiten van
-              Yivi en de werking van de app te kunnen waarborgen. Zo is het
-              verwerken van het mobiele nummer, het e-mailadres als attribuut,
-              het app-ID en de historische gebruiksgegevens noodzakelijk voor de
-              verificatie en werking van de app. Daarmee is de verwerking
-              noodzakelijk ter uitvoering van de overeenkomst tussen de
-              beheerders en de gebruiker van de Yivi-app.
+              The legal bases for the processing by administrators as
+              controllers, in the context of Yivi, are consent of the data
+              subject and necessary for the performance of the user agreement.
+              The processing of personal data by administrators is necessary to
+              ensure the functionalities of Yivi and the operation of the app.
+              For example, the processing of the mobile number, email address as
+              an attribute, the app ID and historical usage data is necessary
+              for the verification and operation of the app. Thus, the
+              processing is necessary for the performance of the agreement
+              between the administrators and the user of the Yivi app.
             </p>
             <p>
-              Daarnaast geeft de gebruiker, wanneer hij/zij ervoor kiest om van
-              de herstelfunctie gebruik te maken, via het doorgeven het
-              e-mailadres, expliciet toestemming aan de beheerders om het
-              herstel e-mailadres te laten verwerken.
+              In addition, if the user chooses to use the recovery function, by
+              passing the email address, the user explicitly authorizes the
+              administrators to have the recovery email address processed.
             </p>
             <p>
-              De Yivi-app vraagt de gebruiker bij iedere ontvangst en bij iedere
-              onthulling van attributen overigens ook expliciet om toestemming
-              voor deze actie. Dit vormt de grondslag voor de verwerking van de
-              betreffende attributen door deze (derde) partijen.
+              Incidentally, the Yivi app also explicitly asks the user for
+              permission for this action with each receipt and with each
+              disclosure of attributes. This constitutes the basis for the
+              processing of the concerning attributes by these (third) parties.
             </p>
           </div>
         </div>
