@@ -52,10 +52,9 @@ jobs:
 
       - name: Build container and push to GitHub Container Registry
         uses: docker/build-push-action@v5
-        if: ${{ github.event_name != 'pull_request' }}
         with:
           context: .
           file: Dockerfile.django
-          push: true
+          push: ${{ ! contains(fromJSON('["schedule", "pull_request"]'), github.event_name) }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
