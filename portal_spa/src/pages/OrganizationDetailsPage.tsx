@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useParams, Link } from "react-router-dom";
-import { axiosInstance } from "@/services/axiosInstance";
+import { axiosInstance, apiEndpoint } from "@/services/axiosInstance";
 import type { Organization } from "@/models/organization";
 import type { RelyingParty } from "@/models/relying-party";
 
@@ -16,14 +16,13 @@ export default function OrganizationPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeSection, setActiveSection] = useState("overview");
-  const apiEndpoint = import.meta.env.VITE_API_ENDPOINT;
 
   useEffect(() => {
     const fetchOrganizationData = async () => {
       try {
         // Fetch organization details
         const orgResponse = await axiosInstance.get(
-          `/v1/organizations/${organizationSlug}/`
+          `/v1/organizations/${organizationSlug}/`,
         );
         setOrganization(orgResponse.data);
 
@@ -31,7 +30,7 @@ export default function OrganizationPage() {
       } catch (error) {
         console.error("Error fetching organization:", error);
         setError(
-          "Failed to load organization details. Please try again later."
+          "Failed to load organization details. Please try again later.",
         );
         setLoading(false);
       }
@@ -47,7 +46,7 @@ export default function OrganizationPage() {
       setLoadingRpDetails(true);
 
       const listResponse = await axiosInstance.get(
-        `/v1/yivi/organizations/${organizationSlug}/relying-party/`
+        `/v1/yivi/organizations/${organizationSlug}/relying-party/`,
       );
 
       const rpList: RelyingParty[] = listResponse.data.relying_parties;
@@ -57,7 +56,7 @@ export default function OrganizationPage() {
       for (const rp of rpList) {
         try {
           const detailResponse = await axiosInstance.get(
-            `/v1/yivi/organizations/${organizationSlug}/relying-party/${rp.environment}/${rp.rp_slug}/`
+            `/v1/yivi/organizations/${organizationSlug}/relying-party/${rp.environment}/${rp.rp_slug}/`,
           );
           const rpData = detailResponse.data;
           rpData.environment = rp.environment;
@@ -129,7 +128,7 @@ export default function OrganizationPage() {
                 alt={`${organization.name_en} logo`}
                 className="object-cover w-full h-full"
                 onError={(e) => {
-                  e.currentTarget.src = "/placeholder-logo.png";
+                  e.currentTarget.src = "/logo-placeholder.svg";
                 }}
               />
             </div>
@@ -140,7 +139,7 @@ export default function OrganizationPage() {
             {organization.trust_model && (
               <Link
                 to={`/trust-models/${encodeURIComponent(
-                  organization.trust_model
+                  organization.trust_model,
                 )}`}
                 className="text-sm text-blue-600 hover:underline"
               >

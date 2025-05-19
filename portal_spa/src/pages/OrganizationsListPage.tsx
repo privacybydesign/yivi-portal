@@ -11,26 +11,25 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { axiosInstance } from "@/services/axiosInstance";
+import { axiosInstance, apiEndpoint } from "@/services/axiosInstance";
 import { useSearchParams, Link } from "react-router-dom";
 import type { PaginationResponse } from "@/models/paginated-response";
 import type { Organization } from "@/models/organization";
 
 export default function OrganizationsListPage() {
-  const apiEndpoint = import.meta.env.VITE_API_ENDPOINT ?? "%VITE_API_ENDPOINT%";
   const [searchParams, setSearchParams] = useSearchParams();
 
   const [searchQuery, setSearchQuery] = useState(
-    searchParams.get("search") || ""
+    searchParams.get("search") || "",
   );
   const [selectedTrustModel, setSelectedTrustModel] = useState(
-    searchParams.get("trust_model") || "all"
+    searchParams.get("trust_model") || "all",
   );
   const [APSelected, setAPSelected] = useState(
-    !searchParams.has("ap") || searchParams.get("ap") === "true"
+    !searchParams.has("ap") || searchParams.get("ap") === "true",
   );
   const [RPSelected, setRPSelected] = useState(
-    !searchParams.has("rp") || searchParams.get("rp") === "true"
+    !searchParams.has("rp") || searchParams.get("rp") === "true",
   );
   const [currentPage, setCurrentPage] = useState(() => {
     const page = searchParams.get("page");
@@ -51,7 +50,7 @@ export default function OrganizationsListPage() {
   const fetchOrganizations = (
     page = 1,
     selectAPs: boolean,
-    selectRPs: boolean
+    selectRPs: boolean,
   ) => {
     setLoading(true);
     const offset = (page - 1) * pageSize;
@@ -133,7 +132,7 @@ export default function OrganizationsListPage() {
     searchQuery: string,
     selectedTrustModel: string,
     selectAPs: boolean,
-    selectRPs: boolean
+    selectRPs: boolean,
   ) => {
     setApplyingFilters(true);
     updateQueryParams({
@@ -242,7 +241,7 @@ export default function OrganizationsListPage() {
                     searchQuery,
                     selectedTrustModel,
                     APSelected,
-                    RPSelected
+                    RPSelected,
                   )
                 }
               />
@@ -280,7 +279,7 @@ export default function OrganizationsListPage() {
                   handleFilterChange(
                     !APSelected,
                     RPSelected,
-                    selectedTrustModel
+                    selectedTrustModel,
                   )
                 }
               />
@@ -291,7 +290,7 @@ export default function OrganizationsListPage() {
                   handleFilterChange(
                     !APSelected,
                     RPSelected,
-                    selectedTrustModel
+                    selectedTrustModel,
                   )
                 }
               >
@@ -307,7 +306,7 @@ export default function OrganizationsListPage() {
                   handleFilterChange(
                     APSelected,
                     !RPSelected,
-                    selectedTrustModel
+                    selectedTrustModel,
                   )
                 }
               />
@@ -318,7 +317,7 @@ export default function OrganizationsListPage() {
                   handleFilterChange(
                     APSelected,
                     !RPSelected,
-                    selectedTrustModel
+                    selectedTrustModel,
                   )
                 }
               >
@@ -331,15 +330,15 @@ export default function OrganizationsListPage() {
             RPSelected ||
             selectedTrustModel !== "all" ||
             searchQuery) && (
-              <div className="mt-4 text-sm text-blue-600">
-                Filtering:
-                {searchQuery && ` Search: "${searchQuery}"`}
-                {selectedTrustModel !== "all" &&
-                  ` Trust Model: ${selectedTrustModel}`}
-                {APSelected && " | Attestation Providers"}
-                {RPSelected && " | Relying Parties"}
-              </div>
-            )}
+            <div className="mt-4 text-sm text-blue-600">
+              Filtering:
+              {searchQuery && ` Search: "${searchQuery}"`}
+              {selectedTrustModel !== "all" &&
+                ` Trust Model: ${selectedTrustModel}`}
+              {APSelected && " | Attestation Providers"}
+              {RPSelected && " | Relying Parties"}
+            </div>
+          )}
         </div>
       </div>
 
@@ -385,9 +384,9 @@ export default function OrganizationsListPage() {
                             height={32}
                             alt={`${org.name_en} logo`}
                             className="object-cover w-full h-full"
-                          // onError={(e) => {
-                          //   // e.currentTarget.src = "/placeholder-logo.png";
-                          // }}
+                            onError={(e) => {
+                              e.currentTarget.src = "/logo-placeholder.svg";
+                            }}
                           />
                         </div>
                       ) : (
