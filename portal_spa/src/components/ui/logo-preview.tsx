@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { XIcon } from "lucide-react";
 import type { RegistrationInputs } from "@/actions/manage-organization";
+import { apiEndpoint } from "@/services/axiosInstance";
 
 export function LogoPreview({
   control,
@@ -17,7 +18,6 @@ export function LogoPreview({
   const logo = useWatch({ control, name: "logo" });
 
   const [logoURL, setLogoURL] = useState<string>("/logo-placeholder.svg");
-  const apiEndpoint = import.meta.env.VITE_API_ENDPOINT;
 
   useEffect(() => {
     if (typeof logo === "string") {
