@@ -3,8 +3,11 @@ import { jwtDecode } from "jwt-decode";
 import useStore from "@/store";
 import type { AuthToken } from "@/models/auth_token";
 
+export const apiEndpoint =
+  import.meta.env.VITE_API_ENDPOINT ?? "%VITE_API_ENDPOINT%";
+
 export const axiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_ENDPOINT ?? "%VITE_API_ENDPOINT%",
+  baseURL: apiEndpoint,
   withCredentials: true,
 });
 
@@ -43,5 +46,5 @@ axiosInstance.interceptors.request.use(
 
     return config;
   },
-  (error) => Promise.reject(error)
+  (error) => Promise.reject(error),
 );
