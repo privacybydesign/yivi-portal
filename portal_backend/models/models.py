@@ -157,6 +157,7 @@ class AttestationProvider(models.Model):
     published_ap_details = models.JSONField(null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     last_updated_at = models.DateTimeField(auto_now=True)
+    published = models.BooleanField(default=False)
 
     def __str__(self):
         return self.organization.name_en
@@ -228,11 +229,10 @@ class RelyingParty(models.Model):
     ready = models.BooleanField(default=False)
     ready_at = models.DateTimeField(null=True, blank=True)
     reviewed_accepted = models.BooleanField(null=True, default=False)
-    reviewed_at = models.DateTimeField(null=True, blank=True)
     rejection_remarks = models.TextField(blank=True, null=True)
+    reviewed_at = models.DateTimeField(null=True, blank=True)
+    published = models.BooleanField(default=False)
     published_at = models.DateTimeField(null=True, blank=True)
-    approved_rp_details = models.JSONField(null=True, default=None, blank=True)
-    published_rp_details = models.JSONField(null=True, default=None, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     last_updated_at = models.DateTimeField(auto_now=True)
 
@@ -240,51 +240,42 @@ class RelyingParty(models.Model):
         return f"{self.organization.name_en}"
 
     @property
-    def rp_details(self):
-        hostname = RelyingPartyHostname.objects.filter(relying_party=self).first()
-        requestor_scheme_entry = {
-            "id": self.id,
-            "name": {"en": self.organization.name_en, "nl": self.organization.name_nl},
-            "logo": (
-                self.organization.logo.url
-                if self.organization.logo and self.organization.logo.name
-                else None
-            ),
-            "hostnames": [hostname.hostname],
-            "scheme": self.yivi_tme.environment,
-        }
-        return requestor_scheme_entry
+    def has_invalidated_hostname(self):
+        return RelyingPartyHostname.objects.filter(
+            relying_party=self,
+            dns_challenge_verified=False,
+            dns_challenge_invalidated_at__isnull=False,
+        ).exists()
 
     @property
     def status(self) -> str:
-        if self.reviewed_accepted is True and self.published_at:
+        if self.published and self.has_invalidated_hostname:
+            return StatusChoices.INVALIDATED
+        if self.reviewed_accepted and self.has_invalidated_hostname:
+            return StatusChoices.INVALIDATED
+        if self.reviewed_accepted is True and self.published:
             return StatusChoices.PUBLISHED
-        if self.reviewed_accepted is True:
+        if self.reviewed_accepted is True and not self.published:
             return StatusChoices.ACCEPTED
-        if self.reviewed_accepted is False:
+        if self.reviewed_accepted is False and not self.published:
             return StatusChoices.REJECTED
         if self.ready:
             return StatusChoices.PENDING_FOR_REVIEW
         return StatusChoices.DRAFT
 
     def save(self, *args, skip_import_approve=False, **kwargs):
-        if self.ready and not self.ready_at:
-            self.ready_at = timezone.now()
-        elif not self.ready:
-            self.ready_at = None
-            self.reviewed_accepted = None
-            self.reviewed_at = None
-            self.rejection_remarks = None
-            self.published_at = None
 
-        previous = RelyingParty.objects.filter(pk=self.pk).first() if self.pk else None
+        if self.pk:  # If this record already exists
+            if self.ready and not self.ready_at:
+                self.ready_at = timezone.now()
 
-        if previous and not previous.reviewed_accepted and self.reviewed_accepted:
-            self.approved_rp_details = self.rp_details
-            self.reviewed_at = timezone.now()
-        elif not previous and self.reviewed_accepted:
-            self.approved_rp_details = self.rp_details
-            self.reviewed_at = timezone.now()
+            elif not self.ready:  # When it is not ready anymore
+                self.ready_at = None
+                self.rejection_remarks = None
+                self.reviewed_accepted = False
+                self.reviewed_at = None
+
+            self.last_updated_at = timezone.now()
 
         super().save(*args, **kwargs)
 
@@ -361,23 +352,14 @@ class RelyingPartyHostname(models.Model):
         RelyingParty, on_delete=models.CASCADE, related_name="hostnames"
     )
 
-    @property
-    def invalidated(
-        self,
-    ):  # TODO if dns_challenge is invalidated or if the published_rp_details is now different than approved_rp_details
-        return (
-            self.dns_challenge_verified
-            and self.dns_challenge_invalidated_at is not None
-        )
-
     def __str__(self):
         return self.hostname
 
 
 class Condiscon(models.Model):
     condiscon = models.JSONField()
-    context_description_en = models.CharField(max_length=255)
-    context_description_nl = models.CharField(max_length=255)
+    context_description_en = models.CharField(max_length=255, blank=True, null=True)
+    context_description_nl = models.CharField(max_length=255, blank=True, null=True)
     relying_party = models.ForeignKey(
         RelyingParty, on_delete=models.CASCADE, related_name="condiscons"
     )

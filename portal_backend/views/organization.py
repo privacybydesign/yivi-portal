@@ -4,7 +4,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from drf_yasg.utils import swagger_auto_schema  # type: ignore
 from rest_framework import status
-from portal_backend.services.organizaion import filter_organizations
+from portal_backend.services.organization import filter_organizations
 from ..models.model_serializers import MaintainerSerializer, OrganizationSerializer
 from ..models.models import Organization
 from rest_framework import permissions

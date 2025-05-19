@@ -9,6 +9,7 @@ from portal_backend.models.models import (
 from django.db import transaction
 import logging
 import portal_backend.scheme_utils.import_utils as import_utils
+from django.utils import timezone
 
 
 logger = logging.getLogger(__name__)
@@ -112,8 +113,6 @@ def create_ap(
             organization=org,
             yivi_tme=yivi_tme,
             defaults={
-                "yivi_tme": yivi_tme,
-                "organization": org,
                 "version": apfields.version,
                 "shortname_en": apfields.shortname_en,
                 "shortname_nl": apfields.shortname_nl,
@@ -121,8 +120,16 @@ def create_ap(
                 "base_url": apfields.base_url,
                 "ready": True,
                 "reviewed_accepted": True,
+                "published": True,
             },
         )
+
+        if ap_created:
+            ap.published_at = timezone.now()
+            ap.ready_at = timezone.now()
+            ap.reviewed_at = timezone.now()
+            ap.created_at = timezone.now()
+            ap.save()
 
         logger.info(
             f"{'Created' if ap_created else 'Updated'} Attestation Provider: {apfields.slug} in environment {environment}"
