@@ -11,11 +11,9 @@ def check_published_rps(rps_dict: dict) -> None:
     db_rps = RelyingParty.objects.all()
     for db_rp in db_rps:
         if db_rp.rp_slug not in str(rps_dict):
-            logger.info(f"Relying Party {db_rp.rp_slug} is not published")
             db_rp.rp_published = False
             db_rp.save()
         else:
-            logger.info(f"Relying Party {db_rp.rp_slug} is published")
             db_rp.rp_published = True
             db_rp.rp_published_at = timezone.now()
             db_rp.save()
