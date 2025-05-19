@@ -5,7 +5,7 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("portal_backend", "0005_remove_relyingparty_reviewed_rejected"),
+        ("portal_backend", "0004_remove_relyingparty_approved_rp_details_and_more"),
     ]
 
     operations = [
