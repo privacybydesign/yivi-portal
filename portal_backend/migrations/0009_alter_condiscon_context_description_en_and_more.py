@@ -5,7 +5,10 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("portal_backend", "0008_attestationprovider_published"),
+        (
+            "portal_backend",
+            "0006_remove_attestationprovider_approved_ap_details_and_more",
+        ),
     ]
 
     operations = [
