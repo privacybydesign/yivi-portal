@@ -83,9 +83,12 @@ class OrganizationDetailView(APIView):
     @swagger_auto_schema(responses={200: "Success", 404: "Not Found"})
     def get(self, request: Request, org_slug: str) -> Response:
         """Get organization by uuid"""
-        logger.info("Fetching organization with slug: %s", org_slug)
 
-        org = get_object_or_404(Organization, slug=org_slug)
+        org = Organization.objects.with_role_annotations().filter(slug=org_slug).first()
+        if not org:
+            return Response(
+                {"error": "Organization not found"}, status=status.HTTP_404_NOT_FOUND
+            )
         serializer = OrganizationSerializer(org)
         return Response(serializer.data)
 

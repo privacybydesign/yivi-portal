@@ -21,8 +21,14 @@ class TrustModelSerializer(serializers.ModelSerializer):
         fields = ["id", "name", "description", "eudi_compliant"]
 
 
+class TrustModelNameSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TrustModel
+        fields = ["name"]
+
+
 class OrganizationSerializer(CountryFieldMixin, serializers.ModelSerializer):
-    trust_models = TrustModelSerializer(many=True, read_only=True)
+    trust_models = TrustModelNameSerializer(many=True, read_only=True)
 
     is_RP = serializers.BooleanField(source="is_rp", read_only=True)
     is_AP = serializers.BooleanField(source="is_ap", read_only=True)

@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models import Exists, OuterRef
 from django.core.validators import URLValidator, RegexValidator, FileExtensionValidator
 from django.core.files.storage import FileSystemStorage
 import uuid
@@ -33,7 +34,26 @@ class LogoStorage(FileSystemStorage):
         return f"{content_hash}{file_extension}"
 
 
+class OrganizationQuerySet(models.QuerySet):
+    def with_role_annotations(self):
+        return self.annotate(
+            is_rp=Exists(
+                RelyingParty.objects.filter(
+                    organization=OuterRef("pk"),
+                    published=True,
+                )
+            ),
+            is_ap=Exists(
+                AttestationProvider.objects.filter(
+                    organization=OuterRef("pk"),
+                    published=True,
+                )
+            ),
+        )
+
+
 class Organization(models.Model):
+    objects = OrganizationQuerySet.as_manager()
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name_en = models.CharField(max_length=255)
     name_nl = models.CharField(max_length=255)
