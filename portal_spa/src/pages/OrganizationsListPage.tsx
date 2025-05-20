@@ -72,10 +72,6 @@ export default function OrganizationsListPage() {
     }
 
     // Add trust model filter
-    if (selectedTrustModel !== "all") {
-      url += `&trust_model=${encodeURIComponent(selectedTrustModel)}`;
-    }
-
     if (trustModel !== "all") {
       url += `&trust_model=${encodeURIComponent(trustModel)}`;
     }
