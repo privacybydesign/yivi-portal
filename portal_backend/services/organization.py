@@ -1,9 +1,7 @@
 from typing import Optional
-from django.db.models import Exists, OuterRef, Q, QuerySet
+from django.db.models import Q, QuerySet
 from portal_backend.models.models import (
-    AttestationProvider,
     Organization,
-    RelyingParty,
 )
 from rest_framework.request import Request
 
@@ -29,27 +27,14 @@ def filter_organizations(
     select_aps: Optional[bool] = to_nullable_bool(request.query_params.get("ap"))
     select_rps: Optional[bool] = to_nullable_bool(request.query_params.get("rp"))
 
-    # If both select_aps and select_rps are False, return an empty list
-    if select_aps is False and select_rps is False:
-        return Organization.objects.none()
-
-    filtered_orgs = (
-        Organization.objects.annotate(
-            is_rp=Exists(
-                RelyingParty.objects.filter(organization=OuterRef("pk"), published=True)
-            ),
-            is_ap=Exists(
-                AttestationProvider.objects.filter(
-                    organization=OuterRef("pk"), published=True
-                )
-            ),
-        )
-        .filter(
-            (Q(is_rp=select_rps) if select_rps is not None else Q())
-            | (Q(is_ap=select_aps) if select_aps is not None else Q())
-        )
-        .order_by("name_en")
+    filtered_orgs = Organization.objects.with_role_annotations().filter(
+        Q(is_ap=True) | Q(is_rp=True)
     )
+
+    if select_aps:
+        filtered_orgs = filtered_orgs.filter(is_ap=True)
+    if select_rps:
+        filtered_orgs = filtered_orgs.filter(is_rp=True)
 
     if search_query:
         filtered_orgs = filtered_orgs.filter(

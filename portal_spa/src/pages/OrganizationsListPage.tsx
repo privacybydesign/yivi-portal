@@ -20,16 +20,16 @@ export default function OrganizationsListPage() {
   const [searchParams, setSearchParams] = useSearchParams();
 
   const [searchQuery, setSearchQuery] = useState(
-    searchParams.get("search") || "",
+    searchParams.get("search") || ""
   );
   const [selectedTrustModel, setSelectedTrustModel] = useState(
-    searchParams.get("trust_model") || "all",
+    searchParams.get("trust_model") || "all"
   );
   const [APSelected, setAPSelected] = useState(
-    !searchParams.has("ap") || searchParams.get("ap") === "true",
+    !searchParams.has("ap") || searchParams.get("ap") === "true"
   );
   const [RPSelected, setRPSelected] = useState(
-    !searchParams.has("rp") || searchParams.get("rp") === "true",
+    !searchParams.has("rp") || searchParams.get("rp") === "true"
   );
   const [currentPage, setCurrentPage] = useState(() => {
     const page = searchParams.get("page");
@@ -47,11 +47,19 @@ export default function OrganizationsListPage() {
   const pageSize = 20; // Fixed page size
 
   // Function to fetch organizations with pagination
-  const fetchOrganizations = (
-    page = 1,
-    selectAPs: boolean,
-    selectRPs: boolean,
-  ) => {
+  const fetchOrganizations = ({
+    page,
+    searchQuery,
+    trustModel,
+    ap,
+    rp,
+  }: {
+    page: number;
+    searchQuery: string;
+    trustModel: string;
+    ap: boolean;
+    rp: boolean;
+  }) => {
     setLoading(true);
     const offset = (page - 1) * pageSize;
 
@@ -64,12 +72,12 @@ export default function OrganizationsListPage() {
     }
 
     // Add trust model filter
-    if (selectedTrustModel !== "all") {
-      url += `&trust_model=${encodeURIComponent(selectedTrustModel)}`;
+    if (trustModel !== "all") {
+      url += `&trust_model=${encodeURIComponent(trustModel)}`;
     }
 
-    url += `&rp=${selectRPs}`;
-    url += `&ap=${selectAPs}`;
+    url += `&rp=${rp}`;
+    url += `&ap=${ap}`;
 
     axiosInstance
       .get<PaginationResponse<Organization>>(url)
@@ -81,12 +89,14 @@ export default function OrganizationsListPage() {
         setOrganizations(data.results);
 
         // Extract trust models if not already done
-        if (trustModels.length === 0) {
-          const models = [
-            ...new Set(data.results.map((org) => org.trust_model)),
-          ].filter(Boolean);
-          setTrustModels(models);
-        }
+        const trustModels = [
+          ...new Set(
+            data.results.flatMap(
+              (org) => org.trust_models?.map((tm) => tm.name) || []
+            )
+          ),
+        ];
+        setTrustModels(trustModels);
 
         setLoading(false);
         setApplyingFilters(false);
@@ -114,25 +124,29 @@ export default function OrganizationsListPage() {
     const page = parseInt(searchParams.get("page") || "1");
     const search = searchParams.get("search") || "";
     const trustModel = searchParams.get("trust_model") || "all";
-    const selectAPs =
-      !searchParams.has("ap") || searchParams.get("ap") === "true";
-    const selectRPs =
-      !searchParams.has("rp") || searchParams.get("rp") === "true";
+    const selectAPs = searchParams.get("ap") !== "false"; // default true
+    const selectRPs = searchParams.get("rp") !== "false"; // default true
     setSearchQuery(search);
     setSelectedTrustModel(trustModel);
     setAPSelected(selectAPs);
     setRPSelected(selectRPs);
     setCurrentPage(page);
 
-    fetchOrganizations(page, selectAPs, selectRPs);
-  }, [searchParams.toString()]);
+    fetchOrganizations({
+      page,
+      searchQuery: search,
+      trustModel,
+      ap: selectAPs,
+      rp: selectRPs,
+    });
+  }, [searchParams]);
 
   // Function to apply filters
   const applyFilters = (
     searchQuery: string,
     selectedTrustModel: string,
     selectAPs: boolean,
-    selectRPs: boolean,
+    selectRPs: boolean
   ) => {
     setApplyingFilters(true);
     updateQueryParams({
@@ -241,7 +255,7 @@ export default function OrganizationsListPage() {
                     searchQuery,
                     selectedTrustModel,
                     APSelected,
-                    RPSelected,
+                    RPSelected
                   )
                 }
               />
@@ -257,7 +271,9 @@ export default function OrganizationsListPage() {
               <select
                 id="trustModel"
                 value={selectedTrustModel}
-                onChange={(e) => setSelectedTrustModel(e.target.value)}
+                onChange={(e) =>
+                  handleFilterChange(APSelected, RPSelected, e.target.value)
+                }
                 className="w-full px-3 py-2 border rounded-md"
               >
                 <option value="all">All Trust Models</option>
@@ -279,7 +295,7 @@ export default function OrganizationsListPage() {
                   handleFilterChange(
                     !APSelected,
                     RPSelected,
-                    selectedTrustModel,
+                    selectedTrustModel
                   )
                 }
               />
@@ -290,7 +306,7 @@ export default function OrganizationsListPage() {
                   handleFilterChange(
                     !APSelected,
                     RPSelected,
-                    selectedTrustModel,
+                    selectedTrustModel
                   )
                 }
               >
@@ -306,7 +322,7 @@ export default function OrganizationsListPage() {
                   handleFilterChange(
                     APSelected,
                     !RPSelected,
-                    selectedTrustModel,
+                    selectedTrustModel
                   )
                 }
               />
@@ -317,7 +333,7 @@ export default function OrganizationsListPage() {
                   handleFilterChange(
                     APSelected,
                     !RPSelected,
-                    selectedTrustModel,
+                    selectedTrustModel
                   )
                 }
               >
@@ -405,7 +421,9 @@ export default function OrganizationsListPage() {
                         {org.name_en}
                       </Link>
                     </TableCell>
-                    <TableCell>{org.trust_model}</TableCell>
+                    <TableCell>
+                      {org.trust_models?.map((tm) => tm.name).join(", ") || "-"}
+                    </TableCell>
                     <TableCell>
                       {org.is_AP === true ? (
                         <Badge className="bg-green-100 text-green-800">
