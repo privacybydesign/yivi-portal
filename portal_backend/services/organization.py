@@ -46,6 +46,4 @@ def filter_organizations(
     if trust_model:
         filtered_orgs = filtered_orgs.filter(trust_models__name=trust_model)
 
-    return filtered_orgs.prefetch_related(
-        "trust_models",
-    )
+    return filtered_orgs

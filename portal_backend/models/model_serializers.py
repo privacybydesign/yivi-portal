@@ -30,9 +30,17 @@ class TrustModelNameSerializer(serializers.ModelSerializer):
 class OrganizationSerializer(CountryFieldMixin, serializers.ModelSerializer):
     trust_models = TrustModelNameSerializer(many=True, read_only=True)
 
-    is_RP = serializers.BooleanField(source="is_rp", read_only=True)
-    is_AP = serializers.BooleanField(source="is_ap", read_only=True)
+    is_RP = serializers.SerializerMethodField()
+    is_AP = serializers.SerializerMethodField()
     logo = serializers.ImageField(required=False)
+
+    def get_is_RP(self, obj):
+        return RelyingParty.objects.filter(organization=obj, published=True).exists()
+
+    def get_is_AP(self, obj):
+        return AttestationProvider.objects.filter(
+            organization=obj, published=True
+        ).exists()
 
     class Meta:
         model = Organization
