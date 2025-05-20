@@ -1,9 +1,7 @@
 from typing import Optional
-from django.db.models import Exists, OuterRef, Q, QuerySet
+from django.db.models import Q, QuerySet
 from portal_backend.models.models import (
-    AttestationProvider,
     Organization,
-    RelyingParty,
 )
 from rest_framework.request import Request
 
