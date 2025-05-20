@@ -88,14 +88,14 @@ export default function OrganizationsListPage() {
         setOrganizations(data.results);
 
         // Extract trust models if not already done
-        const trust_models = [
+        const trustModels = [
           ...new Set(
             data.results.flatMap(
-              (org) => org.trust_models?.map((tm) => tm.name) || []
+              (org) => org.trustModels?.map((tm) => tm.name) || []
             )
           ),
         ];
-        setTrustModels(trust_models);
+        setTrustModels(trustModels);
 
         setLoading(false);
         setApplyingFilters(false);
@@ -421,8 +421,8 @@ export default function OrganizationsListPage() {
                       </Link>
                     </TableCell>
                     <TableCell>
-                      {org.trust_models && org.trust_models.length > 0
-                        ? org.trust_models.map((tm) => tm.name).join(", ")
+                      {org.trustModels && org.trustModels.length > 0
+                        ? org.trustModels.map((tm) => tm.name).join(", ")
                         : "-"}
                     </TableCell>
                     <TableCell>
