@@ -138,7 +138,7 @@ export default function OrganizationPage() {
             <h1 className="text-3xl font-bold">{organization.name_en}</h1>
             <p className="text-gray-500">{organization.name_nl}</p>
             <div className="flex flex-wrap gap-1">
-              {organization.trustModels?.map(
+              {organization.trust_models?.map(
                 (tm) =>
                   tm.name && (
                     <span
@@ -273,7 +273,7 @@ export default function OrganizationPage() {
           <CardContent>
             <p className="mb-4 text-gray-600">
               This organization acts as an Attestation Provider in the{" "}
-              {organization.trustModels?.map((tm) => tm.name).join(" and ")}{" "}
+              {organization.trust_models?.map((tm) => tm.name).join(" and ")}{" "}
               trust models.
             </p>
           </CardContent>

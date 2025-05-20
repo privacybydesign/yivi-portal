@@ -16,8 +16,8 @@ export interface Organization {
   last_updated_at: string;
   is_RP: boolean;
   is_AP: boolean;
-  trustModels?: TrustModel[];
+  trust_models?: trust_model[];
 }
-type TrustModel = {
+export type trust_model = {
   name: string;
 };

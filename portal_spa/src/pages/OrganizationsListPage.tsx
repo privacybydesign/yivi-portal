@@ -71,6 +71,11 @@ export default function OrganizationsListPage() {
       url += `&search=${encodeURIComponent(searchQuery.trim())}`;
     }
 
+    // Add trust model filter
+    if (selectedTrustModel !== "all") {
+      url += `&trust_model=${encodeURIComponent(selectedTrustModel)}`;
+    }
+
     if (trustModel !== "all") {
       url += `&trust_model=${encodeURIComponent(trustModel)}`;
     }
@@ -88,14 +93,14 @@ export default function OrganizationsListPage() {
         setOrganizations(data.results);
 
         // Extract trust models if not already done
-        const trustModels = [
+        const trust_models = [
           ...new Set(
             data.results.flatMap(
-              (org) => org.trustModels?.map((tm) => tm.name) || []
+              (org) => org.trust_models?.map((tm) => tm.name) || []
             )
           ),
         ];
-        setTrustModels(trustModels);
+        setTrustModels(trust_models);
 
         setLoading(false);
         setApplyingFilters(false);
@@ -134,7 +139,7 @@ export default function OrganizationsListPage() {
     fetchOrganizations({
       page,
       searchQuery: search,
-      trustModel: selectedTrustModel,
+      trustModel,
       ap: selectAPs,
       rp: selectRPs,
     });
@@ -421,9 +426,7 @@ export default function OrganizationsListPage() {
                       </Link>
                     </TableCell>
                     <TableCell>
-                      {org.trustModels && org.trustModels.length > 0
-                        ? org.trustModels.map((tm) => tm.name).join(", ")
-                        : "-"}
+                      {org.trust_models?.map((tm) => tm.name).join(", ") || "-"}
                     </TableCell>
                     <TableCell>
                       {org.is_AP === true ? (
