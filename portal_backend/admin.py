@@ -16,7 +16,7 @@ from portal_backend.models.models import (
 
 @admin.register(CredentialAttribute)
 class CredentialAttributeAdmin(admin.ModelAdmin):
-    list_display = ("name",)
+    list_display = ("name_en", "description_en")
 
 
 @admin.register(Organization)
@@ -74,11 +74,11 @@ class AttestationProviderAdmin(admin.ModelAdmin):
 class CredentialAdmin(admin.ModelAdmin):
     list_display = (
         "name_en",
+        "description_en",
         "attestation_provider",
-        "credential_tag",
         "get_full_path",
     )
-    search_fields = ("name_en", "credential_tag")
+    search_fields = ["name_en"]
 
     def get_full_path(self, obj):
         return obj.full_path
@@ -95,7 +95,7 @@ class CondisconAttributeInline(admin.TabularInline):
 @admin.register(CondisconAttribute)
 class CondisconAttributeAdmin(admin.ModelAdmin):
     list_display = ("credential_attribute", "condiscon", "reason_en", "reason_nl")
-    search_fields = ("credential_attribute__name", "reason_en", "reason_nl")
+    search_fields = ("credential_attribute__name_en", "reason_en", "reason_nl")
     list_filter = ("condiscon",)
 
 
