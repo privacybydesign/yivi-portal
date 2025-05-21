@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { useParams, Link } from "react-router-dom";
-import { axiosInstance } from "@/services/axiosInstance";
+import { useParams } from "react-router-dom";
+import { axiosInstance, apiEndpoint } from "@/services/axiosInstance";
 import type { Organization } from "@/models/organization";
 import type { RelyingParty } from "@/models/relying-party";
 
@@ -16,7 +16,6 @@ export default function OrganizationPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeSection, setActiveSection] = useState("overview");
-  const apiEndpoint = import.meta.env.VITE_API_ENDPOINT;
 
   useEffect(() => {
     const fetchOrganizationData = async () => {
@@ -129,24 +128,28 @@ export default function OrganizationPage() {
                 alt={`${organization.name_en} logo`}
                 className="object-cover w-full h-full"
                 onError={(e) => {
-                  e.currentTarget.src = "/placeholder-logo.png";
+                  e.currentTarget.src = "/logo-placeholder.svg";
                 }}
               />
             </div>
           )}
+
           <div>
             <h1 className="text-3xl font-bold">{organization.name_en}</h1>
             <p className="text-gray-500">{organization.name_nl}</p>
-            {organization.trust_model && (
-              <Link
-                to={`/trust-models/${encodeURIComponent(
-                  organization.trust_model
-                )}`}
-                className="text-sm text-blue-600 hover:underline"
-              >
-                {organization.trust_model}
-              </Link>
-            )}
+            <div className="flex flex-wrap gap-1">
+              {organization.trust_models?.map(
+                (tm) =>
+                  tm.name && (
+                    <span
+                      key={tm.name}
+                      className="inline-block mt-2 px-2 py-1 text-sm font-medium text-gray-700 bg-gray-200 rounded-full"
+                    >
+                      {tm.name}
+                    </span>
+                  )
+              )}
+            </div>
           </div>
         </div>
 
@@ -269,8 +272,9 @@ export default function OrganizationPage() {
           </CardHeader>
           <CardContent>
             <p className="mb-4 text-gray-600">
-              This organization acts as an Attestation Provider in the
-              {organization.trust_model} trust model.
+              This organization acts as an Attestation Provider in the{" "}
+              {organization.trust_models?.map((tm) => tm.name).join(" and ")}{" "}
+              trust models.
             </p>
           </CardContent>
         </Card>
@@ -313,20 +317,10 @@ export default function OrganizationPage() {
                       </ul>
                     </div>
                     <div className="pt-4 border-t">
-                      <h4 className="font-medium">Publication</h4>
                       <div className="flex flex-col gap-2 text-sm">
                         <div>
                           <span className="font-medium">Published At:</span>{" "}
                           {formatDate(rp.published_at)}
-                        </div>
-                        <div>
-                          <span className="font-medium">State:</span>{" "}
-                          <Badge className="bg-blue-100 text-blue-800">
-                            {JSON.stringify(rp.approved_rp_details) ===
-                            JSON.stringify(rp.published_rp_details)
-                              ? "Published"
-                              : "Changes Pending"}
-                          </Badge>
                         </div>
                       </div>
                     </div>

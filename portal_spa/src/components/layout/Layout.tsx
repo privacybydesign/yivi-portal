@@ -1,5 +1,7 @@
 import { Link, Outlet } from "react-router-dom";
 import Header from "@/components/layout/Header";
+import { buttonVariants } from "../ui/button";
+import { cn } from "@/lib/utils";
 
 export default function Layout() {
   return (
@@ -9,10 +11,22 @@ export default function Layout() {
         <Outlet />
       </main>
       <footer className="bg-gray-100 p-4">
-        <div className="flex justify-between container px-4 mx-auto">
+
+        <div className="flex justify-between items-center container px-4 mx-auto">
           <p>&copy; 2025 Yivi Portal. All rights reserved.</p>
-          <div className="grid gap-6">
-            <Link to="/privacy-policy">Privacy policy</Link>
+          <div className="flex gap-6">
+            <Link
+              to="/terms-of-service"
+              className={cn(buttonVariants({ variant: "link" }))}
+            >
+              Terms of service
+            </Link>
+            <Link
+              to="/privacy-policy"
+              className={cn(buttonVariants({ variant: "link" }))}
+            >
+              Privacy policy
+            </Link>
           </div>
         </div>
       </footer>

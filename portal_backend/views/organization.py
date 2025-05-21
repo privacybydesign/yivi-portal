@@ -4,7 +4,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from drf_yasg.utils import swagger_auto_schema  # type: ignore
 from rest_framework import status
-from portal_backend.services.organizaion import filter_organizations
+from portal_backend.services.organization import filter_organizations
 from ..models.model_serializers import MaintainerSerializer, OrganizationSerializer
 from ..models.models import Organization
 from rest_framework import permissions
@@ -83,9 +83,12 @@ class OrganizationDetailView(APIView):
     @swagger_auto_schema(responses={200: "Success", 404: "Not Found"})
     def get(self, request: Request, org_slug: str) -> Response:
         """Get organization by uuid"""
-        logger.info("Fetching organization with slug: %s", org_slug)
 
-        org = get_object_or_404(Organization, slug=org_slug)
+        org = Organization.objects.with_role_annotations().filter(slug=org_slug).first()
+        if not org:
+            return Response(
+                {"error": "Organization not found"}, status=status.HTTP_404_NOT_FOUND
+            )
         serializer = OrganizationSerializer(org)
         return Response(serializer.data)
 

@@ -1,17 +1,19 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { apiEndpoint } from "@/services/axiosInstance";
 import useStore from "@/store";
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
 export default function Login() {
-  const apiEndpoint = import.meta.env.VITE_API_ENDPOINT ?? "%VITE_API_ENDPOINT%";
   const setAccessToken = useStore((state) => state.setAccessToken);
   const navigate = useNavigate();
 
   useEffect(() => {
+    let web: any;
+
     import("@privacybydesign/yivi-frontend").then((yivi: any) => {
-      const web = yivi.newWeb({
-        debugging: true, // Enable to get helpful output in the browser console
+      web = yivi.newWeb({
+        debugging: import.meta.env.DEV, // Enable to get helpful output in the browser console
         element: "#yivi-web-form", // Which DOM element to render to
 
         // Back-end options
@@ -32,23 +34,19 @@ export default function Login() {
           },
         },
       });
-      web
-        .start()
-        .then((result: any) => {
-          setAccessToken(result.access);
-          navigate(-1); // Go back to the previous page
-        })
-        .catch((err: any) => {
-          alert(err);
-        });
+
+      web.start().then((result: any) => {
+        setAccessToken(result.access);
+        navigate(-1); // Go back to the previous page
+      });
     });
+
+    return () => web.abort();
   }, [navigate, setAccessToken]);
 
   return (
-    <div className="flex justify-center items-center">
-      <div className="flex grow p-6 justify-center items-center">
-        <div id="yivi-web-form"></div>
-      </div>
+    <div className="flex p-6 justify-center items-center">
+      <div id="yivi-web-form"></div>
     </div>
   );
 }

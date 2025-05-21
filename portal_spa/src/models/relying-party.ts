@@ -10,8 +10,11 @@ export interface RelyingParty {
     dns_challenge_invalidated_at?: string;
     manually_verified?: boolean;
   }[];
-
+  last_updated_at: string;
+  created_at: string;
+  published: boolean;
   published_at: string | null;
+  reviewed_at: string | null;
   status?: string;
   context_description_en?: string;
   context_description_nl?: string;
@@ -20,12 +23,4 @@ export interface RelyingParty {
     reason_en: string;
     reason_nl: string;
   }[];
-  approved_rp_details?: {
-    hostnames: string[];
-    id: string;
-    scheme: string;
-  };
-  published_rp_details?: object;
-  last_updated_at?: string;
-  yivi_tme?: string;
 }

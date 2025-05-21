@@ -180,7 +180,7 @@ class RelyingPartyUpdateView(APIView):
         relying_party = get_object_or_404(
             RelyingParty, organization__slug=org_slug, rp_slug=rp_slug
         )
-        condiscon = get_object_or_404(Condiscon, relying_party=relying_party)
+        condiscon = Condiscon.objects.filter(relying_party=relying_party).first()
 
         data = request.data
         response_data = {"slug": str(relying_party.rp_slug)}
