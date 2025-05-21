@@ -48,7 +48,7 @@ def load_logo_if_exists(logo_path: str) -> ImageFile | None:
 def create_org(slug: str, name_en: str, name_nl: str, logo_path: str) -> Organization:
 
     try:
-        trust_model = TrustModel.objects.get(name="yivi")
+        trust_model = TrustModel.objects.get(name__iexact="yivi")
         logo_image_file = load_logo_if_exists(logo_path)
         org, org_created = Organization.objects.update_or_create(
             slug=slug,

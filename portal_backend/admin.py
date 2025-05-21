@@ -16,7 +16,21 @@ from portal_backend.models.models import (
 
 @admin.register(CredentialAttribute)
 class CredentialAttributeAdmin(admin.ModelAdmin):
-    list_display = ("name_en", "description_en")
+    list_display = (
+        "name_en",
+        "description_en",
+        "get_credential",
+        "get_credential_full_path",
+    )
+    search_fields = ("name_en", "description_en", "credential__name_en")
+
+    @admin.display(description="Credential")
+    def get_credential(self, obj):
+        return obj.credential.name_en
+
+    @admin.display(description="Identifier")
+    def get_credential_full_path(self, obj):
+        return obj.credential.full_path + "." + obj.credential_attribute_id
 
 
 @admin.register(Organization)
@@ -83,7 +97,7 @@ class CredentialAdmin(admin.ModelAdmin):
     def get_full_path(self, obj):
         return obj.full_path
 
-    get_full_path.short_description = "Full Credential Path"
+    get_full_path.short_description = "Credential Identifier"
 
 
 class CondisconAttributeInline(admin.TabularInline):

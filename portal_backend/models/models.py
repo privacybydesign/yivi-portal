@@ -166,7 +166,7 @@ class AttestationProvider(models.Model):
     shortname_en = models.CharField(max_length=100, null=True, blank=True)
     shortname_nl = models.CharField(max_length=100, null=True, blank=True)
     contact_email = models.EmailField(max_length=255, null=True, blank=True)
-    base_url = models.URLField(null=True, blank=True)
+    contact_address = models.URLField(null=True, blank=True)
     ready = models.BooleanField(default=False)
     ready_at = models.DateTimeField(null=True, blank=True)
     reviewed_accepted = models.BooleanField(null=True, default=False)
@@ -337,6 +337,7 @@ class CredentialAttribute(models.Model):
     credential = models.ForeignKey(
         Credential, on_delete=models.CASCADE, related_name="attributes"
     )
+    credential_attribute_id = models.CharField(max_length=100)
     name_en = models.CharField(max_length=255)
     name_nl = models.CharField(max_length=255)
     description_en = models.TextField()
