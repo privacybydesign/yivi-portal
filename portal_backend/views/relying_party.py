@@ -123,7 +123,8 @@ class RelyingPartyRetrieveView(APIView):
             )
             attributes = [
                 {
-                    "credential_attribute_name": attr.credential_attribute.name,
+                    "credential_id": attr.credential_attribute.credential_id,
+                    "credential_attribute_name": attr.credential_attribute.name_en,
                     "reason_en": attr.reason_en,
                     "reason_nl": attr.reason_nl,
                 }
@@ -191,9 +192,23 @@ class RelyingPartyUpdateView(APIView):
             updated_fields.add("context")
 
         def update_attributes():
-            update_condiscon_attributes(condiscon, data["attributes"])
-            condiscon.condiscon = make_condiscon_json(data["attributes"])
-            condiscon.save()
+            nonlocal condiscon
+
+            if condiscon is None:
+                condiscon = create_condiscon(
+                    attributes=data["attributes"],
+                    contexts={
+                        "en": data.get("context_description_en", ""),
+                        "nl": data.get("context_description_nl", ""),
+                    },
+                    relying_party=relying_party,
+                )
+                create_condiscon_attributes(condiscon, data["attributes"])
+            else:
+                update_condiscon_attributes(condiscon, data["attributes"])
+                condiscon.condiscon = make_condiscon_json(data["attributes"])
+                condiscon.save()
+
             updated_fields.add("attributes")
 
         def update_hostnames():
