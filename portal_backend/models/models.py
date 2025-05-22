@@ -351,7 +351,7 @@ class CredentialAttribute(models.Model):
 
     @property
     def full_path(self):
-        return f"{self.credential.full_path}.{self.name}"
+        return f"{self.credential.full_path}.{self.credential_attribute_id}"
 
 
 class RelyingPartyHostname(models.Model):
