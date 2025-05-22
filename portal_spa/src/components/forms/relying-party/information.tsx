@@ -22,7 +22,10 @@ import {
   SelectItem,
 } from "../../ui/select";
 import { useEffect, useState } from "react";
+import { fetchCredentials } from "@/actions/manage-relying-party";
+import type { Credential } from "@/models/credential";
 import DnsChallenges from "@/components/forms/relying-party/dnscheck";
+import CredentialAttributeFields from "@/components/custom/SelectAttributes";
 
 type RelyingPartyProps =
   | {
@@ -137,6 +140,19 @@ export default function RelyingPartyForm({
 
     return result;
   }
+
+  const [credentials, setCredentials] = useState<Credential[]>([]);
+
+  useEffect(() => {
+    async function hydrateCredentialSelections() {
+      const res = await fetchCredentials();
+      if (res.success && res.data) {
+        setCredentials(res.data.credentials);
+      }
+    }
+
+    hydrateCredentialSelections();
+  }, [defaultValues.attributes, form]);
 
   return (
     <>
@@ -312,45 +328,11 @@ export default function RelyingPartyForm({
                     key={field.id}
                     className="border p-4 rounded-md space-y-3"
                   >
-                    <div className="grid md:grid-cols-1 gap-4">
-                      <FormLabel>Attribute Name</FormLabel>
-                      <Input
-                        {...register(
-                          `attributes.${index}.credential_attribute_name`
-                        )}
-                      />
-                      <FormMessage>
-                        {
-                          errors.attributes?.[index]?.credential_attribute_name
-                            ?.message
-                        }
-                      </FormMessage>
-                    </div>
-                    <FormLabel className="font-medium">Reason</FormLabel>
-
-                    <div className="grid  gap-4">
-                      <div className="grid md:grid-cols-2 gap-2">
-                        <div className="space-y-2">
-                          <FormLabel className="text-sm">English</FormLabel>
-                          <Input
-                            {...register(`attributes.${index}.reason_en`)}
-                          />
-                          <FormMessage>
-                            {errors.attributes?.[index]?.reason_en?.message}
-                          </FormMessage>
-                        </div>
-
-                        <div className="space-y-2">
-                          <FormLabel className="text-sm">Dutch</FormLabel>
-                          <Input
-                            {...register(`attributes.${index}.reason_nl`)}
-                          />
-                          <FormMessage>
-                            {errors.attributes?.[index]?.reason_nl?.message}
-                          </FormMessage>
-                        </div>
-                      </div>
-                    </div>
+                    <CredentialAttributeFields
+                      index={index}
+                      credentials={credentials}
+                      onRemove={() => removeAttr(index)}
+                    />
 
                     <div className="flex justify-end">
                       <Button
@@ -373,6 +355,7 @@ export default function RelyingPartyForm({
                 className="mt-2"
                 onClick={() =>
                   appendAttr({
+                    credential_id: undefined,
                     credential_attribute_name: "",
                     reason_en: "",
                     reason_nl: "",

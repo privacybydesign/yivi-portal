@@ -16,6 +16,7 @@ const initialData: RelyingPartyFormData = {
   hostnames: [{ hostname: "" }],
   attributes: [
     {
+      credential_id: undefined,
       credential_attribute_name: "",
       reason_en: "",
       reason_nl: "",
