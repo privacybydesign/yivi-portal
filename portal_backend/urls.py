@@ -15,6 +15,7 @@ from portal_backend.views.organization import (
 )
 from portal_backend.views.attestation_provider import (
     AttestationProviderListView,
+    CredentialListView,
 )
 from portal_backend.views.relying_party import (
     RelyingPartyHostnameStatusView,
@@ -24,6 +25,7 @@ from portal_backend.views.relying_party import (
     RelyingPartyRetrieveView,
     RelyingPartyDeleteView,
 )
+
 from rest_framework import permissions
 from drf_yasg.views import get_schema_view  # type: ignore
 from drf_yasg import openapi  # type: ignore
@@ -109,6 +111,7 @@ urlpatterns = [
         RelyingPartyHostnameStatusView.as_view(),
         name="rp-hostname-status",
     ),
+    path("v1/credentials/", CredentialListView.as_view(), name="credential-list"),
     # Trust Models
     path("v1/trust-models/", TrustModelListView.as_view(), name="trust-model-list"),
     path(
