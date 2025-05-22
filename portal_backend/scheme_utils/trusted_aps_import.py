@@ -12,6 +12,7 @@ from django.db import transaction
 import logging
 import portal_backend.scheme_utils.import_utils as import_utils
 from django.utils import timezone
+from datetime import datetime
 
 
 logger = logging.getLogger(__name__)
@@ -120,9 +121,6 @@ class APFields:
             raise Exception(f"Error extracting fields from issuer: {e}")
 
 
-from datetime import datetime
-
-
 class CredentialFields:
     def __init__(self, credential_dict: dict) -> None:
         try:
@@ -156,7 +154,7 @@ class CredentialFields:
                     else:
                         self.deprecated_since = deprecated_raw  # assume valid date
                 except Exception as e:
-                    raise Exception(f"Invalid DeprecatedSince value: {deprecated_raw}")
+                    raise Exception(f"Invalid DeprecatedSince value: {e}")
             else:
                 self.deprecated_since = None
 
