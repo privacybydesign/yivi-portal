@@ -158,10 +158,9 @@ class CredentialFields:
             else:
                 self.deprecated_since = None
 
-            attributes = spec.get("Attributes", {}).get("Attribute")
-            if attributes is None:
-                self.attributes = []
-            elif isinstance(attributes, list):
+            attributes = spec.get("Attributes", {}).get("Attribute", [])
+
+            if isinstance(attributes, list):
                 self.attributes = attributes
             else:
                 self.attributes = [attributes]
@@ -248,7 +247,7 @@ def create_credential_attributes(
                 continue
 
             name = attr["Name"]
-            desc = attr.get("Description", {})
+            desc = attr.get("Description")
 
             CredentialAttribute.objects.update_or_create(
                 credential=credential,
