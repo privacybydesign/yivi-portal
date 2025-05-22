@@ -111,7 +111,7 @@ urlpatterns = [
         RelyingPartyHostnameStatusView.as_view(),
         name="rp-hostname-status",
     ),
-    path("v1/credentials/", CredentialListView.as_view(), name="credential-list"),
+    path("v1/yivi/credentials/", CredentialListView.as_view(), name="credential-list"),
     # Trust Models
     path("v1/trust-models/", TrustModelListView.as_view(), name="trust-model-list"),
     path(

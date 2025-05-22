@@ -152,7 +152,7 @@ export async function fetchCredentials(): Promise<
   RelyingPartyResponse<{ credentials: Credential[] }>
 > {
   try {
-    const response = await axiosInstance.get("/v1/credentials/");
+    const response = await axiosInstance.get("/v1/yivi/credentials/");
     return { success: true, data: response.data };
   } catch (error) {
     if (error instanceof AxiosError) {
