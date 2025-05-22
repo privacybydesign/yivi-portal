@@ -81,26 +81,39 @@ class AttestationProviderSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
-class CredentialSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Credential
-        fields = "__all__"
-
-
 class CredentialAttributeSerializer(serializers.ModelSerializer):
     class Meta:
         model = CredentialAttribute
-        fields = ""
+        fields = [
+            "id",
+            "credential_attribute_id",
+            "name_en",
+            "name_nl",
+        ]
+
+
+class CredentialSerializer(serializers.ModelSerializer):
+    attributes = CredentialAttributeSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Credential
+        fields = [
+            "id",
+            "name_en",
+            "name_nl",
+            "credential_id",
+            "attributes",
+        ]
 
 
 class CondisconAttributeSerializer(serializers.ModelSerializer):
     credential_attribute = serializers.CharField(
-        source="credential_attribute.credential.", read_only=True
+        source="credential_attribute.name_en", read_only=True
     )
 
     class Meta:
         model = CondisconAttribute
-        fields = ["reason-en", "credential_attribute"]
+        fields = ["reason_en", "credential_attribute"]
 
 
 class RelyingPartySerializer(serializers.ModelSerializer):
