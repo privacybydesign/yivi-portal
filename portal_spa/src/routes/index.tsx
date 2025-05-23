@@ -12,6 +12,7 @@ import Layout from "@/components/layout/Layout";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import PrivacyPolicyPage from "@/pages/PrivacyPolicyPage";
 import TermsOfServicePage from "@/pages/TermsOfServicePage";
+import GuestRoute from "@/components/auth/GuestRoute";
 
 // We manage all routes here to keep App.tsx clean
 export default function AppRoutes() {
@@ -21,7 +22,10 @@ export default function AppRoutes() {
       element: <Layout />,
       children: [
         { path: "/", element: <HomePage /> },
-        { path: "/login", element: <LoginPage /> },
+        {
+          element: <GuestRoute />,
+          children: [{ path: "/login", element: <LoginPage /> }],
+        },
         { path: "/organizations", element: <OrganizationsListPage /> },
         {
           path: "/organizations/register",
