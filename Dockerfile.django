@@ -7,34 +7,26 @@ ENV PYTHONUNBUFFERED=1
 # Install system dependencies
 RUN apt-get update \
     && apt-get install -y --no-install-recommends gcc libpq-dev python3-dev cron \
-    && rm -rf /var/lib/apt/lists/*
-
-# Set the working directory in the container
-WORKDIR /app
-
-# Copy only the requirements file to leverage Docker cache
-COPY pyproject.toml poetry.lock /app/
-
-# Install project dependencies
-RUN pip install poetry \
+    && rm -rf /var/lib/apt/lists/* \
+    && pip install poetry \
     && poetry config virtualenvs.create false
 
 # Copy the current directory contents into the container at /app
 COPY . /app
 
+# Set the working directory in the container
+WORKDIR /app
+
+# Install project dependencies
 RUN poetry install --with prod --no-interaction --no-ansi
 
 ENV STATIC_ROOT=/app/static
 ENV MEDIA_ROOT=/app/media
 
-RUN mkdir -p $STATIC_ROOT
-RUN mkdir -p $MEDIA_ROOT
+RUN mkdir -p $STATIC_ROOT $MEDIA_ROOT
 
 ENV STATIC_URL=/static/
 ENV MEDIA_URL=/media/
-
-
-RUN chown -R nobody:nogroup $MEDIA_ROOT
 
 EXPOSE 8000
 
