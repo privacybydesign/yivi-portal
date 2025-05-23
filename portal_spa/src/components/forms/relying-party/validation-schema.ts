@@ -42,6 +42,7 @@ export const RelyingPartySchema = z.object({
       reason_nl: z.string().nonempty("Dutch reason is required"),
     })
   ),
+  ready: z.boolean(),
 });
 
 export type RelyingPartyFormData = z.infer<typeof RelyingPartySchema>;
