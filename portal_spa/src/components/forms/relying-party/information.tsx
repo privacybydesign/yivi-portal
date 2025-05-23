@@ -26,6 +26,7 @@ import { fetchCredentials } from "@/actions/manage-relying-party";
 import type { Credential } from "@/models/credential";
 import DnsChallenges from "@/components/forms/relying-party/dnscheck";
 import CredentialAttributeFields from "@/components/custom/SelectAttributes";
+import { Checkbox } from "@/components/ui/checkbox";
 
 type RelyingPartyProps =
   | {
@@ -374,24 +375,20 @@ export default function RelyingPartyForm({
                 control={control}
                 name="ready"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        {...register("ready")}
+                  <FormItem className="flex items-center space-x-3 space-y-0">
+                    <FormControl>
+                      <Checkbox
                         checked={field.value}
-                        onChange={field.onChange}
-                        className="
-            h-5 w-5 rounded border-2 border-gray-300 
-            text-blue-600 focus:ring-2 focus:ring-blue-400 
-            transition-colors duration-150
-            checked:bg-blue-600 checked:border-blue-600
-            hover:border-blue-400
-          "
+                        onCheckedChange={field.onChange}
+                        id="ready-checkbox"
                       />
+                    </FormControl>
+                    <FormLabel
+                      htmlFor="ready-checkbox"
+                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                    >
                       Ready for review
                     </FormLabel>
-                    <FormControl />
                     <FormMessage>{serverErrors.ready}</FormMessage>
                   </FormItem>
                 )}
