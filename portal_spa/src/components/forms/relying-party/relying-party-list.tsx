@@ -248,6 +248,7 @@ export default function RelyingPartyList() {
                             editingRP.context_description_nl ?? "",
                           hostnames: editingRP.hostnames,
                           attributes: editingRP.attributes,
+                          ready: editingRP.ready,
                         }}
                         onSubmit={async (formData, originalSlug) => {
                           setSaving(true);

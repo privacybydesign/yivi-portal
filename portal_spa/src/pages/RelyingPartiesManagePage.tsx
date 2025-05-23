@@ -22,6 +22,7 @@ const initialData: RelyingPartyFormData = {
       reason_nl: "",
     },
   ],
+  ready: false,
 };
 
 export default function RelyingPartyManager() {

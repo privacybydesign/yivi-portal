@@ -26,6 +26,7 @@ import { fetchCredentials } from "@/actions/manage-relying-party";
 import type { Credential } from "@/models/credential";
 import DnsChallenges from "@/components/forms/relying-party/dnscheck";
 import CredentialAttributeFields from "@/components/custom/SelectAttributes";
+import { Checkbox } from "@/components/ui/checkbox";
 
 type RelyingPartyProps =
   | {
@@ -134,7 +135,11 @@ export default function RelyingPartyForm({
       } else if (
         JSON.stringify(original[typedKey]) !== JSON.stringify(current[typedKey])
       ) {
-        result[typedKey] = current[typedKey];
+        if (typedKey === "ready") {
+          result[typedKey] = current[typedKey];
+        } else {
+          result[typedKey] = current[typedKey];
+        }
       }
     }
 
@@ -364,6 +369,30 @@ export default function RelyingPartyForm({
               >
                 Add Attribute
               </Button>
+            </div>
+            <div className="space-y-2 mt-4">
+              <FormField
+                control={control}
+                name="ready"
+                render={({ field }) => (
+                  <FormItem className="flex items-center space-x-3 space-y-0">
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                        id="ready-checkbox"
+                      />
+                    </FormControl>
+                    <FormLabel
+                      htmlFor="ready-checkbox"
+                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                    >
+                      Ready for review
+                    </FormLabel>
+                    <FormMessage>{serverErrors.ready}</FormMessage>
+                  </FormItem>
+                )}
+              />
             </div>
 
             <div className="space-y-2 mt-4">

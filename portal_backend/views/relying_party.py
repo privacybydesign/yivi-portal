@@ -142,6 +142,7 @@ class RelyingPartyRetrieveView(APIView):
                 "attributes": attributes,
                 "environment": relying_party.yivi_tme.environment,
                 "published_at": relying_party.published_at,
+                "ready": relying_party.ready,
             }
         )
 
