@@ -246,8 +246,8 @@ def create_credential_attributes(
                 )
                 continue
 
-            name = attr["Name"]
-            desc = attr.get("Description")
+            name = attr["Name", {}]
+            desc = attr.get("Description", {})
 
             CredentialAttribute.objects.update_or_create(
                 credential=credential,
