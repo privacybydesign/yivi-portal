@@ -5,11 +5,14 @@ from dotenv import load_dotenv  # type: ignore
 from portal_backend.models.models import (
     YiviTrustModelEnv,
     AttestationProvider,
+    Credential,
+    CredentialAttribute,
 )
 from django.db import transaction
 import logging
 import portal_backend.scheme_utils.import_utils as import_utils
 from django.utils import timezone
+from datetime import datetime
 
 
 logger = logging.getLogger(__name__)
@@ -72,6 +75,21 @@ def process_ap_directory(repo_path: str, ap_dir: str) -> dict | None:
         raise Exception(f"No logo found for {ap_dir}")
 
     ap_data["logo_path"] = os.path.abspath(logo_path)
+
+    issues_dir = os.path.join(repo_path, ap_dir, "Issues")
+    if not os.path.isdir(issues_dir):
+        issues_dir = os.path.join(repo_path, ap_dir, "issues")
+
+    credentials = {}
+    if os.path.isdir(issues_dir):
+        for cred_id in os.listdir(issues_dir):
+            cred_desc = os.path.join(issues_dir, cred_id, "description.xml")
+            if not os.path.isfile(cred_desc):
+                continue
+            with open(cred_desc) as cred_file:
+                credentials[cred_id] = xmltodict.parse(cred_file.read())
+    ap_data["credentials"] = credentials
+
     return ap_data
 
 
@@ -97,9 +115,57 @@ class APFields:
             self.contact_email = self.all_APs_dict[self.AP]["Issuer"]["ContactEMail"]
             self.logo_path = self.all_APs_dict[self.AP]["logo_path"]
             self.base_url = self.all_APs_dict[self.AP]["Issuer"].get("baseURL")
+            self.credentials = self.all_APs_dict[self.AP].get("credentials", {})
 
         except Exception as e:
             raise Exception(f"Error extracting fields from issuer: {e}")
+
+
+class CredentialFields:
+    def __init__(self, credential_dict: dict) -> None:
+        try:
+            spec = credential_dict.get("IssueSpecification", {})
+            self.credential_id = spec.get("CredentialID")
+            name = spec.get("Name", {})
+            self.name_en = name.get("en")
+            self.name_nl = name.get("nl")
+            shortname = spec.get("ShortName", {})
+            self.shortname_en = shortname.get("en")
+            self.shortname_nl = shortname.get("nl")
+            self.description_en = spec.get("Description", {}).get("en")
+            self.description_nl = spec.get("Description", {}).get("nl")
+            self.should_be_singleton = (
+                spec.get("ShouldBeSingleton", "").lower() == "true"
+            )
+            self.issue_url = None
+            issue_url = spec.get("IssueURL")
+            if isinstance(issue_url, dict):
+                self.issue_url = issue_url.get("en") or issue_url.get("nl")
+            else:
+                self.issue_url = issue_url
+
+            # Convert DeprecatedSince from UNIX Timestamp to date format
+            deprecated_raw = spec.get("DeprecatedSince")
+            if deprecated_raw:
+                try:
+                    if deprecated_raw.isdigit():  # Unix timestamp
+                        dt = datetime.utcfromtimestamp(int(deprecated_raw))
+                        self.deprecated_since = dt.date().isoformat()  # 'YYYY-MM-DD'
+                    else:
+                        self.deprecated_since = deprecated_raw  # assume valid date
+                except Exception as e:
+                    raise Exception(f"Invalid DeprecatedSince value: {e}")
+            else:
+                self.deprecated_since = None
+
+            attributes = spec.get("Attributes", {}).get("Attribute", [])
+
+            if isinstance(attributes, list):
+                self.attributes = attributes
+            else:
+                self.attributes = [attributes]
+        except Exception as e:
+            raise Exception(f"Error extracting fields from credential: {e}")
 
 
 def create_ap(
@@ -140,6 +206,65 @@ def create_ap(
         raise Exception(f"Error creating Attestation Provider for {apfields.slug}: {e}")
 
 
+def create_credential(
+    ap: AttestationProvider, cfields: CredentialFields, environment: str
+) -> Credential:
+    try:
+        credential, created = Credential.objects.update_or_create(
+            attestation_provider=ap,
+            credential_id=cfields.credential_id,
+            defaults={
+                "name_en": cfields.name_en,
+                "name_nl": cfields.name_nl,
+                "shortname_en": cfields.shortname_en,
+                "shortname_nl": cfields.shortname_nl,
+                "description_en": cfields.description_en,
+                "description_nl": cfields.description_nl,
+                "issue_url": cfields.issue_url,
+                "should_be_singleton": cfields.should_be_singleton,
+                "deprecated_since": cfields.deprecated_since,
+            },
+        )
+
+        logger.info(
+            f"{'Created' if created else 'Updated'} Credential {cfields.credential_id} for AP {ap.organization.slug} in environment {environment}"
+        )
+
+        return credential
+    except Exception as e:
+        raise Exception(f"Error creating credential {cfields.credential_id}: {e}")
+
+
+def create_credential_attributes(
+    credential: Credential, cfields: CredentialFields, environment: str
+) -> None:
+    for attr in cfields.attributes:
+        try:
+            if not attr.get("Name"):  # Skipping incomplete attributes
+                logger.warning(
+                    f"Skipping unnamed attribute in credential {credential.credential_id}"
+                )
+                continue
+
+            name = attr["Name", {}]
+            desc = attr.get("Description", {})
+
+            CredentialAttribute.objects.update_or_create(
+                credential=credential,
+                name_en=name.get("en"),
+                defaults={
+                    "credential_attribute_id": attr.get("@id"),
+                    "name_nl": name.get("nl"),
+                    "description_en": desc.get("en"),
+                    "description_nl": desc.get("nl"),
+                },
+            )
+        except Exception as e:
+            raise Exception(
+                f"Error creating attribute for credential {credential.credential_id}: {e}"
+            )
+
+
 def get_trust_model_env(environment: str) -> YiviTrustModelEnv:
     try:
         yivi_tme = YiviTrustModelEnv.objects.get(environment=environment)
@@ -165,12 +290,17 @@ def create_update_APs(environment: str) -> None:
                 logo_path=apfields.logo_path,
             )
 
-            create_ap(
+            ap = create_ap(
                 org,
                 yivi_tme,
                 apfields,
                 environment=environment,
             )
+
+            for cred_id, cred_dict in apfields.credentials.items():
+                cfields = CredentialFields(cred_dict)
+                credential = create_credential(ap, cfields, environment)
+                create_credential_attributes(credential, cfields, environment)
 
         logger.info(f"Found {len(all_APs_dict)} Attestation Providers in the JSON.")
 

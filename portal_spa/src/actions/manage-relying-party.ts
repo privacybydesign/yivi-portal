@@ -3,6 +3,7 @@ import type { RelyingPartyFormData } from "@/components/forms/relying-party/vali
 import type { FieldErrors } from "react-hook-form";
 import { AxiosError } from "axios";
 import type { RelyingParty } from "@/models/relying-party";
+import type { Credential } from "@/models/credential";
 
 export type RelyingPartyResponse<T = unknown> = {
   success: boolean;
@@ -139,6 +140,23 @@ export async function deleteRelyingParty(
         globalError:
           error.response?.data?.detail || "Failed to delete the relying party.",
       };
+    }
+    return {
+      success: false,
+      globalError: "An unexpected error occurred.",
+    };
+  }
+}
+
+export async function fetchCredentials(): Promise<
+  RelyingPartyResponse<{ credentials: Credential[] }>
+> {
+  try {
+    const response = await axiosInstance.get("/v1/yivi/credentials/");
+    return { success: true, data: response.data };
+  } catch (error) {
+    if (error instanceof AxiosError) {
+      return transformAxiosError<{ credentials: Credential[] }>(error);
     }
     return {
       success: false,

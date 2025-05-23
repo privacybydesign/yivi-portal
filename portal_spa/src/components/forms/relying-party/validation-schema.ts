@@ -27,6 +27,14 @@ export const RelyingPartySchema = z.object({
 
   attributes: z.array(
     z.object({
+      credential_id: z
+        .union([
+          z.undefined(),
+          z
+            .number({ invalid_type_error: "Credential is required" })
+            .int("Credential ID must be a number"),
+        ])
+        .optional(),
       credential_attribute_name: z
         .string()
         .nonempty("Credential attribute name is required"),

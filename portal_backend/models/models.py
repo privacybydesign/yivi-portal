@@ -166,15 +166,13 @@ class AttestationProvider(models.Model):
     shortname_en = models.CharField(max_length=100, null=True, blank=True)
     shortname_nl = models.CharField(max_length=100, null=True, blank=True)
     contact_email = models.EmailField(max_length=255, null=True, blank=True)
-    base_url = models.URLField(null=True, blank=True)
+    contact_address = models.URLField(null=True, blank=True)
     ready = models.BooleanField(default=False)
     ready_at = models.DateTimeField(null=True, blank=True)
     reviewed_accepted = models.BooleanField(null=True, default=False)
     reviewed_at = models.DateTimeField(null=True, blank=True)
     rejection_remarks = models.TextField(blank=True, null=True)
     published_at = models.DateTimeField(null=True, blank=True)
-    approved_ap_details = models.JSONField(null=True)
-    published_ap_details = models.JSONField(null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     last_updated_at = models.DateTimeField(auto_now=True)
     published = models.BooleanField(default=False)
@@ -225,10 +223,8 @@ class AttestationProvider(models.Model):
         )
 
         if previous and not previous.reviewed_accepted and self.reviewed_accepted:
-            self.approved_ap_details = self.ap_details
             self.reviewed_at = timezone.now()
         elif not previous and self.reviewed_accepted:
-            self.approved_ap_details = self.ap_details
             self.reviewed_at = timezone.now()
 
         super().save(*args, **kwargs)
@@ -316,11 +312,16 @@ class Credential(models.Model):
     attestation_provider = models.ForeignKey(
         AttestationProvider, on_delete=models.CASCADE, related_name="credentials"
     )
-    credential_tag = models.CharField(max_length=100)
-    name_en = models.CharField(max_length=255)
-    name_nl = models.CharField(max_length=255)
-    description_en = models.TextField()
-    description_nl = models.TextField()
+    deprecated_since = models.DateField(null=True, blank=True)
+    name_en = models.CharField(max_length=255, null=True, blank=True)
+    name_nl = models.CharField(max_length=255, null=True, blank=True)
+    shortname_en = models.CharField(max_length=100, null=True, blank=True)
+    shortname_nl = models.CharField(max_length=100, null=True, blank=True)
+    credential_id = models.CharField(max_length=100, null=True, blank=True)
+    should_be_singleton = models.BooleanField(default=None, null=True, blank=True)
+    issue_url = models.URLField(null=True, blank=True)
+    description_en = models.TextField(null=True, blank=True)
+    description_nl = models.TextField(null=True, blank=True)
 
     def __str__(self):
         return self.name_en
@@ -329,24 +330,28 @@ class Credential(models.Model):
     def full_path(self):
         scheme = self.attestation_provider.yivi_tme.scheme_manager
         issuer = self.attestation_provider.organization.slug
-        return f"{scheme}.{issuer}.{self.credential_tag}"
+        return f"{scheme}.{issuer}.{self.credential_id}"
 
 
 class CredentialAttribute(models.Model):
-    name = models.CharField(max_length=255)
     credential = models.ForeignKey(
         Credential, on_delete=models.CASCADE, related_name="attributes"
     )
+    credential_attribute_id = models.CharField(max_length=100)
+    name_en = models.CharField(max_length=255)
+    name_nl = models.CharField(max_length=255)
+    description_en = models.TextField()
+    description_nl = models.TextField()
 
     class Meta:
-        unique_together = ("credential", "name")
+        unique_together = ("credential", "name_en")
 
     def __str__(self):
-        return self.name
+        return self.name_en
 
     @property
     def full_path(self):
-        return f"{self.credential.full_path}.{self.name}"
+        return f"{self.credential.full_path}.{self.credential_attribute_id}"
 
 
 class RelyingPartyHostname(models.Model):

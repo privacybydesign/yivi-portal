@@ -115,10 +115,12 @@ def make_condiscon_json(
 
     for attr in attributes_data:
         cred_attr = get_object_or_404(
-            CredentialAttribute, name=attr["credential_attribute_name"]
+            CredentialAttribute,
+            name_en=attr["credential_attribute_name"],
+            credential__id=attr["credential_id"],
         )
         cred_id = cred_attr.credential.id
-        credential_attributes.setdefault(cred_id, []).append(cred_attr.name)
+        credential_attributes.setdefault(cred_id, []).append(cred_attr.name_en)
 
     for attr_list in credential_attributes.values():
         condiscon_json["disclose"].append([attr_list])
@@ -148,8 +150,11 @@ def create_condiscon_attributes(
 ) -> None:
     for attr in attributes_data:
         cred_attr = get_object_or_404(
-            CredentialAttribute, name=attr["credential_attribute_name"]
+            CredentialAttribute,
+            name_en=attr["credential_attribute_name"],
+            credential__id=attr["credential_id"],
         )
+
         CondisconAttribute.objects.create(
             credential_attribute=cred_attr,
             condiscon=condiscon,
@@ -211,6 +216,11 @@ def update_relying_party_hostnames(
 def update_condiscon_attributes(
     condiscon: Condiscon, attributes_data: List[AttributeEntry]
 ) -> None:
+    if condiscon.condiscon is None:
+        raise ValidationError("Condiscon JSON is not set.")
+    condiscon.condiscon = make_condiscon_json(attributes_data)
+    condiscon.save()
+    # Delete existing attributes and create new ones
     CondisconAttribute.objects.filter(condiscon=condiscon).delete()
     create_condiscon_attributes(condiscon, attributes_data)
 
