@@ -134,7 +134,13 @@ export default function RelyingPartyForm({
       } else if (
         JSON.stringify(original[typedKey]) !== JSON.stringify(current[typedKey])
       ) {
-        result[typedKey] = current[typedKey];
+        {
+          if (typedKey === "ready") {
+            result[typedKey] = current[typedKey];
+          } else {
+            result[typedKey] = current[typedKey];
+          }
+        }
       }
     }
 
