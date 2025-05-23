@@ -365,6 +365,34 @@ export default function RelyingPartyForm({
                 Add Attribute
               </Button>
             </div>
+            <div className="space-y-2 mt-4">
+              <FormField
+                control={control}
+                name="ready"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        {...register("ready")}
+                        checked={field.value}
+                        onChange={field.onChange}
+                        className="
+            h-5 w-5 rounded border-2 border-gray-300 
+            text-blue-600 focus:ring-2 focus:ring-blue-400 
+            transition-colors duration-150
+            checked:bg-blue-600 checked:border-blue-600
+            hover:border-blue-400
+          "
+                      />
+                      Ready for review
+                    </FormLabel>
+                    <FormControl />
+                    <FormMessage>{serverErrors.ready}</FormMessage>
+                  </FormItem>
+                )}
+              />
+            </div>
 
             <div className="space-y-2 mt-4">
               <Button type="submit" disabled={isSaving}>

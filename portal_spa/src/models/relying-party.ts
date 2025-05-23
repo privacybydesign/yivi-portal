@@ -24,4 +24,5 @@ export interface RelyingParty {
     reason_en: string;
     reason_nl: string;
   }[];
+  ready: boolean;
 }
