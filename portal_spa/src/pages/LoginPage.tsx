@@ -2,11 +2,12 @@
 import { apiEndpoint } from "@/services/axiosInstance";
 import useStore from "@/store";
 import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 export default function Login() {
   const setAccessToken = useStore((state) => state.setAccessToken);
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     let web: any;
@@ -37,12 +38,17 @@ export default function Login() {
 
       web.start().then((result: any) => {
         setAccessToken(result.access);
-        navigate(-1); // Go back to the previous page
+
+        if (location.state?.from) {
+          navigate(location.state.from.pathname, { replace: true });
+        } else {
+          navigate(-1); // Go back to the previous page
+        }
       });
     });
 
     return () => web.abort();
-  }, [navigate, setAccessToken]);
+  }, [navigate, setAccessToken, location]);
 
   return (
     <div className="flex p-6 justify-center items-center">
