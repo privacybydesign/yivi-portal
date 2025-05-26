@@ -14,9 +14,11 @@ from portal_backend.views.organization import (
     OrganizationMaintainerView,
 )
 from portal_backend.views.attestation_provider import (
+    AttestationProviderCredentialsListView,
     AttestationProviderListView,
-    CredentialListView,
+    AttestationProviderRetrieveView,
 )
+from portal_backend.views.credentials import CredentialListView
 from portal_backend.views.relying_party import (
     RelyingPartyHostnameStatusView,
     RelyingPartyListView,
@@ -130,10 +132,19 @@ urlpatterns = [
         TrustModelEnvironment.as_view(),
         name="trust-model-environment-detail",
     ),
-    # Public Listings inside a Trust Model Environment
+    # Attestation Providers
     path(
-        "v1/<str:trustmodel_name>/<str:environment>/attestation-providers/",
+        "v1/yivi/organizations/<str:org_slug>/attestation-provider/",
         AttestationProviderListView.as_view(),
         name="trust-model-ap-list",
+    ),
+    path(
+        "v1/yivi/organizations/<str:org_slug>/attestation-provider/<str:environment>/<str:ap_slug>/",
+        AttestationProviderRetrieveView.as_view(),
+    ),
+    path(
+        "v1/yivi/organizations/<str:org_slug>/attestation-provider/<str:environment>/<str:ap_slug>/credentials/",
+        AttestationProviderCredentialsListView.as_view(),
+        name="ap-credentials-list",
     ),
 ]
