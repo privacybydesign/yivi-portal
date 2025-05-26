@@ -113,6 +113,9 @@ class APFields:
             self.shortname_en = self.all_APs_dict[self.AP]["Issuer"]["ShortName"]["en"]
             self.shortname_nl = self.all_APs_dict[self.AP]["Issuer"]["ShortName"]["nl"]
             self.contact_email = self.all_APs_dict[self.AP]["Issuer"]["ContactEMail"]
+            self.contact_address = self.all_APs_dict[self.AP]["Issuer"][
+                "ContactAddress"
+            ]
             self.logo_path = self.all_APs_dict[self.AP]["logo_path"]
             self.base_url = self.all_APs_dict[self.AP]["Issuer"].get("baseURL")
             self.credentials = self.all_APs_dict[self.AP].get("credentials", {})
@@ -183,10 +186,12 @@ def create_ap(
                 "shortname_en": apfields.shortname_en,
                 "shortname_nl": apfields.shortname_nl,
                 "contact_email": apfields.contact_email,
+                "contact_address": apfields.contact_address,
                 "base_url": apfields.base_url,
                 "ready": True,
                 "reviewed_accepted": True,
                 "published": True,
+                "ap_slug": apfields.slug,
             },
         )
 

@@ -5,6 +5,8 @@ import { useParams } from "react-router-dom";
 import { axiosInstance, apiEndpoint } from "@/services/axiosInstance";
 import type { Organization } from "@/models/organization";
 import type { RelyingParty } from "@/models/relying-party";
+import type { AttestationProvider } from "@/models/attestationprovider";
+import { toast } from "sonner";
 
 export default function OrganizationPage() {
   const params = useParams();
@@ -12,9 +14,10 @@ export default function OrganizationPage() {
 
   const [organization, setOrganization] = useState<Organization | null>(null);
   const [rpDetails, setRpDetails] = useState<RelyingParty[]>([]);
+  const [apDetails, setApDetails] = useState<AttestationProvider[]>([]);
+  const [loadingApDetails, setLoadingApDetails] = useState(false);
   const [loadingRpDetails, setLoadingRpDetails] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [activeSection, setActiveSection] = useState("overview");
 
   useEffect(() => {
@@ -28,9 +31,10 @@ export default function OrganizationPage() {
 
         setLoading(false);
       } catch (error) {
-        console.error("Error fetching organization:", error);
-        setError(
-          "Failed to load organization details. Please try again later."
+        toast.error(
+          `Failed to load organization details: ${
+            error instanceof Error ? error.message : String(error)
+          }`
         );
         setLoading(false);
       }
@@ -62,16 +66,68 @@ export default function OrganizationPage() {
           rpData.environment = rp.environment;
 
           details.push(detailResponse.data);
-        } catch (err) {
-          console.warn(`Failed to fetch detail for RP ${rp.rp_slug}:`, err);
+        } catch (error) {
+          toast.error(
+            `Failed to fetch details for ${rp.rp_slug} relying party: ${
+              error instanceof Error ? error.message : String(error)
+            }`
+          );
         }
       }
 
       setRpDetails(details);
     } catch (error) {
-      console.error("Error fetching RP details:", error);
+      toast.error(
+        `Failed to load relying parties for this organization: ${
+          error instanceof Error ? error.message : String(error)
+        }`
+      );
     } finally {
       setLoadingRpDetails(false);
+    }
+  };
+
+  const fetchAttestationProviderDetails = async () => {
+    try {
+      setLoadingApDetails(true);
+
+      // Step 1: Get list of AP slugs and environments
+      const listResponse = await axiosInstance.get(
+        `/v1/yivi/organizations/${organizationSlug}/attestation-provider/`
+      );
+
+      const apList: Pick<AttestationProvider, "ap_slug" | "environment">[] =
+        listResponse.data.attestation_providers;
+
+      const details: AttestationProvider[] = [];
+
+      // Step 2: For each, fetch full detail
+      for (const ap of apList) {
+        try {
+          const detailResponse = await axiosInstance.get(
+            `/v1/yivi/organizations/${organizationSlug}/attestation-provider/${ap.environment}/${ap.ap_slug}/`
+          );
+          const apData = detailResponse.data;
+          apData.environment = ap.environment;
+          details.push(apData);
+        } catch (error) {
+          toast.error(
+            `Failed to fetch details for ${ap.ap_slug} attestation provider: ${
+              error instanceof Error ? error.message : String(error)
+            }`
+          );
+        }
+      }
+
+      setApDetails(details);
+    } catch (error) {
+      toast.error(
+        `Failed to load attestation providers for this organization: ${
+          error as string
+        }`
+      );
+    } finally {
+      setLoadingApDetails(false);
     }
   };
 
@@ -85,8 +141,18 @@ export default function OrganizationPage() {
       rpDetails.length === 0 &&
       !loadingRpDetails;
 
+    const shouldFetchApDetails =
+      section === "ap-details" &&
+      organization?.is_AP &&
+      apDetails.length === 0 &&
+      !loadingApDetails;
+
     if (shouldFetchRpDetails) {
       fetchRelyingPartyDetails();
+    }
+
+    if (shouldFetchApDetails) {
+      fetchAttestationProviderDetails();
     }
   };
 
@@ -101,10 +167,6 @@ export default function OrganizationPage() {
         <div className="text-lg">Loading organization details...</div>
       </div>
     );
-  }
-
-  if (error) {
-    return <div className="p-4 bg-red-50 text-red-600 rounded-md">{error}</div>;
   }
 
   if (!organization) {
@@ -267,35 +329,129 @@ export default function OrganizationPage() {
 
       {activeSection === "ap-details" && organization.is_AP === true && (
         <Card>
-          <CardHeader>
-            <CardTitle>Attestation Provider Details</CardTitle>
-          </CardHeader>
           <CardContent>
             <p className="mb-4 text-gray-600">
-              This organization acts as an Attestation Provider in the{" "}
-              {organization.trust_models?.map((tm) => tm.name).join(" and ")}{" "}
-              trust models.
+              The attestation providers listed below are configured for this
+              organization.
             </p>
+            {loadingApDetails ? (
+              <div className="py-8 text-center text-gray-500">
+                Loading AP details...
+              </div>
+            ) : (
+              apDetails.map((ap, index) => (
+                <div key={index}>
+                  <Card key={index} className="mb-6 border shadow-sm">
+                    <CardHeader>
+                      <CardTitle>
+                        {ap.ap_slug}{" "}
+                        <span className="text-sm text-gray-500">
+                          ({ap.environment})
+                        </span>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="text-sm text-gray-700">
+                        <div>
+                          <span className="font-medium "> Contact Email:</span>{" "}
+                          {ap.contact_email}
+                        </div>
+                        <div className="mt-1">
+                          <span className="font-medium">Contact Address:</span>{" "}
+                          {ap.contact_address}
+                        </div>
+
+                        <div className="mt-1">
+                          <span className="font-medium">Credentials: </span>
+                          <p>
+                            The following credentials can be issued by this
+                            Attestation Provider.
+                          </p>
+                        </div>
+                        <div className="text-sm text-gray-700 mt-2">
+                          {ap.credentials.length === 0 ? (
+                            <div className="text-gray-500">
+                              No credentials available for this Attestation
+                              Provider.
+                            </div>
+                          ) : (
+                            <div className="grid grid-cols-1 gap-4">
+                              {ap.credentials.map((cred, i) => (
+                                <div
+                                  key={i}
+                                  className="p-6 border rounded-xl bg-gray-50 shadow-sm space-y-3"
+                                >
+                                  <div className="text-lg font-semibold text-gray-800 flex flex-wrap gap-2 items-center">
+                                    {cred.name_en}
+                                    <span className="text-sm text-gray-500 font-mono">
+                                      ({cred.full_path})
+                                    </span>
+                                  </div>
+
+                                  <p className="text-sm text-gray-600">
+                                    <span className="font-medium text-gray-700">
+                                      Description:{" "}
+                                    </span>
+                                    {cred.description ||
+                                      "No description available."}
+                                  </p>
+
+                                  <div>
+                                    <p className="text-sm font-medium text-gray-700 mb-1">
+                                      Attributes:
+                                    </p>
+
+                                    <ul className="list-disc list-inside text-gray-800 font-mono space-y-1">
+                                      {cred.attributes.length > 0 ? (
+                                        cred.attributes.map((attr) => (
+                                          <ul key={attr.id}>
+                                            <span className="font-light">
+                                              {attr.name_en}
+                                            </span>{" "}
+                                            <span className="text-gray-500">
+                                              {attr.full_path}
+                                            </span>
+                                          </ul>
+                                        ))
+                                      ) : (
+                                        <li className="text-gray-400">
+                                          No attributes defined
+                                        </li>
+                                      )}
+                                    </ul>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              ))
+            )}
           </CardContent>
         </Card>
       )}
 
       {activeSection === "rp-details" && organization.is_RP === true && (
         <Card>
-          <CardHeader>
-            <CardTitle>Relying Party Details</CardTitle>
-          </CardHeader>
           <CardContent>
+            <p className="mb-4 text-gray-600">
+              The relying parties listed below are configured for this
+              organization.
+            </p>
             {loadingRpDetails ? (
               <div className="py-8 text-center text-gray-500">
                 Loading RP details...
               </div>
             ) : rpDetails.length > 0 ? (
               rpDetails.map((rp, index) => (
-                <Card key={index} className="mb-6 border shadow-sm">
+                <Card key={index} className="mb-6 border shadow-sm ">
                   <CardHeader>
                     <CardTitle>
-                      Relying Party: {rp.rp_slug}
+                      {rp.rp_slug}{" "}
                       <span className="text-sm text-gray-500">
                         ({rp.environment})
                       </span>
@@ -315,14 +471,6 @@ export default function OrganizationPage() {
                           </li>
                         )}
                       </ul>
-                    </div>
-                    <div className="pt-4 border-t">
-                      <div className="flex flex-col gap-2 text-sm">
-                        <div>
-                          <span className="font-medium">Published At:</span>{" "}
-                          {formatDate(rp.published_at)}
-                        </div>
-                      </div>
                     </div>
                   </CardContent>
                 </Card>
