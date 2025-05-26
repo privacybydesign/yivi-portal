@@ -5,6 +5,7 @@ import { useParams } from "react-router-dom";
 import { axiosInstance, apiEndpoint } from "@/services/axiosInstance";
 import type { Organization } from "@/models/organization";
 import type { RelyingParty } from "@/models/relying-party";
+import type { AttestationProvider } from "@/models/attestationprovider";
 
 export default function OrganizationPage() {
   const params = useParams();
@@ -12,6 +13,8 @@ export default function OrganizationPage() {
 
   const [organization, setOrganization] = useState<Organization | null>(null);
   const [rpDetails, setRpDetails] = useState<RelyingParty[]>([]);
+  const [apDetails, setApDetails] = useState<AttestationProvider[]>([]);
+  const [loadingApDetails, setLoadingApDetails] = useState(false);
   const [loadingRpDetails, setLoadingRpDetails] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -75,6 +78,42 @@ export default function OrganizationPage() {
     }
   };
 
+  const fetchAttestationProviderDetails = async () => {
+    try {
+      setLoadingApDetails(true);
+
+      // Step 1: Get list of AP slugs and environments
+      const listResponse = await axiosInstance.get(
+        `/v1/yivi/organizations/${organizationSlug}/attestation-provider/`
+      );
+
+      const apList: Pick<AttestationProvider, "ap_slug" | "environment">[] =
+        listResponse.data.attestation_providers;
+
+      const details: AttestationProvider[] = [];
+
+      // Step 2: For each, fetch full detail
+      for (const ap of apList) {
+        try {
+          const detailResponse = await axiosInstance.get(
+            `/v1/yivi/organizations/${organizationSlug}/attestation-provider/${ap.environment}/${ap.ap_slug}/`
+          );
+          const apData = detailResponse.data;
+          apData.environment = ap.environment;
+          details.push(apData);
+        } catch (err) {
+          console.warn(`Failed to fetch detail for AP ${ap.ap_slug}:`, err);
+        }
+      }
+
+      setApDetails(details);
+    } catch (error) {
+      console.error("Error fetching AP details:", error);
+    } finally {
+      setLoadingApDetails(false);
+    }
+  };
+
   // Handler for section changes with data fetching
   const handleSectionChange = (section: string) => {
     setActiveSection(section);
@@ -85,8 +124,18 @@ export default function OrganizationPage() {
       rpDetails.length === 0 &&
       !loadingRpDetails;
 
+    const shouldFetchApDetails =
+      section === "ap-details" &&
+      organization?.is_AP &&
+      apDetails.length === 0 &&
+      !loadingApDetails;
+
     if (shouldFetchRpDetails) {
       fetchRelyingPartyDetails();
+    }
+
+    if (shouldFetchApDetails) {
+      fetchAttestationProviderDetails();
     }
   };
 
@@ -276,6 +325,78 @@ export default function OrganizationPage() {
               {organization.trust_models?.map((tm) => tm.name).join(" and ")}{" "}
               trust models.
             </p>
+            {loadingApDetails ? (
+              <div className="py-8 text-center text-gray-500">
+                Loading AP details...
+              </div>
+            ) : (
+              apDetails.map((ap, index) => (
+                <div key={index}>
+                  <Card key={index} className="mb-6 border shadow-sm">
+                    <CardHeader>
+                      <CardTitle>
+                        {ap.ap_slug}{" "}
+                        <span className="text-sm text-gray-500">
+                          ({ap.environment})
+                        </span>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="text-sm text-gray-700">
+                        <div>
+                          <span className="font-medium"> Contact Email:</span>{" "}
+                          {ap.contact_email}
+                        </div>
+                        <div>
+                          <span className="font-medium">Contact Address:</span>{" "}
+                          {ap.contact_address}
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardHeader>
+                      <CardTitle> Credentials </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div>
+                        {" "}
+                        <p>
+                          {" "}
+                          The following credentials can be issued by this
+                          Attestation Provider:
+                        </p>
+                      </div>
+                      <div className="text-sm text-gray-700">
+                        {ap.credentials.length === 0 ? (
+                          <div className="text-gray-500">
+                            No credentials available for this Attestation
+                            Provider.
+                          </div>
+                        ) : (
+                          <div className="grid grid-cols-1 gap-4">
+                            {ap.credentials.map((cred, i) => (
+                              <div
+                                key={i}
+                                className="p-4 border rounded-md bg-gray-50"
+                              >
+                                <span className="font-medium">{cred.name}</span>{" "}
+                                <span className="text-gray-500">
+                                  ({cred.full_path})
+                                </span>
+                                <p className="text-sm text-gray-600">
+                                  {cred.description}
+                                </p>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              ))
+            )}
           </CardContent>
         </Card>
       )}
@@ -295,7 +416,7 @@ export default function OrganizationPage() {
                 <Card key={index} className="mb-6 border shadow-sm">
                   <CardHeader>
                     <CardTitle>
-                      Relying Party: {rp.rp_slug}
+                      {rp.rp_slug}{" "}
                       <span className="text-sm text-gray-500">
                         ({rp.environment})
                       </span>
@@ -315,14 +436,6 @@ export default function OrganizationPage() {
                           </li>
                         )}
                       </ul>
-                    </div>
-                    <div className="pt-4 border-t">
-                      <div className="flex flex-col gap-2 text-sm">
-                        <div>
-                          <span className="font-medium">Published At:</span>{" "}
-                          {formatDate(rp.published_at)}
-                        </div>
-                      </div>
                     </div>
                   </CardContent>
                 </Card>
