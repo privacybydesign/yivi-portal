@@ -64,6 +64,13 @@ class AttestationProviderRetrieveView(APIView):
                 "name": credential.name_en,
                 "description": credential.description_en,
                 "full_path": credential.full_path,
+                "attributes": [
+                    {
+                        "id": attr.id,
+                        "name_en": attr.name_en,
+                    }
+                    for attr in credential.attributes.all()
+                ],
             }
             for credential in ap_credentials
         ]

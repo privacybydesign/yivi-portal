@@ -3,6 +3,7 @@ export interface CredentialAttribute {
   credential_attribute_id: string;
   name_en: string;
   name_nl: string;
+  full_path: string;
 }
 
 export interface Credential {
