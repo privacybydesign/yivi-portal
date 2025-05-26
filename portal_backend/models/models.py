@@ -162,6 +162,7 @@ class AttestationProvider(models.Model):
     organization = models.ForeignKey(
         Organization, on_delete=models.CASCADE, related_name="attestation_providers"
     )
+    ap_slug = models.SlugField(unique=True, null=True, blank=True)
     version = models.CharField(max_length=50)
     shortname_en = models.CharField(max_length=100, null=True, blank=True)
     shortname_nl = models.CharField(max_length=100, null=True, blank=True)
