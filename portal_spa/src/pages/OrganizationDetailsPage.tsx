@@ -382,7 +382,7 @@ export default function OrganizationPage() {
                                   className="p-6 border rounded-xl bg-gray-50 shadow-sm space-y-3"
                                 >
                                   <div className="text-lg font-semibold text-gray-800 flex flex-wrap gap-2 items-center">
-                                    {cred.name}
+                                    {cred.name_en}
                                     <span className="text-sm text-gray-500 font-mono">
                                       ({cred.full_path})
                                     </span>

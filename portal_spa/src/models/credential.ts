@@ -8,7 +8,7 @@ export interface CredentialAttribute {
 
 export interface Credential {
   id: number;
-  name: string;
+  name_en: string;
   credential_id: string;
   description: string;
   attributes: CredentialAttribute[];

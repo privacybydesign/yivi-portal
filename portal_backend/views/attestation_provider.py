@@ -61,7 +61,7 @@ class AttestationProviderRetrieveView(APIView):
         all_credentials = [
             {
                 "id": credential.id,
-                "name": credential.name_en,
+                "name_en": credential.name_en,
                 "description": credential.description_en,
                 "full_path": credential.full_path,
                 "attributes": [
