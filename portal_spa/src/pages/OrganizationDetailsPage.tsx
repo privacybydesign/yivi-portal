@@ -6,6 +6,7 @@ import { axiosInstance, apiEndpoint } from "@/services/axiosInstance";
 import type { Organization } from "@/models/organization";
 import type { RelyingParty } from "@/models/relying-party";
 import type { AttestationProvider } from "@/models/attestationprovider";
+import { toast } from "sonner";
 
 export default function OrganizationPage() {
   const params = useParams();
@@ -17,7 +18,6 @@ export default function OrganizationPage() {
   const [loadingApDetails, setLoadingApDetails] = useState(false);
   const [loadingRpDetails, setLoadingRpDetails] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [activeSection, setActiveSection] = useState("overview");
 
   useEffect(() => {
@@ -31,9 +31,10 @@ export default function OrganizationPage() {
 
         setLoading(false);
       } catch (error) {
-        console.error("Error fetching organization:", error);
-        setError(
-          "Failed to load organization details. Please try again later."
+        toast.error(
+          `Failed to load organization details: ${
+            error instanceof Error ? error.message : String(error)
+          }`
         );
         setLoading(false);
       }
@@ -65,14 +66,22 @@ export default function OrganizationPage() {
           rpData.environment = rp.environment;
 
           details.push(detailResponse.data);
-        } catch (err) {
-          console.warn(`Failed to fetch detail for RP ${rp.rp_slug}:`, err);
+        } catch (error) {
+          toast.error(
+            `Failed to fetch details for ${rp.rp_slug} relying party: ${
+              error instanceof Error ? error.message : String(error)
+            }`
+          );
         }
       }
 
       setRpDetails(details);
     } catch (error) {
-      console.error("Error fetching RP details:", error);
+      toast.error(
+        `Failed to load relying parties for this organization: ${
+          error instanceof Error ? error.message : String(error)
+        }`
+      );
     } finally {
       setLoadingRpDetails(false);
     }
@@ -101,14 +110,22 @@ export default function OrganizationPage() {
           const apData = detailResponse.data;
           apData.environment = ap.environment;
           details.push(apData);
-        } catch (err) {
-          console.warn(`Failed to fetch detail for AP ${ap.ap_slug}:`, err);
+        } catch (error) {
+          toast.error(
+            `Failed to fetch details for ${ap.ap_slug} attestation provider: ${
+              error instanceof Error ? error.message : String(error)
+            }`
+          );
         }
       }
 
       setApDetails(details);
     } catch (error) {
-      console.error("Error fetching AP details:", error);
+      toast.error(
+        `Failed to load attestation providers for this organization: ${
+          error as string
+        }`
+      );
     } finally {
       setLoadingApDetails(false);
     }
@@ -150,10 +167,6 @@ export default function OrganizationPage() {
         <div className="text-lg">Loading organization details...</div>
       </div>
     );
-  }
-
-  if (error) {
-    return <div className="p-4 bg-red-50 text-red-600 rounded-md">{error}</div>;
   }
 
   if (!organization) {
