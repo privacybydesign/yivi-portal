@@ -88,6 +88,10 @@ export default function AttributeIndexLayout() {
     );
   }
 
+  function capitalizeFirstLetter(string: string): string {
+    return string.charAt(0).toUpperCase() + string.slice(1);
+  }
+
   return (
     <div className="flex">
       {/* Sidebar */}
@@ -106,7 +110,7 @@ export default function AttributeIndexLayout() {
               <AccordionItem value={env} key={env}>
                 <AccordionTrigger>
                   <Link to={`/attribute-index/environments/${env}`}>
-                    {env} Environment
+                    {capitalizeFirstLetter(env)} Environment
                   </Link>
                 </AccordionTrigger>
                 <AccordionContent>
