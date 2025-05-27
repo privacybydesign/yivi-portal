@@ -12,6 +12,13 @@ class CredentialListView(APIView):
     permission_classes = [permissions.AllowAny]
 
     def get(self, request: Request) -> Response:
-        credentials = Credential.objects.prefetch_related("attributes").all()
+        credentials = (
+            Credential.objects.select_related(
+                "attestation_provider__yivi_tme",
+                "attestation_provider__organization",
+            )
+            .prefetch_related("attributes")
+            .all()
+        )
         serializer = CredentialSerializer(credentials, many=True)
         return Response({"credentials": serializer.data})
