@@ -3,6 +3,7 @@ import json
 import os
 from dotenv import load_dotenv  # type: ignore
 from portal_backend.models.models import (
+    TrustModel,
     YiviTrustModelEnv,
     AttestationProvider,
     Credential,
@@ -270,6 +271,62 @@ def create_credential_attributes(
             )
 
 
+def get_scheme_description(scheme_description_xml: str) -> dict:
+    try:
+        with open(scheme_description_xml, "r", encoding="utf-8") as f:
+            return xmltodict.parse(f.read())
+    except Exception as e:
+        raise Exception(
+            f"Failed to parse scheme description at {scheme_description_xml}: {e}"
+        )
+
+
+def create_update_trust_model_env(
+    environment: str,
+    data: dict,
+) -> YiviTrustModelEnv:
+    try:
+        scheme = data.get("SchemeManager", {})
+
+        if not scheme:
+            raise ValueError("Missing 'SchemeManager' in scheme description data")
+        trust_model = TrustModel.objects.get(name__iexact="yivi")
+
+        if not trust_model:
+            raise ValueError("TrustModel 'yivi' does not exist in the database")
+
+        yivi_tme, created = YiviTrustModelEnv.objects.update_or_create(
+            trust_model=trust_model,
+            environment=environment,
+            defaults={
+                "version": scheme.get("@version"),
+                "scheme_id": scheme.get("Id"),
+                "url": scheme.get("Url"),
+                "name_en": scheme.get("Name").get("en"),
+                "name_nl": scheme.get("Name").get("nl"),
+                "description_en": scheme.get("Description").get("en"),
+                "description_nl": scheme.get("Description").get("nl"),
+                "minimum_android_version": scheme.get("MinimumAppVersion").get(
+                    "Android"
+                ),
+                "minimum_ios_version": scheme.get("MinimumAppVersion").get("iOS"),
+                "keyshare_server": scheme.get("KeyshareServer"),
+                "keyshare_website": scheme.get("KeyshareWebsite"),
+                "keyshare_attribute": scheme.get("KeyshareAttribute"),
+                "timestamp_server": scheme.get("TimestampServer"),
+                "contact_website": scheme.get("Contact"),
+            },
+        )
+
+        logger.info(
+            f"{'Created' if created else 'Updated'} YiviTrustModelEnv for {environment}"
+        )
+        return yivi_tme
+
+    except Exception as e:
+        raise Exception(f"Failed to create/update YiviTrustModelEnv: {e}")
+
+
 def get_trust_model_env(environment: str) -> YiviTrustModelEnv:
     try:
         yivi_tme = YiviTrustModelEnv.objects.get(environment=environment)
@@ -324,6 +381,13 @@ def import_aps(config_file=CONFIG_FILE) -> None:
         import_utils.download_extract_repo(repo_url, repo_name, REPO_DIR)
         convert_xml_to_json(repo_name)
         create_update_APs(environment)
+        scheme_desc = get_scheme_description(
+            REPO_DIR + f"/{repo_name}-master/description.xml"
+        )
+        create_update_trust_model_env(
+            environment,
+            scheme_desc,
+        )
 
     except Exception as e:
         raise Exception(f"Failed to import Attestation Providers: {e}")

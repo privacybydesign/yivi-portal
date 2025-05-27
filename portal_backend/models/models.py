@@ -132,12 +132,17 @@ class YiviTrustModelEnv(models.Model):
     keyshare_server = models.CharField(max_length=255)
     keyshare_website = models.CharField(max_length=255)
     keyshare_attribute = models.CharField(max_length=255)
-    contact = models.CharField(max_length=255)
+    contact_website = models.CharField(max_length=255)
     minimum_android_version = models.CharField(max_length=20)
     minimum_ios_version = models.CharField(max_length=20)
+    name_en = models.CharField(max_length=255)
+    name_nl = models.CharField(max_length=255)
     description_en = models.TextField()
     description_nl = models.TextField()
     url = models.URLField(validators=[URLValidator()])
+    scheme_id = models.CharField(
+        max_length=100,
+    )
 
     def __str__(self):
         return f"{self.trust_model.name} - {self.environment}"
