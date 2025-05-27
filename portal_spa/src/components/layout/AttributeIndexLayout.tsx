@@ -15,7 +15,7 @@ import { Separator } from "../ui/separator";
 
 export default function AttributeIndexLayout() {
   const [credentials, setCredentials] = useState<Credential[]>([]);
-  const [searchQuery, setsearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     axiosInstance.get("/v1/yivi/credentials/").then((res) => {
@@ -49,7 +49,7 @@ export default function AttributeIndexLayout() {
 
   useEffect(() => {
     // Clearing search searchQuery when navigating to a different page (mainly from main page to details page so the search bar is cleared)
-    setsearchQuery("");
+    setSearchQuery("");
   }, [location]);
 
   function SearchDropdown({
@@ -118,7 +118,7 @@ export default function AttributeIndexLayout() {
                     {Object.entries(aps).map(([key, creds]) => {
                       const referenceCredential = creds[0]; // Use the first credential as reference for org_slug and org_name
                       if (!referenceCredential) return null;
-                      const organizationName = `${referenceCredential.org_name}`;
+                      const organizationName = referenceCredential.org_name;
                       return (
                         <AccordionItem value={key} key={key}>
                           <AccordionTrigger>
@@ -160,12 +160,12 @@ export default function AttributeIndexLayout() {
             type="text"
             placeholder="Search credentials, attributes or issuer"
             value={searchQuery}
-            onChange={(e) => setsearchQuery(e.target.value)}
+            onChange={(e) => setSearchQuery(e.target.value)}
           />
           {!isMainPage && searchQuery.length > 0 && (
             <SearchDropdown
               results={filtered}
-              onSelect={() => setsearchQuery("")}
+              onSelect={() => setSearchQuery("")}
             />
           )}
         </div>
