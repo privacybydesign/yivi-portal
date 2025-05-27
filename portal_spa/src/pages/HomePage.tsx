@@ -51,6 +51,20 @@ function HomePage() {
               </div>
             </CardContent>
           </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle>Supported Credentials</CardTitle>
+            </CardHeader>
+            <CardContent>
+              Interested in giving Yivi a try? Search the attribute index of
+              Yivi, which catalogues all the supported credentials.
+              <div className="mt-4">
+                <Button variant="outline" asChild>
+                  <Link to="/attribute-index">View Attribute Index</Link>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </main>
     </div>
