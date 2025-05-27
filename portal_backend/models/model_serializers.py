@@ -94,6 +94,18 @@ class CredentialAttributeSerializer(serializers.ModelSerializer):
 
 class CredentialSerializer(serializers.ModelSerializer):
     attributes = CredentialAttributeSerializer(many=True, read_only=True)
+    org_slug = serializers.CharField(
+        source="attestation_provider.organization.slug", read_only=True
+    )
+    org_name = serializers.CharField(
+        source="attestation_provider.organization.name_en", read_only=True
+    )
+    environment = serializers.CharField(
+        source="attestation_provider.yivi_tme.environment", read_only=True
+    )
+    ap_slug = serializers.CharField(
+        source="attestation_provider.ap_slug", read_only=True
+    )
 
     class Meta:
         model = Credential
@@ -101,6 +113,10 @@ class CredentialSerializer(serializers.ModelSerializer):
             "id",
             "name_en",
             "name_nl",
+            "org_slug",
+            "org_name",
+            "ap_slug",
+            "environment",
             "credential_id",
             "attributes",
         ]
