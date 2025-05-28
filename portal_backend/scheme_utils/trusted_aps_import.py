@@ -148,19 +148,9 @@ class CredentialFields:
             else:
                 self.issue_url = issue_url
 
-            # Convert DeprecatedSince from UNIX Timestamp to date format
-            deprecated_raw = spec.get("DeprecatedSince")
-            if deprecated_raw:
-                try:
-                    if deprecated_raw.isdigit():  # Unix timestamp
-                        dt = datetime.utcfromtimestamp(int(deprecated_raw))
-                        self.deprecated_since = dt.date().isoformat()  # 'YYYY-MM-DD'
-                    else:
-                        self.deprecated_since = deprecated_raw  # assume valid date
-                except Exception as e:
-                    raise Exception(f"Invalid DeprecatedSince value: {e}")
-            else:
-                self.deprecated_since = None
+            self.deprecated_since = import_utils.normalize_deprecated_since(
+                spec.get("DeprecatedSince", None)
+            )
 
             attributes = spec.get("Attributes", {}).get("Attribute", [])
 

@@ -20,5 +20,6 @@ export interface Credential {
   attributes: CredentialAttribute[];
   full_path: string;
   issue_url: string;
-  scheme_url: string; // TODO: Might be nice to add these later?
+  scheme_url: string; // TODO: Might be nice to add direct scheme url later?
+  deprecated_since?: string;
 }

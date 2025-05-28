@@ -203,6 +203,11 @@ class AttestationProvider(models.Model):
         return ap_scheme_entry
 
     @property
+    def full_path(self):
+        scheme = self.yivi_tme.scheme_manager
+        return f"{scheme}.{self.ap_slug}"
+
+    @property
     def status(self) -> str:
         if self.reviewed_accepted is True and self.published_at:
             return StatusChoices.PUBLISHED

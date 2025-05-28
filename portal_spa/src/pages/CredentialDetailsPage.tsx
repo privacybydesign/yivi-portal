@@ -1,6 +1,7 @@
 import { Link, useOutletContext, useParams } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { Credential } from "@/models/credential";
+import { Badge } from "@/components/ui/badge";
 
 type OutletContext = {
   credentials: Credential[];
@@ -25,8 +26,11 @@ export default function CredentialDetailsPage() {
 
   return (
     <div className="space-y-8 p-4">
-      <h1 className="text-3xl font-semibold">
+      <h1 className="text-3xl font-semibold flex items-center gap-3">
         {credential.name_en} Credential
+        {credential.deprecated_since && (
+          <Badge variant="destructive">Deprecated</Badge>
+        )}
       </h1>
 
       {/* Credential Details */}
@@ -37,6 +41,10 @@ export default function CredentialDetailsPage() {
         <CardContent>
           <dl className="space-y-3 text-sm">
             <div>
+              <dt className="font-medium">Description</dt>
+              <dd>{credential.description_en}</dd>
+            </div>
+            <div>
               <dt className="font-medium">Short Identifier</dt>
               <dd>{credential.credential_id}</dd>
             </div>
@@ -45,7 +53,7 @@ export default function CredentialDetailsPage() {
               <dd>{credential.full_path}</dd>
             </div>
             <div>
-              <dt className="font-medium">Issued by</dt>
+              <dt className="font-medium">Organization</dt>
               <dd>
                 <Link
                   to={`/organizations/${credential.org_slug}`}
@@ -56,7 +64,7 @@ export default function CredentialDetailsPage() {
               </dd>
             </div>
             <div>
-              <dt className="font-medium">Attestation provider</dt>
+              <dt className="font-medium">Attestation Provider</dt>
               <dd>
                 <Link
                   to={`/attribute-index/attestation-provider/${credential.org_slug}/${credential.environment}/${credential.ap_slug}`}
@@ -78,16 +86,37 @@ export default function CredentialDetailsPage() {
               </dd>
             </div>
             <div>
-              <dt className="font-medium">Description</dt>
-              <dd>{credential.description_en}</dd>
+              {credential.deprecated_since ? (
+                <div>
+                  <dt className="font-medium">Deprecated Since</dt>
+                  <dd>
+                    <span>{credential.deprecated_since}</span>
+                  </dd>
+                </div>
+              ) : (
+                <div></div>
+              )}
             </div>
             <div>
               <dt className="font-medium">Issue URL</dt>
-              <dd>
-                <a href={credential.issue_url} className="text-blue-600">
-                  {credential.issue_url}
-                </a>
-              </dd>
+              {!credential.issue_url ? (
+                <dd className="text-gray-500">Not provided</dd>
+              ) : (
+                <dd className="text-sm">
+                  {credential.issue_url.startsWith("http") ? (
+                    <a
+                      href={credential.issue_url}
+                      className="text-blue-600 hover:underline"
+                    >
+                      {credential.issue_url}
+                    </a>
+                  ) : (
+                    <span className="text-gray-500">
+                      {credential.issue_url}
+                    </span>
+                  )}
+                </dd>
+              )}
             </div>
           </dl>
         </CardContent>
