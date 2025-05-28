@@ -5,7 +5,6 @@ from portal_backend.models.models import Credential
 from portal_backend.models.model_serializers import (
     CredentialListSerializer,
 )
-from rest_framework import status
 from rest_framework import permissions
 
 

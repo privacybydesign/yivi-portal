@@ -13,7 +13,6 @@ from django.db import transaction
 import logging
 import portal_backend.scheme_utils.import_utils as import_utils
 from django.utils import timezone
-from datetime import datetime
 
 
 logger = logging.getLogger(__name__)
