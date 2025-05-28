@@ -202,7 +202,7 @@ export default function AttributeIndexLayout() {
             })}
           </div>
         )}
-        {!isMainPage && <Outlet />}
+        {!isMainPage && <Outlet context={{ credentials }} />}
       </main>
     </div>
   );

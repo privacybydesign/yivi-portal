@@ -89,10 +89,13 @@ class CredentialAttributeSerializer(serializers.ModelSerializer):
             "credential_attribute_id",
             "name_en",
             "name_nl",
+            "description_en",
+            "description_nl",
+            "full_path",
         ]
 
 
-class CredentialSerializer(serializers.ModelSerializer):
+class CredentialListSerializer(serializers.ModelSerializer):
     attributes = CredentialAttributeSerializer(many=True, read_only=True)
     org_slug = serializers.CharField(
         source="attestation_provider.organization.slug", read_only=True
@@ -119,6 +122,10 @@ class CredentialSerializer(serializers.ModelSerializer):
             "environment",
             "credential_id",
             "attributes",
+            "description_en",
+            "description_nl",
+            "full_path",
+            "issue_url",
         ]
 
 
