@@ -85,28 +85,22 @@ export default function CredentialDetailsPage() {
                 </Link>
               </dd>
             </div>
-            <div>
-              {credential.deprecated_since ? (
-                <div>
-                  <dt className="font-medium">Deprecated Since</dt>
-                  <dd>
-                    <span>{credential.deprecated_since}</span>
-                  </dd>
-                </div>
-              ) : (
-                <div></div>
-              )}
-            </div>
-            <div>
-              <dt className="font-medium">Issue URL</dt>
-              {!credential.issue_url ? (
-                <dd className="text-gray-500">Not provided</dd>
-              ) : (
+            {credential.deprecated_since && (
+              <div>
+                <dt className="font-medium">Deprecated Since</dt>
+                <dd>{credential.deprecated_since}</dd>
+              </div>
+            )}
+            {credential.issue_url && (
+              <div>
+                <dt className="font-medium">Issue URL</dt>
                 <dd className="text-sm">
                   {credential.issue_url.startsWith("http") ? (
                     <a
                       href={credential.issue_url}
                       className="text-blue-600 hover:underline"
+                      target="_blank"
+                      rel="noopener noreferrer"
                     >
                       {credential.issue_url}
                     </a>
@@ -116,8 +110,8 @@ export default function CredentialDetailsPage() {
                     </span>
                   )}
                 </dd>
-              )}
-            </div>
+              </div>
+            )}
           </dl>
         </CardContent>
 
@@ -137,7 +131,7 @@ export default function CredentialDetailsPage() {
                   className="border p-4 rounded-lg"
                   key={attr.credential_attribute_id}
                 >
-                  <div key={attr.id} className="text-sm space-y-1">
+                  <div className="text-sm space-y-1">
                     <div>
                       <span className="font-mono font-bold">
                         {attr.name_en}

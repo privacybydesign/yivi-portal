@@ -37,7 +37,7 @@ class YiviTrustModelEnvListView(APIView):
     @swagger_auto_schema(responses={200: "Success", 404: "Not found"})
     def get(self, request: Request, trust_model_name: str) -> Response:
         """Gets a list of environments for a trust model."""
-        trust_model = get_object_or_404(TrustModel, name=trust_model_name)
+        trust_model = get_object_or_404(TrustModel, name__iexact=trust_model_name)
         environments = trust_model.environments.all()
         serializer = YiviTrustModelEnvSerializer(environments, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)

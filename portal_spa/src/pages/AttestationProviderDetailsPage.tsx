@@ -60,10 +60,12 @@ export default function AttestationProviderDetailsPage() {
               <span className="font-medium">Identifier:</span>{" "}
               {apDetails?.ap_slug}
             </div>
-            <div>
-              <span className="font-medium">Full Identifier:</span>{" "}
-              {apDetails?.full_path || "Not provided"}
-            </div>
+            {apDetails?.full_path && (
+              <div>
+                <span className="font-medium">Full Identifier:</span>{" "}
+                {apDetails.full_path}
+              </div>
+            )}
             <div>
               <span className="font-medium">Organization:</span>{" "}
               <Link to={`/organizations/${org_slug}`} className="text-blue-600">
@@ -79,23 +81,21 @@ export default function AttestationProviderDetailsPage() {
                 {environment}
               </Link>
             </div>
-            <div>
-              <span className="font-medium">Contact Email:</span>{" "}
-              {apDetails?.contact_email ? (
+            {apDetails?.contact_email && (
+              <div>
+                <span className="font-medium">Contact Email:</span>{" "}
                 <a
                   href={`mailto:${apDetails.contact_email}`}
                   className="text-blue-600 hover:underline"
                 >
                   {apDetails.contact_email}
                 </a>
-              ) : (
-                "Not provided"
-              )}
-            </div>
+              </div>
+            )}
 
-            <div>
-              <span className="font-medium">Contact Website:</span>{" "}
-              {apDetails?.contact_address ? (
+            {apDetails?.contact_address && (
+              <div>
+                <span className="font-medium">Contact Website:</span>{" "}
                 <a
                   href={apDetails.contact_address}
                   target="_blank"
@@ -104,10 +104,8 @@ export default function AttestationProviderDetailsPage() {
                 >
                   {apDetails.contact_address}
                 </a>
-              ) : (
-                "Not provided"
-              )}
-            </div>
+              </div>
+            )}
           </>
         </CardContent>
       </Card>
