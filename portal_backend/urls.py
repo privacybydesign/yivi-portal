@@ -2,8 +2,7 @@ from django.urls import path
 from portal_backend.views.trust_model import (
     TrustModelListView,
     TrustModelDetailView,
-    TrustModelEnvironments,
-    TrustModelEnvironment,
+    YiviTrustModelEnvListView,
 )
 from portal_backend.views.organization import (
     OrganizationListView,
@@ -123,14 +122,9 @@ urlpatterns = [
     ),
     # Trust Model Environments
     path(
-        "v1/<str:name>/environments/",
-        TrustModelEnvironments.as_view(),
+        "v1/<str:trust_model_name>/environments/",
+        YiviTrustModelEnvListView.as_view(),
         name="trust-model-environment-list",
-    ),
-    path(
-        "v1/<str:trustmodel_name>/<str:environment>/",
-        TrustModelEnvironment.as_view(),
-        name="trust-model-environment-detail",
     ),
     # Attestation Providers
     path(

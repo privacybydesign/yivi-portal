@@ -11,4 +11,8 @@ export interface AttestationProvider {
   contact_email: string;
   contact_address: string;
   credentials: Credential[];
+  organization: string;
+  yivi_tme: string;
+  full_path: string;
+  organization_logo: string;
 }

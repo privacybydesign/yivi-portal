@@ -75,10 +75,24 @@ class AttestationProviderSerializer(serializers.ModelSerializer):
     yivi_tme = serializers.CharField(source="yivi_tme.environment", read_only=True)
     organization = serializers.CharField(source="organization.name_en", read_only=True)
     status = serializers.BooleanField(source="status.reviewed_accepted", read_only=True)
+    organization_logo = serializers.ImageField(
+        source="organization.logo", read_only=True
+    )
 
     class Meta:
         model = AttestationProvider
-        fields = "__all__"
+        fields = [
+            "id",
+            "ap_slug",
+            "organization",
+            "yivi_tme",
+            "contact_email",
+            "contact_address",
+            "credentials",
+            "full_path",
+            "status",
+            "organization_logo",
+        ]
 
 
 class CredentialAttributeSerializer(serializers.ModelSerializer):
@@ -89,10 +103,13 @@ class CredentialAttributeSerializer(serializers.ModelSerializer):
             "credential_attribute_id",
             "name_en",
             "name_nl",
+            "description_en",
+            "description_nl",
+            "full_path",
         ]
 
 
-class CredentialSerializer(serializers.ModelSerializer):
+class CredentialListSerializer(serializers.ModelSerializer):
     attributes = CredentialAttributeSerializer(many=True, read_only=True)
     org_slug = serializers.CharField(
         source="attestation_provider.organization.slug", read_only=True
@@ -119,6 +136,11 @@ class CredentialSerializer(serializers.ModelSerializer):
             "environment",
             "credential_id",
             "attributes",
+            "description_en",
+            "description_nl",
+            "full_path",
+            "issue_url",
+            "deprecated_since",
         ]
 
 

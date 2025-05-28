@@ -1,3 +1,4 @@
+import datetime
 import logging
 import json
 import os
@@ -73,6 +74,17 @@ def create_org(slug: str, name_en: str, name_nl: str, logo_path: str) -> Organiz
         raise
 
     return org
+
+
+def normalize_deprecated_since(value: str | None) -> str | None:
+    if value is None:
+        return None
+
+    try:
+        ts = int(value)
+        return datetime.utcfromtimestamp(ts).strftime("%Y-%m-%d")
+    except (ValueError, TypeError) as e:
+        raise ValueError(f"Invalid UNIX timestamp for DeprecatedSince: {e}")
 
 
 def get_trust_model_env(environment: str) -> YiviTrustModelEnv:

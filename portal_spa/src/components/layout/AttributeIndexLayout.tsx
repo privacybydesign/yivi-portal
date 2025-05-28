@@ -93,9 +93,8 @@ export default function AttributeIndexLayout() {
   }
 
   return (
-    <div className="flex">
+    <div className="container mx-auto flex">
       {/* Sidebar */}
-
       <aside className="w-72 border-r p-4">
         <Link to="/attribute-index" className="block mb-4">
           <h1 className="text-xl font-bold mb-4">Attribute Index</h1>
@@ -202,7 +201,7 @@ export default function AttributeIndexLayout() {
             })}
           </div>
         )}
-        {!isMainPage && <Outlet />}
+        {!isMainPage && <Outlet context={{ credentials }} />}
       </main>
     </div>
   );
