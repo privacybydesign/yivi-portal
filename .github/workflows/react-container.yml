@@ -56,6 +56,6 @@ jobs:
         with:
           context: portal_spa
           file: portal_spa/Dockerfile.react
-          push: ${{ github.event_name != 'pull_request' }}
+          push: ${{ ! contains(fromJSON('["schedule", "pull_request"]'), github.event_name) }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
