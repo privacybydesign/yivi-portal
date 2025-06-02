@@ -21,6 +21,8 @@ from ..swagger_specs.organization import (
     organization_maintainer_create_schama,
     organization_maintainer_delete_schema,
 )
+from django.core.exceptions import ValidationError
+
 
 logger = logging.getLogger(__name__)
 
@@ -157,7 +159,17 @@ class OrganizationMaintainersView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        user = User.objects.create(email=email, role="maintainer")
+        user = User(email=email, role="maintainer")
+
+        try:
+            user.full_clean()
+        except ValidationError as e:
+            logger.error(f"Validation error creating user: {e}")
+            return Response(
+                {"error": e.message_dict},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        user.save()
         user.organizations.add(organization)
 
         return Response(
