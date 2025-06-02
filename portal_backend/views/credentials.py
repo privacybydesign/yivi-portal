@@ -3,7 +3,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from portal_backend.models.models import Credential
 from portal_backend.models.model_serializers import (
-    CredentialSerializer,
+    CredentialListSerializer,
 )
 from rest_framework import permissions
 
@@ -20,5 +20,5 @@ class CredentialListView(APIView):
             .prefetch_related("attributes")
             .all()
         )
-        serializer = CredentialSerializer(credentials, many=True)
+        serializer = CredentialListSerializer(credentials, many=True)
         return Response({"credentials": serializer.data})
