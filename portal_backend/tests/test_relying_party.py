@@ -1,6 +1,4 @@
-from datetime import *
 from django.utils import timezone
-import os
 from rest_framework.test import APITestCase, APIClient
 from django.urls import reverse
 from portal_backend.models.models import (

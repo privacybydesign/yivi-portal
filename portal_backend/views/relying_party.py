@@ -1,4 +1,4 @@
-from django.db import IntegrityError, transaction
+from django.db import transaction
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from rest_framework import permissions
@@ -76,7 +76,7 @@ class RelyingPartyCreateView(APIView):
         except Exception as e:
             transaction.set_rollback(True)
             return Response(
-                {"error": "Failed to create relying party"},
+                {"error": "Failed to create relying party: " + str(e)},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 

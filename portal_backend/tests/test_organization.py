@@ -4,7 +4,6 @@ from django.urls import reverse
 from portal_backend.models.models import Organization
 from portal_backend.models.models import User as OrgUser
 from django.contrib.auth import get_user_model
-from django.core.files.uploadedfile import SimpleUploadedFile
 from portal_backend.scheme_utils.import_utils import load_logo_if_exists
 from rest_framework_simplejwt.tokens import AccessToken  # type: ignore
 from unittest.mock import patch
@@ -213,7 +212,8 @@ class OrganizationMaintainerActionsTest(APITestCase):
             "portal_backend.models.models.Organization.save",
             side_effect=IntegrityError("Simulated DB error"),
         ):
-            response = self.client.patch(
+
+            self.client.patch(
                 url,
                 {
                     "name_en": "Test",
