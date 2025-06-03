@@ -392,7 +392,7 @@ export default function OrganizationPage() {
                                     <span className="font-medium text-gray-700">
                                       Description:{" "}
                                     </span>
-                                    {cred.description ||
+                                    {cred.description_en ||
                                       "No description available."}
                                   </p>
 

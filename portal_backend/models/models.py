@@ -135,9 +135,14 @@ class YiviTrustModelEnv(models.Model):
     contact_website = models.CharField(max_length=255)
     minimum_android_version = models.CharField(max_length=20)
     minimum_ios_version = models.CharField(max_length=20)
+    name_en = models.CharField(max_length=255)
+    name_nl = models.CharField(max_length=255)
     description_en = models.TextField()
     description_nl = models.TextField()
     url = models.URLField(validators=[URLValidator()])
+    scheme_id = models.CharField(
+        max_length=100,
+    )
 
     def __str__(self):
         return f"{self.trust_model.name} - {self.environment}"
@@ -196,6 +201,11 @@ class AttestationProvider(models.Model):
             "scheme": self.yivi_tme.environment,
         }
         return ap_scheme_entry
+
+    @property
+    def full_path(self):
+        scheme = self.yivi_tme.scheme_manager
+        return f"{scheme}.{self.ap_slug}"
 
     @property
     def status(self) -> str:
