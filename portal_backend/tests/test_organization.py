@@ -7,6 +7,8 @@ from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile
 from portal_backend.scheme_utils.import_utils import load_logo_if_exists
 from rest_framework_simplejwt.tokens import AccessToken  # type: ignore
+from unittest.mock import patch
+from django.db import IntegrityError
 
 
 User = get_user_model()
@@ -58,6 +60,21 @@ class OrganizationCreateTest(APITestCase):
         invalid_data["slug"] = "invalid slug"
         response = self.client.post(url, invalid_data, format="multipart")
         self.assertEqual(response.status_code, 400)
+
+    def test_create_organization_rollback(self):
+        """Test rollback happens if error occurs during post request in view."""
+        url = reverse("portal_backend:organization-create")
+
+        with patch(
+            "portal_backend.models.models.User.save",
+            side_effect=IntegrityError("Simulated DB error"),
+        ):
+            response = self.client.post(url, self.organization_data, format="multipart")
+
+            self.assertEqual(response.status_code, 500)
+            self.assertFalse(
+                Organization.objects.filter(name_en="Test Organization").exists()
+            )
 
 
 class OrganizationMaintainerActionsTest(APITestCase):
@@ -172,3 +189,46 @@ class OrganizationMaintainerActionsTest(APITestCase):
         )
         response = self.client.delete(url)
         self.assertEqual(response.status_code, 403)
+
+    def test_patch_organization_rollback(self):
+        """Test rollback happens if error occurs during patch request."""
+        url = reverse(
+            "portal_backend:organization-update", args=[self.organization.slug]
+        )
+        with patch(
+            "portal_backend.models.models.Organization.save",
+            side_effect=IntegrityError("Simulated DB error"),
+        ):
+            response = self.client.patch(
+                url,
+                {
+                    "name_en": "Test",
+                },
+                format="multipart",
+            )
+
+            self.assertFalse(Organization.objects.filter(name_en="Test").exists())
+
+    def test_add_maintainer_duplicate(self):
+        """Test rollback happens if error occurs during adding organizations to user."""
+        url = reverse(
+            "portal_backend:organization-maintainers", args=[self.organization.slug]
+        )
+
+        user = OrgUser.objects.create(
+            email="newmaintainer@gmail.com", role="maintainer"
+        )
+
+        with patch.object(
+            user.organizations, "add", side_effect=IntegrityError("Simulated DB error")
+        ):
+            response = self.client.post(
+                url,
+                {"email": "newmaintainer@gmail.com"},
+                format="json",
+            )
+
+            self.assertEqual(response.status_code, 400)
+            self.assertFalse(
+                user.organizations.filter(slug=self.organization.slug).exists()
+            )
