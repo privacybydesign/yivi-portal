@@ -122,6 +122,20 @@ class OrganizationMaintainerActionsTest(APITestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(self.organization.name_en, "Updated Name")
 
+    def test_patch_organization_invalid_data(self):
+        """Test updating an organization with invalid data."""
+        url = reverse(
+            "portal_backend:organization-update", args=[self.organization.slug]
+        )
+        response = self.client.patch(
+            url,
+            {
+                "name_en": "",
+            },
+            format="multipart",
+        )
+        self.assertEqual(response.status_code, 400)
+
     def test_add_maintainer_created(self):
         """Test adding a maintainer to an organization."""
         url = reverse(
