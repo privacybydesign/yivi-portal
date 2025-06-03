@@ -29,7 +29,7 @@ def create_relying_party(
     yivi_tme = get_object_or_404(
         YiviTrustModelEnv,
         environment=data.get("environment"),
-        trust_model__name="yivi",
+        trust_model__name__iexact="yivi",
     )
     relying_party = RelyingParty(
         rp_slug=rp_slug,
@@ -41,6 +41,7 @@ def create_relying_party(
         rejection_remarks=None,
         published_at=None,
     )
+
     relying_party.full_clean()
     relying_party.save()
     return relying_party
@@ -141,6 +142,8 @@ def create_condiscon(
         context_description_en=contexts["en"],
         context_description_nl=contexts["nl"],
     )
+    condiscon.full_clean()
+    condiscon.save()
     return condiscon
 
 

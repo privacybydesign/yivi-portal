@@ -1,4 +1,4 @@
-from django.db import transaction
+from django.db import IntegrityError, transaction
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from rest_framework import permissions
@@ -37,6 +37,7 @@ from ..models.models import (
     Condiscon,
     CondisconAttribute,
 )
+from django.core.exceptions import ValidationError
 
 
 class RelyingPartyCreateView(APIView):
@@ -46,20 +47,38 @@ class RelyingPartyCreateView(APIView):
     ]
 
     @relying_party_create_schema
+    @transaction.atomic
     def post(self, request: Request, org_slug: str) -> Response:
 
-        relying_party = create_relying_party(
-            request.data, org_slug, request.data.get("rp_slug")
-        )
-        hostnames = create_hostnames(request.data.get("hostnames", []), relying_party)
-        contexts = {}
-        contexts["en"] = request.data.get("context_description_en", "")
-        contexts["nl"] = request.data.get("context_description_nl", "")
+        try:
+            relying_party = create_relying_party(
+                request.data, org_slug, request.data.get("rp_slug")
+            )
+            hostnames = create_hostnames(
+                request.data.get("hostnames", []), relying_party
+            )
+            if not hostnames:
+                raise ValidationError("At least one hostname is required.")
+            contexts = {}
+            contexts["en"] = request.data.get("context_description_en", "")
+            contexts["nl"] = request.data.get("context_description_nl", "")
 
-        condiscon = create_condiscon(
-            request.data.get("attributes", []), contexts, relying_party
-        )
-        create_condiscon_attributes(condiscon, request.data.get("attributes", []))
+            condiscon = create_condiscon(
+                request.data.get("attributes", []), contexts, relying_party
+            )
+            create_condiscon_attributes(condiscon, request.data.get("attributes", []))
+        except ValidationError as e:
+            transaction.set_rollback(True)
+            return Response(
+                {"error": str(e)},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        except Exception as e:
+            transaction.set_rollback(True)
+            return Response(
+                {"error": "Failed to create relying party"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
 
         return Response(
             {
@@ -171,98 +190,117 @@ class RelyingPartyDeleteView(APIView):
         for c in condiscons:
             CondisconAttribute.objects.filter(condiscon=c).delete()
         rp.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response(
+            status=status.HTTP_200_OK,
+            data={"message": "Relying party deleted successfully"},
+        )
 
 
 class RelyingPartyUpdateView(APIView):
     permission_classes = [permissions.IsAuthenticated, IsOrganizationMaintainerOrAdmin]
 
     @relying_party_patch_schema
+    @transaction.atomic
     def patch(self, request: Request, org_slug: str, rp_slug: str) -> Response:
-        relying_party = get_object_or_404(
-            RelyingParty, organization__slug=org_slug, rp_slug=rp_slug
-        )
-        condiscon = Condiscon.objects.filter(relying_party=relying_party).first()
+        try:
+            relying_party = get_object_or_404(
+                RelyingParty, organization__slug=org_slug, rp_slug=rp_slug
+            )
+            condiscon = Condiscon.objects.filter(relying_party=relying_party).first()
 
-        data = request.data
-        response_data = {"slug": str(relying_party.rp_slug)}
-        updated_fields = set()
+            data = request.data
+            response_data = {"slug": str(relying_party.rp_slug)}
+            updated_fields = set()
 
-        def update_context():
-            update_condiscon_context(condiscon, data)
-            updated_fields.add("context")
+            def update_context():
+                update_condiscon_context(condiscon, data)
+                updated_fields.add("context")
 
-        def update_attributes():
-            nonlocal condiscon
+            def update_attributes():
+                nonlocal condiscon
 
-            if condiscon is None:
-                condiscon = create_condiscon(
-                    attributes=data["attributes"],
-                    contexts={
-                        "en": data.get("context_description_en", ""),
-                        "nl": data.get("context_description_nl", ""),
-                    },
-                    relying_party=relying_party,
+                if condiscon is None:
+                    condiscon = create_condiscon(
+                        attributes=data["attributes"],
+                        contexts={
+                            "en": data.get("context_description_en", ""),
+                            "nl": data.get("context_description_nl", ""),
+                        },
+                        relying_party=relying_party,
+                    )
+                    create_condiscon_attributes(condiscon, data["attributes"])
+                else:
+                    update_condiscon_attributes(condiscon, data["attributes"])
+                    condiscon.condiscon = make_condiscon_json(data["attributes"])
+                    condiscon.save()
+
+                updated_fields.add("attributes")
+
+            def update_hostnames():
+                dns_challenges = update_relying_party_hostnames(
+                    relying_party, data["hostnames"]
                 )
-                create_condiscon_attributes(condiscon, data["attributes"])
-            else:
-                update_condiscon_attributes(condiscon, data["attributes"])
-                condiscon.condiscon = make_condiscon_json(data["attributes"])
-                condiscon.save()
+                if dns_challenges:
+                    response_data["hostnames"] = dns_challenges
+                updated_fields.add("hostnames")
 
-            updated_fields.add("attributes")
+            def update_environment():
+                update_rp_environment(relying_party, data["environment"])
+                updated_fields.add("environment")
 
-        def update_hostnames():
-            dns_challenges = update_relying_party_hostnames(
-                relying_party, data["hostnames"]
-            )
-            if dns_challenges:
-                response_data["hostnames"] = dns_challenges
-            updated_fields.add("hostnames")
+            def update_slug():
+                updated_slug = update_rp_slug(relying_party, data["rp_slug"])
+                if updated_slug:
+                    response_data["rp_slug"] = updated_slug
+                updated_fields.add("rp_slug")
 
-        def update_environment():
-            update_rp_environment(relying_party, data["environment"])
-            updated_fields.add("environment")
+            dispatcher = {
+                ("context_description_en", "context_description_nl"): update_context,
+                ("attributes",): update_attributes,
+                ("hostnames",): update_hostnames,
+                ("environment",): update_environment,
+                ("rp_slug",): update_slug,
+            }
 
-        def update_slug():
-            updated_slug = update_rp_slug(relying_party, data["rp_slug"])
-            if updated_slug:
-                response_data["rp_slug"] = updated_slug
-            updated_fields.add("rp_slug")
+            for keys, handler in dispatcher.items():
+                if any(k in data for k in keys):
+                    handler()
 
-        dispatcher = {
-            ("context_description_en", "context_description_nl"): update_context,
-            ("attributes",): update_attributes,
-            ("hostnames",): update_hostnames,
-            ("environment",): update_environment,
-            ("rp_slug",): update_slug,
-        }
+            if "ready" in data:
+                relying_party.ready = data["ready"]
+                relying_party.ready_at = timezone.now() if relying_party.ready else None
+                relying_party.reviewed_accepted = None
+                relying_party.reviewed_at = None
+                relying_party.rejection_remarks = None
+                relying_party.published_at = (
+                    None  # TODO: automatic public check not yet implemented
+                )
 
-        for keys, handler in dispatcher.items():
-            if any(k in data for k in keys):
-                handler()
-
-        if "ready" in data:
-            relying_party.ready = data["ready"]
-            relying_party.ready_at = timezone.now() if relying_party.ready else None
-            relying_party.reviewed_accepted = None
-            relying_party.reviewed_at = None
-            relying_party.rejection_remarks = None
-            relying_party.published_at = (
-                None  # TODO: automatic public check not yet implemented
-            )
-            relying_party.save()
-        elif updated_fields:
-            relying_party.ready = False
-            relying_party.ready_at = None
-            relying_party.reviewed_accepted = None
-            relying_party.reviewed_at = None
-            relying_party.rejection_remarks = None
-            relying_party.published_at = None
+            elif updated_fields:
+                relying_party.ready = False
+                relying_party.ready_at = None
+                relying_party.reviewed_accepted = None
+                relying_party.reviewed_at = None
+                relying_party.rejection_remarks = None
+                relying_party.published_at = None
+            relying_party.full_clean()
             relying_party.save()
 
-        response_data["message"] = "Relying party updated successfully"
-        return Response(response_data, status=200)
+            response_data["message"] = "Relying party updated successfully"
+            return Response(response_data, status=200)
+
+        except ValidationError as e:
+            transaction.set_rollback(True)
+            return Response(
+                {"error": str(e)},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        except Exception as e:
+            transaction.set_rollback(True)
+            return Response(
+                {"error": str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
 
 
 class RelyingPartyHostnameStatusView(APIView):
