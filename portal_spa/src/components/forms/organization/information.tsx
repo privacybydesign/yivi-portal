@@ -92,30 +92,32 @@ export default function ManageOrganizationInformationForm({
                   Upload your logo (PNG or JPEG).
                 </FormDescription>
               </div>
-              <div className="flex items-center justify-between w-full">
-                <LogoPreview
-                  control={form.control}
-                  setValue={form.setValue}
-                  name={typeof value === "string" ? value : value?.name}
-                />
-                <Label>
-                  <div className="cursor-pointer whitespace-nowrap rounded-md text-sm font-medium transition-colors bg-primary text-primary-foreground shadow hover:bg-primary/90 h-9 px-4 py-2 flex items-center gap-2">
-                    <UploadIcon size={12} strokeWidth={3} />
-                    Select logo
-                  </div>
-                  <FormControl>
-                    <Input
-                      type="file"
-                      accept="image/png,image/jpeg"
-                      className="hidden"
-                      onChange={(event) => onChange(event.target.files?.[0])}
-                      {...field}
-                    />
-                  </FormControl>
-                </Label>
+              <div className="flex flex-col items-start w-full">
+                <div className="flex items-center justify-between w-full">
+                  <LogoPreview
+                    control={form.control}
+                    setValue={form.setValue}
+                    name={typeof value === "string" ? value : value?.name}
+                  />
+                  <Label>
+                    <div className="cursor-pointer whitespace-nowrap rounded-md text-sm font-medium transition-colors bg-primary text-primary-foreground shadow hover:bg-primary/90 h-9 px-4 py-2 flex items-center gap-2">
+                      <UploadIcon size={12} strokeWidth={3} />
+                      Select logo
+                    </div>
+                    <FormControl>
+                      <Input
+                        type="file"
+                        accept="image/png,image/jpeg"
+                        className="hidden"
+                        onChange={(event) => onChange(event.target.files?.[0])}
+                        {...field}
+                      />
+                    </FormControl>
+                  </Label>
+                </div>
                 {formState.errors.logo && (
                   <FormMessage className="text-sm text-red-600 mt-1">
-                    {!formState.errors.logo.message}
+                    {formState.errors.logo.message}
                   </FormMessage>
                 )}
               </div>
@@ -149,8 +151,8 @@ export default function ManageOrganizationInformationForm({
                   />
                 </FormControl>
                 {formState.errors.name_en && (
-                  <FormMessage className="text-sm text-red-600 mt-1">
-                    {!formState.errors.name_en.message}
+                  <FormMessage className="text-sm text-red-600">
+                    {formState.errors.name_en.message}
                   </FormMessage>
                 )}
               </div>

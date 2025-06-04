@@ -28,7 +28,14 @@ class OrganizationSerializer(CountryFieldMixin, serializers.ModelSerializer):
     is_AP = serializers.BooleanField(source="is_ap", read_only=True)
     logo = serializers.ImageField(required=False)
 
-    _required_fields = ["country", "house_number", "street", "postal_code", "city"]
+    _required_fields = [
+        "country",
+        "house_number",
+        "street",
+        "postal_code",
+        "city",
+        "logo",
+    ]
 
     class Meta:
         model = Organization
@@ -64,7 +71,7 @@ class OrganizationSerializer(CountryFieldMixin, serializers.ModelSerializer):
                     missing_fields.append(field)
             if missing_fields:
                 errors = {
-                    field: f"Frield {field} is required." for field in missing_fields
+                    field: f"Field {field} is required." for field in missing_fields
                 }
                 raise serializers.ValidationError(errors)
 
