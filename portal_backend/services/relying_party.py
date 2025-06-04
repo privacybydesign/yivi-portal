@@ -176,6 +176,9 @@ def update_relying_party_hostnames(
     hostnames_with_id = {str(h.id): h for h in existing_hostnames}
     update_or_add = []
 
+    if len(submitted_hostnames) == 0:
+        raise ValidationError("Cannot delete all hostnames.")
+
     for entry in submitted_hostnames:
         hostname_str = entry.get("hostname", "").strip()
         if not hostname_str:
