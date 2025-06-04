@@ -10,6 +10,7 @@ from django.conf import settings
 from django.utils import timezone
 from django.utils.text import slugify
 from django_countries.fields import CountryField  # type: ignore
+from PIL import Image
 
 
 class LogoStorage(FileSystemStorage):
@@ -52,6 +53,15 @@ class OrganizationQuerySet(models.QuerySet):
         )
 
 
+class ConvertToRGB(object):
+    def process(self, image):
+        if image.mode in ("RGBA", "LA"):
+            background = Image.new("RGBA", image.size, (255, 255, 255, 255))
+            background.paste(image, (0, 0), image)
+            return background.convert("RGB")
+        return image.convert("RGB")
+
+
 class Organization(models.Model):
     objects = OrganizationQuerySet.as_manager()
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -68,6 +78,7 @@ class Organization(models.Model):
     verified_at = models.DateTimeField(null=True)
     logo = ProcessedImageField(
         upload_to=LogoStorage.get_logo_path,
+        processors=[ConvertToRGB()],
         storage=LogoStorage(),
         null=True,
         blank=True,
