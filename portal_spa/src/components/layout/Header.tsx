@@ -77,7 +77,7 @@ export default function Header() {
   }, [organizationSlugs]);
 
   return (
-    <div className="bg-white border-b border-gray-200">
+    <div className="sticky top-0 z-50 bg-white border-b border-gray-200">
       <nav className="container mx-auto flex justify-between items-center px-4 py-3">
         <Link to="/" className="text-xl font-semibold flex items-center gap-4">
           <img src="/yivi-logo.svg" alt="Yivi Logo" height={32} width={54} />
