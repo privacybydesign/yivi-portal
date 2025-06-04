@@ -145,6 +145,15 @@ class RelyingPartyCreateTest(APITestCase):
             RelyingParty.objects.filter(rp_slug="test-relying-party").exists()
         )
 
+    def test_create_relying_party_no_hostnames(self):
+        """Test creating a relying party without hostnames."""
+        url = reverse("portal_backend:rp-create", args=[self.organization.slug])
+        invalid_data = self.relying_party_data.copy()
+        invalid_data["hostnames"] = []
+
+        response = self.client.post(url, invalid_data, format="json")
+        self.assertEqual(response.status_code, 400)
+
     def test_create_relying_party_invalid_data(self):
         """Test creating a relying party with invalid data."""
         url = reverse("portal_backend:rp-create", args=[self.organization.slug])

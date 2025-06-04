@@ -28,6 +28,15 @@ class OrganizationSerializer(CountryFieldMixin, serializers.ModelSerializer):
     is_AP = serializers.BooleanField(source="is_ap", read_only=True)
     logo = serializers.ImageField(required=False)
 
+    _required_fields = [
+        "country",
+        "house_number",
+        "street",
+        "postal_code",
+        "city",
+        "logo",
+    ]
+
     class Meta:
         model = Organization
         fields = [
@@ -50,6 +59,23 @@ class OrganizationSerializer(CountryFieldMixin, serializers.ModelSerializer):
             "city",
         ]
         read_only_fields = ["is_verified"]
+
+    # These fields are nullable to allow the creation of imported organizations, but we need to enforce them via the serializer for our API
+    def validate(self, data):
+
+        if not self.partial:
+            missing_fields = []
+            for field in self._required_fields:
+                value = data.get(field)
+                if not value:
+                    missing_fields.append(field)
+            if missing_fields:
+                errors = {
+                    field: f"Field {field} is required." for field in missing_fields
+                }
+                raise serializers.ValidationError(errors)
+
+        return data
 
 
 class YiviTrustModelEnvSerializer(serializers.ModelSerializer):

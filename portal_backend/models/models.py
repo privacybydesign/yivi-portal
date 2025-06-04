@@ -309,7 +309,7 @@ class RelyingParty(models.Model):
             elif not self.ready:  # When it is not ready anymore
                 self.ready_at = None
                 self.rejection_remarks = None
-                self.reviewed_accepted = False
+                self.reviewed_accepted = None
                 self.reviewed_at = None
 
             self.last_updated_at = timezone.now()

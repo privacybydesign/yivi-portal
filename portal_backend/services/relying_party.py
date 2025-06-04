@@ -36,7 +36,7 @@ def create_relying_party(
         organization=organization,
         yivi_tme=yivi_tme,
         ready=False,
-        reviewed_accepted=False,
+        reviewed_accepted=None,
         reviewed_at=None,
         rejection_remarks=None,
         published_at=None,
