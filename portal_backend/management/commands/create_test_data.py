@@ -56,7 +56,6 @@ class Command(BaseCommand):
                 "name_en": "Test Organization",
                 "name_nl": "Testorganisatie",
                 "slug": "test-organization",
-                "registration_number": "12345678",
                 "country": "NL",
                 "city": "Utrecht",
                 "house_number": "54",

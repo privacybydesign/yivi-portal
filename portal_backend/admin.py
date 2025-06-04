@@ -35,8 +35,8 @@ class CredentialAttributeAdmin(admin.ModelAdmin):
 
 @admin.register(Organization)
 class OrganizationAdmin(admin.ModelAdmin):
-    list_display = ("name_en", "registration_number", "created_at", "last_updated_at")
-    search_fields = ("name_en", "name_nl", "registration_number")
+    list_display = ("name_en", "created_at", "last_updated_at")
+    search_fields = ("name_en", "name_nl")
     list_filter = ("created_at", "last_updated_at")
     prepopulated_fields = {"slug": ("name_en",)}
     readonly_fields = ("created_at", "last_updated_at")

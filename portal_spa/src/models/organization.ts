@@ -3,7 +3,6 @@ export interface Organization {
   name_en: string;
   name_nl: string;
   slug: string;
-  registration_number: string;
   street: string;
   house_number: string;
   postal_code: string;

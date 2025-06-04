@@ -35,7 +35,6 @@ class RelyingPartyCreateTest(APITestCase):
             name_en="Test Organization",
             name_nl="Test Organization",
             slug="test-name",
-            registration_number="987654321",
             country="NL",
             house_number="2B",
             street="Test Street",

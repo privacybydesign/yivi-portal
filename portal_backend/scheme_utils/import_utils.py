@@ -58,7 +58,6 @@ def create_org(slug: str, name_en: str, name_nl: str, logo_path: str) -> Organiz
                 "logo": logo_image_file,
                 "name_en": name_en,
                 "name_nl": name_nl,
-                "registration_number": None,
                 "city": None,
                 "street": None,
                 "postal_code": None,
