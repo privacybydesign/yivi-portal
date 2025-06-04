@@ -35,7 +35,6 @@ class OrganizationSerializer(CountryFieldMixin, serializers.ModelSerializer):
             "name_en",
             "name_nl",
             "slug",
-            "registration_number",
             "is_verified",
             "verified_at",
             "logo",

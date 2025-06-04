@@ -58,7 +58,6 @@ class Organization(models.Model):
     name_en = models.CharField(max_length=255)
     name_nl = models.CharField(max_length=255)
     slug = models.SlugField(unique=True)
-    registration_number = models.CharField(max_length=100, null=True, blank=True)
     street = models.CharField(max_length=35, null=True, blank=True)
     house_number = models.CharField(max_length=35, null=True, blank=True)
     postal_code = models.CharField(max_length=35, null=True, blank=True)
