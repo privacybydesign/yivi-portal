@@ -255,7 +255,7 @@ class RelyingParty(models.Model):
     )
     ready = models.BooleanField(default=False)
     ready_at = models.DateTimeField(null=True, blank=True)
-    reviewed_accepted = models.BooleanField(null=True, default=False)
+    reviewed_accepted = models.BooleanField(null=True, blank=True)
     rejection_remarks = models.TextField(blank=True, null=True)
     reviewed_at = models.DateTimeField(null=True, blank=True)
     published = models.BooleanField(default=False)

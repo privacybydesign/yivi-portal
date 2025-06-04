@@ -35,7 +35,7 @@ class Command(BaseCommand):
                 "keyshare_server": "https://keyshare.example.com",
                 "keyshare_website": "https://keyshare-web.example.com",
                 "keyshare_attribute": "test.keyshare",
-                "contact": "contact@example.com",
+                "contact_website": "contact@example.com",
                 "minimum_android_version": "1.0",
                 "minimum_ios_version": "1.0",
                 "description_en": "Test environment",

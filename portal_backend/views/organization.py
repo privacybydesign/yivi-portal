@@ -21,6 +21,8 @@ from ..swagger_specs.organization import (
     organization_maintainer_create_schama,
     organization_maintainer_delete_schema,
 )
+from django.core.exceptions import ValidationError
+
 
 logger = logging.getLogger(__name__)
 
@@ -48,6 +50,7 @@ class OrganizationCreateView(APIView):
             user.organizations.add(organization)
 
         except Exception as e:
+            transaction.set_rollback(True)
             logger.error(f"Error creating user: {e}")
             return Response(
                 {"error": "Failed to create user"},
@@ -101,6 +104,7 @@ class OrganizationUpdateView(APIView):
     parser_classes = [MultiPartParser, FormParser]
 
     @organization_update_schema
+    # @transaction.atomic
     def patch(self, request: Request, org_slug: str) -> Response:
         """Updates an organization, given the uuid."""
         organization = get_object_or_404(Organization, slug=org_slug)
@@ -115,7 +119,13 @@ class OrganizationUpdateView(APIView):
                 serializer.errors,
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        serializer.save()
+        try:
+            serializer.save()
+        except Exception as e:
+            logger.error(f"Error saving to database: {e}")
+            return Response(
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
         return Response(status=status.HTTP_200_OK)
 
 
@@ -157,7 +167,23 @@ class OrganizationMaintainersView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        user = User.objects.create(email=email, role="maintainer")
+        user = User(email=email, role="maintainer")
+
+        try:
+            user.full_clean()
+        except ValidationError as e:
+            logger.error(f"Validation error creating user: {e}")
+            return Response(
+                {"error": e.message_dict},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        except Exception as e:
+            logger.error(f"Unexpected error creating user: {e}")
+            return Response(
+                {"error": "Failed to create user"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+        user.save()
         user.organizations.add(organization)
 
         return Response(
