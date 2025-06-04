@@ -95,7 +95,7 @@ export default function AttributeIndexLayout() {
   return (
     <div className="container mx-auto flex">
       {/* Sidebar */}
-      <aside className="w-72 border-r p-4">
+      <aside className="w-72 border-r p-4 sticky top-0 h-screen">
         <Link to="/attribute-index" className="block mb-4">
           <h1 className="text-xl font-bold mb-4">Attribute Index</h1>
         </Link>
