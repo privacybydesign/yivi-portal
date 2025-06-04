@@ -287,12 +287,6 @@ export default function OrganizationPage() {
                 <span className="col-span-2">{organization.slug}</span>
               </div>
               <div className="grid grid-cols-3 gap-2">
-                <span className="font-medium">Registration Number:</span>
-                <span className="col-span-2">
-                  {organization.registration_number}
-                </span>
-              </div>
-              <div className="grid grid-cols-3 gap-2">
                 <span className="font-medium">Country:</span>
                 <span className="col-span-2">{organization.country}</span>
               </div>

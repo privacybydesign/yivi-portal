@@ -32,7 +32,6 @@ export default function ManageOrganizationInformationForm({
     name_en: "",
     name_nl: "",
     slug: "",
-    registration_number: "",
     street: "",
     house_number: "",
     postal_code: "",
@@ -221,31 +220,6 @@ export default function ManageOrganizationInformationForm({
           )}
         />
 
-        <FormField
-          control={form.control}
-          name="registration_number"
-          render={({ field }) => (
-            <FormItem className="grid md:grid-cols-2 items-start md:gap-4">
-              <div className="py-1">
-                <Label>Registration Number</Label>
-                <FormDescription>
-                  e.g. KVK number or similar official registration code.
-                </FormDescription>
-              </div>
-              <div>
-                <FormControl>
-                  <Input {...field} />
-                </FormControl>
-                {formState.errors.registration_number && (
-                  <FormMessage className="text-sm text-red-600 mt-1">
-                    {!formState.errors.registration_number.message}
-                  </FormMessage>
-                )}
-              </div>
-            </FormItem>
-          )}
-        />
-
         <fieldset className="border border-primary-light rounded-lg p-4 space-y-2">
           <legend className="font-medium">Contact Address</legend>
 
@@ -262,9 +236,9 @@ export default function ManageOrganizationInformationForm({
                     <Input {...field} />
                   </FormControl>
 
-                  {formState.errors.registration_number && (
+                  {formState.errors.street && (
                     <FormMessage className="text-sm text-red-600 mt-1">
-                      {!formState.errors.registration_number.message}
+                      {!formState.errors.street.message}
                     </FormMessage>
                   )}
                 </div>
@@ -285,9 +259,9 @@ export default function ManageOrganizationInformationForm({
                     <Input {...field} />
                   </FormControl>
 
-                  {formState.errors.registration_number && (
+                  {formState.errors.house_number && (
                     <FormMessage className="text-sm text-red-600 mt-1">
-                      {!formState.errors.registration_number.message}
+                      {!formState.errors.house_number.message}
                     </FormMessage>
                   )}
                 </div>
@@ -308,9 +282,9 @@ export default function ManageOrganizationInformationForm({
                     <Input {...field} />
                   </FormControl>
 
-                  {formState.errors.registration_number && (
+                  {formState.errors.postal_code && (
                     <FormMessage className="text-sm text-red-600 mt-1">
-                      {!formState.errors.registration_number.message}
+                      {!formState.errors.postal_code.message}
                     </FormMessage>
                   )}
                 </div>
@@ -331,9 +305,9 @@ export default function ManageOrganizationInformationForm({
                     <Input {...field} />
                   </FormControl>
 
-                  {formState.errors.registration_number && (
+                  {formState.errors.city && (
                     <FormMessage className="text-sm text-red-600 mt-1">
-                      {!formState.errors.registration_number.message}
+                      {!formState.errors.city.message}
                     </FormMessage>
                   )}
                 </div>
@@ -354,9 +328,9 @@ export default function ManageOrganizationInformationForm({
                     <Input {...field} />
                   </FormControl>
 
-                  {formState.errors.registration_number && (
+                  {formState.errors.country && (
                     <FormMessage className="text-sm text-red-600 mt-1">
-                      {!formState.errors.registration_number.message}
+                      {!formState.errors.country.message}
                     </FormMessage>
                   )}
                 </div>
