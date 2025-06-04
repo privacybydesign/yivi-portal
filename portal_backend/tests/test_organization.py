@@ -74,6 +74,14 @@ class OrganizationCreateTest(APITestCase):
                 Organization.objects.filter(name_en="Test Organization").exists()
             )
 
+    def test_create_organization_missing_required_fields(self):
+        """Test creating an organization with missing required fields."""
+        url = reverse("portal_backend:organization-create")
+        invalid_data = self.organization_data.copy()
+        del invalid_data["city"]
+        response = self.client.post(url, invalid_data, format="multipart")
+        self.assertEqual(response.status_code, 400)
+
 
 class OrganizationMaintainerActionsTest(APITestCase):
     """Ensure that an authenticated user can update an organization."""
