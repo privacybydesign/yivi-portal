@@ -51,18 +51,20 @@ def create_org(slug: str, name_en: str, name_nl: str, logo_path: str) -> Organiz
     try:
         trust_model = TrustModel.objects.get(name__iexact="yivi")
         logo_image_file = load_logo_if_exists(logo_path)
-        org, org_created = Organization.objects.update_or_create(
-            slug=slug,
-            defaults={
-                "is_verified": True,
-                "logo": logo_image_file,
-                "name_en": name_en,
-                "name_nl": name_nl,
-                "city": None,
-                "street": None,
-                "postal_code": None,
-                "house_number": None,
-            },
+        org, org_created = (
+            Organization.objects.get_or_create(  # We can't use update_or_create because we are making the organization out of the issuer description which differs across scheme environments. instead we set production as the first environment so that is the official organization associated with rps and aps and doesn't get overwritten
+                slug=slug,
+                defaults={
+                    "is_verified": True,
+                    "logo": logo_image_file,
+                    "name_en": name_en,
+                    "name_nl": name_nl,
+                    "city": None,
+                    "street": None,
+                    "postal_code": None,
+                    "house_number": None,
+                },
+            )
         )
 
         org.trust_models.add(trust_model)
