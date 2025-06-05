@@ -8,8 +8,6 @@ export const RelyingPartySchema = z.object({
       message: "Slug must be lowercase, hyphen-separated",
     }),
 
-  environment: z.string().nonempty("Environment is required"),
-
   context_description_en: z.string(),
   context_description_nl: z.string(),
 

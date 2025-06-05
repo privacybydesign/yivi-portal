@@ -10,7 +10,6 @@ import { toast } from "sonner";
 
 const initialData: RelyingPartyFormData = {
   rp_slug: "",
-  environment: "",
   context_description_en: "",
   context_description_nl: "",
   hostnames: [{ hostname: "" }],

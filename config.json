@@ -19,18 +19,9 @@
       }
     }
   },
-  "RP": {
-    "environment": {
-      "production": {
+  "RP": { 
         "name": "pbdf-requestors",
         "environment": "production",
         "repo-url": "https://github.com/privacybydesign/pbdf-requestors/archive/refs/heads/master.zip"
-      },
-      "demo": {
-        "name": "irma-demo-requestors",
-        "environment": "demo",
-        "repo-url": "https://github.com/privacybydesign/irma-demo-requestors/archive/refs/heads/master.zip"
-      }
-    }
   }
 }
