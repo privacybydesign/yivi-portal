@@ -1,20 +1,21 @@
 {
   "AP": {
-    "environment": {
-      "development": {
+    "environments": {
+      "staging": {
         "name": "pbdf-staging",
-        "environment": "staging",
-        "repo-url": "https://github.com/privacybydesign/pbdf-staging/archive/refs/heads/main.zip"
+        "repo-url": "https://github.com/privacybydesign/pbdf-staging/archive/refs/heads/main.zip",
+        "branch": "main"
       },
       "production": {
         "name": "pbdf-schememanager",
-        "environment": "production",
-        "repo-url": "https://github.com/privacybydesign/pbdf-schememanager/archive/refs/heads/master.zip"
+        "repo-url": "https://github.com/privacybydesign/pbdf-schememanager/archive/refs/heads/master.zip",
+        "branch": "master"
       },
       "demo": {
         "name": "irma-demo-schememanager",
-        "environment": "demo",
-        "repo-url": "https://github.com/privacybydesign/irma-demo-schememanager/archive/refs/heads/master.zip"
+        "repo-url": "https://github.com/privacybydesign/irma-demo-schememanager/archive/refs/heads/master.zip",
+        "branch": "master"
+
       }
     }
   },

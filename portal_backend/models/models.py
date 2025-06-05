@@ -139,12 +139,12 @@ class YiviTrustModelEnv(models.Model):
     )
     environment = models.CharField(max_length=50, choices=ENV_CHOICES)
     timestamp_server = models.CharField(max_length=255)
-    keyshare_server = models.CharField(max_length=255)
-    keyshare_website = models.CharField(max_length=255)
-    keyshare_attribute = models.CharField(max_length=255)
+    keyshare_server = models.CharField(max_length=255, null=True)
+    keyshare_website = models.CharField(max_length=255, null=True)
+    keyshare_attribute = models.CharField(max_length=255, null=True)
     contact_website = models.CharField(max_length=255)
-    minimum_android_version = models.CharField(max_length=20)
-    minimum_ios_version = models.CharField(max_length=20)
+    minimum_android_version = models.CharField(max_length=20, null=True)
+    minimum_ios_version = models.CharField(max_length=20, null=True)
     name_en = models.CharField(max_length=255)
     name_nl = models.CharField(max_length=255)
     description_en = models.TextField()
@@ -177,7 +177,7 @@ class AttestationProvider(models.Model):
     organization = models.ForeignKey(
         Organization, on_delete=models.CASCADE, related_name="attestation_providers"
     )
-    ap_slug = models.SlugField(unique=True, null=True, blank=True)
+    ap_slug = models.SlugField(null=True, blank=True)
     version = models.CharField(max_length=50)
     shortname_en = models.CharField(max_length=100, null=True, blank=True)
     shortname_nl = models.CharField(max_length=100, null=True, blank=True)
@@ -192,6 +192,13 @@ class AttestationProvider(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     last_updated_at = models.DateTimeField(auto_now=True)
     published = models.BooleanField(default=False)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["yivi_tme", "ap_slug"], name="unique_ap_slug_per_yivi_tme"
+            )
+        ]
 
     def __str__(self):
         return self.organization.name_en
