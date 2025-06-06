@@ -26,11 +26,11 @@ os.makedirs(DOWNLOADS_DIR, exist_ok=True)
 os.makedirs(REPO_DIR, exist_ok=True)
 
 
-def convert_xml_to_json(repo_name: str) -> None:
+def convert_xml_to_json(repo_name: str, branch: str) -> None:
     try:
         os.makedirs(DOWNLOADS_DIR, exist_ok=True)
         all_APs_dict = {}
-        repo_path = f"{REPO_DIR}/{repo_name}-master"
+        repo_path = f"{REPO_DIR}/{repo_name}-{branch}"
 
         logger.info(f"Looking for Attestation Providers in {repo_path}")
 
@@ -117,7 +117,6 @@ class APFields:
                 "ContactAddress"
             ]
             self.logo_path = self.all_APs_dict[self.AP]["logo_path"]
-            self.base_url = self.all_APs_dict[self.AP]["Issuer"].get("baseURL")
             self.credentials = self.all_APs_dict[self.AP].get("credentials", {})
 
         except Exception as e:
@@ -177,11 +176,10 @@ def create_ap(
                 "shortname_nl": apfields.shortname_nl,
                 "contact_email": apfields.contact_email,
                 "contact_address": apfields.contact_address,
-                "base_url": apfields.base_url,
                 "ready": True,
                 "reviewed_accepted": True,
                 "published": True,
-                "ap_slug": apfields.slug,
+                "ap_slug": apfields.slug,  # running in different environments we will have same slug in different environments so I made it unique per environment
             },
         )
 
@@ -246,12 +244,15 @@ def create_credential_attributes(
 
             CredentialAttribute.objects.update_or_create(
                 credential=credential,
-                name_en=name.get("en"),
+                name_en=name.get("en")
+                or name.get(
+                    "nl"
+                ),  # fallback for irma-demo scheme missing attribute names
                 defaults={
                     "credential_attribute_id": attr.get("@id"),
-                    "name_nl": name.get("nl"),
-                    "description_en": desc.get("en"),
-                    "description_nl": desc.get("nl"),
+                    "name_nl": name.get("nl") or name.get("en"),
+                    "description_en": desc.get("en") or "No description provided",
+                    "description_nl": desc.get("nl") or "No description provided",
                 },
             )
         except Exception as e:
@@ -288,17 +289,16 @@ def create_update_trust_model_env(
             trust_model=trust_model,
             environment=environment,
             defaults={
-                "version": scheme.get("@version"),
                 "scheme_id": scheme.get("Id"),
                 "url": scheme.get("Url"),
                 "name_en": scheme.get("Name").get("en"),
                 "name_nl": scheme.get("Name").get("nl"),
                 "description_en": scheme.get("Description").get("en"),
                 "description_nl": scheme.get("Description").get("nl"),
-                "minimum_android_version": scheme.get("MinimumAppVersion").get(
+                "minimum_android_version": scheme.get("MinimumAppVersion", {}).get(
                     "Android"
                 ),
-                "minimum_ios_version": scheme.get("MinimumAppVersion").get("iOS"),
+                "minimum_ios_version": scheme.get("MinimumAppVersion", {}).get("iOS"),
                 "keyshare_server": scheme.get("KeyshareServer"),
                 "keyshare_website": scheme.get("KeyshareWebsite"),
                 "keyshare_attribute": scheme.get("KeyshareAttribute"),
@@ -360,23 +360,21 @@ def import_aps(config_file=CONFIG_FILE) -> None:
     try:
         load_dotenv()
         config = import_utils.load_config(config_file)
-        environment = os.environ.get("AP_ENV")
-        if environment not in ["production", "staging", "demo"]:
-            logger.error(f"No specific environment specified. Got: '{environment}'")
-            raise ValueError("No specific environment specified.")
-
-        repo_url = config["AP"]["environment"][environment]["repo-url"]
-        repo_name = config["AP"]["environment"][environment]["name"]
-        import_utils.download_extract_repo(repo_url, repo_name, REPO_DIR)
-        convert_xml_to_json(repo_name)
-        create_update_APs(environment)
-        scheme_desc = get_scheme_description(
-            REPO_DIR + f"/{repo_name}-master/description.xml"
-        )
-        create_update_trust_model_env(
-            environment,
-            scheme_desc,
-        )
+        environments = ["production", "staging", "demo"]
+        for env in environments:
+            repo_url = config["AP"]["environments"][env]["repo-url"]
+            repo_name = config["AP"]["environments"][env]["name"]
+            branch = config["AP"]["environments"][env]["branch"]
+            import_utils.download_extract_repo(repo_url, repo_name, REPO_DIR)
+            scheme_desc = get_scheme_description(
+                REPO_DIR + f"/{repo_name}-{branch}/description.xml"
+            )
+            create_update_trust_model_env(
+                env,
+                scheme_desc,
+            )
+            convert_xml_to_json(repo_name, branch)
+            create_update_APs(env)
 
     except Exception as e:
         raise Exception(f"Failed to import Attestation Providers: {e}")

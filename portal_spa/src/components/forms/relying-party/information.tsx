@@ -14,13 +14,6 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import {
-  Select,
-  SelectTrigger,
-  SelectValue,
-  SelectContent,
-  SelectItem,
-} from "../../ui/select";
 import { useEffect, useState } from "react";
 import { fetchCredentials } from "@/actions/manage-relying-party";
 import type { Credential } from "@/models/credential";
@@ -217,29 +210,6 @@ export default function RelyingPartyForm({
                       <Input {...field} />
                     </FormControl>
                     <FormMessage>{serverErrors.rp_slug}</FormMessage>
-                  </FormItem>
-                )}
-              />
-            </div>
-            <div className="space-y-2 mt-4">
-              <FormField
-                control={control}
-                name="environment"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Environment</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select an environment" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="demo">Demo</SelectItem>
-                        <SelectItem value="production">Production</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
                   </FormItem>
                 )}
               />

@@ -28,7 +28,7 @@ def create_relying_party(
     organization = get_object_or_404(Organization, slug=org_slug)
     yivi_tme = get_object_or_404(
         YiviTrustModelEnv,
-        environment=data.get("environment"),
+        environment="production",  # setting production as default since the demo environment for requestors is totally different format
         trust_model__name__iexact="yivi",
     )
     relying_party = RelyingParty(

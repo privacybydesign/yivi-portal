@@ -121,25 +121,29 @@ export default function AttributeIndexLayout() {
                       return (
                         <AccordionItem value={key} key={key}>
                           <AccordionTrigger>
-                            <Link
-                              to={`/attribute-index/attestation-provider/${referenceCredential.org_slug}/${referenceCredential.environment}/${referenceCredential.ap_slug}`}
-                            >
-                              {organizationName}
-                            </Link>
+                            <div className="mx-2 font-normal">
+                              <Link
+                                to={`/attribute-index/attestation-provider/${referenceCredential.org_slug}/${referenceCredential.environment}/${referenceCredential.ap_slug}`}
+                              >
+                                {organizationName}
+                              </Link>
+                            </div>
                           </AccordionTrigger>
                           <AccordionContent>
-                            <ul className="ml-2 space-y-1">
-                              {creds.map((c) => (
-                                <li key={c.id}>
-                                  <Link
-                                    to={`/attribute-index/credentials/${c.environment}/${c.ap_slug}/${c.credential_id}`}
-                                    className="text-sm"
-                                  >
-                                    {c.name_en}
-                                  </Link>
-                                </li>
-                              ))}
-                            </ul>
+                            <div className="mx-3 font-light">
+                              <ul className="ml-2 space-y-1">
+                                {creds.map((c) => (
+                                  <li key={c.id}>
+                                    <Link
+                                      to={`/attribute-index/credentials/${c.environment}/${c.ap_slug}/${c.credential_id}`}
+                                      className="text-sm"
+                                    >
+                                      {c.name_en}
+                                    </Link>
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
                           </AccordionContent>
                         </AccordionItem>
                       );
@@ -161,7 +165,7 @@ export default function AttributeIndexLayout() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
-          {!isMainPage && searchQuery.length > 0 && (
+          {searchQuery.length > 0 && (
             <SearchDropdown
               results={filtered}
               onSelect={() => setSearchQuery("")}
@@ -169,36 +173,23 @@ export default function AttributeIndexLayout() {
           )}
         </div>
 
-        {/* If we are on the main page, show browsable credentials cards */}
+        {/* If we are on the main page, show a description of what the attribute index is for */}
         {isMainPage && (
-          <div className="space-y-4">
-            {filtered.map((cred) => {
-              const { id, name_en, credential_id, ap_slug, environment } = cred;
-
-              return (
-                <div key={id} className="border rounded-md p-4">
-                  <h2 className="font-semibold">
-                    <Link
-                      to={`/attribute-index/credentials/${environment}/${ap_slug}/${credential_id}`}
-                    >
-                      {name_en} ({credential_id})
-                    </Link>
-                  </h2>
-
-                  <p className="text-sm text-muted-foreground">
-                    Environment: {environment}
-                  </p>
-
-                  {Array.isArray(cred.attributes) && (
-                    <ul className="list-disc mt-2">
-                      {cred.attributes.map((attr) => (
-                        <ul key={attr.id}>{attr.name_en}</ul>
-                      ))}
-                    </ul>
-                  )}
-                </div>
-              );
-            })}
+          <div className="space-y-4 mx-2 my-10">
+            <div className="text-lg font-semibold mb-4">
+              What is the attribute index?
+            </div>
+            <div>
+              <p className="leading-relaxed">
+                The attribute index is a browsable list of all attributes that
+                can be used in the Yivi ecosystem. It allows you to explore the
+                available credentials and their definitions, and the
+                organizations that issue them. You can search for specific
+                attributes, credentials, or issuers using the search bar above.
+                The sidebar provides a structured view of the credentials
+                grouped by environment and attestation provider.
+              </p>
+            </div>
           </div>
         )}
         {!isMainPage && <Outlet context={{ credentials }} />}

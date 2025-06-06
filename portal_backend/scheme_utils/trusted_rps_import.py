@@ -45,7 +45,6 @@ class RPFields:
 def create_rp(
     org: import_utils.Organization,
     yivi_tme: import_utils.YiviTrustModelEnv,
-    environment: str,
 ) -> RelyingParty:
     if not org or not yivi_tme:
         raise ValueError("Missing organization or trust model environment")
@@ -73,9 +72,7 @@ def create_rp(
             rp.published_at = now
         rp.save(skip_import_approve=True)
 
-        logger.info(
-            f"{'Created' if rp_created else 'Updated'} Relying Party: {org} in environment {environment}"
-        )
+        logger.info(f"{'Created' if rp_created else 'Updated'} Relying Party: {org}")
 
     except Exception as rp_error:
         raise Exception(f"Failed to create/update RelyingParty for {org}: {rp_error}")
@@ -86,7 +83,6 @@ def create_rp(
 def create_hostnames(
     rpfields: RPFields,
     rp: RelyingParty,
-    environment: str,
 ) -> None:
     """
     Create or update RelyingPartyHostname objects for the RelyingParty object"""
@@ -109,7 +105,7 @@ def create_hostnames(
                 },
             )
             logger.info(
-                f"{'Created' if hostname_created else 'Updated'} Hostname: {hostname} for RP {rpfields.slug} in environment {environment}"
+                f"{'Created' if hostname_created else 'Updated'} Hostname: {hostname} for RP {rpfields.slug}"
             )
         except Exception as hostname_error:
             raise Exception(
@@ -135,8 +131,8 @@ def create_org_rp(all_RPs_dict: dict, environment: str, repo_path: str) -> None:
             rpfields.slug, rpfields.name_en, rpfields.name_nl, rpfields.logo_path
         )
         yivi_tme = import_utils.get_trust_model_env(environment)
-        rp = create_rp(org, yivi_tme, environment)
-        create_hostnames(rpfields, rp, environment)
+        rp = create_rp(org, yivi_tme)
+        create_hostnames(rpfields, rp)
 
 
 # download requestors repo
@@ -144,21 +140,15 @@ def import_rps() -> None:
 
     try:
         config = import_utils.load_config()
-        environment = os.environ.get("RP_ENV")
 
-        if environment in ["staging", "production"]:
-            logger.info(f"Importing relying parties for environment: {environment}")
-        else:
-            raise ValueError(f"No specific environment specified. Got: '{environment}'")
-
-        repo_url = config["RP"]["environment"]["production"]["repo-url"]
-        repo_name = config["RP"]["environment"]["production"]["name"]
+        repo_url = config["RP"]["repo-url"]
+        repo_name = config["RP"]["name"]
         repo_path = f"{EXTRACT_DIR}/{repo_name}-master"
 
         import_utils.download_extract_repo(repo_url, repo_name, EXTRACT_DIR)
 
         all_RPs_dict = import_utils.load_json_to_dict(f"{repo_path}/requestors.json")
-        create_org_rp(all_RPs_dict, environment, repo_path)
+        create_org_rp(all_RPs_dict, "production", repo_path)
 
     except Exception as e:
         raise Exception(f"Failed to import relying parties: {e}")
