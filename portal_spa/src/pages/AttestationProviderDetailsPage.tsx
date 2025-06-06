@@ -5,6 +5,7 @@ import type { AttestationProvider } from "@/models/attestationprovider";
 import { axiosInstance } from "@/services/axiosInstance";
 import { toast } from "sonner";
 import { apiEndpoint } from "@/services/axiosInstance";
+import { Badge } from "@/components/ui/badge";
 
 export default function AttestationProviderDetailsPage() {
   const { org_slug, environment, ap_slug } = useParams();
@@ -44,7 +45,12 @@ export default function AttestationProviderDetailsPage() {
           />
         )}
       </div>
-      <h1 className="text-3xl font-semibold">{apDetails?.organization}</h1>
+      <h1 className="text-3xl font-semibold flex items-center gap-3">
+        {apDetails?.organization}
+        {apDetails?.deprecated_since && (
+          <Badge variant="destructive">Deprecated</Badge>
+        )}
+      </h1>
 
       {/* Provider Details Card */}
 
