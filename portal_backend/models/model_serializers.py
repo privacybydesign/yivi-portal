@@ -117,6 +117,7 @@ class AttestationProviderSerializer(serializers.ModelSerializer):
             "full_path",
             "status",
             "organization_logo",
+            "deprecated_since",
         ]
 
 

@@ -116,6 +116,9 @@ class APFields:
             self.contact_address = self.all_APs_dict[self.AP]["Issuer"][
                 "ContactAddress"
             ]
+            self.deprecated_since = import_utils.normalize_deprecated_since(
+                self.all_APs_dict[self.AP]["Issuer"].get("DeprecatedSince", None)
+            )
             self.logo_path = self.all_APs_dict[self.AP]["logo_path"]
             self.credentials = self.all_APs_dict[self.AP].get("credentials", {})
 
@@ -124,7 +127,12 @@ class APFields:
 
 
 class CredentialFields:
-    def __init__(self, credential_dict: dict) -> None:
+
+    def __init__(
+        self,
+        credential_dict: dict,
+        apfields: APFields,
+    ) -> None:
         try:
             spec = credential_dict.get("IssueSpecification", {})
             self.credential_id = spec.get("CredentialID")
@@ -146,9 +154,12 @@ class CredentialFields:
             else:
                 self.issue_url = issue_url
 
-            self.deprecated_since = import_utils.normalize_deprecated_since(
-                spec.get("DeprecatedSince", None)
-            )
+            if apfields.deprecated_since:
+                self.deprecated_since = apfields.deprecated_since
+            else:
+                self.deprecated_since = import_utils.normalize_deprecated_since(
+                    spec.get("DeprecatedSince", None)
+                )
 
             attributes = spec.get("Attributes", {}).get("Attribute", [])
 
@@ -180,6 +191,7 @@ def create_ap(
                 "reviewed_accepted": True,
                 "published": True,
                 "ap_slug": apfields.slug,  # running in different environments we will have same slug in different environments so I made it unique per environment
+                "deprecated_since": apfields.deprecated_since,
             },
         )
 
@@ -349,7 +361,7 @@ def create_update_APs(environment: str) -> None:
             )
 
             for cred_id, cred_dict in apfields.credentials.items():
-                cfields = CredentialFields(cred_dict)
+                cfields = CredentialFields(cred_dict, apfields)
                 credential = create_credential(ap, cfields, environment)
                 create_credential_attributes(credential, cfields, environment)
 
