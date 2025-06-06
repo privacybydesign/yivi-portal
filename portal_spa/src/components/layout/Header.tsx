@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate, useLocation } from "react-router-dom";
+import { Link, useNavigate, useLocation, matchRoutes } from "react-router-dom";
 import { createAvatar } from "@dicebear/core";
 import { initials } from "@dicebear/collection";
 import useStore from "@/store";
@@ -16,6 +16,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
+import ProtectedRoute from "../auth/ProtectedRoute";
 
 export default function Header() {
   const initializeAuth = useStore((state) => state.initializeAuth);
@@ -43,7 +44,18 @@ export default function Header() {
   const handleLogout = async () => {
     await axiosInstance.post("/v1/logout");
     setAccessToken(null);
-    navigate("/login");
+
+    const isOnProtectedRoute = matchRoutes(
+      [
+        { path: "organizations/:organization/manage" },
+        { path: "organizations/register" },
+      ],
+      location.pathname,
+    );
+
+    if (isOnProtectedRoute?.length) {
+      navigate("/");
+    }
   };
 
   const fetchFullOrganizationName = async (slug: string) => {
@@ -94,7 +106,7 @@ export default function Header() {
                   location.pathname === "/organizations"
                     ? "bg-muted hover:bg-muted"
                     : "",
-              })
+              }),
             )}
           >
             Organizations
