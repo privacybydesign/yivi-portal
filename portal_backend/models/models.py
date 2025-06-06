@@ -42,12 +42,14 @@ class OrganizationQuerySet(models.QuerySet):
                 RelyingParty.objects.filter(
                     organization=OuterRef("pk"),
                     published=True,
+                    organization__is_verified=True,
                 )
             ),
             is_ap=Exists(
                 AttestationProvider.objects.filter(
                     organization=OuterRef("pk"),
                     published=True,
+                    organization__is_verified=True,
                 )
             ),
         )
@@ -74,7 +76,6 @@ class Organization(models.Model):
     city = models.CharField(max_length=35, null=True, blank=True)
     country = CountryField(null=True, blank=True)
     is_verified = models.BooleanField(default=False)
-    verified_at = models.DateTimeField(null=True)
     logo = ProcessedImageField(
         upload_to=LogoStorage.get_logo_path,
         processors=[ConvertToRGB()],
@@ -93,6 +94,13 @@ class Organization(models.Model):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._logo = self.logo
+        self._name_en = self.name_en
+        self._name_nl = self.name_nl
+        self._street = self.street
+        self._house_number = self.house_number
+        self._postal_code = self.postal_code
+        self._city = self.city
+        self._country = self.country
 
     def save(self, *args, **kwargs):
         if not self.slug:
@@ -102,6 +110,18 @@ class Organization(models.Model):
         if self._logo != self.logo and self._logo:
             if not self.approved_logo == self._logo:
                 self.logo.storage.delete(self._logo.path)
+        # if any of the fields changed is_verified resets to False
+        if (
+            self._logo != self.logo
+            or self._name_en != self.name_en
+            or self._name_nl != self.name_nl
+            or self._street != self.street
+            or self._house_number != self.house_number
+            or self._postal_code != self._logo.postal_code
+            or self._city != self._logo.city
+            or self._country != self._logo.country
+        ):
+            self.is_verified = False
 
         return super().save(*args, **kwargs)
 
