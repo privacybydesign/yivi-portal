@@ -9,13 +9,13 @@ export interface Organization {
   country: string;
   city: string;
   is_verified: boolean;
-  verified_at: string | null;
   logo: string;
   created_at: string;
   last_updated_at: string;
   is_RP: boolean;
   is_AP: boolean;
   trust_models?: trust_model[];
+  verification_status: string;
 }
 export type trust_model = {
   name: string;

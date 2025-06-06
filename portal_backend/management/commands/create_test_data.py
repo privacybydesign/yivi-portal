@@ -62,7 +62,6 @@ class Command(BaseCommand):
                 "postal_code": "24343",
                 "street": "test",
                 "is_verified": True,
-                "verified_at": timezone.now(),
             },
         )
         self.stdout.write(self.style.SUCCESS(f"Created organization: {org.name_en}"))

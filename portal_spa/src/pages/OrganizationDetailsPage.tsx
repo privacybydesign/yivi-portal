@@ -217,7 +217,7 @@ export default function OrganizationPage() {
 
         <div className="flex gap-2">
           {organization.is_AP === true && (
-            <Badge className="bg-green-100 text-green-800">
+            <Badge className="bg-purple-100 text-purple-800">
               Attestation Provider
             </Badge>
           )}
@@ -225,7 +225,7 @@ export default function OrganizationPage() {
             <Badge className="bg-blue-100 text-blue-800">Relying Party</Badge>
           )}
           {organization.is_verified && (
-            <Badge className="bg-purple-100 text-purple-800">Verified</Badge>
+            <Badge className="bg-green-100 text-green-800">Verified</Badge>
           )}
         </div>
       </div>
@@ -277,12 +277,6 @@ export default function OrganizationPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-3 gap-2">
-                <span className="font-medium">ID:</span>
-                <span className="col-span-2 font-mono text-sm">
-                  {organization.id}
-                </span>
-              </div>
-              <div className="grid grid-cols-3 gap-2">
                 <span className="font-medium">Slug:</span>
                 <span className="col-span-2">{organization.slug}</span>
               </div>
@@ -308,12 +302,6 @@ export default function OrganizationPage() {
                 <span className="font-medium">Last Updated:</span>
                 <span className="col-span-2">
                   {formatDate(organization.last_updated_at)}
-                </span>
-              </div>
-              <div className="grid grid-cols-3 gap-2">
-                <span className="font-medium">Verified At:</span>
-                <span className="col-span-2">
-                  {formatDate(organization.verified_at)}
                 </span>
               </div>
             </CardContent>
