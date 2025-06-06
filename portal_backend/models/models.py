@@ -183,6 +183,7 @@ class AttestationProvider(models.Model):
     shortname_nl = models.CharField(max_length=100, null=True, blank=True)
     contact_email = models.EmailField(max_length=255, null=True, blank=True)
     contact_address = models.URLField(null=True, blank=True)
+    deprecated_since = models.DateField(null=True, blank=True)
     ready = models.BooleanField(default=False)
     ready_at = models.DateTimeField(null=True, blank=True)
     reviewed_accepted = models.BooleanField(null=True, default=False)

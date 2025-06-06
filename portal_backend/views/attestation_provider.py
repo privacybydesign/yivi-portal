@@ -65,6 +65,7 @@ class AttestationProviderRetrieveView(APIView):
                 "credential_id": credential.credential_id,
                 "description_en": credential.description_en,
                 "full_path": credential.full_path,
+                "deprecated_since": credential.deprecated_since,
                 "attributes": [
                     {
                         "id": attr.id,

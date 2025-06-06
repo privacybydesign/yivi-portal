@@ -15,4 +15,5 @@ export interface AttestationProvider {
   yivi_tme: string;
   full_path: string;
   organization_logo: string;
+  deprecated_since?: string;
 }

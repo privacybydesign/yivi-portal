@@ -27,7 +27,7 @@ export default function CredentialDetailsPage() {
   return (
     <div className="space-y-8 p-4">
       <h1 className="text-3xl font-semibold flex items-center gap-3">
-        {credential.name_en} Credential
+        {credential.name_en}
         {credential.deprecated_since && (
           <Badge variant="destructive">Deprecated</Badge>
         )}

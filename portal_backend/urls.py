@@ -17,7 +17,10 @@ from portal_backend.views.attestation_provider import (
     AttestationProviderListView,
     AttestationProviderRetrieveView,
 )
-from portal_backend.views.credentials import CredentialListView
+from portal_backend.views.credentials import (
+    CredentialListView,
+    CredentialsListViewWithDeprecated,
+)
 from portal_backend.views.relying_party import (
     RelyingPartyHostnameStatusView,
     RelyingPartyListView,
@@ -112,7 +115,6 @@ urlpatterns = [
         RelyingPartyHostnameStatusView.as_view(),
         name="rp-hostname-status",
     ),
-    path("v1/yivi/credentials/", CredentialListView.as_view(), name="credential-list"),
     # Trust Models
     path("v1/trust-models/", TrustModelListView.as_view(), name="trust-model-list"),
     path(
@@ -125,6 +127,13 @@ urlpatterns = [
         "v1/<str:trust_model_name>/environments/",
         YiviTrustModelEnvListView.as_view(),
         name="trust-model-environment-list",
+    ),
+    # Credentials
+    path("v1/yivi/credentials/", CredentialListView.as_view(), name="credential-list"),
+    path(
+        "v1/yivi/all-credentials/",
+        CredentialsListViewWithDeprecated.as_view(),
+        name="credentials-list-with-deprecated",
     ),
     # Attestation Providers
     path(

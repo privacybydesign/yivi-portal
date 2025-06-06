@@ -18,8 +18,8 @@ export default function AttributeIndexLayout() {
   const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
-    axiosInstance.get("/v1/yivi/credentials/").then((res) => {
-      setCredentials(res.data.credentials);
+    axiosInstance.get("/v1/yivi/all-credentials/").then((res) => {
+      setCredentials(res.data);
     });
   }, []);
 
