@@ -411,14 +411,14 @@ export default function OrganizationPage() {
                                     <ul className="list-disc list-inside text-gray-800 font-mono space-y-1">
                                       {cred.attributes.length > 0 ? (
                                         cred.attributes.map((attr) => (
-                                          <ul key={attr.id}>
+                                          <li key={attr.id}>
                                             <span className="font-light">
                                               {attr.name_en}
                                             </span>{" "}
                                             <span className="text-gray-500">
                                               {attr.full_path}
                                             </span>
-                                          </ul>
+                                          </li>
                                         ))
                                       ) : (
                                         <li className="text-gray-400">
