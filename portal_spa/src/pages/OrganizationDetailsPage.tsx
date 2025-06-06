@@ -18,7 +18,7 @@ export default function OrganizationPage() {
   const [loadingApDetails, setLoadingApDetails] = useState(false);
   const [loadingRpDetails, setLoadingRpDetails] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [activeSection, setActiveSection] = useState("overview");
+  const [activeSection, setActiveSection] = useState("");
 
   useEffect(() => {
     const fetchOrganizationData = async () => {
@@ -131,6 +131,16 @@ export default function OrganizationPage() {
     }
   };
 
+  useEffect(() => {
+    if (organization) {
+      if (organization.is_AP) {
+        handleSectionChange("ap-details");
+      } else if (organization.is_RP) {
+        handleSectionChange("rp-details");
+      }
+    }
+  }, [organization]);
+
   // Handler for section changes with data fetching
   const handleSectionChange = (section: string) => {
     setActiveSection(section);
@@ -154,11 +164,6 @@ export default function OrganizationPage() {
     if (shouldFetchApDetails) {
       fetchAttestationProviderDetails();
     }
-  };
-
-  const formatDate = (dateString: string | null) => {
-    if (!dateString) return "Not available";
-    return new Date(dateString).toLocaleString();
   };
 
   if (loading) {
@@ -217,7 +222,7 @@ export default function OrganizationPage() {
 
         <div className="flex gap-2">
           {organization.is_AP === true && (
-            <Badge className="bg-purple-100 text-purple-800">
+            <Badge className="bg-green-100 text-green-800">
               Attestation Provider
             </Badge>
           )}
@@ -225,13 +230,13 @@ export default function OrganizationPage() {
             <Badge className="bg-blue-100 text-blue-800">Relying Party</Badge>
           )}
           {organization.is_verified && (
-            <Badge className="bg-green-100 text-green-800">Verified</Badge>
+            <Badge className="bg-purple-100 text-purple-800">Verified</Badge>
           )}
         </div>
       </div>
 
       <div className="flex mb-6 border-b">
-        <button
+        {/* <button
           className={`px-4 py-2 font-medium ${
             activeSection === "overview"
               ? "border-b-2 border-blue-500 text-blue-600"
@@ -240,7 +245,7 @@ export default function OrganizationPage() {
           onClick={() => handleSectionChange("overview")}
         >
           Overview
-        </button>
+        </button> */}
 
         {organization.is_AP === true && (
           <button
@@ -268,46 +273,6 @@ export default function OrganizationPage() {
           </button>
         )}
       </div>
-
-      {activeSection === "overview" && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Basic Information</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-3 gap-2">
-                <span className="font-medium">Slug:</span>
-                <span className="col-span-2">{organization.slug}</span>
-              </div>
-              <div className="grid grid-cols-3 gap-2">
-                <span className="font-medium">Country:</span>
-                <span className="col-span-2">{organization.country}</span>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Status Information</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-3 gap-2">
-                <span className="font-medium">Created At:</span>
-                <span className="col-span-2">
-                  {formatDate(organization.created_at)}
-                </span>
-              </div>
-              <div className="grid grid-cols-3 gap-2">
-                <span className="font-medium">Last Updated:</span>
-                <span className="col-span-2">
-                  {formatDate(organization.last_updated_at)}
-                </span>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
 
       {activeSection === "ap-details" && organization.is_AP === true && (
         <Card>
