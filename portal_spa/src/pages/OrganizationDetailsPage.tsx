@@ -326,7 +326,9 @@ export default function OrganizationPage() {
           <CardContent>
             <p className="mb-4 text-gray-600">
               The attestation providers listed below are configured for this
-              organization.
+              organization. If the credential or attestation provider in certain
+              environment has the deprecated flag, it means that it can no
+              longer be used to issue the credentials.
             </p>
             {loadingApDetails ? (
               <div className="py-8 text-center text-gray-500">
@@ -342,6 +344,11 @@ export default function OrganizationPage() {
                         <span className="text-sm text-gray-500">
                           ({ap.environment})
                         </span>
+                        {ap.deprecated_since && (
+                          <Badge variant="destructive" className="ml-2">
+                            Deprecated
+                          </Badge>
+                        )}
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
@@ -356,11 +363,8 @@ export default function OrganizationPage() {
                         </div>
 
                         <div className="mt-1">
-                          <span className="font-medium">Credentials: </span>
-                          <p>
-                            The following credentials can be issued by this
-                            Attestation Provider.
-                          </p>
+                          The following credentials can be issued by this
+                          Attestation Provider.
                         </div>
                         <div className="text-sm text-gray-700 mt-2">
                           {ap.credentials.length === 0 ? (
@@ -377,9 +381,18 @@ export default function OrganizationPage() {
                                 >
                                   <div className="text-lg font-semibold text-gray-800 flex flex-wrap gap-2 items-center">
                                     {cred.name_en}
+
                                     <span className="text-sm text-gray-500 font-mono">
                                       ({cred.full_path})
                                     </span>
+                                    {cred.deprecated_since && (
+                                      <Badge
+                                        variant="destructive"
+                                        className="ml-2"
+                                      >
+                                        Deprecated
+                                      </Badge>
+                                    )}
                                   </div>
 
                                   <p className="text-sm text-gray-600">
