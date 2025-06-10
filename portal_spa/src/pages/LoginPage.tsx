@@ -11,18 +11,13 @@ export default function Login() {
 
   useEffect(() => {
     let web: any;
-
     import("@privacybydesign/yivi-frontend").then((yivi: any) => {
       web = yivi.newWeb({
-        debugging: import.meta.env.DEV, // Enable to get helpful output in the browser console
-        element: "#yivi-web-form", // Which DOM element to render to
+        debugging: import.meta.env.DEV,
+        element: "#yivi-web-form",
         language: "en",
-
-        // Back-end options
         session: {
-          // Point this to your controller:
           url: apiEndpoint + "/v1",
-
           start: {
             url: (o: any) => `${o.url}/session/`,
             method: "POST",
@@ -39,11 +34,10 @@ export default function Login() {
 
       web.start().then((result: any) => {
         setAccessToken(result.access);
-
         if (location.state?.from) {
           navigate(location.state.from.pathname, { replace: true });
         } else {
-          navigate(-1); // Go back to the previous page
+          navigate(-1);
         }
       });
     });
@@ -52,8 +46,39 @@ export default function Login() {
   }, [navigate, setAccessToken, location]);
 
   return (
-    <div className="flex p-6 justify-center items-center">
-      <div id="yivi-web-form"></div>
+    <div className="min-h-screen flex flex-col justify-center items-center p-10">
+      {/* <h1 className="text-2xl font-bold text-gray-900 mb-4">Login with Yivi</h1> */}
+
+      <p className="mb-3 text-gray-600 text-start max-w-md">
+        Scan the QR code with your Yivi app to authenticate with your email. If
+        you don't have the app, you can download it{" "}
+        <a
+          className="text-blue-600 hover:underline"
+          href="https://yivi.app/#download"
+        >
+          here
+        </a>
+        .
+      </p>
+
+      <div id="yivi-web-form" className="mb-8 max-w-md w-full"></div>
+      <p className="my-10 text-gray-600 text-start">
+        Having trouble? Read our{" "}
+        <a
+          href="https://yivi.app/faq/"
+          className="text-blue-600 hover:underline"
+        >
+          frequently asked questions
+        </a>{" "}
+        or contact us at{" "}
+        <a
+          href="mailto:support@yivi.app"
+          className="text-blue-600 hover:underline"
+        >
+          support@yivi.app
+        </a>
+        .
+      </p>
     </div>
   );
 }

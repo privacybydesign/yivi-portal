@@ -13,56 +13,62 @@ export default function Layout() {
   >({});
   const organizationSlugs = useStore((state) => state.organizationSlugs);
 
-  const fetchOrganizationName = async (slug: string) => {
-    try {
-      const response = await axiosInstance.get(`/v1/organizations/${slug}`);
-      if (response.status === 200) {
-        return response.data.name_en;
-      }
-      return slug;
-    } catch (error) {
-      console.error(`Error fetching organization name for ${slug}:`, error);
-      return slug;
-    }
-  };
-
   useEffect(() => {
-    const loadOrganizationNames = async () => {
-      const slugMap: Record<string, string> = {};
-      for (const slug of organizationSlugs) {
-        const name = await fetchOrganizationName(slug);
-        slugMap[slug] = name;
-      }
-      setOrganizationNames(slugMap);
+    const fetchOrganizationNames = async () => {
+      const namesMap: Record<string, string> = {};
+      await Promise.all(
+        organizationSlugs.map(async (slug) => {
+          try {
+            const { data, status } = await axiosInstance.get(
+              `/v1/organizations/${slug}`
+            );
+            namesMap[slug] =
+              status === 200 && data.name_en ? data.name_en : slug;
+          } catch (error) {
+            console.error(
+              `Error fetching organization name for ${slug}:`,
+              error
+            );
+            namesMap[slug] = slug;
+          }
+        })
+      );
+      setOrganizationNames(namesMap);
     };
 
     if (organizationSlugs.length > 0) {
-      loadOrganizationNames();
+      fetchOrganizationNames();
     }
   }, [organizationSlugs]);
 
   return (
     <OrganizationContext.Provider value={organizationNames}>
-      <div className="min-h-screen flex flex-col">
+      <div className="flex flex-col min-h-screen bg-gray-50">
         <Header />
+
         <main className="flex-grow p-4">
-          <Outlet />
+          <div className="mx-auto w-full">
+            <Outlet />
+          </div>
         </main>
-        <footer className="bg-gray-100 p-4">
-          <div className="flex justify-between items-center container px-4 mx-auto">
-            <p>&copy; 2025 Yivi Portal. All rights reserved.</p>
-            <div className="flex gap-6">
+
+        <footer className="bg-white border-t p-4 shadow mt-4">
+          <div className="container mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+            <p className="text-center text-sm text-gray-500">
+              &copy; 2025 Yivi Portal. All rights reserved.
+            </p>
+            <div className="flex gap-4 justify-center">
               <Link
                 to="/terms-of-service"
                 className={cn(buttonVariants({ variant: "link" }))}
               >
-                Terms of service
+                Terms of Service
               </Link>
               <Link
                 to="/privacy-policy"
                 className={cn(buttonVariants({ variant: "link" }))}
               >
-                Privacy policy
+                Privacy Policy
               </Link>
             </div>
           </div>

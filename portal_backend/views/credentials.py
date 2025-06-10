@@ -25,6 +25,8 @@ class CredentialListView(APIView):
 
 
 class CredentialsListViewWithDeprecated(APIView):
+    permission_classes = [permissions.AllowAny]
+
     """
     This view returns all credentials for the attribute index page, including deprecated ones.
     """

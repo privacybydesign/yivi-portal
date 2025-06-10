@@ -15,6 +15,12 @@ import { axiosInstance, apiEndpoint } from "@/services/axiosInstance";
 import { useSearchParams, Link } from "react-router-dom";
 import type { PaginationResponse } from "@/models/paginated-response";
 import type { Organization } from "@/models/organization";
+import {
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+} from "@/components/ui/tooltip";
+import { Info } from "lucide-react";
 
 export default function OrganizationsListPage() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -195,7 +201,7 @@ export default function OrganizationsListPage() {
   };
 
   return (
-    <div className="container mx-auto p-4">
+    <div className="container mx-auto p-4 bg-white shadow-md rounded-lg">
       <div className="flex flex-col gap-2 mb-6">
         <div className="flex justify-between items-start">
           <div>
@@ -203,16 +209,24 @@ export default function OrganizationsListPage() {
           </div>
         </div>
 
-        <div className="mb-1">
-          In Yivi echosystem, organizations can participate as parties that
-          provide identity material, or parties that consume it. The
-          organizations listed below are either Attestation Providers (APs) or
-          Relying Parties (RPs), or both. You can filter by role, or search by
-          name. The AP and RP coloumns indicate whether the organization is an
-          Attestation Provider or a Relying Party or both.
+        <div className="mb-4">
+          In the Yivi echosystem, organizations are parties that can provide
+          identity material, or parties that consume it. The organizations
+          listed below are either Attestation Providers or Relying Parties, or
+          both. You can filter by role, or search by name. Learn more about how
+          Yivi works{" "}
+          <a
+            href="https://docs.yivi.app/what-is-yivi"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-600 hover:underline"
+          >
+            here
+          </a>
+          .
         </div>
 
-        <div className="border rounded-md p-4 bg-gray-50">
+        <div className="border rounded-md p-2 mb-4">
           <h2 className="text-lg font-medium mb-4">Filters</h2>
 
           <div className="grid grid-cols-1 gap-4 mb-4">
@@ -290,9 +304,62 @@ export default function OrganizationsListPage() {
           <TableRow>
             <TableHead className="w-16">Logo</TableHead>
             <TableHead>Name</TableHead>
-            <TableHead>Trust Model</TableHead>
-            <TableHead>AP</TableHead>
-            <TableHead>RP</TableHead>
+            <TableHead>
+              Trust Model{" "}
+              <Tooltip>
+                {" "}
+                <TooltipTrigger asChild>
+                  <div className="ml-1 inline-flex items-center justify-center w-4 h-4 rounded-full bg-gray-200 text-gray-600 cursor-pointer">
+                    <Info className="w-3 h-3" />
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent side="top">
+                  <p>
+                    Trust model distinguishes in which scheme this organization
+                    has a valid credential. Currently only the legacy trust
+                    model, Yivi, is supported. In the future, an EUDI Compliant
+                    trust model will be supported. Read more
+                    <a
+                      href="https://docs.yivi.app/blog/2025-eudi-wallet-roadmap"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:underline"
+                    >
+                      {" "}
+                      here
+                    </a>
+                  </p>
+                </TooltipContent>
+              </Tooltip>{" "}
+            </TableHead>
+            <TableHead>
+              AP
+              <Tooltip>
+                {" "}
+                <TooltipTrigger asChild>
+                  <div className="ml-1 inline-flex items-center justify-center w-4 h-4 rounded-full bg-gray-200 text-gray-600 cursor-pointer">
+                    <Info className="w-3 h-3" />
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent side="top">
+                  <p>Also known as attestation provider, or an issuer</p>
+                </TooltipContent>
+              </Tooltip>{" "}
+            </TableHead>
+            <TableHead>
+              RP{" "}
+              <Tooltip>
+                {" "}
+                <TooltipTrigger asChild>
+                  <div className="ml-1 inline-flex items-center justify-center w-4 h-4 rounded-full bg-gray-200 text-gray-600 cursor-pointer">
+                    <Info className="w-3 h-3" />
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent side="top">
+                  <p>Also known as a relying party, or a verifier</p>
+                </TooltipContent>
+              </Tooltip>{" "}
+            </TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -344,18 +411,14 @@ export default function OrganizationsListPage() {
                     </TableCell>
                     <TableCell>
                       {org.is_AP === true ? (
-                        <Badge className="bg-green-100 text-green-800">
-                          Yes
-                        </Badge>
+                        <Badge variant={"default"}>Yes</Badge>
                       ) : (
                         <Badge variant="outline">No</Badge>
                       )}
                     </TableCell>
                     <TableCell>
                       {org.is_RP === true ? (
-                        <Badge className="bg-green-100 text-green-800">
-                          Yes
-                        </Badge>
+                        <Badge variant="default">Yes</Badge>
                       ) : (
                         <Badge variant="outline">No</Badge>
                       )}
