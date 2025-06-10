@@ -16,6 +16,7 @@ export default function Login() {
       web = yivi.newWeb({
         debugging: import.meta.env.DEV, // Enable to get helpful output in the browser console
         element: "#yivi-web-form", // Which DOM element to render to
+        language: "en",
 
         // Back-end options
         session: {

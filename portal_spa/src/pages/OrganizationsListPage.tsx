@@ -22,15 +22,8 @@ export default function OrganizationsListPage() {
   const [searchQuery, setSearchQuery] = useState(
     searchParams.get("search") || ""
   );
-  const [selectedTrustModel, setSelectedTrustModel] = useState(
-    searchParams.get("trust_model") || "all"
-  );
-  const [APSelected, setAPSelected] = useState(
-    !searchParams.has("ap") || searchParams.get("ap") === "true"
-  );
-  const [RPSelected, setRPSelected] = useState(
-    !searchParams.has("rp") || searchParams.get("rp") === "true"
-  );
+  const [APSelected, setAPSelected] = useState(false);
+  const [RPSelected, setRPSelected] = useState(false);
   const [currentPage, setCurrentPage] = useState(() => {
     const page = searchParams.get("page");
     return page ? parseInt(page) : 1;
@@ -38,7 +31,6 @@ export default function OrganizationsListPage() {
 
   const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [loading, setLoading] = useState(true);
-  const [trustModels, setTrustModels] = useState<string[]>([]);
   const [applyingFilters, setApplyingFilters] = useState(false);
 
   // Pagination state
@@ -50,7 +42,6 @@ export default function OrganizationsListPage() {
   const fetchOrganizations = ({
     page,
     searchQuery,
-    trustModel,
     ap,
     rp,
   }: {
@@ -71,11 +62,6 @@ export default function OrganizationsListPage() {
       url += `&search=${encodeURIComponent(searchQuery.trim())}`;
     }
 
-    // Add trust model filter
-    if (trustModel !== "all") {
-      url += `&trust_model=${encodeURIComponent(trustModel)}`;
-    }
-
     url += `&rp=${rp}`;
     url += `&ap=${ap}`;
 
@@ -87,16 +73,6 @@ export default function OrganizationsListPage() {
         setTotalCount(data.count);
         setTotalPages(Math.ceil(data.count / pageSize));
         setOrganizations(data.results);
-
-        // Extract trust models if not already done
-        const trustModels = [
-          ...new Set(
-            data.results.flatMap(
-              (org) => org.trust_models?.map((tm) => tm.name) || []
-            )
-          ),
-        ];
-        setTrustModels(trustModels);
 
         setLoading(false);
         setApplyingFilters(false);
@@ -124,10 +100,9 @@ export default function OrganizationsListPage() {
     const page = parseInt(searchParams.get("page") || "1");
     const search = searchParams.get("search") || "";
     const trustModel = searchParams.get("trust_model") || "all";
-    const selectAPs = searchParams.get("ap") !== "false"; // default true
-    const selectRPs = searchParams.get("rp") !== "false"; // default true
+    const selectAPs = searchParams.get("ap") === "true";
+    const selectRPs = searchParams.get("rp") === "true";
     setSearchQuery(search);
-    setSelectedTrustModel(trustModel);
     setAPSelected(selectAPs);
     setRPSelected(selectRPs);
     setCurrentPage(page);
@@ -144,7 +119,6 @@ export default function OrganizationsListPage() {
   // Function to apply filters
   const applyFilters = (
     searchQuery: string,
-    selectedTrustModel: string,
     selectAPs: boolean,
     selectRPs: boolean
   ) => {
@@ -152,21 +126,19 @@ export default function OrganizationsListPage() {
     updateQueryParams({
       page: "1",
       search: searchQuery || undefined,
-      trust_model:
-        selectedTrustModel !== "all" ? selectedTrustModel : undefined,
       ap: selectAPs ? "true" : "false",
       rp: selectRPs ? "true" : "false",
     });
   };
 
-  const handleFilterChange = (ap: boolean, rp: boolean, trustModel: string) => {
-    applyFilters(searchQuery, trustModel, ap, rp);
+  const handleFilterChange = (ap: boolean, rp: boolean) => {
+    applyFilters(searchQuery, ap, rp);
   };
 
   // Handle search input change with debounce to stop rapid call to API
   const handleSearch = (value: string) => {
     setSearchQuery(value);
-    applyFilters(value, selectedTrustModel, APSelected, RPSelected);
+    applyFilters(value, APSelected, RPSelected);
   };
 
   // Handle page change
@@ -224,17 +196,26 @@ export default function OrganizationsListPage() {
 
   return (
     <div className="container mx-auto p-4">
-      <div className="flex flex-col gap-6 mb-6">
-        <div className="flex justify-between items-start mb-4">
+      <div className="flex flex-col gap-2 mb-6">
+        <div className="flex justify-between items-start">
           <div>
             <h1 className="text-2xl font-bold">Organizations</h1>
           </div>
         </div>
 
+        <div className="mb-1">
+          In Yivi echosystem, organizations can participate as parties that
+          provide identity material, or parties that consume it. The
+          organizations listed below are either Attestation Providers (APs) or
+          Relying Parties (RPs), or both. You can filter by role, or search by
+          name. The AP and RP coloumns indicate whether the organization is an
+          Attestation Provider or a Relying Party or both.
+        </div>
+
         <div className="border rounded-md p-4 bg-gray-50">
           <h2 className="text-lg font-medium mb-4">Filters</h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+          <div className="grid grid-cols-1 gap-4 mb-4">
             <div>
               <label
                 htmlFor="search"
@@ -246,43 +227,14 @@ export default function OrganizationsListPage() {
                 id="search"
                 type="text"
                 placeholder="Search organizations..."
-                className="w-full px-3 py-2 border rounded-md"
+                className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 value={searchQuery}
                 onChange={(e) => handleSearch(e.target.value)}
                 onKeyDown={(e) =>
                   e.key === "Enter" &&
-                  applyFilters(
-                    searchQuery,
-                    selectedTrustModel,
-                    APSelected,
-                    RPSelected
-                  )
+                  applyFilters(searchQuery, APSelected, RPSelected)
                 }
               />
-            </div>
-
-            <div>
-              <label
-                htmlFor="trustModel"
-                className="block text-sm font-medium mb-1"
-              >
-                Trust Model
-              </label>
-              <select
-                id="trustModel"
-                value={selectedTrustModel}
-                onChange={(e) =>
-                  handleFilterChange(APSelected, RPSelected, e.target.value)
-                }
-                className="w-full px-3 py-2 border rounded-md"
-              >
-                <option value="all">All Trust Models</option>
-                {trustModels.map((model) => (
-                  <option key={model} value={model}>
-                    {model}
-                  </option>
-                ))}
-              </select>
             </div>
           </div>
 
@@ -292,23 +244,13 @@ export default function OrganizationsListPage() {
                 id="isAP"
                 checked={APSelected}
                 onCheckedChange={() =>
-                  handleFilterChange(
-                    !APSelected,
-                    RPSelected,
-                    selectedTrustModel
-                  )
+                  handleFilterChange(!APSelected, RPSelected)
                 }
               />
               <label
                 htmlFor="isAP"
                 className="text-sm font-medium leading-none cursor-pointer"
-                onClick={() =>
-                  handleFilterChange(
-                    !APSelected,
-                    RPSelected,
-                    selectedTrustModel
-                  )
-                }
+                onClick={() => handleFilterChange(!APSelected, RPSelected)}
               >
                 Attestation Provider
               </label>
@@ -319,42 +261,18 @@ export default function OrganizationsListPage() {
                 id="isRP"
                 checked={RPSelected}
                 onCheckedChange={() =>
-                  handleFilterChange(
-                    APSelected,
-                    !RPSelected,
-                    selectedTrustModel
-                  )
+                  handleFilterChange(APSelected, !RPSelected)
                 }
               />
               <label
                 htmlFor="isRP"
                 className="text-sm font-medium leading-none cursor-pointer"
-                onClick={() =>
-                  handleFilterChange(
-                    APSelected,
-                    !RPSelected,
-                    selectedTrustModel
-                  )
-                }
+                onClick={() => handleFilterChange(APSelected, !RPSelected)}
               >
                 Relying Party
               </label>
             </div>
           </div>
-
-          {(APSelected ||
-            RPSelected ||
-            selectedTrustModel !== "all" ||
-            searchQuery) && (
-            <div className="mt-4 text-sm text-blue-600">
-              Filtering:
-              {searchQuery && ` Search: "${searchQuery}"`}
-              {selectedTrustModel !== "all" &&
-                ` Trust Model: ${selectedTrustModel}`}
-              {APSelected && " | Attestation Providers"}
-              {RPSelected && " | Relying Parties"}
-            </div>
-          )}
         </div>
       </div>
 

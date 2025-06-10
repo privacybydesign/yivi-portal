@@ -18,7 +18,7 @@ export default function OrganizationPage() {
   const [loadingApDetails, setLoadingApDetails] = useState(false);
   const [loadingRpDetails, setLoadingRpDetails] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [activeSection, setActiveSection] = useState("overview");
+  const [activeSection, setActiveSection] = useState("");
 
   useEffect(() => {
     const fetchOrganizationData = async () => {
@@ -86,6 +86,21 @@ export default function OrganizationPage() {
       setLoadingRpDetails(false);
     }
   };
+  useEffect(() => {
+    if (!organization) return;
+    if (organization.is_AP) {
+      setActiveSection("ap-details");
+    } else if (organization.is_RP) {
+      setActiveSection("rp-details");
+    }
+
+    // Fetch details based on the active section
+    if (organization.is_RP && activeSection === "rp-details") {
+      fetchRelyingPartyDetails();
+    } else if (organization.is_AP && activeSection === "ap-details") {
+      fetchAttestationProviderDetails();
+    }
+  }, [organization, activeSection]);
 
   const fetchAttestationProviderDetails = async () => {
     try {
@@ -154,11 +169,6 @@ export default function OrganizationPage() {
     if (shouldFetchApDetails) {
       fetchAttestationProviderDetails();
     }
-  };
-
-  const formatDate = (dateString: string | null) => {
-    if (!dateString) return "Not available";
-    return new Date(dateString).toLocaleString();
   };
 
   if (loading) {
@@ -231,17 +241,6 @@ export default function OrganizationPage() {
       </div>
 
       <div className="flex mb-6 border-b">
-        <button
-          className={`px-4 py-2 font-medium ${
-            activeSection === "overview"
-              ? "border-b-2 border-blue-500 text-blue-600"
-              : "text-gray-600"
-          }`}
-          onClick={() => handleSectionChange("overview")}
-        >
-          Overview
-        </button>
-
         {organization.is_AP === true && (
           <button
             className={`px-4 py-2 font-medium ${
@@ -268,46 +267,6 @@ export default function OrganizationPage() {
           </button>
         )}
       </div>
-
-      {activeSection === "overview" && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Basic Information</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-3 gap-2">
-                <span className="font-medium">Slug:</span>
-                <span className="col-span-2">{organization.slug}</span>
-              </div>
-              <div className="grid grid-cols-3 gap-2">
-                <span className="font-medium">Country:</span>
-                <span className="col-span-2">{organization.country}</span>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Status Information</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-3 gap-2">
-                <span className="font-medium">Created At:</span>
-                <span className="col-span-2">
-                  {formatDate(organization.created_at)}
-                </span>
-              </div>
-              <div className="grid grid-cols-3 gap-2">
-                <span className="font-medium">Last Updated:</span>
-                <span className="col-span-2">
-                  {formatDate(organization.last_updated_at)}
-                </span>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
 
       {activeSection === "ap-details" && organization.is_AP === true && (
         <Card>
