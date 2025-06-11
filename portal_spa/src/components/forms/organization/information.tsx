@@ -22,6 +22,7 @@ import { updateOrganization } from "@/actions/manage-organization";
 import type { Organization } from "@/models/organization";
 import { LogoPreview } from "@/components/ui/logo-preview";
 import { useNavigate } from "react-router-dom";
+import { CountryDropdown } from "@/components/ui/country-dropdown";
 
 export default function ManageOrganizationInformationForm({
   organization,
@@ -36,7 +37,7 @@ export default function ManageOrganizationInformationForm({
     house_number: "",
     postal_code: "",
     city: "",
-    country: "",
+    country: "NL",
     logo: undefined,
     ...(organization || {}),
   } as RegistrationInputs);
@@ -144,7 +145,7 @@ export default function ManageOrganizationInformationForm({
                       if (!form.getValues("slug")) {
                         form.setValue(
                           "slug",
-                          generateSlug(event.target.value.trim())
+                          generateSlug(event.target.value.trim()),
                         );
                       }
                     }}
@@ -205,7 +206,7 @@ export default function ManageOrganizationInformationForm({
                     onBlur={(event) => {
                       if (!event.target.value && form.getValues("name_en")) {
                         const newSlug = generateSlug(
-                          form.getValues("name_en").trim()
+                          form.getValues("name_en").trim(),
                         );
                         form.setValue("slug", newSlug);
                       }
@@ -327,7 +328,18 @@ export default function ManageOrganizationInformationForm({
                 </div>
                 <div>
                   <FormControl>
-                    <Input {...field} />
+                    <>
+                      <Input type="hidden" {...field} />
+
+                      <CountryDropdown
+                        placeholder="Country"
+                        defaultValue={field.value}
+                        onChange={(country) => {
+                          field.onChange(country.alpha2);
+                          form.setValue("country", country.alpha2);
+                        }}
+                      />
+                    </>
                   </FormControl>
 
                   {formState.errors.country && (

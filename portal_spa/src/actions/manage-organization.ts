@@ -30,9 +30,8 @@ const updateClaims = async () => {
     update_claims: true,
   });
 
-  axiosInstance.defaults.headers.common[
-    "Authorization"
-  ] = `Bearer ${response.data.access}`;
+  axiosInstance.defaults.headers.common["Authorization"] =
+    `Bearer ${response.data.access}`;
 
   const { setAccessToken } = useStore.getState();
   setAccessToken(response.data.access);
@@ -41,7 +40,7 @@ const updateClaims = async () => {
 };
 
 export const fetchOrganization = async (
-  organizationSlug: string
+  organizationSlug: string,
 ): Promise<AxiosResponse | undefined> => {
   try {
     return await axiosInstance.get(`/v1/organizations/${organizationSlug}/`);
@@ -52,7 +51,7 @@ export const fetchOrganization = async (
 
 export const updateOrganization = async (
   formState: RegistrationFormState,
-  formData: FormData
+  formData: FormData,
 ): Promise<RegistrationFormState> => {
   if (
     !!formState.values["logo"] &&
@@ -64,7 +63,7 @@ export const updateOrganization = async (
   try {
     await axiosInstance.patch(
       `/v1/organizations/${formState.values.slug}/update/`,
-      formData
+      formData,
     );
 
     return {
@@ -101,8 +100,9 @@ export const updateOrganization = async (
 
 export const registerOrganization = async (
   formState: RegistrationFormState,
-  formData: FormData
+  formData: FormData,
 ): Promise<RegistrationFormState> => {
+  console.log(formState, formData);
   try {
     await axiosInstance.post("/v1/organizations/create/", formData);
     const slug = formData.get("slug") as string;
