@@ -240,20 +240,21 @@ export default function ManageOrganizationInformationForm({
                   only for verification purposes.
                 </FormDescription>
               </div>
-              <div className="border rounded-md shadow-xs">
-                <PhoneInput
-                  defaultCountry="nl"
-                  value={value || ""}
-                  onChange={onChange}
-                  className="flex-1 text-sm outline-none bg-transparent !border-none"
-                  inputClassName="!bg-transparent !border-none !border !shadow-none !ring-0 !outline-none w-full"
-                  inputStyle={{
-                    border: "none",
-                    backgroundColor: "transparent",
-                  }}
-                  {...field}
-                />
-
+              <div>
+                <div className="border rounded-md shadow-xs">
+                  <PhoneInput
+                    defaultCountry="nl"
+                    value={value || ""}
+                    onChange={onChange}
+                    className="flex-1 text-sm outline-none bg-transparent !border-none"
+                    inputClassName="!bg-transparent !border-none !border !shadow-none !ring-0 !outline-none w-full"
+                    inputStyle={{
+                      border: "none",
+                      backgroundColor: "transparent",
+                    }}
+                    {...field}
+                  />
+                </div>
                 {formState.errors.contact_number && (
                   <FormMessage className="text-sm text-red-600 mt-1">
                     {formState.errors.contact_number.message}
