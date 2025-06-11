@@ -117,9 +117,9 @@ class Organization(models.Model):
             or self._name_nl != self.name_nl
             or self._street != self.street
             or self._house_number != self.house_number
-            or self._postal_code != self._logo.postal_code
-            or self._city != self._logo.city
-            or self._country != self._logo.country
+            or self._postal_code != self.postal_code
+            or self._city != self.city
+            or self._country != self.country
         ):
             self.is_verified = False
 
