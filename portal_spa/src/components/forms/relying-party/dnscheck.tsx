@@ -23,11 +23,13 @@ const DnsChallenges: React.FC<DnsChallengesProps> = ({ hostnames }) => {
     <div className="space-y-4 border border-muted rounded-md p-4 bg-muted/50">
       <h4 className="text-base font-semibold ">DNS challenges</h4>
       <p className="text-sm text-muted-foreground">
-        To make sure that the entered domains belongs to this organization,
-        please verify the domain by adding a TXT record to your DNS settings.
-        Keep this as long as you plan to use this domain with Yivi. If after the
-        verification this challenge is not present, the verification will be
-        invalidated.
+        To make sure that the entered domains belongs to this organization, To
+        confirm that the entered domain belongs to this organization, please add
+        the provided TXT record to your DNS settings.
+        <br />
+        This record must remain in place for as long as you intend to use the
+        domain with Yivi. If the challenge record is removed after verification,
+        the domain will no longer be considered verified.
       </p>
 
       {/* Conditionally render DNS verification state  */}

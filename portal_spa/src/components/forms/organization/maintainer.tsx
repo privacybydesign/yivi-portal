@@ -92,19 +92,16 @@ export default function AddOrganizationMaintainerInformationForm({
         <DialogHeader>
           <DialogTitle>Add maintainer</DialogTitle>
           <DialogDescription>
-            This person will get the following permissions:
+            The user will receive the following permissions:{" "}
             <ul className="list-disc pl-5">
-              <li>
-                Can modify organization's information such as name and logo
-              </li>
-              <li>Can add/remove a relying party</li>
-              <li>Can add/remove other maintainers</li>
+              <li>Modify organization's information such as name and logo</li>
+              <li>Add/remove a relying party</li>
+              <li>Add/remove other maintainers</li>
             </ul>
             <p className="mt-2">
-              The maintainer will receive an email with a confirmation that they
-              have been added to this organization as a maintainer. Next time
-              they log in using that email address, they will be able to manage
-              this organization.
+              A confirmation email will be sent to notify them of their new
+              role. Once they log in with that email address, they’ll be able to
+              manage this organization.
             </p>
           </DialogDescription>
         </DialogHeader>

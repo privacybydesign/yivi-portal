@@ -124,7 +124,9 @@ export default function CredentialAttributeFields({
           </TooltipTrigger>
           <TooltipContent side="top">
             <p className="text-sm">
-              Please provide a brief reason for why this attribute is needed.
+              Please specify the purpose for which you are disclosing this
+              attribute. Be specific — e.g., “age verification for online
+              purchase” or “access to restricted content.”{" "}
             </p>
           </TooltipContent>
         </Tooltip>

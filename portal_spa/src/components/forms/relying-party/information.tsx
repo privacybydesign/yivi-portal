@@ -221,9 +221,9 @@ export default function RelyingPartyForm({
                         </TooltipTrigger>
                         <TooltipContent side="top">
                           <p className="text-sm">
-                            This will be an unique identifier for your relying
-                            party. You cannot have two relying parties with the
-                            same slug.
+                            This will serve as a unique identifier for your
+                            relying party. Each slug must be distinct —
+                            duplicate slugs are not allowed.
                           </p>
                         </TooltipContent>
                       </Tooltip>
@@ -293,8 +293,10 @@ export default function RelyingPartyForm({
                   </TooltipTrigger>
                   <TooltipContent side="top">
                     <p className="text-sm">
-                      Provide a brief description of the authentication context
-                      your selected Yivi attributes are used for.
+                      Provide a short description of the context in which you're
+                      using Yivi and the selected attributes. For example:
+                      "Access to employee portal" or "Proof of age for alcohol
+                      purchase".
                     </p>
                   </TooltipContent>
                 </Tooltip>
@@ -340,8 +342,9 @@ export default function RelyingPartyForm({
                   </TooltipTrigger>
                   <TooltipContent side="top">
                     <p className="text-sm">
-                      In this section, you can disclose the Yivi credential
-                      attributes you plan on asking on this relying party.
+                      In this section, specify the Yivi credential attributes
+                      you intend to request from users through this relying
+                      party.
                     </p>
                   </TooltipContent>
                 </Tooltip>
@@ -414,11 +417,11 @@ export default function RelyingPartyForm({
                           className="max-w-md break-words"
                         >
                           <p className="justify-center text-sm">
-                            By marking this relying party as ready, you indicate
-                            that you are ready for your relying party to be
-                            reviewed and published. You can always leave this
-                            empty or unmark it. This means your registration
-                            will remail as a draft and not finalized.
+                            Marking this relying party as "ready" indicates that
+                            it is prepared for review and publication. You may
+                            choose to leave it unmarked — in that case, your
+                            registration will remain in draft form and will not
+                            be finalized.
                           </p>
                         </TooltipContent>
                       </Tooltip>

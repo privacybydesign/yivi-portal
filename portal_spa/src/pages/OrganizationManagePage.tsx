@@ -26,7 +26,7 @@ export default function ManageLayout() {
           <div>
             <h2 className="text-lg font-medium">Basic information</h2>
             <p className="text-sm text-muted-foreground">
-              Update your organization&apos;s basic information.
+              Update your organization's basic information.
             </p>
           </div>
           {organization && (

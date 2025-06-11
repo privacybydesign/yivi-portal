@@ -210,11 +210,11 @@ export default function OrganizationsListPage() {
         </div>
 
         <div className="mb-4">
-          In the Yivi echosystem, organizations are parties that can provide
-          identity material, or parties that consume it. The organizations
-          listed below are either Attestation Providers or Relying Parties, or
-          both. You can filter by role, or search by name. Learn more about how
-          Yivi works{" "}
+          In the Yivi ecosystem, organizations play one of two roles: they
+          either provide identity attributes or consume them. The list below
+          includes both Attestation Providers and Relying Parties — some
+          organizations may serve as both. You can filter by role or search by
+          name. Learn more about how Yivi works{" "}
           <a
             href="https://docs.yivi.app/what-is-yivi"
             target="_blank"
@@ -315,10 +315,11 @@ export default function OrganizationsListPage() {
                 </TooltipTrigger>
                 <TooltipContent side="top">
                   <p>
-                    Trust model distinguishes in which scheme this organization
-                    has a valid credential. Currently only the legacy trust
-                    model, Yivi, is supported. In the future, an EUDI Compliant
-                    trust model will be supported. Read more
+                    The trust model indicates the scheme under which this
+                    organization holds a valid credential. Currently, only the
+                    privacy-first Yivi trust model is supported. Support for an
+                    EUDI-compliant trust model will be added in the future. Read
+                    more
                     <a
                       href="https://docs.yivi.app/blog/2025-eudi-wallet-roadmap"
                       target="_blank"

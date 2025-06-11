@@ -47,8 +47,6 @@ export default function Login() {
 
   return (
     <div className="min-h-screen flex flex-col justify-center items-center p-10">
-      {/* <h1 className="text-2xl font-bold text-gray-900 mb-4">Login with Yivi</h1> */}
-
       <p className="mb-3 text-gray-600 text-start max-w-md">
         Scan the QR code with your Yivi app to authenticate with your email. If
         you don't have the app, you can download it{" "}

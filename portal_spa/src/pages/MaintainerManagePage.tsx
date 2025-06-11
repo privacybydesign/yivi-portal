@@ -70,7 +70,7 @@ export default function MaintainerManagePage() {
           <div>
             <h2 className="text-lg font-medium">Maintainers</h2>
             <p className="text-sm text-muted-foreground">
-              Update your organization&apos;s maintainers.
+              Update your organization's maintainers.
             </p>
           </div>
           {organization && (

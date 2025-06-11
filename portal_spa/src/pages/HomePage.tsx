@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 
 function HomePage() {
   return (
-    <div className="flex justify-center items-start min-h-screen">
+    <div className="flex justify-center items-start p-6">
       <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start w-full max-w-3xl">
         <img
           className="dark:invert"
