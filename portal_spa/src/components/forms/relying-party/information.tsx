@@ -20,6 +20,12 @@ import type { Credential } from "@/models/credential";
 import DnsChallenges from "@/components/forms/relying-party/dnscheck";
 import CredentialAttributeFields from "@/components/custom/SelectAttributes";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+} from "@/components/ui/tooltip";
+import { Info } from "lucide-react";
 
 type RelyingPartyProps =
   | {
@@ -159,14 +165,14 @@ export default function RelyingPartyForm({
           variant={activeTab === "form-tab" ? "default" : "outline"}
           onClick={() => setActiveTab("form-tab")}
         >
-          Relying Party Details
+          Relying party details
         </Button>
         <Button
           variant={activeTab === "dns-tab" ? "default" : "outline"}
           onClick={() => setActiveTab("dns-tab")}
           disabled={!hasValidHostnames}
         >
-          DNS Check
+          DNS check
         </Button>
       </div>
 
@@ -205,7 +211,23 @@ export default function RelyingPartyForm({
                 name="rp_slug"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Relying Party Slug</FormLabel>
+                    <FormLabel>
+                      Relying party slug
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div className="ml-1 inline-flex items-center justify-center w-4 h-4 rounded-full bg-gray-200 text-gray-600 cursor-pointer">
+                            <Info className="w-3 h-3" />
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent side="top">
+                          <p className="text-sm">
+                            This will be an unique identifier for your relying
+                            party. You cannot have two relying parties with the
+                            same slug.
+                          </p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </FormLabel>
                     <FormControl>
                       <Input {...field} />
                     </FormControl>
@@ -262,7 +284,20 @@ export default function RelyingPartyForm({
 
             <div className="space-y-2 mt-4">
               <FormLabel className="text-base font-medium">
-                Context Description
+                Context description
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="ml-1 inline-flex items-center justify-center w-4 h-4 rounded-full bg-gray-200 text-gray-600 cursor-pointer">
+                      <Info className="w-3 h-3" />
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent side="top">
+                    <p className="text-sm">
+                      Provide a brief description of the authentication context
+                      your selected Yivi attributes are used for.
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
               </FormLabel>
 
               <FormField
@@ -295,7 +330,22 @@ export default function RelyingPartyForm({
             </div>
 
             <div className="space-y-2 mt-4">
-              <FormLabel className="font-bold">Credential attributes</FormLabel>
+              <FormLabel className="text-base font-medium">
+                Credential attributes
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="ml-1 inline-flex items-center justify-center w-4 h-4 rounded-full bg-gray-200 text-gray-600 cursor-pointer">
+                      <Info className="w-3 h-3" />
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent side="top">
+                    <p className="text-sm">
+                      In this section, you can disclose the Yivi credential
+                      attributes you plan on asking on this relying party.
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+              </FormLabel>
 
               <div className="space-y-2">
                 {attrFields.map((field, index) => (
@@ -313,29 +363,27 @@ export default function RelyingPartyForm({
                         size="sm"
                         onClick={() => removeAttr(index)}
                       >
-                        Remove Attribute
+                        Remove attribute
                       </Button>
                     </div>
                   </div>
                 ))}
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() =>
+                    appendAttr({
+                      credential_id: undefined,
+                      credential_attribute_name: "",
+                      reason_en: "",
+                      reason_nl: "",
+                    })
+                  }
+                >
+                  Add attribute
+                </Button>
               </div>
-
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="mt-2"
-                onClick={() =>
-                  appendAttr({
-                    credential_id: undefined,
-                    credential_attribute_name: "",
-                    reason_en: "",
-                    reason_nl: "",
-                  })
-                }
-              >
-                Add attribute
-              </Button>
             </div>
             <div className="space-y-2 mt-4">
               <FormField
@@ -354,7 +402,26 @@ export default function RelyingPartyForm({
                       htmlFor="ready-checkbox"
                       className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
                     >
-                      Ready for review
+                      Mark as ready
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div className="ml-1 inline-flex items-center justify-center w-4 h-4 rounded-full bg-gray-200 text-gray-600 cursor-pointer">
+                            <Info className="w-3 h-3" />
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent
+                          side="top"
+                          className="max-w-md break-words"
+                        >
+                          <p className="justify-center text-sm">
+                            By marking this relying party as ready, you indicate
+                            that you are ready for your relying party to be
+                            reviewed and published. You can always leave this
+                            empty or unmark it. This means your registration
+                            will remail as a draft and not finalized.
+                          </p>
+                        </TooltipContent>
+                      </Tooltip>
                     </FormLabel>
                     <FormMessage>{serverErrors.ready}</FormMessage>
                   </FormItem>
@@ -362,8 +429,26 @@ export default function RelyingPartyForm({
               />
             </div>
 
-            <div className="space-y-2 mt-4">
-              <Button type="submit" disabled={isSaving}>
+            <div className="gap-2 mt-6 flex sm:justify-end">
+              {isEditMode && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    if (typeof onClose === "function") {
+                      onClose();
+                    }
+                  }}
+                  className="h-9 text-sm"
+                >
+                  Cancel
+                </Button>
+              )}
+              <Button
+                type="submit"
+                disabled={isSaving}
+                className="h-9 px-4 text-sm"
+              >
                 {isSaving ? "Saving..." : "Save"}
               </Button>
             </div>

@@ -47,7 +47,7 @@ export default function ManageLayout() {
                     variant="secondary"
                     className="bg-yellow-100 text-yellow-800"
                   >
-                    Pending Verification
+                    Pending verification
                   </Badge>
                   <div className="text-sm text-muted-foreground pl-1 italic">
                     Your organization details is waiting to be reviewed. This
@@ -60,7 +60,10 @@ export default function ManageLayout() {
 
           <Separator />
           {organization ? (
-            <ManageOrganizationInformationForm organization={organization} />
+            <ManageOrganizationInformationForm
+              organization={organization}
+              editMode={true}
+            />
           ) : (
             <p>Loading organization...</p>
           )}
