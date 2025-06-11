@@ -37,7 +37,7 @@ export default function ManageOrganizationLayout({
   }
 
   return (
-    <div className="space-y-6 px-3 py-16 container mx-auto">
+    <div className="space-y-6 px-3 py-6 container mx-auto bg-white rounded-lg shadow-md min-h-screen">
       <div className="space-y-0.5">
         <h1 className="text-2xl font-bold tracking-tight">
           Manage {organizationName}

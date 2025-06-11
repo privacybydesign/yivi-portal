@@ -70,12 +70,6 @@ export default function RelyingPartyList() {
   }, [fetchData]);
 
   const handleEdit = async (slug: string) => {
-    if (editingSlug === slug) {
-      setEditingRPSlug(null);
-      setEditingRP(null);
-      return;
-    }
-
     const rp = relyingParties.find((r) => r.rp_slug === slug);
     if (!rp) {
       toast.error("Error", {
@@ -103,6 +97,7 @@ export default function RelyingPartyList() {
 
     setEditingRP(result.data as RelyingParty);
   };
+
   const handleCancelEdit = () => {
     setEditingRPSlug(null);
     setEditingRP(null);
@@ -173,12 +168,15 @@ export default function RelyingPartyList() {
                 </div>
                 <div className="flex items-center space-x-4">
                   {rp.status ? <StatusBadge status={rp.status} /> : null}
-                  <Button
-                    variant="outline"
-                    onClick={() => handleEdit(rp.rp_slug)}
-                  >
-                    {editingSlug === rp.rp_slug ? "Cancel" : "Edit"}
-                  </Button>
+                  {editingSlug !== rp.rp_slug && (
+                    <Button
+                      variant="outline"
+                      onClick={() => handleEdit(rp.rp_slug)}
+                    >
+                      Edit
+                    </Button>
+                  )}
+
                   <DeleteRelyingPartyButton
                     isPublished={isPublished}
                     rpSlug={rp.rp_slug}

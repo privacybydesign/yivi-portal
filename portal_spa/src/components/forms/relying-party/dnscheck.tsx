@@ -21,9 +21,16 @@ const DnsChallenges: React.FC<DnsChallengesProps> = ({ hostnames }) => {
 
   return (
     <div className="space-y-4 border border-muted rounded-md p-4 bg-muted/50">
-      <h4 className="text-base font-semibold text-muted-foreground">
-        DNS Challenges
-      </h4>
+      <h4 className="text-base font-semibold ">DNS challenges</h4>
+      <p className="text-sm text-muted-foreground">
+        To make sure that the entered domains belongs to this organization, To
+        confirm that the entered domain belongs to this organization, please add
+        the provided TXT record to your DNS settings.
+        <br />
+        This record must remain in place for as long as you intend to use the
+        domain with Yivi. If the challenge record is removed after verification,
+        the domain will no longer be considered verified.
+      </p>
 
       {/* Conditionally render DNS verification state  */}
       <div className="space-y-3">
@@ -71,7 +78,7 @@ const DnsChallenges: React.FC<DnsChallengesProps> = ({ hostnames }) => {
 
                       {host.dns_challenge && !host.dns_challenge_verified && (
                         <span className="inline-flex items-center gap-1 text-yellow-800 bg-yellow-100 border border-yellow-300 text-xs px-2 py-1 rounded">
-                          Pending Verification
+                          Pending verification
                         </span>
                       )}
                     </div>
@@ -79,7 +86,7 @@ const DnsChallenges: React.FC<DnsChallengesProps> = ({ hostnames }) => {
                     {host.dns_challenge && (
                       <div className="flex flex-col gap-1">
                         <div className="text-sm font-medium mb-1">
-                          TXT Record:
+                          TXT record
                         </div>
                         <code className="block bg-gray-100 px-2 py-3 rounded text-s break-all">
                           {host.dns_challenge.replace(/(^\"|\"$)/g, "")}

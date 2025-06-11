@@ -20,6 +20,12 @@ import type { Credential } from "@/models/credential";
 import DnsChallenges from "@/components/forms/relying-party/dnscheck";
 import CredentialAttributeFields from "@/components/custom/SelectAttributes";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+} from "@/components/ui/tooltip";
+import { Info } from "lucide-react";
 
 type RelyingPartyProps =
   | {
@@ -159,14 +165,14 @@ export default function RelyingPartyForm({
           variant={activeTab === "form-tab" ? "default" : "outline"}
           onClick={() => setActiveTab("form-tab")}
         >
-          Relying Party Details
+          Relying party details
         </Button>
         <Button
           variant={activeTab === "dns-tab" ? "default" : "outline"}
           onClick={() => setActiveTab("dns-tab")}
           disabled={!hasValidHostnames}
         >
-          DNS Check
+          DNS check
         </Button>
       </div>
 
@@ -205,45 +211,27 @@ export default function RelyingPartyForm({
                 name="rp_slug"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Relying Party Slug</FormLabel>
+                    <FormLabel>
+                      Relying party slug
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div className="ml-1 inline-flex items-center justify-center w-4 h-4 rounded-full bg-gray-200 text-gray-600 cursor-pointer">
+                            <Info className="w-3 h-3" />
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent side="top">
+                          <p className="text-sm">
+                            This will serve as a unique identifier for your
+                            relying party. Each slug must be distinct —
+                            duplicate slugs are not allowed.
+                          </p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </FormLabel>
                     <FormControl>
                       <Input {...field} />
                     </FormControl>
                     <FormMessage>{serverErrors.rp_slug}</FormMessage>
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            <div className="space-y-2 mt-4">
-              <FormLabel className="text-base font-medium">
-                Context Description
-              </FormLabel>
-
-              <FormField
-                control={control}
-                name="context_description_en"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-sm">English</FormLabel>
-                    <FormControl>
-                      <Textarea {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={control}
-                name="context_description_nl"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-sm">Dutch</FormLabel>
-                    <FormControl>
-                      <Textarea {...field} />
-                    </FormControl>
-                    <FormMessage />
                   </FormItem>
                 )}
               />
@@ -290,19 +278,81 @@ export default function RelyingPartyForm({
                 size="sm"
                 onClick={() => appendHostname({ hostname: "" })}
               >
-                Add Hostname
+                Add hostname
               </Button>
             </div>
 
             <div className="space-y-2 mt-4">
-              <FormLabel className="font-bold">Credential Attributes</FormLabel>
+              <FormLabel className="text-base font-medium">
+                Context description
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="ml-1 inline-flex items-center justify-center w-4 h-4 rounded-full bg-gray-200 text-gray-600 cursor-pointer">
+                      <Info className="w-3 h-3" />
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent side="top">
+                    <p className="text-sm">
+                      Provide a short description of the context in which you're
+                      using Yivi and the selected attributes. For example:
+                      "Access to employee portal" or "Proof of age for alcohol
+                      purchase".
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+              </FormLabel>
+
+              <FormField
+                control={control}
+                name="context_description_en"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-sm">English</FormLabel>
+                    <FormControl>
+                      <Textarea {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={control}
+                name="context_description_nl"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-sm">Dutch</FormLabel>
+                    <FormControl>
+                      <Textarea {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <div className="space-y-2 mt-4">
+              <FormLabel className="text-base font-medium">
+                Credential attributes
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="ml-1 inline-flex items-center justify-center w-4 h-4 rounded-full bg-gray-200 text-gray-600 cursor-pointer">
+                      <Info className="w-3 h-3" />
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent side="top">
+                    <p className="text-sm">
+                      In this section, specify the Yivi credential attributes
+                      you intend to request from users through this relying
+                      party.
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+              </FormLabel>
 
               <div className="space-y-2">
                 {attrFields.map((field, index) => (
-                  <div
-                    key={field.id}
-                    className="border p-4 rounded-md space-y-3"
-                  >
+                  <div key={field.id} className="rounded-md space-y-3">
                     <CredentialAttributeFields
                       index={index}
                       credentials={credentials}
@@ -316,29 +366,27 @@ export default function RelyingPartyForm({
                         size="sm"
                         onClick={() => removeAttr(index)}
                       >
-                        Remove Attribute
+                        Remove attribute
                       </Button>
                     </div>
                   </div>
                 ))}
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() =>
+                    appendAttr({
+                      credential_id: undefined,
+                      credential_attribute_name: "",
+                      reason_en: "",
+                      reason_nl: "",
+                    })
+                  }
+                >
+                  Add attribute
+                </Button>
               </div>
-
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="mt-2"
-                onClick={() =>
-                  appendAttr({
-                    credential_id: undefined,
-                    credential_attribute_name: "",
-                    reason_en: "",
-                    reason_nl: "",
-                  })
-                }
-              >
-                Add Attribute
-              </Button>
             </div>
             <div className="space-y-2 mt-4">
               <FormField
@@ -357,7 +405,26 @@ export default function RelyingPartyForm({
                       htmlFor="ready-checkbox"
                       className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
                     >
-                      Ready for review
+                      Mark as ready
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div className="ml-1 inline-flex items-center justify-center w-4 h-4 rounded-full bg-gray-200 text-gray-600 cursor-pointer">
+                            <Info className="w-3 h-3" />
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent
+                          side="top"
+                          className="max-w-md break-words"
+                        >
+                          <p className="justify-center text-sm">
+                            Marking this relying party as "ready" indicates that
+                            it is prepared for review and publication. You may
+                            choose to leave it unmarked — in that case, your
+                            registration will remain in draft form and will not
+                            be finalized.
+                          </p>
+                        </TooltipContent>
+                      </Tooltip>
                     </FormLabel>
                     <FormMessage>{serverErrors.ready}</FormMessage>
                   </FormItem>
@@ -365,8 +432,26 @@ export default function RelyingPartyForm({
               />
             </div>
 
-            <div className="space-y-2 mt-4">
-              <Button type="submit" disabled={isSaving}>
+            <div className="gap-2 mt-6 flex sm:justify-end">
+              {isEditMode && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    if (typeof onClose === "function") {
+                      onClose();
+                    }
+                  }}
+                  className="h-9 text-sm"
+                >
+                  Cancel
+                </Button>
+              )}
+              <Button
+                type="submit"
+                disabled={isSaving}
+                className="h-9 px-4 text-sm"
+              >
                 {isSaving ? "Saving..." : "Save"}
               </Button>
             </div>

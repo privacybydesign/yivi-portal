@@ -26,8 +26,10 @@ import { CountryDropdown } from "@/components/ui/country-dropdown";
 
 export default function ManageOrganizationInformationForm({
   organization,
+  editMode = false,
 }: {
   organization?: Organization;
+  editMode?: boolean;
 }) {
   const [defaultFormInput] = useState({
     name_en: "",
@@ -354,7 +356,13 @@ export default function ManageOrganizationInformationForm({
         </fieldset>
 
         <Button type="submit" disabled={pending} className="col-span-2">
-          {pending ? "Submitting..." : "Submit"}
+          {pending
+            ? editMode
+              ? "Saving..."
+              : "Submitting..."
+            : editMode
+            ? "Save"
+            : "Submit"}
         </Button>
 
         {formState?.globalError && (

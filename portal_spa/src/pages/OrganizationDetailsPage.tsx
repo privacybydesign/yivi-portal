@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { axiosInstance, apiEndpoint } from "@/services/axiosInstance";
 import type { Organization } from "@/models/organization";
 import type { RelyingParty } from "@/models/relying-party";
@@ -18,7 +18,7 @@ export default function OrganizationPage() {
   const [loadingApDetails, setLoadingApDetails] = useState(false);
   const [loadingRpDetails, setLoadingRpDetails] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [activeSection, setActiveSection] = useState("overview");
+  const [activeSection, setActiveSection] = useState("");
 
   useEffect(() => {
     const fetchOrganizationData = async () => {
@@ -86,6 +86,23 @@ export default function OrganizationPage() {
       setLoadingRpDetails(false);
     }
   };
+  useEffect(() => {
+    if (!organization) return;
+    if (!activeSection) {
+      if (organization.is_AP) {
+        setActiveSection("ap-details");
+      } else if (organization.is_RP) {
+        setActiveSection("rp-details");
+      }
+    }
+
+    // Fetch details based on the active section
+    if (organization.is_RP && activeSection === "rp-details") {
+      fetchRelyingPartyDetails();
+    } else if (organization.is_AP && activeSection === "ap-details") {
+      fetchAttestationProviderDetails();
+    }
+  }, [organization, activeSection]);
 
   const fetchAttestationProviderDetails = async () => {
     try {
@@ -154,11 +171,6 @@ export default function OrganizationPage() {
     if (shouldFetchApDetails) {
       fetchAttestationProviderDetails();
     }
-  };
-
-  const formatDate = (dateString: string | null) => {
-    if (!dateString) return "Not available";
-    return new Date(dateString).toLocaleString();
   };
 
   if (loading) {
@@ -231,23 +243,12 @@ export default function OrganizationPage() {
       </div>
 
       <div className="flex mb-6 border-b">
-        <button
-          className={`px-4 py-2 font-medium ${
-            activeSection === "overview"
-              ? "border-b-2 border-blue-500 text-blue-600"
-              : "text-gray-600"
-          }`}
-          onClick={() => handleSectionChange("overview")}
-        >
-          Overview
-        </button>
-
         {organization.is_AP === true && (
           <button
-            className={`px-4 py-2 font-medium ${
+            className={`px-4 py-2 font-medium cursor-pointer ${
               activeSection === "ap-details"
                 ? "border-b-2 border-blue-500 text-blue-600"
-                : "text-gray-600"
+                : "text-gray-600 hover:text-blue-600 hover:border-b-2 hover:border-blue-300"
             }`}
             onClick={() => handleSectionChange("ap-details")}
           >
@@ -257,10 +258,10 @@ export default function OrganizationPage() {
 
         {organization.is_RP === true && (
           <button
-            className={`px-4 py-2 font-medium ${
+            className={`px-4 py-2 font-medium cursor-pointer ${
               activeSection === "rp-details"
                 ? "border-b-2 border-blue-500 text-blue-600"
-                : "text-gray-600"
+                : "text-gray-600 hover:text-blue-600 hover:border-b-2 hover:border-blue-300"
             }`}
             onClick={() => handleSectionChange("rp-details")}
           >
@@ -268,46 +269,6 @@ export default function OrganizationPage() {
           </button>
         )}
       </div>
-
-      {activeSection === "overview" && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Basic Information</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-3 gap-2">
-                <span className="font-medium">Slug:</span>
-                <span className="col-span-2">{organization.slug}</span>
-              </div>
-              <div className="grid grid-cols-3 gap-2">
-                <span className="font-medium">Country:</span>
-                <span className="col-span-2">{organization.country}</span>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Status Information</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-3 gap-2">
-                <span className="font-medium">Created At:</span>
-                <span className="col-span-2">
-                  {formatDate(organization.created_at)}
-                </span>
-              </div>
-              <div className="grid grid-cols-3 gap-2">
-                <span className="font-medium">Last Updated:</span>
-                <span className="col-span-2">
-                  {formatDate(organization.last_updated_at)}
-                </span>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
 
       {activeSection === "ap-details" && organization.is_AP === true && (
         <Card>
@@ -324,105 +285,88 @@ export default function OrganizationPage() {
               </div>
             ) : (
               apDetails.map((ap, index) => (
-                <div key={index}>
-                  <Card key={index} className="mb-6 border shadow-sm">
-                    <CardHeader>
-                      <CardTitle>
-                        {ap.ap_slug}{" "}
-                        <span className="text-sm text-gray-500">
-                          ({ap.environment})
-                        </span>
-                        {ap.deprecated_since && (
-                          <Badge variant="destructive" className="ml-2">
-                            Deprecated
-                          </Badge>
-                        )}
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div className="text-sm text-gray-700">
-                        <div>
-                          <span className="font-medium "> Contact Email:</span>{" "}
-                          {ap.contact_email}
+                <div className="text-lg font-semibold p-2" key={index}>
+                  {ap.ap_slug}{" "}
+                  <span className="text-sm text-gray-500">
+                    ({ap.environment})
+                  </span>
+                  {ap.deprecated_since && (
+                    <Badge variant="destructive" className="ml-2">
+                      Deprecated
+                    </Badge>
+                  )}
+                  <div className="text-sm text-gray-700 mx-2 mt-2">
+                    <div className="mt-1">
+                      <span className="font-medium "> Contact Email:</span>{" "}
+                      <a
+                        className="font-normal text-blue-600 hover:underline"
+                        href={`mailto:${ap.contact_email}`}
+                      >
+                        {ap.contact_email}
+                      </a>
+                    </div>
+                    <div className="mt-1">
+                      <span className="font-medium">Contact Address:</span>{" "}
+                      <a
+                        className="font-normal text-blue-600 hover:underline"
+                        href={`${ap.contact_address}`}
+                      >
+                        {ap.contact_address}
+                      </a>
+                    </div>
+                    <div className="font-normal mt-1">
+                      The following credentials can be issued by this
+                      Attestation Provider.
+                    </div>
+                    <div className="text-sm text-gray-700 mt-2">
+                      {ap.credentials.length === 0 ? (
+                        <div className="text-gray-500">
+                          No credentials available for this Attestation
+                          Provider.
                         </div>
-                        <div className="mt-1">
-                          <span className="font-medium">Contact Address:</span>{" "}
-                          {ap.contact_address}
-                        </div>
-
-                        <div className="mt-1">
-                          The following credentials can be issued by this
-                          Attestation Provider.
-                        </div>
-                        <div className="text-sm text-gray-700 mt-2">
-                          {ap.credentials.length === 0 ? (
-                            <div className="text-gray-500">
-                              No credentials available for this Attestation
-                              Provider.
-                            </div>
-                          ) : (
-                            <div className="grid grid-cols-1 gap-4">
-                              {ap.credentials.map((cred, i) => (
-                                <div
-                                  key={i}
-                                  className="p-6 border rounded-xl bg-gray-50 shadow-sm space-y-3"
-                                >
-                                  <div className="text-lg font-semibold text-gray-800 flex flex-wrap gap-2 items-center">
+                      ) : (
+                        <div className="grid grid-cols-1 gap-3">
+                          {ap.credentials.map((cred, i) => (
+                            <div
+                              key={i}
+                              className="p-4 border rounded-lg bg-gray-50 shadow-sm hover:shadow-md transition-shadow"
+                            >
+                              <div className="flex flex-wrap gap-2 items-center justify-between">
+                                <div className="flex flex-wrap gap-2 items-center">
+                                  <h1 className="text-lg font-semibold text-gray-800">
                                     {cred.name_en}
-
-                                    <span className="text-sm text-gray-500 font-mono">
-                                      ({cred.full_path})
-                                    </span>
-                                    {cred.deprecated_since && (
-                                      <Badge
-                                        variant="destructive"
-                                        className="ml-2"
-                                      >
-                                        Deprecated
-                                      </Badge>
-                                    )}
-                                  </div>
-
-                                  <p className="text-sm text-gray-600">
-                                    <span className="font-medium text-gray-700">
-                                      Description:{" "}
-                                    </span>
-                                    {cred.description_en ||
-                                      "No description available."}
-                                  </p>
-
-                                  <div>
-                                    <p className="text-sm font-medium text-gray-700 mb-1">
-                                      Attributes:
-                                    </p>
-
-                                    <ul className="list-disc list-inside text-gray-800 font-mono space-y-1">
-                                      {cred.attributes.length > 0 ? (
-                                        cred.attributes.map((attr) => (
-                                          <li key={attr.id}>
-                                            <span className="font-light">
-                                              {attr.name_en}
-                                            </span>{" "}
-                                            <span className="text-gray-500">
-                                              {attr.full_path}
-                                            </span>
-                                          </li>
-                                        ))
-                                      ) : (
-                                        <li className="text-gray-400">
-                                          No attributes defined
-                                        </li>
-                                      )}
-                                    </ul>
-                                  </div>
+                                  </h1>
+                                  <span className="text-sm text-gray-500 font-mono">
+                                    ({cred.full_path})
+                                  </span>
                                 </div>
-                              ))}
+                                <div className="flex gap-2">
+                                  {cred.deprecated_since && (
+                                    <Badge variant="destructive">
+                                      Deprecated
+                                    </Badge>
+                                  )}
+                                  <Link
+                                    to={`/attribute-index/credentials/${ap.environment}/${ap.ap_slug}/${cred.credential_id}`}
+                                    className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+                                  >
+                                    View Details →
+                                  </Link>
+                                </div>
+                              </div>
+
+                              {cred.description_en && (
+                                <p className="text-sm text-gray-600 mt-2">
+                                  {cred.description_en}
+                                </p>
+                              )}
+                              <div className="mt-3"></div>
                             </div>
-                          )}
+                          ))}
                         </div>
-                      </div>
-                    </CardContent>
-                  </Card>
+                      )}
+                    </div>
+                  </div>
                 </div>
               ))
             )}

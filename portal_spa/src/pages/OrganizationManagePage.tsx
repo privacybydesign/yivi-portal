@@ -20,50 +20,55 @@ export default function ManageLayout() {
   }, [slug]);
 
   return (
-    <ManageOrganizationLayout>
-      <div className="space-y-6">
-        <div>
-          <h2 className="text-lg font-medium">Basic information</h2>
-          <p className="text-sm text-muted-foreground">
-            Update your organization&apos;s basic information.
-          </p>
-        </div>
-        {organization && (
-          <>
-            {organization.is_verified === true && (
-              <div className="flex items-center gap-2">
-                <Badge
-                  variant="secondary"
-                  className="bg-green-100 text-green-800"
-                >
-                  Verified
-                </Badge>
-              </div>
-            )}
-            {organization.is_verified === false && (
-              <div className="flex flex-col gap-1">
-                <Badge
-                  variant="secondary"
-                  className="bg-yellow-100 text-yellow-800"
-                >
-                  Pending Verification
-                </Badge>
-                <div className="text-sm text-muted-foreground pl-1 italic">
-                  Your organization details is waiting to be reviewed. This
-                  means it won't be publicly visible until it is verified.
+    <>
+      <ManageOrganizationLayout>
+        <div className="space-y-6 ">
+          <div>
+            <h2 className="text-lg font-medium">Basic information</h2>
+            <p className="text-sm text-muted-foreground">
+              Update your organization's basic information.
+            </p>
+          </div>
+          {organization && (
+            <>
+              {organization.is_verified === true && (
+                <div className="flex items-center gap-2">
+                  <Badge
+                    variant="secondary"
+                    className="bg-green-100 text-green-800"
+                  >
+                    Verified
+                  </Badge>
                 </div>
-              </div>
-            )}
-          </>
-        )}
+              )}
+              {organization.is_verified === false && (
+                <div className="flex flex-col gap-1">
+                  <Badge
+                    variant="secondary"
+                    className="bg-yellow-100 text-yellow-800"
+                  >
+                    Pending verification
+                  </Badge>
+                  <div className="text-sm text-muted-foreground pl-1 italic">
+                    Your organization details is waiting to be reviewed. This
+                    means it won't be publicly visible until it is verified.
+                  </div>
+                </div>
+              )}
+            </>
+          )}
 
-        <Separator />
-        {organization ? (
-          <ManageOrganizationInformationForm organization={organization} />
-        ) : (
-          <p>Loading organization...</p>
-        )}
-      </div>
-    </ManageOrganizationLayout>
+          <Separator />
+          {organization ? (
+            <ManageOrganizationInformationForm
+              organization={organization}
+              editMode={true}
+            />
+          ) : (
+            <p>Loading organization...</p>
+          )}
+        </div>
+      </ManageOrganizationLayout>
+    </>
   );
 }
