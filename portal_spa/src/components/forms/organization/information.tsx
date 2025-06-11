@@ -23,6 +23,8 @@ import type { Organization } from "@/models/organization";
 import { LogoPreview } from "@/components/ui/logo-preview";
 import { useNavigate } from "react-router-dom";
 import { CountryDropdown } from "@/components/ui/country-dropdown";
+import { PhoneInput } from "react-international-phone";
+import "react-international-phone/style.css";
 
 export default function ManageOrganizationInformationForm({
   organization,
@@ -41,6 +43,7 @@ export default function ManageOrganizationInformationForm({
     city: "",
     country: "NL",
     logo: undefined,
+    contact_number: "",
     ...(organization || {}),
   } as RegistrationInputs);
 
@@ -147,7 +150,7 @@ export default function ManageOrganizationInformationForm({
                       if (!form.getValues("slug")) {
                         form.setValue(
                           "slug",
-                          generateSlug(event.target.value.trim()),
+                          generateSlug(event.target.value.trim())
                         );
                       }
                     }}
@@ -208,7 +211,7 @@ export default function ManageOrganizationInformationForm({
                     onBlur={(event) => {
                       if (!event.target.value && form.getValues("name_en")) {
                         const newSlug = generateSlug(
-                          form.getValues("name_en").trim(),
+                          form.getValues("name_en").trim()
                         );
                         form.setValue("slug", newSlug);
                       }
@@ -218,6 +221,42 @@ export default function ManageOrganizationInformationForm({
                 {formState.errors.slug && (
                   <FormMessage className="text-sm text-red-600 mt-1">
                     {formState.errors.slug.message}
+                  </FormMessage>
+                )}
+              </div>
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="contact_number"
+          render={({ field: { value, onChange, ...field } }) => (
+            <FormItem className="grid md:grid-cols-2 items-start md:gap-4">
+              <div className="py-1">
+                <Label>Contact Number</Label>
+                <FormDescription>
+                  Phone number of a contact person of this organization. Used
+                  only for verification purposes.
+                </FormDescription>
+              </div>
+              <div className="border rounded-md shadow-xs">
+                <PhoneInput
+                  defaultCountry="nl"
+                  value={value || ""}
+                  onChange={onChange}
+                  className="flex-1 text-sm outline-none bg-transparent !border-none"
+                  inputClassName="!bg-transparent !border-none !border !shadow-none !ring-0 !outline-none w-full"
+                  inputStyle={{
+                    border: "none",
+                    backgroundColor: "transparent",
+                  }}
+                  {...field}
+                />
+
+                {formState.errors.contact_number && (
+                  <FormMessage className="text-sm text-red-600 mt-1">
+                    {formState.errors.contact_number.message}
                   </FormMessage>
                 )}
               </div>
