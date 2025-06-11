@@ -56,6 +56,7 @@ class OrganizationSerializer(CountryFieldMixin, serializers.ModelSerializer):
             "is_RP",
             "is_AP",
             "trust_models",
+            "contact_number",
             "country",
             "house_number",
             "street",

@@ -16,6 +16,7 @@ export interface Organization {
   is_AP: boolean;
   trust_models?: trust_model[];
   verification_status: string;
+  contact_number: string;
 }
 export type trust_model = {
   name: string;

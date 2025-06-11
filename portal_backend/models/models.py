@@ -11,6 +11,7 @@ from django.utils import timezone
 from django.utils.text import slugify
 from django_countries.fields import CountryField  # type: ignore
 from PIL import Image
+from phonenumber_field.modelfields import PhoneNumberField  # type: ignore
 
 
 class LogoStorage(FileSystemStorage):
@@ -72,6 +73,7 @@ class Organization(models.Model):
     slug = models.SlugField(unique=True)
     street = models.CharField(max_length=35, null=True, blank=True)
     house_number = models.CharField(max_length=35, null=True, blank=True)
+    contact_number = PhoneNumberField(blank=True, null=True)
     postal_code = models.CharField(max_length=35, null=True, blank=True)
     city = models.CharField(max_length=35, null=True, blank=True)
     country = CountryField(null=True, blank=True)
