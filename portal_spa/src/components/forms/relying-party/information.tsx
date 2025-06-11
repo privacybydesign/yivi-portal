@@ -216,40 +216,6 @@ export default function RelyingPartyForm({
             </div>
 
             <div className="space-y-2 mt-4">
-              <FormLabel className="text-base font-medium">
-                Context Description
-              </FormLabel>
-
-              <FormField
-                control={control}
-                name="context_description_en"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-sm">English</FormLabel>
-                    <FormControl>
-                      <Textarea {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={control}
-                name="context_description_nl"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-sm">Dutch</FormLabel>
-                    <FormControl>
-                      <Textarea {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            <div className="space-y-2 mt-4">
               <FormLabel className="font-medium">Hostnames</FormLabel>
 
               <div className="space-y-2 rounded-md">
@@ -290,19 +256,50 @@ export default function RelyingPartyForm({
                 size="sm"
                 onClick={() => appendHostname({ hostname: "" })}
               >
-                Add Hostname
+                Add hostname
               </Button>
             </div>
 
             <div className="space-y-2 mt-4">
-              <FormLabel className="font-bold">Credential Attributes</FormLabel>
+              <FormLabel className="text-base font-medium">
+                Context Description
+              </FormLabel>
+
+              <FormField
+                control={control}
+                name="context_description_en"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-sm">English</FormLabel>
+                    <FormControl>
+                      <Textarea {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={control}
+                name="context_description_nl"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-sm">Dutch</FormLabel>
+                    <FormControl>
+                      <Textarea {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <div className="space-y-2 mt-4">
+              <FormLabel className="font-bold">Credential attributes</FormLabel>
 
               <div className="space-y-2">
                 {attrFields.map((field, index) => (
-                  <div
-                    key={field.id}
-                    className="border p-4 rounded-md space-y-3"
-                  >
+                  <div key={field.id} className="rounded-md space-y-3">
                     <CredentialAttributeFields
                       index={index}
                       credentials={credentials}
@@ -337,7 +334,7 @@ export default function RelyingPartyForm({
                   })
                 }
               >
-                Add Attribute
+                Add attribute
               </Button>
             </div>
             <div className="space-y-2 mt-4">

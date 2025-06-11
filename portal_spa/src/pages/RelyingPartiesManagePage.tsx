@@ -6,6 +6,14 @@ import { registerRelyingParty } from "@/actions/manage-relying-party";
 import ManageOrganizationLayout from "@/components/layout/organization/manage-organization";
 import RelyingPartyList from "@/components/forms/relying-party/relying-party-list";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { toast } from "sonner";
 
 const initialData: RelyingPartyFormData = {
@@ -27,22 +35,11 @@ const initialData: RelyingPartyFormData = {
 export default function RelyingPartyManager() {
   const params = useParams();
   const organizationSlug = params?.organization as string;
+
   const [saving, setSaving] = useState(false);
   const [fieldErrors, setFieldErrors] = useState({});
   const [globalError, setGlobalError] = useState<string | undefined>();
   const [isCreating, setIsCreating] = useState(false);
-
-  const handleCreateRP = () => {
-    setIsCreating(true);
-    setFieldErrors({});
-    setGlobalError(undefined);
-  };
-
-  const handleCancel = () => {
-    setIsCreating(false);
-    setFieldErrors({});
-    setGlobalError(undefined);
-  };
 
   const handleSave = async (data: RelyingPartyFormData) => {
     setSaving(true);
@@ -70,31 +67,33 @@ export default function RelyingPartyManager() {
       <>
         <RelyingPartyList />
 
-        {!isCreating && (
-          <div className="mt-6">
-            <Button variant="default" onClick={handleCreateRP}>
-              Create New Relying Party
-            </Button>
-          </div>
-        )}
+        <div className="mt-6">
+          <Dialog open={isCreating} onOpenChange={setIsCreating}>
+            <DialogTrigger asChild>
+              <Button variant="default">Add a new relying party</Button>
+            </DialogTrigger>
 
-        {isCreating && (
-          <div className="mt-6 border rounded p-4 bg-muted/30">
-            <RelyingPartyForm
-              defaultValues={initialData}
-              onSubmit={handleSave}
-              serverErrors={fieldErrors}
-              globalError={globalError || ""}
-              isSaving={saving}
-              isEditMode={false}
-            />
-            <div className="mt-4">
-              <Button variant="outline" onClick={handleCancel}>
-                Cancel
-              </Button>
-            </div>
-          </div>
-        )}
+            <DialogContent className="sm:max-w-2xl sm:max-h-[90vh] flex flex-col">
+              <DialogHeader className="flex-shrink-0">
+                <DialogTitle>Add a new relying party</DialogTitle>
+                <DialogDescription>
+                  Fill in the details for the relying party you want to add.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="flex-1 overflow-y-auto pr-2">
+                <RelyingPartyForm
+                  defaultValues={initialData}
+                  onSubmit={handleSave}
+                  serverErrors={fieldErrors}
+                  globalError={globalError || ""}
+                  isSaving={saving}
+                  isEditMode={false}
+                  onClose={() => setIsCreating(false)}
+                />
+              </div>
+            </DialogContent>
+          </Dialog>
+        </div>
       </>
     </ManageOrganizationLayout>
   );
