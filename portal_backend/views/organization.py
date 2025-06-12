@@ -22,6 +22,8 @@ from ..swagger_specs.organization import (
     organization_maintainer_delete_schema,
 )
 from django.core.exceptions import ValidationError
+from django.core.mail import EmailMessage
+from django.template.loader import render_to_string
 
 
 logger = logging.getLogger(__name__)
@@ -185,6 +187,32 @@ class OrganizationMaintainersView(APIView):
             )
         user.save()
         user.organizations.add(organization)
+
+        # Send email notification to the maintainer that was just added
+        try:
+
+            html_content = render_to_string(
+                "email_template.html",
+                {
+                    "added_by": request.user.email,
+                    "organization_name": organization.name,
+                },
+            )
+
+            email_notification = EmailMessage(
+                "Subject of the Email",
+                html_content,
+                "portal@yivi.app",
+                [email],
+            )
+            email_notification.content_subtype = "html"
+            email_notification.send()
+        except Exception as e:
+            logger.error(f"Error sending email notification: {e}")
+            return Response(
+                {"error": "Failed to send email notification"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
 
         return Response(
             {"message": f"User {email} added to organization as maintainer"},
