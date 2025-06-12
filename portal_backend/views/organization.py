@@ -209,7 +209,7 @@ class OrganizationMaintainersView(APIView):
             email_notification.content_subtype = "html"
             email_notification.send()
         except Exception as e:
-            transaction.get_rollback(True)
+            transaction.set_rollback(True)
             logger.error(f"Error sending email notification: {e}")
             return Response(
                 {"error": "Failed to send email notification"},
