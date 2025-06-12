@@ -14,6 +14,7 @@ export function LogoPreview({
   control: Control<RegistrationInputs>;
   setValue: UseFormSetValue<RegistrationInputs>;
   name: string | undefined;
+  onClear?: () => void;
 }) {
   const logo = useWatch({ control, name: "logo" });
 
@@ -36,7 +37,7 @@ export function LogoPreview({
   }, [logo, apiEndpoint]);
 
   const clearLogo = () => {
-    setValue("logo", undefined);
+    setValue("logo", undefined, { shouldDirty: true });
     setLogoURL("/logo-placeholder.svg");
   };
 

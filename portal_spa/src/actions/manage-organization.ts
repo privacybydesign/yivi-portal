@@ -112,7 +112,7 @@ export const registerOrganization = async (
     await updateClaims();
 
     return {
-      values: { ...formState.values, logo: formData.get("logo") as File },
+      values: { ...formState.values },
       errors: {},
       success: true,
       redirectTo: `/organizations/${slug}/manage`,
@@ -129,13 +129,13 @@ export const registerOrganization = async (
       });
 
       return {
-        values: { ...formState.values, logo: formData.get("logo") as File },
+        values: { ...formState.values },
         errors: serverErrors,
       };
     }
 
     return {
-      values: { ...formState.values, logo: formData.get("logo") as File },
+      values: { ...formState.values },
       errors: {},
       globalError: "Something went wrong.",
     };
