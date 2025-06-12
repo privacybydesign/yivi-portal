@@ -24,6 +24,7 @@ from ..swagger_specs.organization import (
 from django.core.exceptions import ValidationError
 from django.core.mail import EmailMessage
 from django.template.loader import render_to_string
+from django.conf import settings
 
 
 logger = logging.getLogger(__name__)
@@ -202,8 +203,7 @@ class OrganizationMaintainersView(APIView):
 
             email_notification = EmailMessage(
                 "Subject of the Email",
-                html_content,
-                "portal@yivi.app",
+                settings.EMAIL_FROM,
                 [email],
             )
             email_notification.content_subtype = "html"
