@@ -203,6 +203,7 @@ class OrganizationMaintainersView(APIView):
 
             email_notification = EmailMessage(
                 "Subject of the Email",
+                html_content,
                 settings.EMAIL_FROM,
                 [email],
             )
