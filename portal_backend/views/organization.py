@@ -193,7 +193,7 @@ class OrganizationMaintainersView(APIView):
         try:
 
             html_content = render_to_string(
-                "email_template.html",
+                "email-template.html",
                 {
                     "added_by": request.user.email,
                     "organization_name": organization.name_en,
