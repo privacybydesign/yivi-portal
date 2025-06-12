@@ -67,6 +67,10 @@ export const updateOrganization = async (
       `/v1/organizations/${formState.values.slug}/update/`,
       formData
     );
+    if (formData.get("slug") !== formState.values.slug) {
+      await updateClaims();
+      window.location.href = `/organizations/${formData.get("slug")}/manage`;
+    }
 
     return {
       values: { ...formState.values },
