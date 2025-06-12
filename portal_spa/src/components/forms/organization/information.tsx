@@ -42,10 +42,11 @@ export default function ManageOrganizationInformationForm({
     postal_code: "",
     city: "",
     country: "NL",
-    logo: undefined,
     contact_number: "",
     ...(organization || {}),
   } as RegistrationInputs);
+
+  const [cachedLogo, setCachedLogo] = useState<File | null>(null);
 
   const navigate = useNavigate();
 
@@ -83,10 +84,20 @@ export default function ManageOrganizationInformationForm({
       });
     }
   }, [formState?.errors, form]);
+  const handleSubmit = async (formData: FormData) => {
+    const logo = form.getValues("logo");
+
+    // If logo was cleared, make sure it's not in the FormData
+    if (!logo || (logo instanceof File && logo.size === 0)) {
+      formData.delete("logo");
+    }
+
+    return formSubmit(formData);
+  };
 
   return (
     <Form {...form}>
-      <form action={formSubmit} className="space-y-4">
+      <form action={handleSubmit} className="space-y-4">
         <FormField
           control={form.control}
           name="logo"
@@ -103,7 +114,20 @@ export default function ManageOrganizationInformationForm({
                   <LogoPreview
                     control={form.control}
                     setValue={form.setValue}
-                    name={typeof value === "string" ? value : value?.name}
+                    name={
+                      cachedLogo?.name ||
+                      (typeof value === "string" ? value : value?.name)
+                    }
+                    onClear={() => {
+                      setCachedLogo(null);
+                      form.setValue("logo", undefined, { shouldDirty: true });
+                      form.clearErrors("logo");
+
+                      const fileInput = document.querySelector(
+                        'input[type="file"][accept="image/png,image/jpeg"]'
+                      ) as HTMLInputElement;
+                      if (fileInput) fileInput.value = "";
+                    }}
                   />
                   <Label>
                     <div className="cursor-pointer whitespace-nowrap rounded-md text-sm font-medium transition-colors bg-primary text-primary-foreground shadow hover:bg-primary/90 h-9 px-4 py-2 flex items-center gap-2">
@@ -115,12 +139,19 @@ export default function ManageOrganizationInformationForm({
                         type="file"
                         accept="image/png,image/jpeg"
                         className="hidden"
-                        onChange={(event) => onChange(event.target.files?.[0])}
+                        onChange={(event) => {
+                          const file = event.target.files?.[0];
+                          if (file) {
+                            setCachedLogo(file);
+                          }
+                          onChange(file);
+                        }}
                         {...field}
                       />
                     </FormControl>
                   </Label>
                 </div>
+
                 {formState.errors.logo && (
                   <FormMessage className="text-sm text-red-600 mt-1">
                     {formState.errors.logo.message}
@@ -183,7 +214,7 @@ export default function ManageOrganizationInformationForm({
                 </FormControl>
                 {formState.errors.name_nl && (
                   <FormMessage className="text-sm text-red-600 mt-1">
-                    {!formState.errors.name_nl.message}
+                    {formState.errors.name_nl.message}
                   </FormMessage>
                 )}
               </div>
@@ -283,7 +314,7 @@ export default function ManageOrganizationInformationForm({
 
                   {formState.errors.street && (
                     <FormMessage className="text-sm text-red-600 mt-1">
-                      {!formState.errors.street.message}
+                      {formState.errors.street.message}
                     </FormMessage>
                   )}
                 </div>
@@ -306,7 +337,7 @@ export default function ManageOrganizationInformationForm({
 
                   {formState.errors.house_number && (
                     <FormMessage className="text-sm text-red-600 mt-1">
-                      {!formState.errors.house_number.message}
+                      {formState.errors.house_number.message}
                     </FormMessage>
                   )}
                 </div>
@@ -329,7 +360,7 @@ export default function ManageOrganizationInformationForm({
 
                   {formState.errors.postal_code && (
                     <FormMessage className="text-sm text-red-600 mt-1">
-                      {!formState.errors.postal_code.message}
+                      {formState.errors.postal_code.message}
                     </FormMessage>
                   )}
                 </div>
@@ -352,7 +383,7 @@ export default function ManageOrganizationInformationForm({
 
                   {formState.errors.city && (
                     <FormMessage className="text-sm text-red-600 mt-1">
-                      {!formState.errors.city.message}
+                      {formState.errors.city.message}
                     </FormMessage>
                   )}
                 </div>
@@ -386,7 +417,7 @@ export default function ManageOrganizationInformationForm({
 
                   {formState.errors.country && (
                     <FormMessage className="text-sm text-red-600 mt-1">
-                      {!formState.errors.country.message}
+                      {formState.errors.country.message}
                     </FormMessage>
                   )}
                 </div>
