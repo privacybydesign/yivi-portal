@@ -148,6 +148,7 @@ class OrganizationMaintainersView(APIView):
         return Response(serializer.data)
 
     @organization_maintainer_create_schama
+    @transaction.atomic
     def post(self, request: Request, org_slug: str) -> Response:
         """Add a maintainer to an organization"""
         organization = get_object_or_404(Organization, slug=org_slug)
@@ -195,7 +196,7 @@ class OrganizationMaintainersView(APIView):
                 "email_template.html",
                 {
                     "added_by": request.user.email,
-                    "organization_name": organization.name,
+                    "organization_name": organization.name_en,
                 },
             )
 
@@ -208,6 +209,7 @@ class OrganizationMaintainersView(APIView):
             email_notification.content_subtype = "html"
             email_notification.send()
         except Exception as e:
+            transaction.get_rollback(True)
             logger.error(f"Error sending email notification: {e}")
             return Response(
                 {"error": "Failed to send email notification"},
