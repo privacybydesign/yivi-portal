@@ -11,6 +11,11 @@ export default function EnvironmentDetailsPage() {
   const [environments, setEnvironments] = useState<Environment[]>([]);
   const [loading, setLoading] = useState(true);
 
+  useEffect(
+    () => window.scrollTo({ top: 0, behavior: "smooth" }),
+    [currentEnv],
+  );
+
   useEffect(() => {
     const fetchEnvironments = async () => {
       try {
@@ -36,7 +41,7 @@ export default function EnvironmentDetailsPage() {
     : environments;
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-8">
       <h1 className="text-3xl font-semibold">
         {currentEnv
           ? `${

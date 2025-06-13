@@ -2,6 +2,8 @@ import { Link, useOutletContext, useParams } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { Credential } from "@/models/credential";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useEffect } from "react";
 
 type OutletContext = {
   credentials: Credential[];
@@ -15,18 +17,30 @@ export default function CredentialDetailsPage() {
     (c) =>
       c.environment === environment &&
       c.ap_slug === ap_slug &&
-      c.credential_id === credential_id
+      c.credential_id === credential_id,
   );
 
-  if (!credential) {
+  useEffect(
+    () => window.scrollTo({ top: 0, behavior: "smooth" }),
+    [credential],
+  );
+
+  if (!credentials?.length) {
     return (
-      <div className="p-4 text-sm text-red-500">Credential not found.</div>
+      <>
+        <Skeleton className="h-9 w-3/5"></Skeleton>
+        <Skeleton className="mt-8 h-screen w-full"></Skeleton>
+      </>
     );
   }
 
+  if (!credential) {
+    return <div className="text-sm text-red-500">Credential not found.</div>;
+  }
+
   return (
-    <div className="space-y-8 p-4">
-      <h1 className="text-3xl font-semibold flex items-center gap-3">
+    <div className="space-y-8">
+      <h1 className="text-3xl font-semibold flex items-center gap-x-3">
         {credential.name_en}
         {credential.deprecated_since && (
           <Badge variant="destructive">Deprecated</Badge>
@@ -128,11 +142,11 @@ export default function CredentialDetailsPage() {
             <div className="space-y-6">
               {credential.attributes.map((attr) => (
                 <div
-                  className="border p-4 rounded-lg"
+                  className="border text-sm rounded-lg overflow-hidden"
                   key={attr.credential_attribute_id}
                 >
-                  <div className="text-sm space-y-1">
-                    <div>
+                  <div className="overflow-x-auto p-4 space-y-1">
+                    <div className="w-max">
                       <span className="font-mono font-bold">
                         {attr.name_en}
                       </span>
@@ -141,11 +155,11 @@ export default function CredentialDetailsPage() {
                         ({attr.credential_attribute_id})
                       </span>
                     </div>
-                    <div>
+                    <div className="w-max">
                       <span className="font-medium">Identifier:</span>{" "}
                       <span className="font-mono">{attr.full_path}</span>
                     </div>
-                    <div>
+                    <div className="w-max">
                       <span className="font-medium">Description:</span>{" "}
                       {attr.description_en}
                     </div>
