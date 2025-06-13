@@ -198,11 +198,12 @@ class OrganizationMaintainersView(APIView):
                 {
                     "added_by": request.user.email,
                     "organization_name": organization.name_en,
+                    "portal_url": settings.YIVI_PORTAL_URL,
                 },
             )
 
             email_notification = EmailMessage(
-                "Subject of the Email",
+                "Yivi Portal - You have been added as a maintainer",
                 html_content,
                 settings.EMAIL_FROM,
                 [email],
