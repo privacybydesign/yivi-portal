@@ -22,6 +22,9 @@ from ..swagger_specs.organization import (
     organization_maintainer_delete_schema,
 )
 from django.core.exceptions import ValidationError
+from django.core.mail import EmailMessage
+from django.template.loader import render_to_string
+from django.conf import settings
 
 
 logger = logging.getLogger(__name__)
@@ -146,6 +149,7 @@ class OrganizationMaintainersView(APIView):
         return Response(serializer.data)
 
     @organization_maintainer_create_schama
+    @transaction.atomic
     def post(self, request: Request, org_slug: str) -> Response:
         """Add a maintainer to an organization"""
         organization = get_object_or_404(Organization, slug=org_slug)
@@ -156,35 +160,63 @@ class OrganizationMaintainersView(APIView):
                 {"email": "Email is required"}, status=status.HTTP_400_BAD_REQUEST
             )
 
-        existing_user = User.objects.filter(
-            email=email, organizations=organization
-        ).first()
-        if existing_user:
-            return Response(
-                {
-                    "email": f"User with email {email} is already a maintainer of this organization"
-                },
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        user = User(email=email, role="maintainer")
-
+        user = User.objects.prefetch_related("organizations").get(email=email)
         try:
-            user.full_clean()
+            if user:
+                if organization in user.organizations.all():
+                    return Response(
+                        {
+                            "email": f"User with email {email} is already a maintainer of this organization"
+                        },
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+            else:
+                user = User(email=email, role="maintainer")
+                user.full_clean()
+                user.save()
+            user.organizations.add(organization)
+
         except ValidationError as e:
+            transaction.set_rollback(True)
             logger.error(f"Validation error creating user: {e}")
             return Response(
                 {"error": e.message_dict},
                 status=status.HTTP_400_BAD_REQUEST,
             )
         except Exception as e:
+            transaction.set_rollback(True)
             logger.error(f"Unexpected error creating user: {e}")
             return Response(
                 {"error": "Failed to create user"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
-        user.save()
-        user.organizations.add(organization)
+
+        # Send email notification to the maintainer that was just added
+        try:
+
+            html_content = render_to_string(
+                "email-template.html",
+                {
+                    "added_by": request.user.email,
+                    "organization_name": organization.name_en,
+                    "portal_url": "https://" + settings.YIVI_PORTAL_URL,
+                },
+            )
+
+            email_notification = EmailMessage(
+                "Yivi Portal - You have been added as a maintainer",
+                html_content,
+                settings.EMAIL_FROM,
+                [email],
+            )
+            email_notification.content_subtype = "html"
+            email_notification.send()
+        except Exception as e:
+            logger.error(f"Error sending email notification: {e}")
+            return Response(
+                {"error": f"Failed to send email notification: {e}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
 
         return Response(
             {"message": f"User {email} added to organization as maintainer"},
