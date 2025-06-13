@@ -160,24 +160,24 @@ class OrganizationMaintainersView(APIView):
                 {"email": "Email is required"}, status=status.HTTP_400_BAD_REQUEST
             )
 
-        existing_user = User.objects.filter(
-            email=email, organizations=organization
-        ).first()
-        if existing_user:
-            return Response(
-                {
-                    "email": f"User with email {email} is already a maintainer of this organization"
-                },
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        # Validate email if new user, otherwise get the existing user and add organization to its organizations
         try:
-            if not User.objects.filter(email=email).exists():
+            user = User.objects.filter(email=email)
+            if user.exists():
+                if user.first().organizations.filter(slug=org_slug).exists():
+                    return Response(
+                        {
+                            "email": f"User with email {email} is already a maintainer of this organization"
+                        },
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+                user = user.first()
+                user.organizations.add(organization)
+
+            else:
                 user = User(email=email, role="maintainer")
                 user.full_clean()
                 user.save()
-            else:
-                user = User.objects.get(email=email)
+                user.organizations.add(organization)
 
         except ValidationError as e:
             logger.error(f"Validation error creating user: {e}")
@@ -191,7 +191,6 @@ class OrganizationMaintainersView(APIView):
                 {"error": "Failed to create user"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
-        user.organizations.add(organization)
 
         # Send email notification to the maintainer that was just added
         try:
