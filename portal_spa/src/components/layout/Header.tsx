@@ -52,7 +52,7 @@ export default function Header() {
           Portal
         </Link>
 
-        <div className="md:flex items-center gap-6">
+        <div className="flex items-center gap-6">
           <Link
             to="/organizations"
             className={cn(
@@ -62,7 +62,7 @@ export default function Header() {
                   location.pathname === "/organizations"
                     ? "bg-muted hover:bg-muted"
                     : "",
-              })
+              }),
             )}
           >
             Organizations

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Outlet, Link, useMatch } from "react-router-dom";
 import { axiosInstance } from "@/services/axiosInstance";
 import {
@@ -12,10 +12,17 @@ import { Input } from "@/components/ui/input";
 import type { Credential } from "@/models/credential";
 import { useLocation } from "react-router-dom";
 import { Separator } from "../ui/separator";
+import { Button } from "../ui/button";
+import { HamburgerIcon } from "lucide-react";
+import { Skeleton } from "../ui/skeleton";
 
 export default function AttributeIndexLayout() {
   const [credentials, setCredentials] = useState<Credential[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  const asideRef = useRef(null);
+  const menuRef = useRef(null);
 
   useEffect(() => {
     axiosInstance.get("/v1/yivi/all-credentials/").then((res) => {
@@ -93,77 +100,132 @@ export default function AttributeIndexLayout() {
   }
 
   return (
-    <div className="container mx-auto flex bg-white rounded-lg shadow-md min-h-screen">
+    <div
+      className="max-w-7xl mx-auto relative flex flex-row bg-white rounded-lg shadow-md min-h-screen overflow-hidden"
+      onClick={(e) => {
+        if (
+          (asideRef.current &&
+            menuRef.current &&
+            !(asideRef.current as HTMLElement).contains(
+              e.target as HTMLElement,
+            ) &&
+            !(menuRef.current as HTMLElement).contains(
+              e.target as HTMLElement,
+            )) ||
+          (e.target as HTMLElement).tagName === "A"
+        ) {
+          setMenuOpen(false);
+        }
+      }}
+    >
       {/* Sidebar */}
-      <aside className="w-72 border-r p-4">
-        <Link to="/attribute-index" className="block mb-4">
-          <h1 className="text-xl font-bold mb-4">Attribute Index</h1>
-        </Link>
-        <Separator className="my-4" />
-        <ScrollArea className="h-screen pr-2">
+      <aside
+        ref={asideRef}
+        className={
+          `border-r md:min-w-72 md:min-h-screen h-full transition absolute md:relative z-10 bg-white ` +
+          (menuOpen ? `` : `max-md:opacity-0 max-md:-translate-x-full`)
+        }
+      >
+        <div className="px-4 pt-4 gap-y-4 flex flex-col bg-white z-10 rounded-tl-lg">
+          <Link to="/attribute-index">
+            <h1 className="text-xl font-bold">Attribute Index</h1>
+          </Link>
+          <Separator className="-ml-4 w-[calc(100%+2rem)]" />
+        </div>
+        <ScrollArea className="h-[calc(100%-61px)] p-4">
           <Accordion
             type="multiple"
             defaultValue={["production", "staging", "demo"]}
           >
-            {Object.entries(grouped).map(([env, aps]) => (
-              <AccordionItem value={env} key={env}>
-                <AccordionTrigger>
-                  <Link to={`/attribute-index/environments/${env}`}>
-                    {capitalizeFirstLetter(env)} Environment
-                  </Link>
-                </AccordionTrigger>
-                <AccordionContent>
-                  <Accordion type="multiple">
-                    {Object.entries(aps).map(([key, creds]) => {
-                      const referenceCredential = creds[0]; // Use the first credential as reference for org_slug and org_name
-                      if (!referenceCredential) return null;
-                      const organizationName = referenceCredential.org_name;
-                      return (
-                        <AccordionItem value={key} key={key}>
-                          <AccordionTrigger>
-                            <div className="mx-2 font-normal">
-                              <Link
-                                to={`/attribute-index/attestation-provider/${referenceCredential.org_slug}/${referenceCredential.environment}/${referenceCredential.ap_slug}`}
-                              >
-                                {organizationName}
-                              </Link>
-                            </div>
-                          </AccordionTrigger>
-                          <AccordionContent>
-                            <div className="mx-3 font-light">
-                              <ul className="ml-2 space-y-1">
-                                {creds.map((c) => (
-                                  <li key={c.id}>
-                                    <Link
-                                      to={`/attribute-index/credentials/${c.environment}/${c.ap_slug}/${c.credential_id}`}
-                                      className="text-sm"
-                                    >
-                                      {c.name_en}
-                                    </Link>
-                                  </li>
-                                ))}
-                              </ul>
-                            </div>
-                          </AccordionContent>
-                        </AccordionItem>
-                      );
-                    })}
-                  </Accordion>
-                </AccordionContent>
-              </AccordionItem>
-            ))}
+            {Object.keys(grouped).length > 0 ? (
+              Object.entries(grouped).map(([env, aps]) => (
+                <AccordionItem value={env} key={env}>
+                  <AccordionTrigger>
+                    <Link to={`/attribute-index/environments/${env}`}>
+                      {capitalizeFirstLetter(env)} Environment
+                    </Link>
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    <Accordion type="multiple">
+                      {Object.entries(aps).map(([key, creds]) => {
+                        const referenceCredential = creds[0]; // Use the first credential as reference for org_slug and org_name
+                        if (!referenceCredential) return null;
+                        const organizationName = referenceCredential.org_name;
+                        return (
+                          <AccordionItem value={key} key={key}>
+                            <AccordionTrigger>
+                              <div className="mx-2 font-normal">
+                                <Link
+                                  to={`/attribute-index/attestation-provider/${referenceCredential.org_slug}/${referenceCredential.environment}/${referenceCredential.ap_slug}`}
+                                >
+                                  {organizationName}
+                                </Link>
+                              </div>
+                            </AccordionTrigger>
+                            <AccordionContent>
+                              <div className="mx-3 font-light">
+                                <ul className="ml-2 space-y-1.5">
+                                  {creds.map((c) => (
+                                    <li key={c.id}>
+                                      <Link
+                                        to={`/attribute-index/credentials/${c.environment}/${c.ap_slug}/${c.credential_id}`}
+                                        className="text-sm hover:underline transition"
+                                      >
+                                        {c.name_en}
+                                      </Link>
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            </AccordionContent>
+                          </AccordionItem>
+                        );
+                      })}
+                    </Accordion>
+                  </AccordionContent>
+                </AccordionItem>
+              ))
+            ) : (
+              <div className="space-y-4 mt-4">
+                <Skeleton className="h-9"></Skeleton>
+                <Skeleton className="ml-4 h-9"></Skeleton>
+                <Skeleton className="ml-4 h-9"></Skeleton>
+                <Skeleton className="h-9"></Skeleton>
+                <Skeleton className="ml-4 h-9"></Skeleton>
+                <Skeleton className="ml-4 h-9"></Skeleton>
+              </div>
+            )}
           </Accordion>
         </ScrollArea>
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 p-6">
-        <div className="relative mb-4">
+      <main
+        className={
+          `p-6 overflow-x-auto w-full ` +
+          (menuOpen
+            ? `before:bg-[rgba(0,0,0,0.3)] before:h-full max-md:before:absolute before:inset-0`
+            : ``)
+        }
+      >
+        <div className="relative flex mb-4 -mt-6 -mx-6">
+          <div className="md:hidden flex border-r border-b min-w-[61px]">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="m-auto"
+              onClick={() => setMenuOpen(!menuOpen)}
+              ref={menuRef}
+            >
+              <HamburgerIcon />
+            </Button>
+          </div>
           <Input
             type="text"
             placeholder="Search credentials, attributes or issuer"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
+            className="border-0 shadow-none h-[61px] px-6 border-b rounded-none focus-visible:ring-[0px]"
           />
           {searchQuery.length > 0 && (
             <SearchDropdown
@@ -174,7 +236,7 @@ export default function AttributeIndexLayout() {
         </div>
 
         {/* If we are on the main page, show a description of what the attribute index is for */}
-        {isMainPage && (
+        {isMainPage ? (
           <div className="space-y-4 mx-2 my-10">
             <div className="text-lg font-semibold mb-4">
               What is the attribute index?
@@ -191,8 +253,11 @@ export default function AttributeIndexLayout() {
               </p>
             </div>
           </div>
+        ) : (
+          <div className="lg:p-4">
+            <Outlet context={{ credentials }} />
+          </div>
         )}
-        {!isMainPage && <Outlet context={{ credentials }} />}
       </main>
     </div>
   );
