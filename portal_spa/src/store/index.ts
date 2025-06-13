@@ -13,7 +13,7 @@ interface StateStore {
   initialized: boolean;
   setAccessToken: (accessToken: string | null) => void;
   initializeAuth: () => void;
-  refreshToken: () => Promise<string | null>;
+  refreshToken: (data?: unknown) => Promise<string | null>;
 }
 
 const useStore = create<StateStore>((set) => ({
@@ -23,52 +23,36 @@ const useStore = create<StateStore>((set) => ({
   organizationSlugs: [],
   initialized: false,
 
-  setAccessToken: (newToken: string | null) => {
-    if (newToken) {
-      const decoded = jwtDecode<AuthToken>(newToken);
+  setAccessToken: (accessToken: string | null) => {
+    if (accessToken) {
+      const decoded = jwtDecode<AuthToken>(accessToken);
+
       set({
         email: decoded.email,
         role: decoded.role,
         organizationSlugs: decoded.organizationSlugs || [],
       });
-      localStorage.setItem("accessToken", newToken);
+      localStorage.setItem("accessToken", accessToken);
     } else {
       set({ email: null, role: undefined, organizationSlugs: [] });
       localStorage.removeItem("accessToken");
     }
-    set({ accessToken: newToken });
+
+    set({ accessToken });
   },
 
-  refreshToken: async () => {
+  refreshToken: async (data?: unknown) => {
     try {
       const response = await axiosInstance.post<{ access: string }>(
-        "/v1/refreshtoken"
+        "/v1/refreshtoken",
+        data,
       );
+
       if (response.status !== 200) {
         return null;
       }
 
-      const newToken = response.data.access;
-      if (newToken) {
-        const newDecoded = jwtDecode<AuthToken>(newToken);
-        set({
-          accessToken: newToken,
-          email: newDecoded.email,
-          role: newDecoded.role,
-          organizationSlugs: newDecoded.organizationSlugs || [],
-        });
-        localStorage.setItem("accessToken", newToken);
-        return newToken;
-      }
-
-      // Could not refresh — clear auth
-      set({
-        accessToken: null,
-        email: null,
-        role: undefined,
-        organizationSlugs: [],
-      });
-      localStorage.removeItem("accessToken");
+      useStore.getState().setAccessToken(response.data.access);
     } catch (error: unknown) {
       if (error instanceof AxiosError) {
         console.warn("Error refreshing token:", error.response?.data.detail);
@@ -81,6 +65,7 @@ const useStore = create<StateStore>((set) => ({
 
   initializeAuth: () => {
     const savedAccessToken = localStorage.getItem("accessToken");
+
     if (savedAccessToken) {
       const decoded = jwtDecode<AuthToken>(savedAccessToken);
       const currentTime = Math.floor(Date.now() / 1000);
@@ -96,18 +81,17 @@ const useStore = create<StateStore>((set) => ({
           organizationSlugs: decoded.organizationSlugs || [],
           initialized: true,
         });
-        return;
       }
+    } else {
+      // No valid token - clear
+      set({
+        accessToken: null,
+        email: null,
+        role: undefined,
+        organizationSlugs: [],
+        initialized: true,
+      });
     }
-
-    // No valid token - clear
-    set({
-      accessToken: null,
-      email: null,
-      role: undefined,
-      organizationSlugs: [],
-      initialized: true,
-    });
   },
 }));
 

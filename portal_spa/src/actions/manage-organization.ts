@@ -23,26 +23,22 @@ export type RegistrationFormState = {
   errors: Partial<FieldErrors<RegistrationInputs>>;
   globalError?: string;
   success?: boolean;
-  redirectTo?: string;
+  redirectTo?: string | undefined;
 };
 
 const updateClaims = async () => {
-  const response = await axiosInstance.post("v1/refreshtoken", {
+  const accessToken = await useStore.getState().refreshToken({
     update_claims: true,
   });
 
-  axiosInstance.defaults.headers.common[
-    "Authorization"
-  ] = `Bearer ${response.data.access}`;
+  axiosInstance.defaults.headers.common["Authorization"] =
+    `Bearer ${accessToken}`;
 
-  const { setAccessToken } = useStore.getState();
-  setAccessToken(response.data.access);
-
-  return response.data.access;
+  return accessToken;
 };
 
 export const fetchOrganization = async (
-  organizationSlug: string
+  organizationSlug: string,
 ): Promise<AxiosResponse | undefined> => {
   try {
     return await axiosInstance.get(`/v1/organizations/${organizationSlug}/`);
@@ -53,7 +49,7 @@ export const fetchOrganization = async (
 
 export const updateOrganization = async (
   formState: RegistrationFormState,
-  formData: FormData
+  formData: FormData,
 ): Promise<RegistrationFormState> => {
   if (
     !!formState.values["logo"] &&
@@ -65,10 +61,13 @@ export const updateOrganization = async (
   try {
     await axiosInstance.patch(
       `/v1/organizations/${formState.values.slug}/update/`,
-      formData
+      formData,
     );
+
+    let redirectTo;
     if (formData.get("slug") !== formState.values.slug) {
       await updateClaims();
+      // Can't use React router because middleware will be called before redirecting to the new page.
       window.location.href = `/organizations/${formData.get("slug")}/manage`;
     }
 
@@ -76,6 +75,7 @@ export const updateOrganization = async (
       values: { ...formState.values },
       errors: {},
       success: true,
+      redirectTo,
     };
   } catch (e: unknown) {
     if (e instanceof AxiosError && e.response?.status === 400) {
@@ -106,7 +106,7 @@ export const updateOrganization = async (
 
 export const registerOrganization = async (
   formState: RegistrationFormState,
-  formData: FormData
+  formData: FormData,
 ): Promise<RegistrationFormState> => {
   console.log(formState, formData);
   try {
