@@ -1,21 +1,115 @@
 <!DOCTYPE html>
 <html>
-<head>
-  <meta charset="UTF-8" />
-  <title>You've Been Added to an Organization</title>
-</head>
-<body>
-  <div class="container">
-      <p>Greetings,</p>
-      <p>
-        <strong>{{ added_by }}</strong> has added you as a maintainer to the
-        organization <strong>{{ organization_name }}</strong> on the Yivi Portal.
-      </p>
-      <p>You can now log in and manage organization details.</p>
-    </div>
-    <div class="footer">
-      &mdash; Yivi Portal
-    </div>
-  </div>
-</body>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="color-scheme" content="light dark">
+    <meta name="supported-color-schemes" content="light dark">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        background-color: #ffffff;
+        font-family: 'Roboto', 'Open Sans', 'Arial', sans-serif;
+        font-size: 16px;
+        line-height: 1.5;
+        color: #000000;
+      }
+
+      .main {
+        width: 600px;
+        background-color: #ffffff;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        overflow: hidden;
+      }
+
+      .header, .title, .body-text, .footer-text, .alt-link {
+        padding: 16px 24px;
+        text-align: left;
+      }
+
+      .header img {
+        float: left;
+      }
+
+      .title {
+        font-size: 24px;
+        font-weight: bold;
+      }
+
+      .body-text p {
+        margin: 0 0 10px 0;
+        font-size: 18px;
+      }
+
+      .footer-text {
+        font-size: 16px;
+      }
+
+      .divider {
+        border-top: 2px solid #9b9597;
+        line-height: 1px;
+        font-size: 1px;
+      }
+
+      @media (prefers-color-scheme: dark) {
+        body {
+          background-color: #000000 !important;
+          color: #ffffff !important;
+        }
+        .main {
+          background-color: #000000 !important;
+        }
+        a {
+          color: lightskyblue!important;
+        }
+        .footer-text {
+          color: #ffffff !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <table align="center" width="100%" cellpadding="0" cellspacing="0" role="presentation">
+      <tr>
+        <td align="center">
+          <table class="main">
+            <tr align="center">
+              <td class="header">
+                <img src="https://yivi-cdn.s3.nl-ams.scw.cloud/header.png" />
+              </td>
+            </tr>
+            <tr>
+              <td class="title">You've Been Added as a Maintainer</td>
+            </tr>
+            <tr>
+              <td class="body-text">
+                <p>Greetings,</p>
+                <p>
+                  You have been added as a maintainer to the organization <strong>{{ organization_name }}</strong> by <strong>{{ added_by }}</strong> in the <a href="{{ portal_url }}">Yivi Portal</a>.
+                </p>
+
+                <p>You can now log in and manage organization details.</p>
+              </td>
+            </tr>
+            <tr>
+              <td align="center" style="padding: 0 20px;">
+                <table width="100%" border="0" cellspacing="0" cellpadding="0" role="presentation">
+                  <tr>
+                    <td class="divider">&nbsp;</td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+            <tr>
+              <td class="footer-text">
+                Sent to you from Yivi Portal, join our <a href="https://github.com/privacybydesign">Github community</a>.
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
 </html>
