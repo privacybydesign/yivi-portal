@@ -62,7 +62,7 @@ ROOT_URLCONF = "yivi_portal.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [BASE_DIR / "static"],
+        "DIRS": [BASE_DIR / "portal_backend" / "templates"],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -158,3 +158,4 @@ EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD")
 EMAIL_FROM = os.environ.get("EMAIL_FROM")
 EMAIL_USE_TLS = True
 EMAIL_USE_SSL = False
+YIVI_PORTAL_URL = os.environ.get("YIVI_PORTAL_URL")
