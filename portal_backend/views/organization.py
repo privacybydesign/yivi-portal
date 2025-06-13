@@ -201,7 +201,7 @@ class OrganizationMaintainersView(APIView):
                 {
                     "added_by": request.user.email,
                     "organization_name": organization.name_en,
-                    "portal_url": settings.YIVI_PORTAL_URL,
+                    "portal_url": "https://" + settings.YIVI_PORTAL_URL,
                 },
             )
 
