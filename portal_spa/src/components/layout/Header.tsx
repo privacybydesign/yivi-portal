@@ -35,12 +35,10 @@ export default function Header() {
   }).toString();
 
   const handleLogout = async () => {
-    await axiosInstance.post("/v1/logout");
-    setAccessToken(null);
-
     const isOnProtectedRoute = matchRoutes(
       [
         { path: "organizations/:organization/manage" },
+        { path: "organizations/:organization/manage/:section" },
         { path: "organizations/register" },
       ],
       location.pathname,
@@ -49,6 +47,10 @@ export default function Header() {
     if (isOnProtectedRoute?.length) {
       navigate("/");
     }
+
+    // Invalidate token after routing to prevent redirecting to /login.
+    await axiosInstance.post("/v1/logout");
+    setAccessToken(null);
   };
 
   useEffect(() => {
