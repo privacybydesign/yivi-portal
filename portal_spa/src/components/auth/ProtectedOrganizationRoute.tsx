@@ -6,12 +6,12 @@ const ProtectedOrganizationRoute: React.FC = () => {
   const { organizationSlugs, initialized } = useStore();
   const { organization } = useParams();
 
-  if (!initialized) {
+  if (!initialized || !organization) {
     return null;
   }
 
-  if (!organizationSlugs?.includes(organization as string)) {
-    return <Navigate to={`/`} replace />;
+  if (initialized && !organizationSlugs?.includes(organization)) {
+    return <Navigate to="/" />;
   }
 
   return <Outlet />;
