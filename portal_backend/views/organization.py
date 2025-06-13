@@ -160,32 +160,31 @@ class OrganizationMaintainersView(APIView):
                 {"email": "Email is required"}, status=status.HTTP_400_BAD_REQUEST
             )
 
+        user = User.objects.prefetch_related("organizations").get(email=email)
         try:
-            user = User.objects.filter(email=email)
-            if user.exists():
-                if user.first().organizations.filter(slug=org_slug).exists():
+            if user:
+                if organization in user.organizations.all():
                     return Response(
                         {
                             "email": f"User with email {email} is already a maintainer of this organization"
                         },
                         status=status.HTTP_400_BAD_REQUEST,
                     )
-                user = user.first()
-                user.organizations.add(organization)
-
             else:
                 user = User(email=email, role="maintainer")
                 user.full_clean()
                 user.save()
-                user.organizations.add(organization)
+            user.organizations.add(organization)
 
         except ValidationError as e:
+            transaction.set_rollback(True)
             logger.error(f"Validation error creating user: {e}")
             return Response(
                 {"error": e.message_dict},
                 status=status.HTTP_400_BAD_REQUEST,
             )
         except Exception as e:
+            transaction.set_rollback(True)
             logger.error(f"Unexpected error creating user: {e}")
             return Response(
                 {"error": "Failed to create user"},
@@ -213,7 +212,6 @@ class OrganizationMaintainersView(APIView):
             email_notification.content_subtype = "html"
             email_notification.send()
         except Exception as e:
-            transaction.set_rollback(True)
             logger.error(f"Error sending email notification: {e}")
             return Response(
                 {"error": f"Failed to send email notification: {e}"},
