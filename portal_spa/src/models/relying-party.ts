@@ -19,7 +19,7 @@ export interface RelyingParty {
   context_description_en?: string;
   context_description_nl?: string;
   attributes: {
-    credential_id: number;
+    credential_id?: number;
     credential_attribute_name: string;
     reason_en: string;
     reason_nl: string;

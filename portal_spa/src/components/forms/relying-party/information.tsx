@@ -356,7 +356,17 @@ export default function RelyingPartyForm({
                     <CredentialAttributeFields
                       index={index}
                       credentials={credentials}
-                      onRemove={() => removeAttr(index)}
+                      value={{
+                        ...form.getValues(`attributes.${index}`),
+                        credential_id:
+                          form.getValues(`attributes.${index}.credential_id`) ??
+                          -1,
+                      }}
+                      onChange={(updatedAttr) =>
+                        form.setValue(`attributes.${index}`, updatedAttr, {
+                          shouldValidate: true,
+                        })
+                      }
                     />
 
                     <div className="flex justify-end">
