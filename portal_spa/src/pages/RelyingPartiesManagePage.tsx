@@ -24,7 +24,7 @@ const initialData: RelyingPartyFormData = {
   attributes: [
     {
       credential_id: undefined,
-      credential_attribute_name: "",
+      credential_attribute_id: "",
       reason_en: "",
       reason_nl: "",
     },

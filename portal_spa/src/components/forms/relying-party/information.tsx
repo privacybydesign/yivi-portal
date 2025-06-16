@@ -11,21 +11,22 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useEffect, useState } from "react";
 import { fetchCredentials } from "@/actions/manage-relying-party";
 import type { Credential } from "@/models/credential";
 import DnsChallenges from "@/components/forms/relying-party/dnscheck";
-import CredentialAttributeFields from "@/components/custom/SelectAttributes";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
   Tooltip,
   TooltipTrigger,
   TooltipContent,
 } from "@/components/ui/tooltip";
 import { Info } from "lucide-react";
+import ContextDescription from "./form-components/ContextDescription";
+import Hostnames from "./form-components/Hostnames";
+import { CredentialAttributes } from "./form-components/CredentialAttributes";
+import ReadyCheckbox from "./form-components/ReadyCheckbox";
 
 type RelyingPartyProps =
   | {
@@ -237,210 +238,28 @@ export default function RelyingPartyForm({
               />
             </div>
 
-            <div className="space-y-2 mt-4">
-              <FormLabel className="font-medium">Hostnames</FormLabel>
+            {/* Hostnames */}
+            <Hostnames
+              hostnameFields={hostnameFields}
+              register={register}
+              removeHostname={removeHostname}
+              appendHostname={appendHostname}
+              errors={errors}
+            />
 
-              <div className="space-y-2 rounded-md">
-                {hostnameFields.map((field, index) => (
-                  <div key={index} className="flex gap-2 items-start">
-                    {field.id !== undefined && typeof field.id === "number" && (
-                      <Input
-                        type="hidden"
-                        {...register(`hostnames.${index}.id`, {
-                          valueAsNumber: true,
-                        })}
-                        defaultValue={field.id}
-                      />
-                    )}
+            {/* Context Description */}
+            <ContextDescription control={control} />
 
-                    <Input
-                      {...register(`hostnames.${index}.hostname`)}
-                      defaultValue={field.hostname}
-                      className="w-full"
-                    />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => removeHostname(index)}
-                    >
-                      Remove
-                    </Button>
-                    <FormMessage>
-                      {errors.hostnames?.[index]?.hostname?.message}
-                    </FormMessage>
-                  </div>
-                ))}
-              </div>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => appendHostname({ hostname: "" })}
-              >
-                Add hostname
-              </Button>
-            </div>
+            {/* Credential Selection and Attributes */}
+            <CredentialAttributes
+              attrFields={attrFields}
+              form={form}
+              credentials={credentials}
+              appendAttr={appendAttr}
+              removeAttr={removeAttr}
+            />
 
-            <div className="space-y-2 mt-4">
-              <FormLabel className="text-base font-medium">
-                Context description
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <div className="ml-1 inline-flex items-center justify-center w-4 h-4 rounded-full bg-gray-200 text-gray-600 cursor-pointer">
-                      <Info className="w-3 h-3" />
-                    </div>
-                  </TooltipTrigger>
-                  <TooltipContent side="top">
-                    <p className="text-sm">
-                      Provide a short description of the context in which you're
-                      using Yivi and the selected attributes. For example:
-                      "Access to employee portal" or "Proof of age for alcohol
-                      purchase".
-                    </p>
-                  </TooltipContent>
-                </Tooltip>
-              </FormLabel>
-
-              <FormField
-                control={control}
-                name="context_description_en"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-sm">English</FormLabel>
-                    <FormControl>
-                      <Textarea {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={control}
-                name="context_description_nl"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-sm">Dutch</FormLabel>
-                    <FormControl>
-                      <Textarea {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            <div className="space-y-2 mt-4">
-              <FormLabel className="text-base font-medium">
-                Credential attributes
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <div className="ml-1 inline-flex items-center justify-center w-4 h-4 rounded-full bg-gray-200 text-gray-600 cursor-pointer">
-                      <Info className="w-3 h-3" />
-                    </div>
-                  </TooltipTrigger>
-                  <TooltipContent side="top">
-                    <p className="text-sm">
-                      In this section, specify the Yivi credential attributes
-                      you intend to request from users through this relying
-                      party.
-                    </p>
-                  </TooltipContent>
-                </Tooltip>
-              </FormLabel>
-
-              <div className="space-y-2">
-                {attrFields.map((field, index) => (
-                  <div key={field.id} className="rounded-md space-y-3">
-                    <CredentialAttributeFields
-                      index={index}
-                      credentials={credentials}
-                      value={{
-                        ...form.getValues(`attributes.${index}`),
-                        credential_id:
-                          form.getValues(`attributes.${index}.credential_id`) ??
-                          -1,
-                      }}
-                      onChange={(updatedAttr) =>
-                        form.setValue(`attributes.${index}`, updatedAttr, {
-                          shouldValidate: true,
-                        })
-                      }
-                    />
-
-                    <div className="flex justify-end">
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => removeAttr(index)}
-                      >
-                        Remove attribute
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() =>
-                    appendAttr({
-                      credential_id: undefined,
-                      credential_attribute_name: "",
-                      reason_en: "",
-                      reason_nl: "",
-                    })
-                  }
-                >
-                  Add attribute
-                </Button>
-              </div>
-            </div>
-            <div className="space-y-2 mt-4">
-              <FormField
-                control={control}
-                name="ready"
-                render={({ field }) => (
-                  <FormItem className="flex items-center space-x-3 space-y-0">
-                    <FormControl>
-                      <Checkbox
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                        id="ready-checkbox"
-                      />
-                    </FormControl>
-                    <FormLabel
-                      htmlFor="ready-checkbox"
-                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
-                    >
-                      Mark as ready
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <div className="ml-1 inline-flex items-center justify-center w-4 h-4 rounded-full bg-gray-200 text-gray-600 cursor-pointer">
-                            <Info className="w-3 h-3" />
-                          </div>
-                        </TooltipTrigger>
-                        <TooltipContent
-                          side="top"
-                          className="max-w-md break-words"
-                        >
-                          <p className="justify-center text-sm">
-                            Marking this relying party as "ready" indicates that
-                            it is prepared for review and publication. You may
-                            choose to leave it unmarked — in that case, your
-                            registration will remain in draft form and will not
-                            be finalized.
-                          </p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </FormLabel>
-                    <FormMessage>{serverErrors.ready}</FormMessage>
-                  </FormItem>
-                )}
-              />
-            </div>
+            <ReadyCheckbox control={control} serverErrors={serverErrors} />
 
             <div className="gap-2 mt-6 flex sm:justify-end">
               {isEditMode && (

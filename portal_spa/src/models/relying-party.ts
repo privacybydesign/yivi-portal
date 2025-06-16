@@ -1,3 +1,5 @@
+import type { CredentialAttribute } from "./credential";
+
 export interface RelyingParty {
   rp_slug: string;
   environment: string;
@@ -18,11 +20,6 @@ export interface RelyingParty {
   status?: string;
   context_description_en?: string;
   context_description_nl?: string;
-  attributes: {
-    credential_id?: number;
-    credential_attribute_name: string;
-    reason_en: string;
-    reason_nl: string;
-  }[];
+  attributes: CredentialAttribute[];
   ready: boolean;
 }

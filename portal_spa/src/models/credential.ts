@@ -1,10 +1,13 @@
 export interface CredentialAttribute {
-  id: number;
+  id?: number;
   credential_attribute_id: string;
-  name_en: string;
-  name_nl: string;
-  full_path: string;
-  description_en: string;
+  name_en?: string;
+  name_nl?: string;
+  reason_en: string;
+  reason_nl: string;
+  full_path?: string;
+  description_en?: string;
+  credential_id: number;
 }
 
 export interface Credential {

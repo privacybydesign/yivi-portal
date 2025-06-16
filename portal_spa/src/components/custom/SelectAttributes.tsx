@@ -9,26 +9,16 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
-import type { Credential } from "@/models/credential";
+import type { Credential, CredentialAttribute } from "@/models/credential";
 import { Check, ChevronDown } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger } from "../ui/select";
 import { SelectValue } from "@radix-ui/react-select";
 
 interface CredentialAttributeFieldProps {
   index: number;
-  credentials: Credential[];
-  value: {
-    credential_id: number;
-    credential_attribute_name: string;
-    reason_en: string;
-    reason_nl: string;
-  };
-  onChange: (updated: {
-    credential_id: number;
-    credential_attribute_name: string;
-    reason_en: string;
-    reason_nl: string;
-  }) => void;
+  credentials: Array<Credential>;
+  value: CredentialAttribute;
+  onChange: (updated: CredentialAttribute) => void;
 }
 
 export default function CredentialAttributeFields({
@@ -59,7 +49,7 @@ export default function CredentialAttributeFields({
       const inAttributeName = cred.attributes?.some((attr) =>
         [attr.name_en, attr.name_nl]
           .filter(Boolean)
-          .some((name) => name.toLowerCase().includes(search.toLowerCase()))
+          .some((name) => name?.toLowerCase().includes(search.toLowerCase()))
       );
 
       return matchesEnv && (inCredentialName || inAttributeName);
@@ -182,9 +172,9 @@ export default function CredentialAttributeFields({
           <Label className="text-sm font-medium">Attribute</Label>
           {selected && selected.attributes?.length > 0 ? (
             <Select
-              value={value?.credential_attribute_name ?? ""}
+              value={value?.credential_attribute_id ?? ""}
               onValueChange={(val) =>
-                handleFieldChange("credential_attribute_name", val)
+                handleFieldChange("credential_attribute_id", val)
               }
             >
               <SelectTrigger className="flex w-full items-center justify-between rounded-md border bg-transparent px-3 text-sm font-normal hover:bg-accent">

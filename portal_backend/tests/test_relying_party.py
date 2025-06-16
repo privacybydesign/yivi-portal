@@ -113,7 +113,7 @@ class RelyingPartyCreateTest(APITestCase):
             "attributes": [
                 {
                     "credential_id": self.credential.id,
-                    "credential_attribute_name": self.credential_attribute.name_en,
+                    "credential_attribute_id": self.credential_attribute.name_en,
                     "reason_en": "This is the reason in English",
                     "reason_nl": "Dit is de reden in het Nederlands",
                 }

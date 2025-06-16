@@ -117,7 +117,7 @@ def make_condiscon_json(
     for attr in attributes_data:
         cred_attr = get_object_or_404(
             CredentialAttribute,
-            name_en=attr["credential_attribute_name"],
+            name_en=attr["credential_attribute_id"],
             credential__id=attr["credential_id"],
         )
         cred_id = cred_attr.credential.id
@@ -154,7 +154,7 @@ def create_condiscon_attributes(
     for attr in attributes_data:
         cred_attr = get_object_or_404(
             CredentialAttribute,
-            name_en=attr["credential_attribute_name"],
+            name_en=attr["credential_attribute_id"],
             credential__id=attr["credential_id"],
         )
 

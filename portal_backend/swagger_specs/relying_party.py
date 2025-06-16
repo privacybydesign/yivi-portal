@@ -34,7 +34,7 @@ relying_party_create_schema = swagger_auto_schema(
                 items=openapi.Schema(
                     type=openapi.TYPE_OBJECT,
                     properties={
-                        "credential_attribute_name": openapi.Schema(
+                        "credential_attribute_id": openapi.Schema(
                             type=openapi.TYPE_STRING
                         ),
                         "reason_en": openapi.Schema(type=openapi.TYPE_STRING),
@@ -72,7 +72,7 @@ relying_party_patch_schema = swagger_auto_schema(
                 items=openapi.Schema(
                     type=openapi.TYPE_OBJECT,
                     properties={
-                        "credential_attribute_name": openapi.Schema(
+                        "credential_attribute_id": openapi.Schema(
                             type=openapi.TYPE_STRING
                         ),
                         "reason_en": openapi.Schema(type=openapi.TYPE_STRING),
