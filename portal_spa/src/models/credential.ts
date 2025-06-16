@@ -1,6 +1,6 @@
 export interface CredentialAttribute {
   id?: number;
-  credential_attribute_id: string;
+  credential_attribute_tag: string;
   name_en?: string;
   name_nl?: string;
   reason_en: string;

@@ -172,9 +172,9 @@ export default function CredentialAttributeFields({
           <Label className="text-sm font-medium">Attribute</Label>
           {selected && selected.attributes?.length > 0 ? (
             <Select
-              value={value?.credential_attribute_id ?? ""}
+              value={value?.credential_attribute_tag ?? ""}
               onValueChange={(val) =>
-                handleFieldChange("credential_attribute_id", val)
+                handleFieldChange("credential_attribute_tag", val)
               }
             >
               <SelectTrigger className="flex w-full items-center justify-between rounded-md border bg-transparent px-3 text-sm font-normal hover:bg-accent">
@@ -183,7 +183,7 @@ export default function CredentialAttributeFields({
               <SelectContent>
                 {selected.attributes.map((attr) => (
                   <SelectItem
-                    key={attr.credential_attribute_id}
+                    key={attr.credential_attribute_tag}
                     value={`${attr.name_en}`}
                   >
                     {attr.name_en}

@@ -73,7 +73,7 @@ export function CredentialAttributes(props: CredentialAttributeProps) {
           size="sm"
           onClick={() =>
             appendAttr({
-              credential_attribute_id: "",
+              credential_attribute_tag: "",
               reason_en: "",
               reason_nl: "",
               credential_id: -1, // won't match to any credential

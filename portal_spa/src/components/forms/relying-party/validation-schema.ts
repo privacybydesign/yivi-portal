@@ -28,7 +28,7 @@ export const RelyingPartySchema = z.object({
       credential_id: z
         .number({ invalid_type_error: "Credential is required" })
         .int("Credential ID must be a number"),
-      credential_attribute_id: z
+      credential_attribute_tag: z
         .string()
         .nonempty("Credential attribute name is required"),
       reason_en: z.string().nonempty("English reason is required"),

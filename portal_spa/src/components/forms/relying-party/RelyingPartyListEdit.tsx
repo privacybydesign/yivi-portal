@@ -228,7 +228,7 @@ export default function RelyingPartyListEdit() {
                             }[];
                             attributes: {
                               credential_id: number;
-                              credential_attribute_id: string;
+                              credential_attribute_tag: string;
                               reason_en: string;
                               reason_nl: string;
                             }[];

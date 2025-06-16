@@ -129,7 +129,7 @@ export default function CredentialDetailsPage() {
               {credential.attributes.map((attr) => (
                 <div
                   className="border p-4 rounded-lg"
-                  key={attr.credential_attribute_id}
+                  key={attr.credential_attribute_tag}
                 >
                   <div className="text-sm space-y-1">
                     <div>
@@ -138,7 +138,7 @@ export default function CredentialDetailsPage() {
                       </span>
                       <span className="italic">
                         {" "}
-                        ({attr.credential_attribute_id})
+                        ({attr.credential_attribute_tag})
                       </span>
                     </div>
                     <div>

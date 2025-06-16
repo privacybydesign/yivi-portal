@@ -5,7 +5,7 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("portal_backend", "0013_credentialattribute_credential_attribute_id"),
+        ("portal_backend", "0013_credentialattribute_credential_attribute_tag"),
     ]
 
     operations = [
