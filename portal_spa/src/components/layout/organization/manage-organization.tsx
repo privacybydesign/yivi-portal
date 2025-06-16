@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { useParams } from "react-router-dom";
-import { useOrganizationNames } from "@/contexts/OrganizationContext";
+import { useOrganizationNames } from "@/contexts/organization/OrganizationContext";
 import { SidebarNavigation } from "@/components/ui/sidebar-navigation";
 import { Separator } from "@/components/ui/separator";
 

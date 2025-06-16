@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { useParams } from "react-router-dom";
-import RelyingPartyForm from "@/components/forms/relying-party/information";
 import type { RelyingPartyFormData } from "@/components/forms/relying-party/validation-schema";
 import { registerRelyingParty } from "@/actions/manage-relying-party";
 import ManageOrganizationLayout from "@/components/layout/organization/manage-organization";
-import RelyingPartyList from "@/components/forms/relying-party/relying-party-list";
+import RelyingPartyListEdit from "@/components/forms/relying-party/RelyingPartyListEdit";
 import { Button } from "@/components/ui/button";
+
 import {
   Dialog,
   DialogContent,
@@ -15,7 +15,10 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import RelyingPartyTabs from "@/components/forms/relying-party/RelyingPartyTabs";
+import { RelyingPartyContext } from "@/contexts/relying-party/RelyingPartyContext";
 
+// This data will be used to prefill the Relying Party create form
 const initialData: RelyingPartyFormData = {
   rp_slug: "",
   context_description_en: "",
@@ -23,7 +26,7 @@ const initialData: RelyingPartyFormData = {
   hostnames: [{ hostname: "" }],
   attributes: [
     {
-      credential_id: undefined,
+      credential_id: -1,
       credential_attribute_id: "",
       reason_en: "",
       reason_nl: "",
@@ -35,7 +38,6 @@ const initialData: RelyingPartyFormData = {
 export default function RelyingPartyManager() {
   const params = useParams();
   const organizationSlug = params?.organization as string;
-
   const [saving, setSaving] = useState(false);
   const [fieldErrors, setFieldErrors] = useState({});
   const [globalError, setGlobalError] = useState<string | undefined>();
@@ -65,7 +67,7 @@ export default function RelyingPartyManager() {
   return (
     <ManageOrganizationLayout>
       <>
-        <RelyingPartyList />
+        <RelyingPartyListEdit />
 
         <div className="mt-6">
           <Dialog open={isCreating} onOpenChange={setIsCreating}>
@@ -81,15 +83,19 @@ export default function RelyingPartyManager() {
                 </DialogDescription>
               </DialogHeader>
               <div className="flex-1 overflow-y-auto pr-2">
-                <RelyingPartyForm
-                  defaultValues={initialData}
-                  onSubmit={handleSave}
-                  serverErrors={fieldErrors}
-                  globalError={globalError || ""}
-                  isSaving={saving}
-                  isEditMode={false}
-                  onClose={() => setIsCreating(false)}
-                />
+                <RelyingPartyContext.Provider
+                  value={{
+                    isEditMode: false,
+                    defaultValues: initialData,
+                    onSubmit: handleSave,
+                    serverErrors: fieldErrors,
+                    globalError: globalError || "",
+                    isSaving: saving,
+                    onClose: () => setIsCreating(false),
+                  }}
+                >
+                  <RelyingPartyTabs />
+                </RelyingPartyContext.Provider>
               </div>
             </DialogContent>
           </Dialog>
