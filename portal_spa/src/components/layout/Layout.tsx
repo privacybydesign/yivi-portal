@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, Outlet } from "react-router-dom";
 import Header from "@/components/layout/Header";
-import { OrganizationContext } from "@/contexts/OrganizationContext";
+import { OrganizationContext } from "@/contexts/organization/OrganizationContext";
 import { axiosInstance } from "@/services/axiosInstance";
 import useStore from "@/store";
 import { buttonVariants } from "../ui/button";

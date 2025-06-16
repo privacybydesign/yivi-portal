@@ -89,7 +89,7 @@ const DnsChallenges: React.FC<DnsChallengesProps> = ({ hostnames }) => {
                           TXT record
                         </div>
                         <code className="block bg-gray-100 px-2 py-3 rounded text-s break-all">
-                          {host.dns_challenge.replace(/(^\"|\"$)/g, "")}
+                          {host.dns_challenge.replace(/(^"|"$)/g, "")}
                         </code>
                         {host.dns_challenge_verified_at && (
                           <div className="text-xs text-gray-500 mt-1">

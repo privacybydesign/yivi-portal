@@ -8,18 +8,19 @@ import {
 } from "@/actions/manage-relying-party";
 import type { RelyingParty } from "@/models/relying-party";
 import { Button } from "@/components/ui/button";
-import RelyingPartyForm from "./information";
 import { toast } from "sonner";
 import StatusBadge from "@/components/custom/StatusBadge";
 import DeleteRelyingPartyDialog, {
   DeleteRelyingPartyButton,
 } from "@/components/custom/RelyingPartyDeleteDialogue";
+import RelyingPartyTabs from "./RelyingPartyTabs";
+import { RelyingPartyContext } from "@/contexts/relying-party/RelyingPartyContext";
 
 type FetchRelyingPartiesResponse = {
   relying_parties: RelyingParty[];
 };
 
-export default function RelyingPartyList() {
+export default function RelyingPartyListEdit() {
   const params = useParams();
   const organizationSlug = params?.organization as string;
 
@@ -202,43 +203,68 @@ export default function RelyingPartyList() {
                   {editingLoading || !editingRP ? (
                     <p>Loading form...</p>
                   ) : (
-                    <RelyingPartyForm
-                      originalSlug={editingRP.rp_slug}
-                      defaultValues={{
-                        rp_slug: editingRP.rp_slug,
-                        context_description_en:
-                          editingRP.context_description_en ?? "",
-                        context_description_nl:
-                          editingRP.context_description_nl ?? "",
-                        hostnames: editingRP.hostnames,
-                        attributes: editingRP.attributes,
-                        ready: editingRP.ready,
+                    <RelyingPartyContext.Provider
+                      value={{
+                        originalSlug: editingRP.rp_slug,
+                        isEditMode: true,
+                        defaultValues: {
+                          rp_slug: editingRP.rp_slug,
+                          context_description_en:
+                            editingRP.context_description_en ?? "",
+                          context_description_nl:
+                            editingRP.context_description_nl ?? "",
+                          hostnames: editingRP.hostnames,
+                          attributes: editingRP.attributes,
+                          ready: editingRP.ready,
+                        },
+                        onSubmit: async (
+                          formData: Partial<{
+                            rp_slug: string;
+                            context_description_en: string;
+                            context_description_nl: string;
+                            hostnames: {
+                              hostname: string;
+                              id?: number | undefined;
+                            }[];
+                            attributes: {
+                              credential_id: number;
+                              credential_attribute_id: string;
+                              reason_en: string;
+                              reason_nl: string;
+                            }[];
+                            ready: boolean;
+                          }>,
+                          originalSlug: string
+                        ) => {
+                          setSaving(true);
+
+                          const result = await updateRelyingParty(
+                            organizationSlug,
+                            formData,
+                            originalSlug
+                          );
+                          setSaving(false);
+
+                          if (!result.success) {
+                            toast.error("Error", {
+                              description:
+                                result.globalError || "Update failed.",
+                            });
+                            return;
+                          }
+
+                          handleSuccess("updated");
+                          handleCancelEdit();
+                          fetchData();
+                        },
+                        serverErrors: {},
+                        globalError: globalError || "",
+                        isSaving: saving,
+                        onClose: handleCancelEdit,
                       }}
-                      onSubmit={async (formData, originalSlug) => {
-                        setSaving(true);
-
-                        const result = await updateRelyingParty(
-                          organizationSlug,
-                          formData,
-                          originalSlug
-                        );
-                        setSaving(false);
-
-                        if (!result.success) {
-                          toast.error("Error", {
-                            description: result.globalError || "Update failed.",
-                          });
-                          return;
-                        }
-
-                        handleSuccess("updated");
-                        handleCancelEdit();
-                        fetchData();
-                      }}
-                      isSaving={saving}
-                      isEditMode={true}
-                      onClose={handleCancelEdit}
-                    />
+                    >
+                      <RelyingPartyTabs />
+                    </RelyingPartyContext.Provider>
                   )}
                 </div>
               )}

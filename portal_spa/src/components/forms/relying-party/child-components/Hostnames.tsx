@@ -1,5 +1,5 @@
 import { FormLabel } from "@/components/ui/form";
-import AddHostnameFields from "../form-components/AddHostnameFields";
+import AddHostnameFields from "./AddHostnameFields";
 import { Button } from "@/components/ui/button";
 import type {
   FieldArrayWithId,
