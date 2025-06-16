@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Outlet, Link, useMatch, useParams } from "react-router-dom";
+import { Outlet, Link, useMatch } from "react-router-dom";
 import { axiosInstance } from "@/services/axiosInstance";
 import {
   Accordion,
