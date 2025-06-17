@@ -21,8 +21,8 @@ export default function AttributeIndexLayout() {
   const [searchQuery, setSearchQuery] = useState("");
   const [menuOpen, setMenuOpen] = useState(false);
 
-  const asideRef = useRef(null);
-  const menuRef = useRef(null);
+  const asideRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     axiosInstance.get("/v1/yivi/all-credentials/").then((res) => {
@@ -101,19 +101,14 @@ export default function AttributeIndexLayout() {
 
   return (
     <div
-      className="max-w-7xl mx-auto relative flex flex-row bg-white rounded-lg shadow-md min-h-screen overflow-hidden"
+      className="max-w-7xl mx-auto relative flex flex-row bg-white rounded-lg shadow-md min-h-screen [--topbar-height:61px]"
       onClick={(e) => {
-        if (
-          (asideRef.current &&
-            menuRef.current &&
-            !(asideRef.current as HTMLElement).contains(
-              e.target as HTMLElement,
-            ) &&
-            !(menuRef.current as HTMLElement).contains(
-              e.target as HTMLElement,
-            )) ||
-          (e.target as HTMLElement).tagName === "A"
-        ) {
+        const clickedOutsideMenu =
+          !asideRef.current?.contains(e.target as HTMLElement) &&
+          !menuRef.current?.contains(e.target as HTMLElement);
+
+        // Close menu when clicked outside the menu or when navigating to a different page.
+        if (clickedOutsideMenu || (e.target as HTMLElement).tagName === "A") {
           setMenuOpen(false);
         }
       }}
@@ -122,8 +117,10 @@ export default function AttributeIndexLayout() {
       <aside
         ref={asideRef}
         className={
-          `border-r md:min-w-72 md:min-h-screen h-full transition absolute md:relative z-10 bg-white ` +
-          (menuOpen ? `` : `max-md:opacity-0 max-md:-translate-x-full`)
+          `border-r md:rounded-l-lg md:min-w-72 h-[calc(100vh-var(--topbar-height))] fixed md:sticky top-[var(--topbar-height)] transition z-10 bg-white ` +
+          (menuOpen
+            ? `max-md:-translate-x-4`
+            : `max-md:opacity-0 max-md:-translate-x-full`)
         }
       >
         <div className="px-4 pt-4 gap-y-4 flex flex-col bg-white z-10 rounded-tl-lg">
@@ -132,7 +129,7 @@ export default function AttributeIndexLayout() {
           </Link>
           <Separator className="-ml-4 w-[calc(100%+2rem)]" />
         </div>
-        <ScrollArea className="h-[calc(100%-61px)] p-4">
+        <ScrollArea className="h-[calc(100%-var(--topbar-height))] p-4">
           <Accordion
             type="multiple"
             defaultValue={["production", "staging", "demo"]}
@@ -204,12 +201,12 @@ export default function AttributeIndexLayout() {
         className={
           `p-6 overflow-x-auto w-full ` +
           (menuOpen
-            ? `before:bg-[rgba(0,0,0,0.3)] before:h-full max-md:before:absolute before:inset-0`
+            ? `before:bg-[rgba(0,0,0,0.3)] before:h-full max-md:before:absolute before:inset-0 before:rounded-lg`
             : ``)
         }
       >
         <div className="relative flex mb-4 -mt-6 -mx-6">
-          <div className="md:hidden flex border-r border-b min-w-[61px]">
+          <div className="md:hidden flex border-r border-b min-w-[var(--topbar-height)]">
             <Button
               variant="ghost"
               size="icon"
@@ -225,7 +222,7 @@ export default function AttributeIndexLayout() {
             placeholder="Search credentials, attributes or issuer"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="border-0 shadow-none h-[61px] px-6 border-b rounded-none focus-visible:ring-[0px]"
+            className="border-0 shadow-none h-[var(--topbar-height)] px-6 border-b rounded-none focus-visible:ring-[0px]"
           />
           {searchQuery.length > 0 && (
             <SearchDropdown
