@@ -89,33 +89,19 @@ class OrganizationDetailView(APIView):
     def get(self, request: Request, org_slug: str) -> Response:
         """Get organization by uuid"""
 
-        org_or_maintainer = IsOrganizationMaintainerOrAdmin()
-        if org_or_maintainer.has_permission(request, self):
-            org = (
-                Organization.objects.with_role_annotations()
-                .filter(slug=org_slug)
-                .first()
-            )
-            if not org:
-                return Response(
-                    {"error": "Organization not found"},
-                    status=status.HTTP_404_NOT_FOUND,
-                )
-            serializer = OrganizationSerializer(org)
-            return Response(serializer.data)
+        org = Organization.objects.with_role_annotations().filter(slug=org_slug)
 
-        verified_org = (
-            Organization.objects.with_role_annotations()
-            .filter(slug=org_slug, is_verified=True)
-            .first()
-        )
-
-        if not verified_org:
+        if IsOrganizationMaintainerOrAdmin().has_permission(request, self):
+            org = org.first()
+        else:
+            org = org.filter(is_verified=True).first()
+        if not org:
             return Response(
                 {"error": "Organization not found"},
                 status=status.HTTP_404_NOT_FOUND,
             )
-        serializer = OrganizationSerializer(verified_org)
+
+        serializer = OrganizationSerializer(org)
         return Response(serializer.data)
 
 
