@@ -388,7 +388,7 @@ class CredentialAttribute(models.Model):
     credential = models.ForeignKey(
         Credential, on_delete=models.CASCADE, related_name="attributes"
     )
-    credential_attribute_id = models.CharField(max_length=100)
+    credential_attribute_tag = models.CharField(max_length=100)
     name_en = models.CharField(max_length=255)
     name_nl = models.CharField(max_length=255)
     description_en = models.TextField()
@@ -402,7 +402,7 @@ class CredentialAttribute(models.Model):
 
     @property
     def full_path(self):
-        return f"{self.credential.full_path}.{self.credential_attribute_id}"
+        return f"{self.credential.full_path}.{self.credential_attribute_tag}"
 
 
 class RelyingPartyHostname(models.Model):

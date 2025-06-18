@@ -106,7 +106,7 @@ class CredentialAttributeSerializer(serializers.ModelSerializer):
         model = CredentialAttribute
         fields = [
             "id",
-            "credential_attribute_id",
+            "credential_attribute_tag",
             "name_en",
             "name_nl",
             "description_en",

@@ -30,7 +30,7 @@ class CredentialAttributeAdmin(admin.ModelAdmin):
 
     @admin.display(description="Identifier")
     def get_credential_full_path(self, obj):
-        return obj.credential.full_path + "." + obj.credential_attribute_id
+        return obj.credential.full_path + "." + obj.credential_attribute_tag
 
 
 @admin.register(Organization)

@@ -7,7 +7,7 @@ class HostnameEntry(TypedDict):
 
 
 class AttributeEntry(TypedDict):
-    credential_attribute_name: str
+    credential_attribute_tag: str
     reason_en: str
     reason_nl: str
 

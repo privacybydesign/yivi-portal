@@ -14,7 +14,7 @@ export function CredentialAttributeDetails({ attr, value, onChange }: Props) {
       <div className="overflow-x-auto p-4 space-y-1">
         <div className="w-max">
           <span className="font-mono font-bold">{attr.name_en}</span>
-          <span className="italic"> ({attr.credential_attribute_id})</span>
+          <span className="italic"> ({attr.credential_attribute_tag})</span>
         </div>
         <div className="w-max">
           <span className="font-medium">Identifier:</span>{" "}
@@ -26,7 +26,7 @@ export function CredentialAttributeDetails({ attr, value, onChange }: Props) {
         </div>
         <div className="w-max pt-3">
           <Input
-            id={`attribute-${attr.credential_attribute_id}`}
+            id={`attribute-${attr.credential_attribute_tag}`}
             placeholder={attr.name_en}
             value={value || ""}
             onChange={(e) => onChange?.(e.target.value)}

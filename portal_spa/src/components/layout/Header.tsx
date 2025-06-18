@@ -16,7 +16,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
-import { useOrganizationNames } from "@/contexts/OrganizationContext";
+import { useOrganizationNames } from "@/contexts/organization/OrganizationContext";
 
 export default function Header() {
   const initializeAuth = useStore((state) => state.initializeAuth);
@@ -41,7 +41,7 @@ export default function Header() {
         { path: "organizations/:organization/manage/:section" },
         { path: "organizations/register" },
       ],
-      location.pathname,
+      location.pathname
     );
 
     if (isOnProtectedRoute?.length) {
@@ -75,7 +75,7 @@ export default function Header() {
                   location.pathname === "/organizations"
                     ? "bg-muted hover:bg-muted"
                     : "",
-              }),
+              })
             )}
           >
             Organizations

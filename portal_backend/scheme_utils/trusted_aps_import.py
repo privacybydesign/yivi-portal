@@ -261,7 +261,7 @@ def create_credential_attributes(
                     "nl"
                 ),  # fallback for irma-demo scheme missing attribute names
                 defaults={
-                    "credential_attribute_id": attr.get("@id"),
+                    "credential_attribute_tag": attr.get("@id"),
                     "name_nl": name.get("nl") or name.get("en"),
                     "description_en": desc.get("en") or "No description provided",
                     "description_nl": desc.get("nl") or "No description provided",

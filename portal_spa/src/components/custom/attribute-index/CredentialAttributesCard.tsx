@@ -20,7 +20,7 @@ export default function CredentialAttributesCard({ credential }: Props) {
           <div className="space-y-6">
             {credential.attributes.map((attr) => (
               <CredentialAttributeDetails
-                key={attr.credential_attribute_id}
+                key={attr.credential_attribute_tag}
                 attr={attr}
               />
             ))}

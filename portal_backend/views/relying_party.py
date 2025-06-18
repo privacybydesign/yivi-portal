@@ -143,7 +143,7 @@ class RelyingPartyRetrieveView(APIView):
             attributes = [
                 {
                     "credential_id": attr.credential_attribute.credential_id,
-                    "credential_attribute_name": attr.credential_attribute.name_en,
+                    "credential_attribute_tag": attr.credential_attribute.name_en,
                     "reason_en": attr.reason_en,
                     "reason_nl": attr.reason_nl,
                 }

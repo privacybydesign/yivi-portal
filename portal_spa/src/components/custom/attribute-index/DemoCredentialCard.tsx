@@ -23,7 +23,7 @@ export function DemoCredentialCard({ credential }: Props) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const missing = credential.attributes.find(
-      (attr) => !attributeValues[attr.credential_attribute_id]?.trim()
+      (attr) => !attributeValues[attr.credential_attribute_tag]?.trim()
     );
     if (missing) {
       toast.error(`Please fill in: ${missing.name_en}`);
@@ -72,10 +72,10 @@ export function DemoCredentialCard({ credential }: Props) {
     <form onSubmit={handleSubmit} className="space-y-6">
       {credential.attributes.map((attr) => (
         <CredentialAttributeDetails
-          key={attr.credential_attribute_id}
+          key={attr.credential_attribute_tag}
           attr={attr}
-          value={attributeValues[attr.credential_attribute_id] || ""}
-          onChange={(val) => handleChange(attr.credential_attribute_id, val)}
+          value={attributeValues[attr.credential_attribute_tag] || ""}
+          onChange={(val) => handleChange(attr.credential_attribute_tag, val)}
         />
       ))}
       <Button type="submit" disabled={loading}>
