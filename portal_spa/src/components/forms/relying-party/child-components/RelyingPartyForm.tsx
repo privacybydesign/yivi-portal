@@ -17,16 +17,17 @@ import RelyingPartySlug from "./RelyingPartySlug";
 import { useRelyingParty } from "@/contexts/relying-party/RelyingPartyContext";
 
 export default function RelyingPartyForm() {
+  const context = useRelyingParty();
+
   const {
     originalSlug,
     defaultValues,
-    onSubmit,
     serverErrors = {},
     globalError,
     isSaving,
     isEditMode,
     onClose,
-  } = useRelyingParty();
+  } = context;
 
   const form = useForm<RelyingPartyFormData>({
     resolver: zodResolver(RelyingPartySchema),
@@ -135,14 +136,9 @@ export default function RelyingPartyForm() {
                 }, 100);
                 return;
               }
-              (
-                onSubmit as (
-                  data: Partial<RelyingPartyFormData>,
-                  originalSlug: string
-                ) => void
-              )(payload, originalSlug);
+              context.onSubmit(payload, originalSlug);
             } else {
-              (onSubmit as (data: RelyingPartyFormData) => void)(formData);
+              context.onSubmit(formData);
             }
           })}
         >
@@ -182,7 +178,7 @@ export default function RelyingPartyForm() {
                     onClose();
                   }
                 }}
-                className="h-9 text-sm"
+                className="text-sm"
               >
                 Cancel
               </Button>

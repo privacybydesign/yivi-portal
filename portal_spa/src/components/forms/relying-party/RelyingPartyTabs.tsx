@@ -11,7 +11,7 @@ export default function RelyingPartyTabs() {
     isEditMode &&
     Array.isArray(defaultValues.hostnames) &&
     defaultValues.hostnames.some(
-      (h: { hostname: string }) => h.hostname?.trim() !== ""
+      (h: { hostname?: string }) => h.hostname?.trim() !== ""
     );
 
   const [activeTab, setActiveTab] = useState<"form-tab" | "dns-tab">(

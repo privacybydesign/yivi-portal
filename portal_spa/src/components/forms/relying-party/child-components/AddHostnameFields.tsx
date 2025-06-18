@@ -20,7 +20,7 @@ export default function AddHostnameFields(props: AddHostnameFieldsProps) {
   return (
     <>
       <div key={index} className="flex gap-2 items-start">
-        {field.id !== undefined && typeof field.id === "number" && (
+        {typeof field.id === "number" && (
           <Input
             type="hidden"
             {...register(`hostnames.${index}.id`, {
