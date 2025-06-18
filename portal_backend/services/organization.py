@@ -27,23 +27,27 @@ def filter_organizations(
     select_aps: Optional[bool] = to_nullable_bool(request.query_params.get("ap"))
     select_rps: Optional[bool] = to_nullable_bool(request.query_params.get("rp"))
 
-    filtered_orgs = Organization.objects.with_role_annotations().filter(
-        Q(is_ap=True) | Q(is_rp=True)
-    )
-
-    if select_aps:
-        filtered_orgs = filtered_orgs.filter(is_ap=True)
-    if select_rps:
-        filtered_orgs = filtered_orgs.filter(is_rp=True)
+    queryset = Organization.objects.all().with_role_annotations()
 
     if search_query:
-        filtered_orgs = filtered_orgs.filter(
+        queryset = queryset.filter(
             Q(name_en__icontains=search_query) | Q(name_nl__icontains=search_query)
         )
 
-    if trust_model:
-        filtered_orgs = filtered_orgs.filter(trust_models__name=trust_model)
-
-    return filtered_orgs.prefetch_related(
-        "trust_models",
+    queryset = queryset.exclude(
+        Q(name_en__icontains="demo") | Q(name_nl__icontains="demo")
     )
+
+    if trust_model:
+        queryset = queryset.filter(trust_models__name=trust_model)
+
+    if select_aps is True and select_rps is True:
+        queryset = queryset.filter(is_ap=True, is_rp=True)
+    elif select_aps is True:
+        queryset = queryset.filter(is_ap=True)
+    elif select_rps is True:
+        queryset = queryset.filter(is_rp=True)
+    else:
+        queryset = queryset.filter(Q(is_ap=True) | Q(is_rp=True))
+
+    return queryset.prefetch_related("trust_models").distinct().order_by("name_en")

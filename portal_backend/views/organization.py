@@ -84,17 +84,23 @@ class OrganizationListView(APIView):
 
 
 class OrganizationDetailView(APIView):
-    permission_classes = [permissions.AllowAny]
 
     @swagger_auto_schema(responses={200: "Success", 404: "Not Found"})
     def get(self, request: Request, org_slug: str) -> Response:
         """Get organization by uuid"""
 
-        org = Organization.objects.with_role_annotations().filter(slug=org_slug).first()
+        org = Organization.objects.with_role_annotations().filter(slug=org_slug)
+
+        if IsOrganizationMaintainerOrAdmin().has_permission(request, self):
+            org = org.first()
+        else:
+            org = org.filter(is_verified=True).first()
         if not org:
             return Response(
-                {"error": "Organization not found"}, status=status.HTTP_404_NOT_FOUND
+                {"error": "Organization not found"},
+                status=status.HTTP_404_NOT_FOUND,
             )
+
         serializer = OrganizationSerializer(org)
         return Response(serializer.data)
 

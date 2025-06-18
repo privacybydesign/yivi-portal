@@ -12,19 +12,21 @@ export default function AttestationProviderDetailsPage() {
   const [apDetails, setApDetails] = useState<AttestationProvider | null>(null);
 
   useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+
     if (!org_slug || !environment || !ap_slug) return;
 
     const fetchAttestationProviderDetails = async () => {
       try {
         const response = await axiosInstance.get(
-          `/v1/yivi/organizations/${org_slug}/attestation-provider/${environment}/${ap_slug}/`
+          `/v1/yivi/organizations/${org_slug}/attestation-provider/${environment}/${ap_slug}/`,
         );
         setApDetails(response.data);
       } catch (error) {
         toast.error(
           `Failed to fetch details for ${ap_slug}: ${
             error instanceof Error ? error.message : String(error)
-          }`
+          }`,
         );
       }
     };
@@ -33,8 +35,8 @@ export default function AttestationProviderDetailsPage() {
   }, [org_slug, environment, ap_slug]);
 
   return (
-    <div className="space-y-8 p-4">
-      <div className="flex items-center gap-4 mb-4">
+    <div className="space-y-8">
+      <div className="mb-4">
         {apDetails?.organization_logo && (
           <img
             src={`${apiEndpoint}${apDetails.organization_logo}`}
