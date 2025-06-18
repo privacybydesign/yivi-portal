@@ -1,6 +1,6 @@
-export type Environment = {
+export type YiviEnvironment = {
   id: number;
-  environment: string;
+  environment: Environment;
   name_en: string;
   name_nl: string;
   description_en: string;
@@ -13,3 +13,9 @@ export type Environment = {
   keyshare_attribute: string;
   contact_website: string;
 };
+
+export enum Environment {
+  production = "production",
+  staging = "staging",
+  demo = "demo",
+}

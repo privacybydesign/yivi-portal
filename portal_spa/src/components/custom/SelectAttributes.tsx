@@ -13,6 +13,7 @@ import type { Credential, CredentialAttribute } from "@/models/credential";
 import { Check, ChevronDown } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger } from "../ui/select";
 import { SelectValue } from "@radix-ui/react-select";
+import { Environment } from "@/models/yivi-environment";
 
 interface CredentialAttributeFieldProps {
   index: number;
@@ -29,18 +30,18 @@ export default function CredentialAttributeFields({
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [envFilter, setEnvFilter] = useState({
-    production: true,
-    staging: false,
-    demo: false,
+    [Environment.production]: true,
+    [Environment.staging]: false,
+    [Environment.demo]: false,
   });
 
-  const toggleEnv = (env: keyof typeof envFilter) => {
+  const toggleEnv = (env: Environment) => {
     setEnvFilter((prev) => ({ ...prev, [env]: !prev[env] }));
   };
 
   const filteredCredentials = useMemo(() => {
     return credentials.filter((cred) => {
-      const matchesEnv = envFilter[cred.environment as keyof typeof envFilter];
+      const matchesEnv = envFilter[cred.environment as Environment];
 
       const inCredentialName =
         cred.name_en.toLowerCase().includes(search.toLowerCase()) ||
@@ -59,7 +60,7 @@ export default function CredentialAttributeFields({
   const selected = credentials.find((cred) => cred.id === value?.credential_id);
 
   const handleFieldChange = (fieldKey: string, newValue: unknown) => {
-    onChange?.({
+    onChange({
       ...value,
       [fieldKey]: newValue,
     });
@@ -111,20 +112,22 @@ export default function CredentialAttributeFields({
                 {/* Environment Filters */}
                 <div className="w-full overflow-hidden">
                   <div className="flex flex-wrap gap-2 text-sm w-full">
-                    {(["production", "staging", "demo"] as const).map((env) => (
-                      <label
-                        key={env}
-                        className="flex items-center gap-2 cursor-pointer truncate"
-                      >
-                        <Checkbox
-                          checked={envFilter[env]}
-                          onCheckedChange={() => toggleEnv(env)}
-                        />
-                        <span className="capitalize text-muted-foreground break-normal">
-                          {env}
-                        </span>
-                      </label>
-                    ))}
+                    {(Object.values(Environment) as Environment[]).map(
+                      (env) => (
+                        <label
+                          key={env}
+                          className="flex items-center gap-2 cursor-pointer truncate"
+                        >
+                          <Checkbox
+                            checked={envFilter[env]}
+                            onCheckedChange={() => toggleEnv(env)}
+                          />
+                          <span className="capitalize text-muted-foreground break-normal">
+                            {env}
+                          </span>
+                        </label>
+                      )
+                    )}
                   </div>
                 </div>
 
@@ -196,7 +199,6 @@ export default function CredentialAttributeFields({
               <Input
                 disabled
                 placeholder="Select a credential first"
-                value=""
                 className="h-9 px-3 text-sm font-normal"
               />
             </div>
@@ -210,7 +212,7 @@ export default function CredentialAttributeFields({
           <div className="space-y-2">
             <Label className="text-sm font-medium">Reason (English)</Label>
             <Textarea
-              value={value?.reason_en ?? ""}
+              value={value?.reason_en}
               onChange={(e) => handleFieldChange("reason_en", e.target.value)}
               placeholder="Enter English reason..."
               className="min-h-[80px] resize-y"
