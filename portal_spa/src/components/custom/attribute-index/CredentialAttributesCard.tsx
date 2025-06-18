@@ -7,18 +7,14 @@ type Props = {
   credential: Credential;
 };
 
-export default function CredentialDetailsCard({ credential }: Props) {
+export default function CredentialAttributesCard({ credential }: Props) {
   return (
     <Card>
       <CardHeader>
         <CardTitle className="text-lg">Attributes</CardTitle>
       </CardHeader>
       <CardContent>
-        {credential.attributes.length === 0 ? (
-          <p className="text-sm text-gray-500">
-            No attributes defined for this credential.
-          </p>
-        ) : credential.environment === "demo" ? (
+        {credential.environment === "demo" ? (
           <DemoCredentialForm credential={credential} />
         ) : (
           <div className="space-y-6">
