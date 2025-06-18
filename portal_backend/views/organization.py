@@ -18,13 +18,14 @@ from rest_framework.request import Request
 from ..swagger_specs.organization import (
     organization_create_schema,
     organization_update_schema,
-    organization_maintainer_create_schama,
+    organization_maintainer_create_schema,
     organization_maintainer_delete_schema,
 )
 from django.core.exceptions import ValidationError
 from django.core.mail import EmailMessage
 from django.template.loader import render_to_string
 from django.conf import settings
+from silk.profiling.profiler import silk_profile
 
 
 logger = logging.getLogger(__name__)
@@ -34,6 +35,7 @@ class OrganizationCreateView(APIView):
     permission_classes = [permissions.IsAuthenticated]
     parser_classes = [MultiPartParser, FormParser]
 
+    @silk_profile("OrganizationCreateView.post")
     @organization_create_schema
     @transaction.atomic
     def post(self, request: Request) -> Response:
@@ -69,6 +71,7 @@ class OrganizationCreateView(APIView):
 class OrganizationListView(APIView):
     permission_classes = [permissions.AllowAny]
 
+    @silk_profile("OrganizationListView.get")
     @swagger_auto_schema(responses={200: "Success", 404: "Not Found"})
     def get(self, request: Request) -> Response:
         """Get all registered organizations"""
@@ -85,6 +88,7 @@ class OrganizationListView(APIView):
 
 class OrganizationDetailView(APIView):
 
+    @silk_profile("OrganizationDetailView.get")
     @swagger_auto_schema(responses={200: "Success", 404: "Not Found"})
     def get(self, request: Request, org_slug: str) -> Response:
         """Get organization by uuid"""
@@ -112,8 +116,9 @@ class OrganizationUpdateView(APIView):
     ]
     parser_classes = [MultiPartParser, FormParser]
 
+    @silk_profile("OrganizationUpdateView.patch")
     @organization_update_schema
-    # @transaction.atomic
+    @transaction.atomic
     def patch(self, request: Request, org_slug: str) -> Response:
         """Updates an organization, given the uuid."""
         organization = get_object_or_404(Organization, slug=org_slug)
@@ -131,6 +136,7 @@ class OrganizationUpdateView(APIView):
         try:
             serializer.save()
         except Exception as e:
+            transaction.set_rollback(True)
             logger.error(f"Error saving to database: {e}")
             return Response(
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -145,6 +151,7 @@ class OrganizationMaintainersView(APIView):
     ]
 
     @swagger_auto_schema(responses={200: "Success"})
+    @silk_profile("OrganizationMaintainersView.get")
     def get(self, request: Request, org_slug: str) -> Response:
         """Get all maintainers for an organization"""
         organization = get_object_or_404(Organization, slug=org_slug)
@@ -154,7 +161,8 @@ class OrganizationMaintainersView(APIView):
         serializer = MaintainerSerializer(maintainers, many=True)
         return Response(serializer.data)
 
-    @organization_maintainer_create_schama
+    @organization_maintainer_create_schema
+    @silk_profile("OrganizationMaintainersView.post")
     @transaction.atomic
     def post(self, request: Request, org_slug: str) -> Response:
         """Add a maintainer to an organization"""
@@ -237,6 +245,7 @@ class OrganizationMaintainerView(APIView):
     ]
 
     @organization_maintainer_delete_schema
+    @silk_profile("OrganizationMaintainerView.delete")
     def delete(self, request: Request, org_slug: str, maintainer_id: str) -> Response:
         """Remove a maintainer from an organization"""
 
