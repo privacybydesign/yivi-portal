@@ -12,8 +12,72 @@ from rest_framework_simplejwt.tokens import RefreshToken  # type: ignore
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer  # type: ignore
 from portal_backend.models.models import User
 from yivi_auth.yivi import YiviServer, YiviException
+import time
+
 
 logger = logging.getLogger(__name__)
+
+
+class YiviIssueDemosView(APIView):
+    permission_classes = [AllowAny]
+
+    @swagger_auto_schema(
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT, additional_properties=True
+        ),
+        responses={200: "Success"},
+    )
+    def post(self, request):
+        """Start a Yivi session as proxy to the Yivi server to issue demo credentials."""
+        logger.info(f"Incoming data: {request.data}")
+        logger.info(f"Content-Type: {request.content_type}")
+        logger.info("Starting a Yivi session: " + settings.YIVI_SERVER_TOKEN)
+
+        credential: str = request.data.get("credential", None)
+        attributes: dict = request.data.get("attributes", None)
+
+        yivi_server = YiviServer(
+            settings.YIVI_SERVER_URL,
+            token=settings.YIVI_SERVER_TOKEN,
+        )
+        # UNIX timestamp in the future, 6 months from now
+        validity = int(time.time()) + 6 * 30 * 24 * 60 * 60
+
+        try:
+            session_request = {
+                "@context": "https://irma.app/ld/request/issuance/v2",
+                "credentials": [
+                    {
+                        "credential": credential,
+                        "validity": validity,
+                        "attributes": attributes,
+                    }
+                ],
+            }
+            response = yivi_server.start_session(session_request)
+        except YiviException as e:
+            return Response(status=e.http_status, data=e.msg)
+
+        if response is None:
+            raise RuntimeError("Yivi server did not return a response.")
+
+        return Response(data=response)
+
+
+class YiviDemoIssuanceResultView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request, yivi_token: str):
+        yivi_server = YiviServer(
+            settings.YIVI_SERVER_URL, token=settings.YIVI_SERVER_TOKEN
+        )
+        try:
+            result = yivi_server.session_result(yivi_token)
+            if result is None:
+                return Response(status=400, data="Invalid Yivi token")
+            return Response(result, status=200)
+        except YiviException as e:
+            return Response(status=e.http_status, data=e.msg)
 
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):

@@ -1,9 +1,11 @@
-import { Link, useOutletContext, useParams } from "react-router-dom";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useOutletContext, useParams } from "react-router-dom";
 import type { Credential } from "@/models/credential";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useEffect } from "react";
+import { Info } from "lucide-react";
+import CredentialDetailsCard from "@/components/custom/attribute-index/CredentialDetailsCard";
+import CredentialAttributesCard from "@/components/custom/attribute-index/CredentialAttributesCard";
 
 type OutletContext = {
   credentials: Credential[];
@@ -17,12 +19,12 @@ export default function CredentialDetailsPage() {
     (c) =>
       c.environment === environment &&
       c.ap_slug === ap_slug &&
-      c.credential_id === credential_id,
+      c.credential_id === credential_id
   );
 
   useEffect(
     () => window.scrollTo({ top: 0, behavior: "smooth" }),
-    [credential],
+    [credential]
   );
 
   if (!credentials?.length) {
@@ -40,6 +42,7 @@ export default function CredentialDetailsPage() {
 
   return (
     <div className="space-y-8">
+      {/* Header */}
       <h1 className="text-3xl font-semibold flex items-center gap-x-3">
         {credential.name_en}
         {credential.deprecated_since && (
@@ -47,129 +50,23 @@ export default function CredentialDetailsPage() {
         )}
       </h1>
 
-      {/* Credential Details */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Credential Details</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <dl className="space-y-3 text-sm">
-            <div>
-              <dt className="font-medium">Description</dt>
-              <dd>{credential.description_en}</dd>
-            </div>
-            <div>
-              <dt className="font-medium">Short Identifier</dt>
-              <dd>{credential.credential_id}</dd>
-            </div>
-            <div>
-              <dt className="font-medium">Identifier</dt>
-              <dd>{credential.full_path}</dd>
-            </div>
-            <div>
-              <dt className="font-medium">Organization</dt>
-              <dd>
-                <Link
-                  to={`/organizations/${credential.org_slug}`}
-                  className="text-blue-600"
-                >
-                  {credential.org_name}
-                </Link>
-              </dd>
-            </div>
-            <div>
-              <dt className="font-medium">Attestation Provider</dt>
-              <dd>
-                <Link
-                  to={`/attribute-index/attestation-provider/${credential.org_slug}/${credential.environment}/${credential.ap_slug}`}
-                  className="text-blue-600"
-                >
-                  {credential.ap_slug}
-                </Link>
-              </dd>
-            </div>
-            <div>
-              <dt className="font-medium">Environment</dt>
-              <dd>
-                <Link
-                  to={`/attribute-index/environments/${credential.environment}`}
-                  className="text-blue-600"
-                >
-                  {credential.environment}
-                </Link>
-              </dd>
-            </div>
-            {credential.deprecated_since && (
-              <div>
-                <dt className="font-medium">Deprecated Since</dt>
-                <dd>{credential.deprecated_since}</dd>
-              </div>
-            )}
-            {credential.issue_url && (
-              <div>
-                <dt className="font-medium">Issue URL</dt>
-                <dd className="text-sm">
-                  {credential.issue_url.startsWith("http") ? (
-                    <a
-                      href={credential.issue_url}
-                      className="text-blue-600 hover:underline"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      {credential.issue_url}
-                    </a>
-                  ) : (
-                    <span className="text-gray-500">
-                      {credential.issue_url}
-                    </span>
-                  )}
-                </dd>
-              </div>
-            )}
-          </dl>
-        </CardContent>
+      {/* Demo info */}
+      {credential.environment === "demo" && (
+        <div className="flex items-center gap-x-2 rounded-md bg-yellow-50 p-4 text-yellow-800">
+          <Info className="h-8 w-8 mr-3" />
+          <span>
+            You can obtain this credential by filling out the attribute fields
+            below. This demo credential has no real value, other than to
+            demonstrate the experience of a Yivi credential issuance.
+          </span>
+        </div>
+      )}
 
-        {/* Attributes */}
-        <CardHeader>
-          <CardTitle className="text-lg">Attributes</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {credential.attributes.length === 0 ? (
-            <p className="text-sm text-gray-500">
-              No attributes defined for this credential.
-            </p>
-          ) : (
-            <div className="space-y-6">
-              {credential.attributes.map((attr) => (
-                <div
-                  className="border text-sm rounded-lg overflow-hidden"
-                  key={attr.credential_attribute_id}
-                >
-                  <div className="overflow-x-auto p-4 space-y-1">
-                    <div className="w-max">
-                      <span className="font-mono font-bold">
-                        {attr.name_en}
-                      </span>
-                      <span className="italic">
-                        {" "}
-                        ({attr.credential_attribute_id})
-                      </span>
-                    </div>
-                    <div className="w-max">
-                      <span className="font-medium">Identifier:</span>{" "}
-                      <span className="font-mono">{attr.full_path}</span>
-                    </div>
-                    <div className="w-max">
-                      <span className="font-medium">Description:</span>{" "}
-                      {attr.description_en}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      {/* Credential Details */}
+      <CredentialDetailsCard credential={credential} />
+
+      {/* Attributes */}
+      <CredentialAttributesCard credential={credential} />
     </div>
   );
 }
