@@ -2,20 +2,22 @@ import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { axiosInstance } from "@/services/axiosInstance";
 import { toast } from "sonner";
-import type { Environment } from "@/models/environment";
+import type { YiviEnvironment } from "@/models/yivi-environment";
 import { useParams } from "react-router-dom";
 import { AxiosError } from "axios";
 
 export default function EnvironmentDetailsPage() {
   const { environment: currentEnv } = useParams();
-  const [environments, setEnvironments] = useState<Environment[]>([]);
+  const [yiviEnvironments, setYiviEnvironment] = useState<YiviEnvironment[]>(
+    []
+  );
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchEnvironments = async () => {
       try {
         const response = await axiosInstance.get("/v1/yivi/environments/");
-        setEnvironments(response.data);
+        setYiviEnvironment(response.data);
       } catch (error) {
         toast.error("Something went wrong", {
           description:
@@ -31,9 +33,9 @@ export default function EnvironmentDetailsPage() {
     fetchEnvironments();
   }, []);
 
-  const selectedEnvironment = currentEnv
-    ? environments.filter((env) => env.environment === currentEnv)
-    : environments;
+  const selectedYiviEnvironment = currentEnv
+    ? yiviEnvironments.filter((yiviEnv) => yiviEnv.environment === currentEnv)
+    : [];
 
   return (
     <div className="space-y-6 p-6">
@@ -49,13 +51,13 @@ export default function EnvironmentDetailsPage() {
         <p className="text-muted-foreground">Loading environments...</p>
       )}
 
-      {!loading && selectedEnvironment.length === 0 && (
+      {!loading && selectedYiviEnvironment.length === 0 && (
         <p className="text-gray-500">No matching environments found.</p>
       )}
 
       {!loading &&
-        selectedEnvironment.map((env) => (
-          <Card key={env.id}>
+        selectedYiviEnvironment.map((yiviEnv) => (
+          <Card key={yiviEnv.id}>
             <CardHeader>
               <CardTitle className="text-lg capitalize">
                 Environment Details
@@ -63,72 +65,72 @@ export default function EnvironmentDetailsPage() {
             </CardHeader>
             <CardContent className="text-sm space-y-2">
               <div>
-                <span className="font-medium">ID:</span> {env.scheme_id}
+                <span className="font-medium">ID:</span> {yiviEnv.scheme_id}
               </div>
               <div>
-                <span className="font-medium">Name:</span> {env.name_en}
+                <span className="font-medium">Name:</span> {yiviEnv.name_en}
               </div>
               <div>
                 <span className="font-medium">Description:</span>{" "}
-                {env.description_en}
+                {yiviEnv.description_en}
               </div>
               <div>
                 <span className="font-medium">URL:</span>{" "}
                 <a
-                  href={`${env.url}/description.xml`}
+                  href={`${yiviEnv.url}/description.xml`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-blue-600 hover:underline"
                 >
-                  {env.url}
+                  {yiviEnv.url}
                 </a>
               </div>
               <div>
                 <span className="font-medium">Timestamp Server:</span>{" "}
                 <a
-                  href={env.timestamp_server}
+                  href={yiviEnv.timestamp_server}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-blue-600 hover:underline"
                 >
-                  {env.timestamp_server}
+                  {yiviEnv.timestamp_server}
                 </a>
               </div>
               <div>
                 <span className="font-medium">Keyshare Server: </span>{" "}
                 <a
-                  href={env.keyshare_server}
+                  href={yiviEnv.keyshare_server}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-blue-600 hover:underline"
                 >
-                  {env.keyshare_server}
+                  {yiviEnv.keyshare_server}
                 </a>
               </div>
               <div>
                 <span className="font-medium">Keyshare Website: </span>{" "}
                 <a
-                  href={env.keyshare_website}
+                  href={yiviEnv.keyshare_website}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-blue-600 hover:underline"
                 >
-                  {env.keyshare_website}
+                  {yiviEnv.keyshare_website}
                 </a>
               </div>
               <div>
                 <span className="font-medium">Keyshare Attribute: </span>{" "}
-                {env.keyshare_attribute}
+                {yiviEnv.keyshare_attribute}
               </div>
               <div>
                 <span className="font-medium">Contact Website: </span>{" "}
                 <a
-                  href={env.contact_website}
+                  href={yiviEnv.contact_website}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-blue-600 hover:underline"
                 >
-                  {env.contact_website}
+                  {yiviEnv.contact_website}
                 </a>
               </div>
             </CardContent>
