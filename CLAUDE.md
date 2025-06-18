@@ -18,6 +18,28 @@ Django backend in `portal_backend/` + `yivi_portal/`, React SPA in `portal_spa/`
   use a matching major for anything that rewrites it: `npx -y npm@12 install`. `npm ci` only
   reads the lockfile, so CI running plain `npm ci` on node 22 (npm 10.9.x) is fine.
 
+## portal_backend
+
+- `poetry install` with no flags tries to build `uwsgi` from source (it is in the non-optional
+  `prod` group) and fails without Python headers. Use `poetry install --without prod` for
+  local work; the Docker images pass the group they need.
+- `manage.py` picks the settings module from `$ENVIRONMENT`, and `.env.testing` sets
+  `ENVIRONMENT=development`, so `manage.py test` runs under `yivi_portal/settings/development.py`.
+  Anything the development settings import has to be installed in `Dockerfile.django` too,
+  which happens to hold because `poetry install --with prod` also installs the `dev` group.
+- Two tests in `portal_backend/tests/test_imports.py` read `/app/config.json`, the path the
+  config lands on inside the container. They pass in CI and error out on a checkout run
+  outside Docker; that is the environment, not the code.
+- `test_add_maintainer_created` needs `YIVI_PORTAL_URL` set, otherwise the invite mail blows
+  up and the view answers 500. Note that `.env.testing` writes it as `YIVI_PORTAL_URL= portal.yivi.app`
+  with a leading space: `docker run --env-file` keeps the space and the test passes, but
+  `set -a; . ./.env.testing` in a shell parses the line as a command and never exports the
+  variable at all, so a local run fails a test CI does not.
+- django-silk is development-only: the app, its middleware and its `/silk/` route are added in
+  `settings/development.py` and guarded in `yivi_portal/urls.py` by an `INSTALLED_APPS` check.
+  Keep it out of `settings/base.py`; silk records request and response bodies and serves an
+  unauthenticated dashboard.
+
 ## CI
 
 - `.github/workflows/react-container.yml` runs `npm run test` in `portal_spa/`, then builds

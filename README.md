@@ -58,6 +58,25 @@ docker compose exec django python manage.py createsuperuser
 ```
 Then access with your credentials at `http://{host}:8000/admin/`
 
+### Query Profiling
+
+The development settings load [django-silk](https://github.com/jazzband/django-silk), which
+records every request together with the SQL it ran. Browse to `http://{host}:8000/silk/`. The
+request list gives you a query count and a total query time per request, and each request
+links through to the individual queries and the code that issued them. That is how you find
+N+1 queries.
+
+Recordings go into the project database and pile up as you browse, so clear them when they
+get in the way:
+
+```bash
+docker compose exec django python manage.py silk_clear_request_log
+```
+
+The production settings do not load silk, and should not: it keeps request and response
+bodies, including `Authorization` headers, and its dashboard has no access control of its
+own.
+
 ### Cronjobs
 
 Currently, 3 types of  cronjobs are set. `DNS Verification`, `Import Trusted RPs`, `Import Trusted APs`. The latter two use appropriate scheme repositories to create or update entities in the database.
