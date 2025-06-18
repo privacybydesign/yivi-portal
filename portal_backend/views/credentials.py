@@ -36,6 +36,14 @@ class CredentialsListViewWithDeprecated(APIView):
         request: Request,
     ) -> Response:
 
-        credentials = Credential.objects.all().order_by("name_en")
+        credentials = (
+            Credential.objects.select_related(
+                "attestation_provider",
+                "attestation_provider__organization",
+                "attestation_provider__yivi_tme",
+            )
+            .prefetch_related("attributes")
+            .order_by("name_en")
+        )
         serializer = CredentialListSerializer(credentials, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
