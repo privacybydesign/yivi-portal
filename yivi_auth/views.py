@@ -29,9 +29,6 @@ class YiviIssueDemosView(APIView):
     )
     def post(self, request):
         """Start a Yivi session as proxy to the Yivi server to issue demo credentials."""
-        logger.info(f"Incoming data: {request.data}")
-        logger.info(f"Content-Type: {request.content_type}")
-        logger.info("Starting a Yivi session: " + settings.YIVI_SERVER_TOKEN)
 
         credential: str = request.data.get("credential", None)
         attributes: dict = request.data.get("attributes", None)
