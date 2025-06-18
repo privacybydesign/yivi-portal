@@ -11,7 +11,7 @@ class Migration(migrations.Migration):
     operations = [
         migrations.AddField(
             model_name="credentialattribute",
-            name="credential_attribute_tag",
+            name="credential_attribute_id",
             field=models.CharField(default="", max_length=100),
             preserve_default=False,
         ),
