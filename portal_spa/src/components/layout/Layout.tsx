@@ -6,6 +6,7 @@ import { axiosInstance } from "@/services/axiosInstance";
 import useStore from "@/store";
 import { buttonVariants } from "../ui/button";
 import { cn } from "@/lib/utils";
+import type { Organization } from "@/models/organization";
 
 export default function Layout() {
   const [organizationNames, setOrganizationNames] = useState<
@@ -15,25 +16,21 @@ export default function Layout() {
 
   useEffect(() => {
     const fetchOrganizationNames = async () => {
-      const namesMap: Record<string, string> = {};
-      await Promise.all(
-        organizationSlugs.map(async (slug) => {
-          try {
-            const { data, status } = await axiosInstance.get(
-              `/v1/organizations/${slug}`
-            );
-            namesMap[slug] =
-              status === 200 && data.name_en ? data.name_en : slug;
-          } catch (error) {
-            console.error(
-              `Error fetching organization name for ${slug}:`,
-              error
-            );
-            namesMap[slug] = slug;
-          }
-        })
-      );
-      setOrganizationNames(namesMap);
+      try {
+        const { data } = await axiosInstance.get(`/v1/profile`);
+
+        const namesMap: Record<string, string> = {};
+        organizationSlugs.forEach((slug) => {
+          const org = data.find(
+            (org: Partial<Organization>) => org.slug === slug
+          );
+          namesMap[slug] = org?.name_en || slug;
+        });
+
+        setOrganizationNames(namesMap);
+      } catch (error) {
+        console.error("Error fetching organization names:", error);
+      }
     };
 
     if (organizationSlugs.length > 0) {
