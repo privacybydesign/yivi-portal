@@ -68,18 +68,14 @@ export default function CredentialDetailsCard({ credential }: Props) {
             <div>
               <dt className="font-medium">Issue URL</dt>
               <dd className="text-sm">
-                {credential.issue_url.startsWith("http") ? (
-                  <a
-                    href={credential.issue_url}
-                    className="text-blue-600 hover:underline"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    {credential.issue_url}
-                  </a>
-                ) : (
-                  <span className="text-gray-500">{credential.issue_url}</span>
-                )}
+                <a
+                  href={credential.issue_url}
+                  className="text-blue-600 hover:underline"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {credential.issue_url}
+                </a>
               </dd>
             </div>
           )}
