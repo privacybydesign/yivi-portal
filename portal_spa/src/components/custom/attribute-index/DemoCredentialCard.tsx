@@ -10,7 +10,7 @@ type Props = {
   credential: Credential;
 };
 
-export function DemoCredentialForm({ credential }: Props) {
+export function DemoCredentialCard({ credential }: Props) {
   const [attributeValues, setAttributeValues] = useState<{
     [key: string]: string;
   }>({});

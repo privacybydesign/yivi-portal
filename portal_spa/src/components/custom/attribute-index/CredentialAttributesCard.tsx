@@ -1,6 +1,6 @@
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { CredentialAttributeDetails } from "./CredentialAttributeDetails";
-import { DemoCredentialForm } from "./DemoCredentialCard";
+import { DemoCredentialCard } from "./DemoCredentialCard";
 import type { Credential } from "@/models/credential";
 
 type Props = {
@@ -15,7 +15,7 @@ export default function CredentialAttributesCard({ credential }: Props) {
       </CardHeader>
       <CardContent>
         {credential.environment === "demo" ? (
-          <DemoCredentialForm credential={credential} />
+          <DemoCredentialCard credential={credential} />
         ) : (
           <div className="space-y-6">
             {credential.attributes.map((attr) => (
