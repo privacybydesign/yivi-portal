@@ -65,7 +65,7 @@ export default function Header() {
           Portal
         </Link>
 
-        <div className="md:flex items-center gap-6">
+        <div className="flex items-center gap-6">
           <Link
             to="/organizations"
             className={cn(
