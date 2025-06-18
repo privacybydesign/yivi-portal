@@ -64,7 +64,7 @@ export default function CredentialDetailsCard({ credential }: Props) {
               <dd>{credential.deprecated_since}</dd>
             </div>
           )}
-          {credential.issue_url && (
+          {credential.issue_url && credential.environment !== "demo" && (
             <div>
               <dt className="font-medium">Issue URL</dt>
               <dd className="text-sm">
