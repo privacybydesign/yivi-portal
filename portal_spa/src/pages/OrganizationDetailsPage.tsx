@@ -7,6 +7,7 @@ import type { Organization } from "@/models/organization";
 import type { RelyingParty } from "@/models/relying-party";
 import type { AttestationProvider } from "@/models/attestationprovider";
 import { toast } from "sonner";
+import { AlertTriangle } from "lucide-react";
 
 export default function OrganizationPage() {
   const params = useParams();
@@ -183,8 +184,23 @@ export default function OrganizationPage() {
 
   if (!organization) {
     return (
-      <div className="p-4 bg-yellow-50 text-yellow-600 rounded-md">
-        Organization not found
+      <div className="flex justify-center items-center min-h-[240px]">
+        <Card className="max-w-lg w-full border-0 shadow-md bg-yellow-50">
+          <CardContent className="flex items-center gap-4 py-8">
+            <div className="flex-shrink-0">
+              <AlertTriangle size={36} className="text-yellow-500" />
+            </div>
+            <div>
+              <h2 className="text-lg font-semibold text-yellow-800 mb-1">
+                Organization not found
+              </h2>
+              <p className="text-sm text-yellow-700">
+                The organization you are looking for does not exist or is not
+                available.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     );
   }
