@@ -84,6 +84,7 @@ class OrganizationListView(APIView):
 
 
 class OrganizationDetailView(APIView):
+    permission_classes = [permissions.AllowAny]
 
     @swagger_auto_schema(responses={200: "Success", 404: "Not Found"})
     def get(self, request: Request, org_slug: str) -> Response:
@@ -91,10 +92,15 @@ class OrganizationDetailView(APIView):
 
         org = Organization.objects.with_role_annotations().filter(slug=org_slug)
 
-        if IsOrganizationMaintainerOrAdmin().has_permission(request, self):
+        if (
+            request.user.is_authenticated
+            and IsOrganizationMaintainerOrAdmin().has_permission(request, self)
+        ):
             org = org.first()
         else:
-            org = org.filter(is_verified=True).first()
+            org = org.exclude(is_verified=False).first()
+
+        logger.info(f"Fetching organization with slug: {org_slug}")
         if not org:
             return Response(
                 {"error": "Organization not found"},
