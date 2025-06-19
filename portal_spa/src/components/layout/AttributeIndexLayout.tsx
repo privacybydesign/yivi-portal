@@ -69,7 +69,7 @@ export default function AttributeIndexLayout() {
     if (results.length === 0) return null;
 
     return (
-      <div className="absolute z-50 bg-white border rounded shadow w-full mt-1 max-h-80 overflow-auto">
+      <div className="absolute z-40 bg-white rounded shadow w-full mt-[61px] max-h-80 overflow-auto">
         <ul className="divide-y divide-gray-100">
           {results.map((cred) => {
             const { credential_id, ap_slug, environment, name_en, id } = cred;
