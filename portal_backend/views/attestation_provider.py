@@ -62,15 +62,19 @@ class AttestationProviderRetrieveView(APIView):
             {
                 "id": credential.id,
                 "name_en": credential.name_en,
+                "name_nl": credential.name_nl,
                 "credential_id": credential.credential_id,
                 "description_en": credential.description_en,
+                "description_nl": credential.description_nl,
                 "full_path": credential.full_path,
                 "deprecated_since": credential.deprecated_since,
                 "attributes": [
                     {
                         "id": attr.id,
                         "name_en": attr.name_en,
+                        "name_nl": attr.name_nl,
                         "description_en": attr.description_en,
+                        "description_nl": attr.description_nl,
                         "full_path": attr.full_path,
                     }
                     for attr in credential.attributes.all()

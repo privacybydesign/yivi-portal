@@ -5,6 +5,7 @@ import { axiosInstance } from "@/services/axiosInstance";
 import { CredentialAttributeDetails } from "./CredentialAttributeDetails";
 import type { Credential } from "@/models/credential";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
 
 type Props = {
   credential: Credential;
@@ -15,6 +16,7 @@ export function DemoCredentialCard({ credential }: Props) {
     [key: string]: string;
   }>({});
   const [loading, setLoading] = useState(false);
+  const { i18n } = useTranslation();
 
   const handleChange = (id: string, value: string) => {
     setAttributeValues((prev) => ({ ...prev, [id]: value }));
@@ -34,7 +36,7 @@ export function DemoCredentialCard({ credential }: Props) {
       const yivi: any = await import("@privacybydesign/yivi-frontend");
       const popup = yivi.newPopup({
         debugging: import.meta.env.DEV,
-        language: "en",
+        language: i18n.language,
         translations: {
           header:
             'Issuing demo credential with <i class="yivi-web-logo">Yivi</i>',

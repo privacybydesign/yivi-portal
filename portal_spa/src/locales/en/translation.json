@@ -1,0 +1,53 @@
+{
+  "welcome": "Welcome to the Yivi Portal",
+  "explore": "Explore the Yivi ecosystem and discover how you can participate.",
+  "join_ecosystem": "Join the Yivi ecosystem",
+  "join_ecosystem_desc": "You can register your organization as a relying party or an attestation provider through the Yivi Portal.",
+  "register_org": "Register an organization",
+  "ecosystem_card": "The Yivi ecosystem",
+  "ecosystem_desc": "Find out more about the organizations that participate in the Yivi ecosystem.",
+  "view_orgs": "View organizations",
+  "supported_credentials": "Supported credentials",
+  "supported_credentials_desc": "Interested in giving Yivi a try? Search the attribute index of Yivi, which catalogues all the supported credentials.",
+  "view_attribute_index": "View Attribute Index",
+  "login_scan": "Scan the QR code with your Yivi app to authenticate with your email. If you don't have the app, you can download it",
+  "download_here": "here",
+  "faq_prefix": "Having trouble? Read our",
+  "faq_link": "frequently asked questions",
+  "faq_suffix": "or contact us at",
+  "login": "Login",
+  "organizations": "Organizations",
+  "logout": "Log out",
+  "terms": "Terms of Service",
+  "privacy": "Privacy Policy",
+  "ap_details": {
+    "description": "The attestation providers listed below are configured for this organization. If the credential or attestation provider in certain environment has the deprecated flag, it means that it can no longer be used to issue the credentials.",
+    "credential": "The following credentials can be issued by this Attestation Provider.",
+    "no_credentials": "No credentials available for this Attestation Provider.",
+    "loading": "Loading AP details...",
+    "view_details": "View Details →"
+  },
+  "rp_details": {
+    "description": "The relying parties listed below are configured for this organization.",
+    "authorized_hostnames": "Authorized hostnames",
+    "no_rps": "No Relying Party configurations available for this organization.",
+    "no_hostnames": "No authorized hostnames available for this Relying Party.",
+    "loading": "Loading RP details..."
+  },
+  "list_page": {
+    "description": "In the Yivi ecosystem, organizations play one of two roles: they either provide identity attributes or consume them. The list below includes both Attestation Providers and Relying Parties — some organizations may serve as both. You can filter by role or search by name. Learn more about how Yivi works <a>here</a>.",
+    "search_placeholder": "Search organizations...",
+    "showing_range": "Showing {{start}} to {{end}} of {{total}} organizations{{pageInfo}}",
+    "showing_range_no_data": "Showing 0 to 0 of 0 organizations",
+    "page_info": " (Page {{current}} of {{totalPages}})"
+  },
+  "organization": {
+    "not_found": "The organization you are looking for does not exist or is not available.",
+    "loading": "Loading organization details...",
+    "verified": "Verified",
+    "attestation_provider": "Attestation Provider",
+    "relying_party": "Relying Party",
+    "contact_email": "Contact Email",
+    "contact_address": "Contact Address"
+  }
+}

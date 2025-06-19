@@ -17,6 +17,8 @@ import {
   DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
 import { useOrganizationNames } from "@/contexts/organization/OrganizationContext";
+import { useTranslation } from "react-i18next";
+import LanguageSwitcher from "../LanguageSwitcher";
 
 export default function Header() {
   const initializeAuth = useStore((state) => state.initializeAuth);
@@ -27,6 +29,7 @@ export default function Header() {
   const organizationSlugs = useStore((state) => state.organizationSlugs);
   const setAccessToken = useStore((state) => state.setAccessToken);
   const organizationNames = useOrganizationNames();
+  const { t } = useTranslation();
 
   const svg = createAvatar(initials, {
     seed: email ?? "default-user",
@@ -78,7 +81,7 @@ export default function Header() {
               })
             )}
           >
-            Organizations
+            {t("organizations")}
           </Link>
 
           {email ? (
@@ -107,7 +110,7 @@ export default function Header() {
                 {organizationSlugs.length > 0 && (
                   <>
                     <DropdownMenuSeparator />
-                    <DropdownMenuLabel>Your Organizations</DropdownMenuLabel>
+                    <DropdownMenuLabel>{t("organizations")}</DropdownMenuLabel>
                     <DropdownMenuGroup>
                       {organizationSlugs.map((slug) => (
                         <Link key={slug} to={`/organizations/${slug}/manage`}>
@@ -126,15 +129,16 @@ export default function Header() {
                   onClick={handleLogout}
                   className="!cursor-pointer"
                 >
-                  Log out
+                  {t("logout")}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
             <Link to="/login" className={cn(buttonVariants())}>
-              Login
+              {t("login")}
             </Link>
           )}
+          <LanguageSwitcher />
         </div>
       </nav>
     </div>
