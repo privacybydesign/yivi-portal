@@ -2,7 +2,6 @@
 
 Yivi Portal is a project designed to streamline the process of joining Yivi as an Issuer or Verifier, with an outlook toward adopting EUDI Wallet terminologies. Relying Parties can use the protal to join the Trusted Verifier Program of Yivi.
 
-**Note!** This is a work in progress. Feel free to contribute.
 
 ## Terminology Mapping
 
@@ -23,49 +22,32 @@ Yivi terminology is translated to the following in the scope of this project:
 This project is built with:
 
 * **Backend**: Django REST framework (Python)
-* **Frontend**: Next.js (React, TypeScript)
+* **Frontend**: React
 * **Database**: PostgreSQL
 * **Authentication**: Yivi authentication
 
 The project consists of two main components:
 1. **Portal Backend**: Django application with REST API
-2. **Portal Frontend**: Next.js application with React components
+2. **Portal Frontend**: React single page application
 
 ## Development Setup
 
 
 ### Running the Project
 
-Build and run the project with Docker. This will also build the frontend application.
-Currently, migrations are in the gitignore list due to ongoing restructuring of the model. This means migrations will be made and then applied for you.
+Build and run the project with Docker. To check for unapplied migrations do 
+`docker compose exec django manage.py makemigrations`. If you have any unapplied migrations do `docker compose exec django manage.py migrate`
 
-#### Environment Variables
-
-Create a `.env` file in the root directory with the following variables:
-
-```
-YIVI_SERVER_URL=https://yivi.example.nl
-YIVI_SERVER_TOKEN=token-used-in-irma-server
-POSTGRES_USER=yivi
-POSTGRES_PASSWORD=yivi
-POSTGRES_DB=yivi
-DJANGO_SECRET_KEY=your-secret-key
-DJANGO_ALLOWED_HOSTS=localhost
-AP_ENV=production
-RP_ENV=production
-```
+Create a `.env` file using `.env.sample`
 
 Then start the services:
 
 ```bash
-docker compose up -d
+docker compose up --build
 ```
+Then run `docker compose exec django python manage.py run_crons trusted_aps` first and then `docker compose exec django python manage.py run_crons trusted_rps`
 
-Since the database will be empty, you can populate it with test data:
-
-```bash
-docker compose exec django python manage.py create_test_data
-```
+This imports the Attestation Providers and Relying Parties from the Yivi schemes. This will also run by itself at each cronjob interval set in the `portal_backend/crons.py`
 
 ### Admin Access
 
@@ -74,23 +56,14 @@ The easiest way to view the database is with Django admin. You will need a super
 ```bash
 docker compose exec django python manage.py createsuperuser
 ```
+Then access with your credentials at `http://{host}:8000/admin/`
 
-**Note!** If changes are made to the model, please record it in the ER diagram `dbrelations.md`.
-
-**Note!** If you are testing endpoints with permission class `IsAuthenticated`, you first need to run the frontend project, login with Yivi (currently bound to Yivi staging server), and obtain the token. Currently the token is set to be valid for a day.
-
-### Service URLs
-
-* Backend API: http://localhost:8000/
-* Frontend: http://localhost:9000/
-* Admin panel: http://localhost:8000/admin/
-
-## Features
+## Some of the main features
 
 ### Organization Registration
-* Organizations register by filling in the registration form (TODO: Authentication needed)
+* Organizations register by filling in the registration form
 * Update of organization profiles, logos, and contact information
-* A maintainer can add new maintainers
+* A maintainer can add/delete new maintainers
 
 ### Relying Party Registration
 * Registration as a Verifier (Relying Party) in a Yivi scheme
@@ -99,13 +72,9 @@ docker compose exec django python manage.py createsuperuser
    * With choice from credentials from existing Attestation Providers
    * Purpose inquiry per Condiscon (session request format of Yivi) and per individual chosen attributes
 
-### Cron Jobs
+### Cronjobs
 
-Currently, 3 types of Cron Jobs are set. `DNS Verification`, `Import Trusted RPs`, `Import Trusted APs`. The latter use appropriate scheme repositories to create or update entities in the database.
-
-### AP Registration
-(in progress...)
-
+Currently, 3 types of  cronjobs are set. `DNS Verification`, `Import Trusted RPs`, `Import Trusted APs`. The latter use appropriate scheme repositories to create or update entities in the database. T
 
 ### Status Tracking
 The state of AP or RP registrations from an organization can be followed with status detailed workflow:
