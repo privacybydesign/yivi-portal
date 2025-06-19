@@ -19,5 +19,35 @@
   "organizations": "Organizations",
   "logout": "Log out",
   "terms": "Terms of Service",
-  "privacy": "Privacy Policy"
+  "privacy": "Privacy Policy",
+  "ap_details": {
+    "description": "The attestation providers listed below are configured for this organization. If the credential or attestation provider in certain environment has the deprecated flag, it means that it can no longer be used to issue the credentials.",
+    "credential": "The following credentials can be issued by this Attestation Provider.",
+    "no_credentials": "No credentials available for this Attestation Provider.",
+    "loading": "Loading AP details...",
+    "view_details": "View Details →"
+  },
+  "rp_details": {
+    "description": "The relying parties listed below are configured for this organization.",
+    "authorized_hostnames": "Authorized hostnames",
+    "no_rps": "No Relying Party configurations available for this organization.",
+    "no_hostnames": "No authorized hostnames available for this Relying Party.",
+    "loading": "Loading RP details..."
+  },
+  "list_page": {
+    "description": "In the Yivi ecosystem, organizations play one of two roles: they either provide identity attributes or consume them. The list below includes both Attestation Providers and Relying Parties — some organizations may serve as both. You can filter by role or search by name. Learn more about how Yivi works <a>here</a>.",
+    "search_placeholder": "Search organizations...",
+    "showing_range": "Showing {{start}} to {{end}} of {{total}} organizations{{pageInfo}}",
+    "showing_range_no_data": "Showing 0 to 0 of 0 organizations",
+    "page_info": " (Page {{current}} of {{totalPages}})"
+  },
+  "organization": {
+    "not_found": "The organization you are looking for does not exist or is not available.",
+    "loading": "Loading organization details...",
+    "verified": "Verified",
+    "attestation_provider": "Attestation Provider",
+    "relying_party": "Relying Party",
+    "contact_email": "Contact Email",
+    "contact_address": "Contact Address"
+  }
 }
