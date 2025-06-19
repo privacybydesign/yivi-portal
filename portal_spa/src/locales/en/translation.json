@@ -1,0 +1,23 @@
+{
+  "welcome": "Welcome to the Yivi Portal",
+  "explore": "Explore the Yivi ecosystem and discover how you can participate.",
+  "join_ecosystem": "Join the Yivi ecosystem",
+  "join_ecosystem_desc": "You can register your organization as a relying party or an attestation provider through the Yivi Portal.",
+  "register_org": "Register an organization",
+  "ecosystem_card": "The Yivi ecosystem",
+  "ecosystem_desc": "Find out more about the organizations that participate in the Yivi ecosystem.",
+  "view_orgs": "View organizations",
+  "supported_credentials": "Supported credentials",
+  "supported_credentials_desc": "Interested in giving Yivi a try? Search the attribute index of Yivi, which catalogues all the supported credentials.",
+  "view_attribute_index": "View Attribute Index",
+  "login_scan": "Scan the QR code with your Yivi app to authenticate with your email. If you don't have the app, you can download it",
+  "download_here": "here",
+  "faq_prefix": "Having trouble? Read our",
+  "faq_link": "frequently asked questions",
+  "faq_suffix": "or contact us at",
+  "login": "Login",
+  "organizations": "Organizations",
+  "logout": "Log out",
+  "terms": "Terms of Service",
+  "privacy": "Privacy Policy"
+}

@@ -1,0 +1,23 @@
+{
+  "welcome": "Welkom bij het Yivi Portaal",
+  "explore": "Ontdek het Yivi ecosysteem en hoe je kunt deelnemen.",
+  "join_ecosystem": "Doe mee met het Yivi ecosysteem",
+  "join_ecosystem_desc": "Je kunt je organisatie registreren als relying party of attestation provider via het Yivi Portaal.",
+  "register_org": "Registreer een organisatie",
+  "ecosystem_card": "Het Yivi ecosysteem",
+  "ecosystem_desc": "Ontdek welke organisaties deelnemen aan het Yivi ecosysteem.",
+  "view_orgs": "Bekijk organisaties",
+  "supported_credentials": "Ondersteunde credentials",
+  "supported_credentials_desc": "Wil je Yivi uitproberen? Zoek in de attributenindex van Yivi naar alle ondersteunde credentials.",
+  "view_attribute_index": "Bekijk attributenindex",
+  "login_scan": "Scan de QR-code met je Yivi app om je te authenticeren met je e-mail. Heb je de app nog niet? Download hem",
+  "download_here": "hier",
+  "faq_prefix": "Problemen? Lees onze",
+  "faq_link": "veelgestelde vragen",
+  "faq_suffix": "of neem contact op via",
+  "login": "Inloggen",
+  "organizations": "Organisaties",
+  "logout": "Uitloggen",
+  "terms": "Gebruiksvoorwaarden",
+  "privacy": "Privacyverklaring"
+}

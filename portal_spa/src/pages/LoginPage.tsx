@@ -3,11 +3,13 @@ import { apiEndpoint } from "@/services/axiosInstance";
 import useStore from "@/store";
 import { useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 export default function Login() {
   const setAccessToken = useStore((state) => state.setAccessToken);
   const navigate = useNavigate();
   const location = useLocation();
+  const { t, i18n } = useTranslation();
 
   useEffect(() => {
     let web: any;
@@ -15,7 +17,7 @@ export default function Login() {
       web = yivi.newWeb({
         debugging: import.meta.env.DEV,
         element: "#yivi-web-form",
-        language: "en",
+        language: i18n.language,
         session: {
           url: apiEndpoint + "/v1",
           start: {
@@ -48,27 +50,26 @@ export default function Login() {
   return (
     <div className="min-h-screen flex flex-col justify-center items-center p-10">
       <p className="mb-3 text-gray-600 text-start max-w-md">
-        Scan the QR code with your Yivi app to authenticate with your email. If
-        you don't have the app, you can download it{" "}
+        {t("login_scan")}{" "}
         <a
           className="text-blue-600 hover:underline"
           href="https://yivi.app/#download"
         >
-          here
+          {t("download_here")}
         </a>
         .
       </p>
 
       <div id="yivi-web-form" className="mb-8 max-w-md w-full"></div>
       <p className="my-10 text-gray-600 text-start">
-        Having trouble? Read our{" "}
+        {t("faq_prefix")} {" "}
         <a
           href="https://yivi.app/faq/"
           className="text-blue-600 hover:underline"
         >
-          frequently asked questions
+          {t("faq_link")}
         </a>{" "}
-        or contact us at{" "}
+        {t("faq_suffix")} {" "}
         <a
           href="mailto:support@yivi.app"
           className="text-blue-600 hover:underline"
