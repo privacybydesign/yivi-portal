@@ -13,7 +13,7 @@ import type { UseFormReturn } from "react-hook-form";
 import { PhoneInput } from "react-international-phone";
 import "react-international-phone/style.css";
 
-export default function ContactFields({
+export default function ContactField({
   form,
   formState,
 }: {

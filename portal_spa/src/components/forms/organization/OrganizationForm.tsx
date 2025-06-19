@@ -12,7 +12,7 @@ import type { Organization } from "@/models/organization";
 import { useNavigate } from "react-router-dom";
 import OrganizationNameFields from "./child-components/OrganizationNameFields";
 import LogoUpload from "./child-components/LogoUpload";
-import ContactFields from "./child-components/ContactFields";
+import ContactField from "./child-components/ContactField";
 import SlugField from "./child-components/SlugField";
 import ContactAddressBox from "./child-components/ContactAddressBox";
 
@@ -98,7 +98,7 @@ export default function OrganizationForm({
 
         <SlugField form={form} formState={formState} />
 
-        <ContactFields form={form} formState={formState} />
+        <ContactField form={form} formState={formState} />
 
         <ContactAddressBox form={form} formState={formState} />
 
