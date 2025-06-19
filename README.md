@@ -58,32 +58,9 @@ docker compose exec django python manage.py createsuperuser
 ```
 Then access with your credentials at `http://{host}:8000/admin/`
 
-## Some of the main features
-
-### Organization Registration
-* Organizations register by filling in the registration form
-* Update of organization profiles, logos, and contact information
-* A maintainer can add/delete new maintainers
-
-### Relying Party Registration
-* Registration as a Verifier (Relying Party) in a Yivi scheme
-* Automatic DNS verification for Relying Party hostnames
-* Disclosure request registration:
-   * With choice from credentials from existing Attestation Providers
-   * Purpose inquiry per Condiscon (session request format of Yivi) and per individual chosen attributes
-
 ### Cronjobs
 
-Currently, 3 types of  cronjobs are set. `DNS Verification`, `Import Trusted RPs`, `Import Trusted APs`. The latter use appropriate scheme repositories to create or update entities in the database. T
-
-### Status Tracking
-The state of AP or RP registrations from an organization can be followed with status detailed workflow:
-* **Draft**: Organization is working on their registration
-* **Ready/Pending for Review**: Registration is complete and ready for review
-* **Approved**: Registration has been approved by Yivi admins (production only)
-* **Rejected**: Registration has been rejected and requires changes
-* **Published**: Registration has been published in the scheme
-* **Invalidated**: Registration has become invalid and needs fixes
+Currently, 3 types of  cronjobs are set. `DNS Verification`, `Import Trusted RPs`, `Import Trusted APs`. The latter two use appropriate scheme repositories to create or update entities in the database.
 
 ## Acknowledgements
 
