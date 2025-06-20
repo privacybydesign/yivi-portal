@@ -18,10 +18,12 @@ import ContactAddressBox from "./child-components/ContactAddressBox";
 
 export default function OrganizationForm({
   organization,
-  editMode,
+  pendingButtonLabel,
+  submitButtonLabel,
 }: {
   organization?: Organization;
-  editMode: boolean;
+  pendingButtonLabel: string;
+  submitButtonLabel: string;
 }) {
   const [defaultFormInput] = useState({
     name_en: "",
@@ -46,7 +48,14 @@ export default function OrganizationForm({
   >(organization ? updateOrganization : registerOrganization, {
     values: defaultFormInput,
     errors: {},
+    cachedLogo,
   });
+
+  useEffect(() => {
+    if (formState && formState.cachedLogo !== cachedLogo) {
+      formState.cachedLogo = cachedLogo;
+    }
+  }, [cachedLogo, formState]);
 
   if (formState?.success && formState?.redirectTo) {
     navigate(formState.redirectTo);
@@ -75,18 +84,9 @@ export default function OrganizationForm({
     }
   }, [formState?.errors, form]);
 
-  const submitWithLogo = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const data = new FormData(e.currentTarget);
-    if (!data.get("logo") && cachedLogo) {
-      data.set("logo", cachedLogo);
-    }
-    formSubmit(data);
-  };
-
   return (
     <Form {...form}>
-      <form onSubmit={submitWithLogo} className="space-y-4">
+      <form action={formSubmit} className="space-y-4">
         <LogoUpload
           form={form}
           formState={formState}
@@ -103,13 +103,7 @@ export default function OrganizationForm({
         <ContactAddressBox form={form} formState={formState} />
 
         <Button type="submit" disabled={pending} className="col-span-2">
-          {pending
-            ? editMode
-              ? "Saving..."
-              : "Submitting..."
-            : editMode
-            ? "Save"
-            : "Submit"}
+          {pending ? pendingButtonLabel : submitButtonLabel}
         </Button>
 
         {formState?.globalError && (

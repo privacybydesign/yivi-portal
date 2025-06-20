@@ -60,7 +60,11 @@ export default function ManageLayout() {
 
           <Separator />
           {organization ? (
-            <OrganizationForm organization={organization} editMode={true} />
+            <OrganizationForm
+              organization={organization}
+              pendingButtonLabel={"Saving..."}
+              submitButtonLabel={"Save"}
+            />
           ) : (
             <p>Loading organization...</p>
           )}
