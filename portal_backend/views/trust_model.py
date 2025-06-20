@@ -7,11 +7,13 @@ from ..models.models import TrustModel
 from django.shortcuts import get_object_or_404
 from ..models.model_serializers import TrustModelSerializer, YiviTrustModelEnvSerializer
 from rest_framework import permissions
+from silk.profiling.profiler import silk_profile
 
 
 class TrustModelListView(APIView):
     permission_classes = [permissions.AllowAny]
 
+    @silk_profile(name="TrustModelListView.get")
     @swagger_auto_schema(responses={200: "Success"})
     def get(self, request: Request) -> Response:
         """Gets a list of trust models."""
@@ -23,6 +25,7 @@ class TrustModelListView(APIView):
 class TrustModelDetailView(APIView):
     permission_classes = [permissions.AllowAny]
 
+    @silk_profile(name="TrustModelDetailView.get")
     @swagger_auto_schema(responses={200: "Success", 404: "Not found"})
     def get(self, request: Request, name: str) -> Response:
         """Gets a specific trust model."""
@@ -34,6 +37,7 @@ class TrustModelDetailView(APIView):
 class YiviTrustModelEnvListView(APIView):
     permission_classes = [permissions.AllowAny]
 
+    @silk_profile(name="YiviTrustModelEnvListView.get")
     @swagger_auto_schema(responses={200: "Success", 404: "Not found"})
     def get(self, request: Request, trust_model_name: str) -> Response:
         """Gets a list of environments for a trust model."""

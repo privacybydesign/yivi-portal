@@ -9,11 +9,13 @@ from portal_backend.models.model_serializers import (
     AttestationProviderSerializer,
 )
 from rest_framework import permissions
+from silk.profiling.profiler import silk_profile
 
 
 class AttestationProviderListView(APIView):
     permission_classes = [permissions.AllowAny]
 
+    @silk_profile(name="AttestationProviderListView.get")
     def get(self, request: Request, org_slug: str) -> Response:
         organization = get_object_or_404(Organization, slug=org_slug)
         attestation_providers = AttestationProvider.objects.filter(
@@ -36,6 +38,7 @@ class AttestationProviderListView(APIView):
 class AttestationProviderRetrieveView(APIView):
     permission_classes = [permissions.AllowAny]
 
+    @silk_profile(name="AttestationProviderRetrieveView.get")
     @swagger_auto_schema(responses={200: "Success", 404: "Not Found"})
     def get(
         self,
@@ -89,6 +92,7 @@ class AttestationProviderCredentialsListView(APIView):
     """
     List of all the credentials for a specific attestation provider"""
 
+    @silk_profile(name="AttestationProviderCredentialsListView.get")
     def get(
         self,
         request: Request,
