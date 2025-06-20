@@ -7,6 +7,7 @@ from portal_backend.views.trust_model import (
 from portal_backend.views.organization import (
     OrganizationListView,
     OrganizationCreateView,
+    OrganizationNameAndSlugView,
     OrganizationUpdateView,
     OrganizationDetailView,
     OrganizationMaintainersView,
@@ -149,5 +150,10 @@ urlpatterns = [
         "v1/yivi/organizations/<str:org_slug>/attestation-provider/<str:environment>/<str:ap_slug>/credentials/",
         AttestationProviderCredentialsListView.as_view(),
         name="ap-credentials-list",
+    ),
+    path(
+        "v1/profile",
+        OrganizationNameAndSlugView.as_view(),
+        name="organization-name-and-slug",
     ),
 ]
