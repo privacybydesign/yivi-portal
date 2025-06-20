@@ -1,5 +1,5 @@
 import { fetchOrganization } from "@/actions/manage-organization";
-import ManageOrganizationInformationForm from "@/components/forms/organization/information";
+import OrganizationForm from "@/components/forms/organization/OrganizationForm";
 import { Separator } from "@/components/ui/separator";
 import type { Organization } from "@/models/organization";
 import { useParams } from "react-router-dom";
@@ -60,9 +60,10 @@ export default function ManageLayout() {
 
           <Separator />
           {organization ? (
-            <ManageOrganizationInformationForm
+            <OrganizationForm
               organization={organization}
-              editMode={true}
+              pendingButtonLabel={"Saving..."}
+              submitButtonLabel={"Save"}
             />
           ) : (
             <p>Loading organization...</p>

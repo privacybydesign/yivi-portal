@@ -24,6 +24,7 @@ export type RegistrationFormState = {
   globalError?: string;
   success?: boolean;
   redirectTo?: string | undefined;
+  cachedLogo?: File | null;
 };
 
 const updateClaims = async () => {
@@ -31,14 +32,26 @@ const updateClaims = async () => {
     update_claims: true,
   });
 
-  axiosInstance.defaults.headers.common["Authorization"] =
-    `Bearer ${accessToken}`;
+  axiosInstance.defaults.headers.common[
+    "Authorization"
+  ] = `Bearer ${accessToken}`;
 
   return accessToken;
 };
 
+const addCachedLogoToFormData = (
+  formData: FormData,
+  cachedLogo: File | undefined | null
+): void => {
+  const logo = formData.get("logo");
+  if ((!logo || (logo instanceof File && logo.size === 0)) && cachedLogo) {
+    formData.set("logo", cachedLogo);
+    console.log("Adding cached logo to form data");
+  }
+};
+
 export const fetchOrganization = async (
-  organizationSlug: string,
+  organizationSlug: string
 ): Promise<AxiosResponse | undefined> => {
   try {
     return await axiosInstance.get(`/v1/organizations/${organizationSlug}/`);
@@ -49,7 +62,7 @@ export const fetchOrganization = async (
 
 export const updateOrganization = async (
   formState: RegistrationFormState,
-  formData: FormData,
+  formData: FormData
 ): Promise<RegistrationFormState> => {
   if (
     !!formState.values["logo"] &&
@@ -58,10 +71,12 @@ export const updateOrganization = async (
     formData.delete("logo");
   }
 
+  addCachedLogoToFormData(formData, formState.cachedLogo ?? undefined);
+
   try {
     await axiosInstance.patch(
       `/v1/organizations/${formState.values.slug}/update/`,
-      formData,
+      formData
     );
 
     let redirectTo;
@@ -106,10 +121,11 @@ export const updateOrganization = async (
 
 export const registerOrganization = async (
   formState: RegistrationFormState,
-  formData: FormData,
+  formData: FormData
 ): Promise<RegistrationFormState> => {
-  console.log(formState, formData);
   try {
+    addCachedLogoToFormData(formData, formState.cachedLogo ?? undefined);
+
     await axiosInstance.post("/v1/organizations/create/", formData);
     const slug = formData.get("slug") as string;
 
