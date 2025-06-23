@@ -38,23 +38,20 @@ const initialData: RelyingPartyFormData = {
 export default function RelyingPartyManager() {
   const params = useParams();
   const organizationSlug = params?.organization as string;
-  const [saving, setSaving] = useState(false);
-  const [fieldErrors, setFieldErrors] = useState({});
-  const [globalError, setGlobalError] = useState<string | undefined>();
-  const [isCreating, setIsCreating] = useState(false);
+  const [creatingRP, setCreatingRP] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
 
   const handleSave = async (data: RelyingPartyFormData) => {
-    setSaving(true);
+    setCreatingRP(true);
     const result = await registerRelyingParty(organizationSlug, data);
-    setSaving(false);
+    setCreatingRP(false);
 
     if (!result.success) {
-      setFieldErrors(result.fieldErrors || {});
-      setGlobalError(result.globalError);
+      toast.error("Error creating relying party", {
+        description: result.globalError,
+      });
     } else {
-      setFieldErrors({});
-      setGlobalError(undefined);
-      setIsCreating(false);
+      setIsOpen(false);
       toast.success("Relying Party Created", {
         description: "The relying party has been created successfully.",
       });
@@ -70,7 +67,7 @@ export default function RelyingPartyManager() {
         <RelyingPartyListEdit />
 
         <div className="mt-6">
-          <Dialog open={isCreating} onOpenChange={setIsCreating}>
+          <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <DialogTrigger asChild>
               <Button variant="default">Add a new relying party</Button>
             </DialogTrigger>
@@ -88,10 +85,8 @@ export default function RelyingPartyManager() {
                     isEditMode: false,
                     defaultValues: initialData,
                     onSubmit: handleSave,
-                    serverErrors: fieldErrors,
-                    globalError: globalError || "",
-                    isSaving: saving,
-                    onClose: () => setIsCreating(false),
+                    isCreatingRP: creatingRP,
+                    onClose: () => setIsOpen(false),
                   }}
                 >
                   <RelyingPartyTabs />

@@ -17,11 +17,10 @@ import type { RelyingPartyFormData } from "../validation-schema";
 
 type ReadyCheckboxProps = {
   control: Control<RelyingPartyFormData>;
-  serverErrors: Partial<Record<keyof RelyingPartyFormData, string>>;
 };
 
 export default function ReadyCheckbox(props: ReadyCheckboxProps) {
-  const { control, serverErrors } = props;
+  const { control } = props;
 
   return (
     <div className="space-y-2 mt-4">
@@ -58,7 +57,7 @@ export default function ReadyCheckbox(props: ReadyCheckboxProps) {
                 </TooltipContent>
               </Tooltip>
             </FormLabel>
-            <FormMessage>{serverErrors.ready}</FormMessage>
+            <FormMessage />
           </FormItem>
         )}
       />

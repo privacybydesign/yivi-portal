@@ -8,8 +8,12 @@ export const RelyingPartySchema = z.object({
       message: "Slug must be lowercase, hyphen-separated",
     }),
 
-  context_description_en: z.string(),
-  context_description_nl: z.string(),
+  context_description_en: z
+    .string()
+    .nonempty("English context description is required"),
+  context_description_nl: z
+    .string()
+    .nonempty("Dutch context description is required"),
 
   hostnames: z.array(
     z.object({
@@ -30,7 +34,7 @@ export const RelyingPartySchema = z.object({
         .int("Credential ID must be a number"),
       credential_attribute_tag: z
         .string()
-        .nonempty("Credential attribute name is required"),
+        .nonempty("Credential attribute is required"),
       reason_en: z.string().nonempty("English reason is required"),
       reason_nl: z.string().nonempty("Dutch reason is required"),
     })

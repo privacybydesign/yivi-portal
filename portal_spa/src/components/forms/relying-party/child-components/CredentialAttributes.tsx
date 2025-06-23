@@ -7,20 +7,24 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Info } from "lucide-react";
-import type { Credential, CredentialAttribute } from "@/models/credential";
+import type { Credential } from "@/models/credential";
 import type { RelyingPartyFormData } from "../validation-schema";
-import type { FieldArrayWithId, UseFormReturn } from "react-hook-form";
+import { useFieldArray, type UseFormReturn } from "react-hook-form";
 
 type CredentialAttributeProps = {
-  attrFields: FieldArrayWithId<RelyingPartyFormData, "attributes">[];
   form: UseFormReturn<RelyingPartyFormData>;
   credentials: Array<Credential>;
-  appendAttr: (attr: CredentialAttribute) => void;
-  removeAttr: (index: number) => void;
 };
 
 export function CredentialAttributes(props: CredentialAttributeProps) {
-  const { attrFields, form, credentials, appendAttr, removeAttr } = props;
+  const { form, credentials } = props;
+
+  const {
+    fields: attrFields,
+    append: appendAttr,
+    remove: removeAttr,
+  } = useFieldArray({ control: form.control, name: "attributes" });
+
   return (
     <div className="space-y-2 mt-4">
       <FormLabel className="text-base font-medium">
@@ -43,16 +47,9 @@ export function CredentialAttributes(props: CredentialAttributeProps) {
         {attrFields.map((field, index) => (
           <div key={field.id} className="rounded-md space-y-3">
             <CredentialAttributeFields
+              form={form}
               index={index}
               credentials={credentials}
-              value={{
-                ...form.getValues(`attributes.${index}`),
-              }}
-              onChange={(updatedAttr) =>
-                form.setValue(`attributes.${index}`, updatedAttr, {
-                  shouldValidate: true,
-                })
-              }
             />
 
             <div className="flex justify-end">
@@ -73,10 +70,10 @@ export function CredentialAttributes(props: CredentialAttributeProps) {
           size="sm"
           onClick={() =>
             appendAttr({
+              credential_id: -1,
               credential_attribute_tag: "",
               reason_en: "",
               reason_nl: "",
-              credential_id: -1, // won't match to any credential
             })
           }
         >
