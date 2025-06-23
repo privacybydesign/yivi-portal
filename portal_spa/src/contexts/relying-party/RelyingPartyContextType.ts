@@ -4,7 +4,7 @@ import type { RelyingParty } from "@/models/relying-party";
 type RelyingPartyContextCommon = {
   defaultValues: RelyingPartyFormData;
   globalError?: string;
-  isCreatingRP: boolean;
+  isProcessing: boolean;
   onClose?: () => void;
   relyingParty?: RelyingParty;
 };

@@ -38,13 +38,13 @@ const initialData: RelyingPartyFormData = {
 export default function RelyingPartyManager() {
   const params = useParams();
   const organizationSlug = params?.organization as string;
-  const [creatingRP, setCreatingRP] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
 
   const handleSave = async (data: RelyingPartyFormData) => {
-    setCreatingRP(true);
+    setIsCreating(true);
     const result = await registerRelyingParty(organizationSlug, data);
-    setCreatingRP(false);
+    setIsCreating(false);
 
     if (!result.success) {
       toast.error("Error creating relying party", {
@@ -85,7 +85,7 @@ export default function RelyingPartyManager() {
                     isEditMode: false,
                     defaultValues: initialData,
                     onSubmit: handleSave,
-                    isCreatingRP: creatingRP,
+                    isProcessing: isCreating,
                     onClose: () => setIsOpen(false),
                   }}
                 >

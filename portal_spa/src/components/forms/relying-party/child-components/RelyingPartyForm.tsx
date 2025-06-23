@@ -19,7 +19,7 @@ import { useRelyingParty } from "@/contexts/relying-party/RelyingPartyContext";
 export default function RelyingPartyForm() {
   const context = useRelyingParty();
 
-  const { originalSlug, defaultValues, isCreatingRP, isEditMode, onClose } =
+  const { originalSlug, defaultValues, isProcessing, isEditMode, onClose } =
     context;
 
   const form = useForm<RelyingPartyFormData>({
@@ -145,10 +145,16 @@ export default function RelyingPartyForm() {
             )}
             <Button
               type="submit"
-              disabled={isCreatingRP}
+              disabled={isProcessing}
               className="h-9 px-4 text-sm"
             >
-              {isCreatingRP ? "Saving..." : "Save"}
+              {isEditMode
+                ? isProcessing
+                  ? "Saving..."
+                  : "Save"
+                : isProcessing
+                ? "Creating..."
+                : "Create"}
             </Button>
           </div>
         </form>
