@@ -13,7 +13,7 @@ class NewDNSVerification(CronJobBase):
 
     def do(self):
         for hostname in RelyingPartyHostname.objects.filter(
-            dns_challenge_verified=False, manually_verified=False
+            dns_challenge_verified=False
         ):
             verify_new_dns(hostname)
 
