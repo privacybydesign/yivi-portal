@@ -257,9 +257,8 @@ export default function RelyingPartyListEdit() {
                           handleCancelEdit();
                           fetchData();
                         },
-                        serverErrors: {},
                         globalError: globalError || "",
-                        isSaving: saving,
+                        isProcessing: saving,
                         onClose: handleCancelEdit,
                       }}
                     >
