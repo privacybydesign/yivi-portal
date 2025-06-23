@@ -124,7 +124,7 @@ export default function ManageOrganizationInformationForm({
                       form.clearErrors("logo");
 
                       const fileInput = document.querySelector(
-                        'input[type="file"][accept="image/png,image/jpeg"]',
+                        'input[type="file"][accept="image/png,image/jpeg"]'
                       ) as HTMLInputElement;
                       if (fileInput) fileInput.value = "";
                     }}
@@ -181,7 +181,7 @@ export default function ManageOrganizationInformationForm({
                       if (!form.getValues("slug")) {
                         form.setValue(
                           "slug",
-                          generateSlug(event.target.value.trim()),
+                          generateSlug(event.target.value.trim())
                         );
                       }
                     }}
@@ -238,11 +238,11 @@ export default function ManageOrganizationInformationForm({
                 <FormControl>
                   <Input
                     {...field}
-                    pattern="[a-z0-9\-]+"
+                    pattern="[A-Za-z][A-Za-z0-9]*(?:-[A-Za-z0-9]+)*"
                     onBlur={(event) => {
                       if (!event.target.value && form.getValues("name_en")) {
                         const newSlug = generateSlug(
-                          form.getValues("name_en").trim(),
+                          form.getValues("name_en").trim()
                         );
                         form.setValue("slug", newSlug);
                       }
@@ -432,8 +432,8 @@ export default function ManageOrganizationInformationForm({
               ? "Saving..."
               : "Submitting..."
             : editMode
-              ? "Save"
-              : "Submit"}
+            ? "Save"
+            : "Submit"}
         </Button>
 
         {formState?.globalError && (
