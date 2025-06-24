@@ -172,8 +172,8 @@ class OrganizationMaintainersView(APIView):
                 {"email": "Email is required"}, status=status.HTTP_400_BAD_REQUEST
             )
 
-        user = User.objects.prefetch_related("organizations").get(email=email)
         try:
+            user = User.objects.prefetch_related("organizations").get(email=email)
             if user:
                 if organization in user.organizations.all():
                     return Response(
