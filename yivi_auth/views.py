@@ -158,7 +158,6 @@ class YiviSessionProxyResultView(APIView):
             # Cookie expires when refresh token does
             refresh_lifetime = settings.SIMPLE_JWT["REFRESH_TOKEN_LIFETIME"]
             expires_at = datetime.now(timezone.utc) + refresh_lifetime
-            print(expires_at)
 
             response.set_cookie(
                 key="refresh_token",
