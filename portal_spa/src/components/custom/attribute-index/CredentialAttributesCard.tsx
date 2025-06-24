@@ -8,7 +8,6 @@ type Props = {
 };
 
 export default function CredentialAttributesCard({ credential }: Props) {
-  console.log("env", credential.environment);
   return (
     <Card>
       <CardHeader>
@@ -23,7 +22,6 @@ export default function CredentialAttributesCard({ credential }: Props) {
               <CredentialAttributeDetails
                 key={attr.credential_attribute_tag}
                 attr={attr}
-                environment={credential.environment}
               />
             ))}
           </div>
