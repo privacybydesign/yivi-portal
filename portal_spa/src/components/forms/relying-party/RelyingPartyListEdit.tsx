@@ -15,6 +15,7 @@ import DeleteRelyingPartyDialog, {
 } from "@/components/forms/relying-party/child-components/RelyingPartyDeleteDialogue";
 import RelyingPartyTabs from "./RelyingPartyTabs";
 import { RelyingPartyContext } from "@/contexts/relying-party/RelyingPartyContext";
+import DjangoFieldErrors from "@/components/custom/DjangoErrorList";
 
 type FetchRelyingPartiesResponse = {
   relying_parties: RelyingParty[];
@@ -246,10 +247,16 @@ export default function RelyingPartyListEdit() {
                           setSaving(false);
 
                           if (!result.success) {
-                            toast.error("Error", {
-                              description:
-                                result.globalError || "Update failed.",
+                            toast.error("Error creating relying party", {
+                              description: result.fieldErrors ? (
+                                <DjangoFieldErrors
+                                  errors={result.fieldErrors}
+                                />
+                              ) : (
+                                result.globalError
+                              ),
                             });
+
                             return;
                           }
 

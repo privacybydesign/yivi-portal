@@ -17,6 +17,7 @@ import {
 import { toast } from "sonner";
 import RelyingPartyTabs from "@/components/forms/relying-party/RelyingPartyTabs";
 import { RelyingPartyContext } from "@/contexts/relying-party/RelyingPartyContext";
+import DjangoFieldErrors from "@/components/custom/DjangoErrorList";
 
 // This data will be used to prefill the Relying Party create form
 const initialData: RelyingPartyFormData = {
@@ -48,7 +49,11 @@ export default function RelyingPartyManager() {
 
     if (!result.success) {
       toast.error("Error creating relying party", {
-        description: result.globalError,
+        description: result.fieldErrors ? (
+          <DjangoFieldErrors errors={result.fieldErrors} />
+        ) : (
+          result.globalError
+        ),
       });
     } else {
       setIsOpen(false);
