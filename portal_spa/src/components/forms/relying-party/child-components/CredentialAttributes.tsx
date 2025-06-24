@@ -79,6 +79,11 @@ export function CredentialAttributes(props: CredentialAttributeProps) {
         >
           Add attribute
         </Button>
+        {form.formState?.errors.attributes && (
+          <p className="text-sm text-red-500">
+            {form.formState?.errors.attributes?.message}
+          </p>
+        )}
       </div>
     </div>
   );

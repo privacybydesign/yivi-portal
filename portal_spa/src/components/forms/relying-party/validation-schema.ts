@@ -27,18 +27,20 @@ export const RelyingPartySchema = z.object({
     })
   ),
 
-  attributes: z.array(
-    z.object({
-      credential_id: z
-        .number({ invalid_type_error: "Credential is required" })
-        .int("Credential ID must be a number"),
-      credential_attribute_tag: z
-        .string()
-        .nonempty("Credential attribute is required"),
-      reason_en: z.string().nonempty("English reason is required"),
-      reason_nl: z.string().nonempty("Dutch reason is required"),
-    })
-  ),
+  attributes: z
+    .array(
+      z.object({
+        credential_id: z
+          .number({ invalid_type_error: "Credential is required" })
+          .int("Credential ID must be a number"),
+        credential_attribute_tag: z
+          .string()
+          .nonempty("Credential attribute is required"),
+        reason_en: z.string().nonempty("English reason is required"),
+        reason_nl: z.string().nonempty("Dutch reason is required"),
+      })
+    )
+    .min(1, "At least one attribute is required"),
   ready: z.boolean(),
 });
 
