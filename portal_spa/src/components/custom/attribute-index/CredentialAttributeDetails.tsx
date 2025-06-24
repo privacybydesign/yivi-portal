@@ -6,9 +6,16 @@ type Props = {
   value?: string;
   onChange?: (value: string) => void;
   disabled?: boolean;
+  environment: string;
 };
 
-export function CredentialAttributeDetails({ attr, value, onChange }: Props) {
+export function CredentialAttributeDetails({
+  attr,
+  value,
+  onChange,
+  environment,
+}: Props) {
+  console.log("env", environment);
   return (
     <div className="border text-sm rounded-lg overflow-hidden">
       <div className="overflow-x-auto p-4 space-y-1">
@@ -24,14 +31,16 @@ export function CredentialAttributeDetails({ attr, value, onChange }: Props) {
           <span className="font-medium">Description:</span>{" "}
           {attr.description_en}
         </div>
-        <div className="w-max pt-3">
-          <Input
-            id={`attribute-${attr.credential_attribute_tag}`}
-            placeholder={attr.name_en}
-            value={value || ""}
-            onChange={(e) => onChange?.(e.target.value)}
-          />
-        </div>
+        {environment === "demo" && (
+          <div className="w-max pt-3">
+            <Input
+              id={`attribute-${attr.credential_attribute_tag}`}
+              placeholder={attr.name_en}
+              value={value || ""}
+              onChange={(e) => onChange?.(e.target.value)}
+            />
+          </div>
+        )}
       </div>
     </div>
   );
