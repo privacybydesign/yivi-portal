@@ -10,7 +10,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import type { Credential } from "@/models/credential";
 import { Check, ChevronDown } from "lucide-react";
-import { Select, SelectContent, SelectItem, SelectTrigger } from "../ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+} from "../../../ui/select";
 import { SelectValue } from "@radix-ui/react-select";
 import { Environment } from "@/models/yivi-environment";
 import {
@@ -19,9 +24,9 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "../ui/form";
+} from "../../../ui/form";
 import type { UseFormReturn } from "react-hook-form";
-import type { RelyingPartyFormData } from "../forms/relying-party/validation-schema";
+import type { RelyingPartyFormData } from "../validation-schema";
 
 interface CredentialAttributeFieldProps {
   index: number;

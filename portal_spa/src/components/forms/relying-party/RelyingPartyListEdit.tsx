@@ -12,7 +12,7 @@ import { toast } from "sonner";
 import StatusBadge from "@/components/custom/StatusBadge";
 import DeleteRelyingPartyDialog, {
   DeleteRelyingPartyButton,
-} from "@/components/custom/RelyingPartyDeleteDialogue";
+} from "@/components/forms/relying-party/child-components/RelyingPartyDeleteDialogue";
 import RelyingPartyTabs from "./RelyingPartyTabs";
 import { RelyingPartyContext } from "@/contexts/relying-party/RelyingPartyContext";
 

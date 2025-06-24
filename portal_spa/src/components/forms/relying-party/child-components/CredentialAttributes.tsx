@@ -1,4 +1,4 @@
-import CredentialAttributeFields from "@/components/custom/SelectAttributes";
+import CredentialAttributeFields from "@/components/forms/relying-party/child-components/SelectAttributes";
 import { Button } from "@/components/ui/button";
 import { FormLabel } from "@/components/ui/form";
 import {
