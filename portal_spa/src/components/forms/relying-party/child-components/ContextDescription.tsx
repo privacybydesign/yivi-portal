@@ -51,10 +51,10 @@ export default function ContextDescription({
             <FormControl>
               <Textarea {...field} />
             </FormControl>
+            <FormMessage />
           </FormItem>
         )}
       />
-      <FormMessage />
 
       <FormField
         control={control}
@@ -65,6 +65,7 @@ export default function ContextDescription({
             <FormControl>
               <Textarea {...field} />
             </FormControl>
+            <FormMessage />
           </FormItem>
         )}
       />
