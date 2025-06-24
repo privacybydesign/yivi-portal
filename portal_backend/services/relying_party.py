@@ -196,6 +196,11 @@ def update_relying_party_hostnames(
                 hostname_obj.full_clean()
                 hostname_obj.save()
             update_or_add.append(hostname_obj)
+        elif hostname_str in existing_hostnames.values_list("hostname", flat=True):
+            raise ValidationError(
+                {"hostnames": [f"Hostname already exists: {hostname_obj.hostname}"]}
+            )
+
         else:
             new_obj = RelyingPartyHostname.objects.create(
                 relying_party=relying_party,
@@ -225,6 +230,7 @@ def update_condiscon_attributes(
     if condiscon.condiscon is None:
         raise ValidationError("Condiscon JSON is not set.")
     condiscon.condiscon = make_condiscon_json(attributes_data)
+    condiscon.full_clean()
     condiscon.save()
     # Delete existing attributes and create new ones
     CondisconAttribute.objects.filter(condiscon=condiscon).delete()
@@ -236,12 +242,14 @@ def update_condiscon_context(condiscon: Condiscon, data: RelyingPartyResponse) -
         condiscon.context_description_en = data["context_description_en"]
     if "context_description_nl" in data:
         condiscon.context_description_nl = data["context_description_nl"]
+    condiscon.full_clean()
     condiscon.save()
 
 
 def update_rp_environment(relying_party: RelyingParty, environment: str) -> None:
     yivi_tme = get_object_or_404(YiviTrustModelEnv, environment=environment)
     relying_party.yivi_tme = yivi_tme
+    relying_party.full_clean()
     relying_party.save()
 
 
@@ -251,6 +259,7 @@ def update_rp_slug(
 ) -> None | str:
     if updated_slug != relying_party.rp_slug:
         relying_party.rp_slug = updated_slug
+        relying_party.full_clean()
         relying_party.save()
         return updated_slug
     return None
