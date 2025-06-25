@@ -4,8 +4,9 @@ export const RelyingPartySchema = z.object({
   rp_slug: z
     .string()
     .min(2, "Slug is too short")
-    .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, {
-      message: "Slug must be lowercase, hyphen-separated",
+    .regex(/^[A-Za-z][A-Za-z0-9]*(?:-[A-Za-z0-9]+)*$/, {
+      message:
+        "Slug must start with a letter, can contain letters, digits, and hyphens.",
     }),
 
   context_description_en: z

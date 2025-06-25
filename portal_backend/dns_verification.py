@@ -14,8 +14,13 @@ def verify_dns(hostname: str, challenge: str) -> bool:
     try:
         answer = resolver.resolve(hostname, "TXT")
     except dns.resolver.NoAnswer:
+        logger.warning(f"No TXT record found for {hostname}")
         return False
     except dns.resolver.NXDOMAIN:
+        logger.warning(f"Domain {hostname} does not exist")
+        return False
+    except dns.resolver.LifetimeTimeout:
+        logger.error(f"DNS resolution timed out for {hostname}")
         return False
 
     return any(challenge == item.to_text() for item in answer.rrset.items)
@@ -36,7 +41,7 @@ def verify_new_dns(hostname: RelyingPartyHostname) -> bool:
         logger.info(f"DNS challenge for {hostname.hostname} verified")
         return True
 
-    return False
+    logger.warning(f"DNS challenge for {hostname.hostname} failed to verify")
 
 
 def verify_existing_dns(hostname: RelyingPartyHostname) -> bool:

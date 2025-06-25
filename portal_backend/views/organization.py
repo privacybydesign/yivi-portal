@@ -172,8 +172,8 @@ class OrganizationMaintainersView(APIView):
                 {"email": "Email is required"}, status=status.HTTP_400_BAD_REQUEST
             )
 
-        user = User.objects.prefetch_related("organizations").get(email=email)
         try:
+            user = User.objects.prefetch_related("organizations").get(email=email)
             if user:
                 if organization in user.organizations.all():
                     return Response(
@@ -182,11 +182,10 @@ class OrganizationMaintainersView(APIView):
                         },
                         status=status.HTTP_400_BAD_REQUEST,
                     )
-            else:
-                user = User(email=email, role="maintainer")
-                user.full_clean()
-                user.save()
-            user.organizations.add(organization)
+        except User.DoesNotExist:
+            user = User(email=email, role="maintainer")
+            user.full_clean()
+            user.save()
 
         except ValidationError as e:
             transaction.set_rollback(True)
@@ -202,6 +201,7 @@ class OrganizationMaintainersView(APIView):
                 {"error": "Failed to create user"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
+        user.organizations.add(organization)
 
         # Send email notification to the maintainer that was just added
         try:
@@ -224,6 +224,7 @@ class OrganizationMaintainersView(APIView):
             email_notification.content_subtype = "html"
             email_notification.send()
         except Exception as e:
+            transaction.set_rollback(True)
             logger.error(f"Error sending email notification: {e}")
             return Response(
                 {"error": f"Failed to send email notification: {e}"},
