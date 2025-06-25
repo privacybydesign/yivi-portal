@@ -243,6 +243,7 @@ class RelyingPartyUpdateView(APIView):
                 else:
                     update_condiscon_attributes(condiscon, data["attributes"])
                     condiscon.condiscon = make_condiscon_json(data["attributes"])
+                    condiscon.full_clean()
                     condiscon.save()
 
                 updated_fields.add("attributes")

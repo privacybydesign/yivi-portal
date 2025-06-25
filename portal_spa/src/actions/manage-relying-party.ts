@@ -12,6 +12,19 @@ export type RelyingPartyResponse<T = unknown> = {
   globalError?: string;
 };
 
+export function parseDjangoErrorString(msg: string): string {
+  if (msg.trim().startsWith("{") && msg.trim().endsWith("}")) {
+    try {
+      const jsonStr = msg.replace(/'/g, '"');
+      const parsed = JSON.parse(jsonStr);
+      return Object.values(parsed).flat().join(", ");
+    } catch {
+      return msg;
+    }
+  }
+  return msg;
+}
+
 function transformAxiosError<T = unknown>(
   error: AxiosError
 ): RelyingPartyResponse<T> {
@@ -87,18 +100,29 @@ export async function updateRelyingParty(
       payload
     );
     return { success: true, data: response.data };
-  } catch (error) {
-    if (error instanceof AxiosError) {
+  } catch (error: unknown) {
+    if (error instanceof AxiosError && error.response?.status === 400) {
+      const serverErrors: Partial<FieldErrors<RelyingPartyFormData>> = {};
+      Object.entries(error.response.data).forEach(([key, value]) => {
+        serverErrors[key as keyof RelyingPartyFormData] = {
+          type: "server",
+          message: String(value),
+        };
+      });
+      return {
+        success: false,
+        fieldErrors: serverErrors,
+      };
+    } else if (error instanceof AxiosError) {
       return transformAxiosError<RelyingParty>(error);
     }
-    return {
-      success: false,
-      globalError: "An unexpected error occurred.",
-    };
   }
+  return {
+    success: false,
+    globalError: "An unexpected error occurred.",
+  };
 }
 
-// Register RP
 export async function registerRelyingParty(
   organizationSlug: string,
   data: RelyingPartyFormData
@@ -112,16 +136,29 @@ export async function registerRelyingParty(
       payload
     );
     return { success: true, data: response.data };
-  } catch (error) {
-    if (error instanceof AxiosError) {
+  } catch (error: unknown) {
+    if (error instanceof AxiosError && error.response?.status === 400) {
+      const serverErrors: Partial<FieldErrors<RelyingPartyFormData>> = {};
+      Object.entries(error.response.data).forEach(([key, value]) => {
+        serverErrors[key as keyof RelyingPartyFormData] = {
+          type: "server",
+          message: String(value),
+        };
+      });
+      return {
+        success: false,
+        fieldErrors: serverErrors,
+      };
+    } else if (error instanceof AxiosError) {
       return transformAxiosError<RelyingParty>(error);
     }
-    return {
-      success: false,
-      globalError: "An unexpected error occurred.",
-    };
   }
+  return {
+    success: false,
+    globalError: "An unexpected error occurred.",
+  };
 }
+
 export async function deleteRelyingParty(
   organizationSlug: string,
   environment: string,
