@@ -13,7 +13,7 @@ import {
   SelectValue,
   SelectContent,
   SelectItem,
-} from "@radix-ui/react-select";
+} from "@/components/ui/select";
 import type { UseFormReturn } from "react-hook-form";
 import type { Credential } from "@/models/credential";
 
