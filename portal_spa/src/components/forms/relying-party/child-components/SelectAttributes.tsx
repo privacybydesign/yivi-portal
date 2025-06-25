@@ -15,13 +15,13 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "../../../ui/form";
+} from "@/components/ui/form";
 import type { UseFormReturn } from "react-hook-form";
-import type { RelyingPartyFormData } from "../forms/relying-party/validation-schema";
-import CredentialSearchFilter from "./attribute-selector/CredentialSearchFilter";
-import EnvironmentFilter from "./attribute-selector/EnvironmentFilter";
-import AttributeFormField from "./attribute-selector/AttributeFormField";
-import ReasonFields from "./attribute-selector/ReasonFields";
+import type { RelyingPartyFormData } from "../validation-schema";
+import CredentialSearchFilter from "@/components/custom/attribute-selector/CredentialSearchFilter";
+import EnvironmentFilter from "@/components/custom/attribute-selector/EnvironmentFilter";
+import AttributeFormField from "@/components/custom/attribute-selector/AttributeFormField";
+import ReasonFields from "@/components/custom/attribute-selector/ReasonFields";
 
 interface CredentialAttributeFieldProps {
   index: number;
