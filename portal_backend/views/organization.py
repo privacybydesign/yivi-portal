@@ -275,3 +275,25 @@ class OrganizationMaintainerView(APIView):
                 {"error": "User is not a maintainer of this organization"},
                 status=status.HTTP_404_NOT_FOUND,
             )
+
+
+class OrganizationNameAndSlugView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    @swagger_auto_schema(responses={200: "Success", 404: "Not Found"})
+    def get(self, request: Request) -> Response:
+        """Get all of maintainer's organizations' names and slugs to display in the dropdown"""
+
+        user = User.objects.filter(email=request.user.email).first()
+        orgs = user.organizations.all()
+
+        return Response(
+            [
+                {
+                    "name_en": org.name_en,
+                    "slug": org.slug,
+                }
+                for org in orgs
+            ],
+            status=status.HTTP_200_OK,
+        )

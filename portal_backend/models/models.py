@@ -153,7 +153,7 @@ class TrustModel(models.Model):
 class YiviTrustModelEnv(models.Model):
     ENV_CHOICES = [
         ("production", "Production"),
-        ("development", "Development"),
+        ("staging", "Staging"),
         ("demo", "Demo"),
     ]
     trust_model = models.ForeignKey(

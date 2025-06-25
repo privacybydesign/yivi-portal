@@ -292,10 +292,14 @@ def create_update_trust_model_env(
 
         if not scheme:
             raise ValueError("Missing 'SchemeManager' in scheme description data")
-        trust_model = TrustModel.objects.get(name__iexact="yivi")
-
-        if not trust_model:
-            raise ValueError("TrustModel 'yivi' does not exist in the database")
+        trust_model, _ = TrustModel.objects.get_or_create(
+            name__iexact="Yivi",
+            defaults={
+                "name": "Yivi",
+                "description": "Yivi Trust Model",
+                "eudi_compliant": False,
+            },
+        )
 
         yivi_tme, created = YiviTrustModelEnv.objects.update_or_create(
             trust_model=trust_model,

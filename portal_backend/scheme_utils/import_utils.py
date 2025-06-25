@@ -49,7 +49,14 @@ def load_logo_if_exists(logo_path: str) -> ImageFile | None:
 def create_org(slug: str, name_en: str, name_nl: str, logo_path: str) -> Organization:
 
     try:
-        trust_model = TrustModel.objects.get(name__iexact="yivi")
+        trust_model, _ = TrustModel.objects.get_or_create(
+            name__iexact="Yivi",
+            defaults={
+                "name": "Yivi",
+                "description": "Yivi Trust Model",
+                "eudi_compliant": False,
+            },
+        )
         logo_image_file = load_logo_if_exists(logo_path)
         org, org_created = (
             Organization.objects.get_or_create(  # We can't use update_or_create because we are making the organization out of the issuer description which differs across scheme environments. instead we set production as the first environment so that is the official organization associated with rps and aps and doesn't get overwritten
