@@ -213,6 +213,17 @@ class RelyingPartyUpdateView(APIView):
             updated_fields = set()
 
             def update_context():
+                nonlocal condiscon
+                if condiscon is None:
+                    condiscon = create_condiscon(
+                        attributes=data["attributes"],
+                        contexts={
+                            "en": data.get("context_description_en", ""),
+                            "nl": data.get("context_description_nl", ""),
+                        },
+                        relying_party=relying_party,
+                    )
+                    create_condiscon_attributes(condiscon, data["attributes"])
                 update_condiscon_context(condiscon, data)
                 updated_fields.add("context")
 
@@ -232,6 +243,7 @@ class RelyingPartyUpdateView(APIView):
                 else:
                     update_condiscon_attributes(condiscon, data["attributes"])
                     condiscon.condiscon = make_condiscon_json(data["attributes"])
+                    condiscon.full_clean()
                     condiscon.save()
 
                 updated_fields.add("attributes")

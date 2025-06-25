@@ -13,15 +13,15 @@ import {
 } from "@/components/ui/tooltip";
 import { Info } from "lucide-react";
 import type { RelyingPartyFormData } from "../validation-schema";
-import type { Control } from "react-hook-form";
+import type { Control, FieldErrors } from "react-hook-form";
 
 type RelyingPartySlugProps = {
   control: Control<RelyingPartyFormData>;
-  serverErrors?: Partial<Record<keyof RelyingPartyFormData, string>>;
+  formErrors?: FieldErrors<RelyingPartyFormData>;
 };
 
 export default function RelyingPartySlug(props: RelyingPartySlugProps) {
-  const { control, serverErrors } = props;
+  const { control } = props;
 
   return (
     <div>
@@ -51,7 +51,7 @@ export default function RelyingPartySlug(props: RelyingPartySlugProps) {
               <FormControl>
                 <Input {...field} />
               </FormControl>
-              <FormMessage>{serverErrors?.rp_slug}</FormMessage>
+              <FormMessage />
             </FormItem>
           )}
         />

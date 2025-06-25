@@ -1,13 +1,10 @@
 import type { RelyingPartyFormData } from "@/components/forms/relying-party/validation-schema";
 import type { RelyingParty } from "@/models/relying-party";
 
-type ServerErrors = Partial<Record<keyof RelyingPartyFormData, string>>;
-
 type RelyingPartyContextCommon = {
   defaultValues: RelyingPartyFormData;
-  serverErrors?: ServerErrors;
   globalError?: string;
-  isSaving: boolean;
+  isProcessing: boolean;
   onClose?: () => void;
   relyingParty?: RelyingParty;
 };

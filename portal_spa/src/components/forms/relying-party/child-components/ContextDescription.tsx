@@ -69,6 +69,7 @@ export default function ContextDescription({
           </FormItem>
         )}
       />
+      <FormMessage />
     </div>
   );
 }

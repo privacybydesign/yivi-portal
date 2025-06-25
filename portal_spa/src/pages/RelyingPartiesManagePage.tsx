@@ -17,6 +17,7 @@ import {
 import { toast } from "sonner";
 import RelyingPartyTabs from "@/components/forms/relying-party/RelyingPartyTabs";
 import { RelyingPartyContext } from "@/contexts/relying-party/RelyingPartyContext";
+import DjangoFieldErrors from "@/components/custom/DjangoErrorList";
 
 // This data will be used to prefill the Relying Party create form
 const initialData: RelyingPartyFormData = {
@@ -38,23 +39,24 @@ const initialData: RelyingPartyFormData = {
 export default function RelyingPartyManager() {
   const params = useParams();
   const organizationSlug = params?.organization as string;
-  const [saving, setSaving] = useState(false);
-  const [fieldErrors, setFieldErrors] = useState({});
-  const [globalError, setGlobalError] = useState<string | undefined>();
   const [isCreating, setIsCreating] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
 
   const handleSave = async (data: RelyingPartyFormData) => {
-    setSaving(true);
+    setIsCreating(true);
     const result = await registerRelyingParty(organizationSlug, data);
-    setSaving(false);
+    setIsCreating(false);
 
     if (!result.success) {
-      setFieldErrors(result.fieldErrors || {});
-      setGlobalError(result.globalError);
+      toast.error("Error creating relying party", {
+        description: result.fieldErrors ? (
+          <DjangoFieldErrors errors={result.fieldErrors} />
+        ) : (
+          result.globalError
+        ),
+      });
     } else {
-      setFieldErrors({});
-      setGlobalError(undefined);
-      setIsCreating(false);
+      setIsOpen(false);
       toast.success("Relying Party Created", {
         description: "The relying party has been created successfully.",
       });
@@ -70,7 +72,7 @@ export default function RelyingPartyManager() {
         <RelyingPartyListEdit />
 
         <div className="mt-6">
-          <Dialog open={isCreating} onOpenChange={setIsCreating}>
+          <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <DialogTrigger asChild>
               <Button variant="default">Add a new relying party</Button>
             </DialogTrigger>
@@ -88,10 +90,8 @@ export default function RelyingPartyManager() {
                     isEditMode: false,
                     defaultValues: initialData,
                     onSubmit: handleSave,
-                    serverErrors: fieldErrors,
-                    globalError: globalError || "",
-                    isSaving: saving,
-                    onClose: () => setIsCreating(false),
+                    isProcessing: isCreating,
+                    onClose: () => setIsOpen(false),
                   }}
                 >
                   <RelyingPartyTabs />

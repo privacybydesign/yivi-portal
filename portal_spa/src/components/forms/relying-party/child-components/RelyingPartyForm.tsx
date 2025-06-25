@@ -1,4 +1,4 @@
-import { useForm, useFieldArray } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { RelyingPartySchema } from "../validation-schema";
 import type { RelyingPartyFormData } from "../validation-schema";
@@ -19,15 +19,8 @@ import { useRelyingParty } from "@/contexts/relying-party/RelyingPartyContext";
 export default function RelyingPartyForm() {
   const context = useRelyingParty();
 
-  const {
-    originalSlug,
-    defaultValues,
-    serverErrors = {},
-    globalError,
-    isSaving,
-    isEditMode,
-    onClose,
-  } = context;
+  const { originalSlug, defaultValues, isProcessing, isEditMode, onClose } =
+    context;
 
   const form = useForm<RelyingPartyFormData>({
     resolver: zodResolver(RelyingPartySchema),
@@ -37,29 +30,8 @@ export default function RelyingPartyForm() {
   const {
     control,
     handleSubmit,
-    register,
     formState: { errors },
   } = form;
-
-  const {
-    fields: hostnameFields,
-    append: appendHostname,
-    remove: removeHostname,
-  } = useFieldArray({ control, name: "hostnames" });
-
-  const {
-    fields: attrFields,
-    append: appendAttr,
-    remove: removeAttr,
-  } = useFieldArray({ control, name: "attributes" });
-
-  useEffect(() => {
-    if (globalError) {
-      toast.error("Error", {
-        description: globalError,
-      });
-    }
-  }, [globalError]);
 
   function getChangedFormData(
     original: RelyingPartyFormData,
@@ -143,30 +115,18 @@ export default function RelyingPartyForm() {
           })}
         >
           {/* Relying party slug  */}
-          <RelyingPartySlug control={control} serverErrors={serverErrors} />
+          <RelyingPartySlug control={control} formErrors={errors} />
 
           {/* Hostnames */}
-          <Hostnames
-            hostnameFields={hostnameFields}
-            register={register}
-            removeHostname={removeHostname}
-            appendHostname={appendHostname}
-            errors={errors}
-          />
+          <Hostnames control={control} />
 
           {/* Context Description */}
           <ContextDescription control={control} />
 
           {/* Credential Selection and Attributes */}
-          <CredentialAttributes
-            attrFields={attrFields}
-            form={form}
-            credentials={credentials}
-            appendAttr={appendAttr}
-            removeAttr={removeAttr}
-          />
+          <CredentialAttributes form={form} credentials={credentials} />
 
-          <ReadyCheckbox control={control} serverErrors={serverErrors} />
+          <ReadyCheckbox control={control} />
 
           <div className="gap-2 mt-6 flex sm:justify-end">
             {isEditMode && (
@@ -185,10 +145,16 @@ export default function RelyingPartyForm() {
             )}
             <Button
               type="submit"
-              disabled={isSaving}
+              disabled={isProcessing}
               className="h-9 px-4 text-sm"
             >
-              {isSaving ? "Saving..." : "Save"}
+              {isEditMode
+                ? isProcessing
+                  ? "Saving..."
+                  : "Save"
+                : isProcessing
+                ? "Creating..."
+                : "Create"}
             </Button>
           </div>
         </form>
