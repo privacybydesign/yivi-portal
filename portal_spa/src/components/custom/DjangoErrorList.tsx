@@ -9,9 +9,13 @@ export default function DjangoFieldErrors({
 }) {
   return (
     <ul>
-      {Object.entries(errors).map(([, error], idx) => (
-        <li key={idx}>{parseDjangoErrorString(String(error.message))}</li>
-      ))}
+      {Object.entries(errors).map(([, error], idx) => {
+        const message =
+          typeof error === "object" && error !== null && "message" in error
+            ? (error as { message?: string }).message
+            : error;
+        return <li key={idx}>{parseDjangoErrorString(String(message))}</li>;
+      })}
     </ul>
   );
 }

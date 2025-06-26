@@ -247,7 +247,7 @@ export default function RelyingPartyListEdit() {
                           setSaving(false);
 
                           if (!result.success) {
-                            toast.error("Error creating relying party", {
+                            toast.error("Error updating relying party", {
                               description: result.fieldErrors ? (
                                 <DjangoFieldErrors
                                   errors={result.fieldErrors}

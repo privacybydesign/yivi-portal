@@ -3,6 +3,12 @@ from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django.core.exceptions import ValidationError
 
+from portal_backend.services.helpers import (
+    extract_hostnames,
+    hostname_exists,
+    validate_and_save,
+)
+
 from ..models.models import (
     Organization,
     RelyingParty,
@@ -47,34 +53,13 @@ def create_relying_party(
     return relying_party
 
 
-def check_duplicate_hostnames(
-    hostnames: List[str],
-) -> None:
-    """
-    Raises ValidationError if any of the hostnames already exists in the database.
-    """
-    filtered = [h for h in hostnames if h]
-
-    same_entries = RelyingPartyHostname.objects.filter(hostname__in=filtered)
-
-    if same_entries.exists():
+def parse_and_validate_hostnames(hostnames: HostnameEntry) -> List[str]:
+    new_hostnames = extract_hostnames(hostnames)
+    duplicates = [h for h in new_hostnames if hostname_exists(h)]
+    if duplicates:
         raise ValidationError(
-            {
-                "hostnames": [
-                    f"Hostname already exists: {h.hostname}" for h in same_entries
-                ]
-            }
+            {"hostnames": [f"Hostname already exists: {h}" for h in duplicates]}
         )
-
-
-def parse_and_validate_hostnames(
-    hostnames: HostnameEntry,
-) -> List[str]:
-    filtered = [h for h in hostnames if h]
-    new_hostnames = [
-        h.get("hostname") for h in filtered if isinstance(h, dict) and h.get("hostname")
-    ]
-    check_duplicate_hostnames(new_hostnames)
     return new_hostnames
 
 
@@ -83,16 +68,14 @@ def create_hostname_objects(
 ) -> List[RelyingPartyHostname]:
     created = []
     for hostname in hostnames:
-        obj = RelyingPartyHostname.objects.create(
+        obj = RelyingPartyHostname(
             relying_party=relying_party,
             hostname=hostname,
             dns_challenge=generate_dns_challenge(),
             dns_challenge_created_at=timezone.now(),
             dns_challenge_verified=False,
         )
-        obj.full_clean()
-        obj.save()
-        created.append(obj)
+        created.append(validate_and_save(obj))
     return created
 
 
@@ -157,67 +140,64 @@ def create_condiscon_attributes(
             name_en=attr["credential_attribute_tag"],
             credential__id=attr["credential_id"],
         )
-
-        CondisconAttribute.objects.create(
+        obj = CondisconAttribute(
             credential_attribute=cred_attr,
             condiscon=condiscon,
             reason_en=attr["reason_en"],
             reason_nl=attr["reason_nl"],
         )
+        validate_and_save(obj)
 
 
 def update_relying_party_hostnames(
-    relying_party: RelyingParty,
-    submitted_hostnames: List[HostnameEntry],
+    relying_party: RelyingParty, submitted_hostnames: List[HostnameEntry]
 ) -> List[dict[str, str]]:
-    existing_hostnames = RelyingPartyHostname.objects.filter(
-        relying_party=relying_party
+    rp_existing_hostnames = {
+        str(h.id): h
+        for h in RelyingPartyHostname.objects.filter(relying_party=relying_party)
+    }
+    all_hostnames_set = set(
+        RelyingPartyHostname.objects.values_list("hostname", flat=True)
     )
-    hostnames_with_id = {str(h.id): h for h in existing_hostnames}
     update_or_add = []
 
-    if len(submitted_hostnames) == 0:
+    if not submitted_hostnames:
         raise ValidationError("Cannot delete all hostnames.")
 
     for entry in submitted_hostnames:
         hostname_str = entry.get("hostname", "").strip()
         if not hostname_str:
             continue
-
-        hostname_id = entry.get("id", "")
-        if str(hostname_id) in hostnames_with_id:
-            hostname_obj = hostnames_with_id.pop(str(hostname_id))
+        hostname_id = entry.get("id")
+        # Update
+        if str(hostname_id) in rp_existing_hostnames:
+            hostname_obj = rp_existing_hostnames.pop(str(hostname_id))
             if hostname_obj.hostname != hostname_str:
                 hostname_obj.hostname = hostname_str
                 hostname_obj.dns_challenge = generate_dns_challenge()
                 hostname_obj.manually_verified = False
                 hostname_obj.dns_challenge_created_at = timezone.now()
                 hostname_obj.dns_challenge_verified = False
-                hostname_obj.full_clean()
-                hostname_obj.save()
+                validate_and_save(hostname_obj)
             update_or_add.append(hostname_obj)
-        elif hostname_str in existing_hostnames.values_list("hostname", flat=True):
+        # Add new
+        elif hostname_str in all_hostnames_set:
             raise ValidationError(
-                {"hostnames": [f"Hostname already exists: {hostname_obj.hostname}"]}
+                {"hostnames": [f"Hostname already exists: {hostname_str}"]}
             )
-
         else:
-            new_obj = RelyingPartyHostname.objects.create(
+            new_obj = RelyingPartyHostname(
                 relying_party=relying_party,
                 hostname=hostname_str,
                 dns_challenge=generate_dns_challenge(),
                 dns_challenge_created_at=timezone.now(),
                 dns_challenge_verified=False,
             )
-            new_obj.full_clean()
-            new_obj.save()
-            update_or_add.append(new_obj)
-
-    # delete remaining hostnames not in the submitted list
-    for h in hostnames_with_id.values():
+            update_or_add.append(validate_and_save(new_obj))
+            all_hostnames_set.add(hostname_str)
+    # Delete old
+    for h in rp_existing_hostnames.values():
         h.delete()
-
-    # return DNS challenges for the hostnames that were updated or added
     return [
         {"hostname": h.hostname, "dns_challenge": h.dns_challenge}
         for h in update_or_add
