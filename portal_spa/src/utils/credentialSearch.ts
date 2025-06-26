@@ -1,67 +1,43 @@
 import type { Credential } from "@/models/credential";
+import { scoreCredentials } from "./scoreCredentials";
 
 export type SearchOptions = {
-  query: string;
+  searchQuery: string;
   credentials: Credential[];
   environmentWeights?: Record<string, number>;
-  filterByEnv?: Record<string, boolean>;
+  selectedEnv?: Record<string, boolean>;
+};
+
+const filterByEnvironment = (
+  // Check whether to include a credential based on the selected environment
+  cred: Credential,
+  selectedEnv?: Record<string, boolean>
+): boolean => {
+  if (!selectedEnv) return true;
+  return selectedEnv[cred.environment] ?? false;
 };
 
 export function filterAndRankCredentials({
-  query,
+  searchQuery,
   credentials,
-  environmentWeights = { production: 1, staging: 0.8, demo: 0.5 },
-  filterByEnv,
+  selectedEnv, // e.g. {"production": true, "staging": true, "demo": true}
 }: SearchOptions): Credential[] {
-  const q = query.toLowerCase().trim();
+  const environmentWeights = { production: 1, staging: 0.8, demo: 0.5 };
+  const query = searchQuery.toLowerCase().trim();
 
-  const shouldFilterEnv = !!filterByEnv;
+  const filtered = credentials
+    .filter((cred) => filterByEnvironment(cred, selectedEnv))
+    .filter((cred) => !cred.deprecated_since);
 
-  const scored = credentials
-    .map((cred) => {
-      if (shouldFilterEnv && !filterByEnv?.[cred.environment]) return null;
+  const scored = filtered
+    .map((cred) => scoreCredentials(cred, environmentWeights, query))
+    .filter((item) => item.score > 0);
 
-      let score = 0;
-      const credMatch = cred.name_en?.toLowerCase() === q;
-      const nameMatch = cred.name_en?.toLowerCase().includes(q);
-      const attributeMatch = cred.attributes?.some((attr) =>
-        attr.name_en?.toLowerCase().includes(q)
-      );
+  scored.sort((a, b) => {
+    return b.score - a.score;
+  });
 
-      if (credMatch) score += 2;
-      if (nameMatch) score += 1;
-      if (attributeMatch) score += 0.5;
+  const result = scored.map((item) => item.cred);
 
-      score *= environmentWeights[cred.environment] ?? 1;
-
-      let bucket = 3;
-      if (cred.deprecated_since) {
-        bucket = 4;
-      } else if (credMatch) {
-        bucket = 0;
-      } else if (nameMatch) {
-        bucket = 1;
-      } else if (attributeMatch) {
-        bucket = 2;
-      }
-
-      return { cred, score, bucket };
-    })
-    .filter(
-      (item): item is { cred: Credential; score: number; bucket: number } =>
-        !!item
-    )
-    .filter((item) => q === "" || item.score > 0 || item.cred.deprecated_since)
-    .sort((a, b) => {
-      if (q === "") {
-        return a.cred.name_en.localeCompare(b.cred.name_en, undefined, {
-          sensitivity: "base",
-        });
-      }
-      if (a.bucket !== b.bucket) return a.bucket - b.bucket;
-      return b.score - a.score;
-    })
-    .map((item) => item.cred);
-
-  return scored;
+  return result;
 }

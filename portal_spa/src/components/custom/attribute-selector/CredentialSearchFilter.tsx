@@ -7,14 +7,14 @@ import type { RelyingPartyFormData } from "@/components/forms/relying-party/vali
 import { filterAndRankCredentials } from "@/utils/credentialSearch";
 
 type CredentialSearchFilterProps = {
-  search: string;
+  searchQuery: string;
   credentials: Credential[];
   envFilter: Record<string, boolean>;
   setOpen: React.Dispatch<React.SetStateAction<boolean>>;
   field: ControllerRenderProps<RelyingPartyFormData>;
 };
 export default function CredentialSearchFilter({
-  search,
+  searchQuery,
   credentials,
   envFilter,
   setOpen,
@@ -22,11 +22,11 @@ export default function CredentialSearchFilter({
 }: CredentialSearchFilterProps) {
   const filteredCredentials = useMemo(() => {
     return filterAndRankCredentials({
-      query: search,
+      searchQuery,
       credentials,
-      filterByEnv: envFilter,
+      selectedEnv: envFilter,
     });
-  }, [search, credentials, envFilter]);
+  }, [searchQuery, credentials, envFilter]);
 
   return (
     <div className="max-h-56 overflow-y-auto border-t pt-2">

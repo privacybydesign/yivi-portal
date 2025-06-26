@@ -40,17 +40,10 @@ export default function AttributeIndexLayout() {
     if (!grouped[env][key]) grouped[env][key] = [];
     grouped[env][key].push(c);
   });
-  const environmentWeights: Record<string, number> = {
-    production: 1,
-    staging: 0.8,
-    demo: 0.5,
-  };
+
   const filtered = filterAndRankCredentials({
-    query: searchQuery,
+    searchQuery,
     credentials,
-    environmentWeights,
-    // If you want to filter by env in this component, add:
-    // filterByEnv: { production: true, staging: true, demo: true }
   });
 
   const isMainPage = useMatch("/attribute-index");

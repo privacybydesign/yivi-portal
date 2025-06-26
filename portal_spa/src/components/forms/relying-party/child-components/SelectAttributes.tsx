@@ -104,7 +104,7 @@ export default function CredentialAttributeFields({
                         />
 
                         <CredentialSearchFilter
-                          search={search}
+                          searchQuery={search}
                           credentials={credentials}
                           envFilter={envFilter}
                           setOpen={setOpen}
