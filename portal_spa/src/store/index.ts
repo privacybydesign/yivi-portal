@@ -95,35 +95,33 @@ const useStore = create<StateStore>((set) => ({
   },
 }));
 
-// Hook to initialize authentication in a React component
-export function useAuthInit() {
-  const initializeAuth = useStore((state) => state.initializeAuth);
-  const initialized = useStore((state) => state.initialized);
-
-  useEffect(() => {
-    if (!initialized) {
-      initializeAuth();
-    }
-  }, [initializeAuth, initialized]);
-}
-
 export function useIdleRefresh() {
   const accessToken = useStore((state) => state.accessToken);
   const refreshToken = useStore((state) => state.refreshToken);
 
-  let pageUnloaded = false;
-  document.addEventListener("visibilitychange", () => {
-    if (document.hidden) {
-      pageUnloaded = true;
-    } else if (pageUnloaded && accessToken) {
-      const decoded = jwtDecode<AuthToken>(accessToken);
-      const currentTime = Math.floor(Date.now() / 1000);
-      if (decoded.exp < currentTime + 60) {
-        refreshToken();
+  useEffect(() => {
+    const handler = (event: Event) => {
+      if (
+        (document.visibilityState === "visible" || event.type === "pageshow") &&
+        accessToken
+      ) {
+        const currentTime = Math.floor(Date.now() / 1000);
+        const decoded = jwtDecode<AuthToken>(accessToken);
+
+        if (decoded.exp < currentTime + 60) {
+          refreshToken();
+        }
       }
-      pageUnloaded = false;
-    }
-  });
+    };
+
+    document.addEventListener("visibilitychange", handler);
+    window.addEventListener("pageshow", handler);
+
+    return () => {
+      document.removeEventListener("visibilitychange", handler);
+      window.removeEventListener("pageshow", handler);
+    };
+  }, [accessToken, refreshToken]);
 }
 
 export default useStore;
