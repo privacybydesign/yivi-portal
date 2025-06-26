@@ -8,8 +8,20 @@ import type { RelyingParty } from "@/models/relying-party";
 import type { AttestationProvider } from "@/models/attestationprovider";
 import { toast } from "sonner";
 import { AlertTriangle } from "lucide-react";
+import { useTranslation } from "react-i18next";
+import i18n from "@/i18n";
 
 export default function OrganizationPage() {
+  const { t } = useTranslation();
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  function getLocalizedField(obj: any, key: string, lang = i18n.language) {
+    if (lang === "nl" && obj[`${key}_nl`]) return obj[`${key}_nl`];
+    if (obj[`${key}_en`]) return obj[`${key}_en`];
+    if (obj[`${key}_nl`]) return obj[`${key}_nl`];
+    return "";
+  }
+
   const params = useParams();
   const organizationSlug = params?.organization;
 
@@ -109,7 +121,6 @@ export default function OrganizationPage() {
     try {
       setLoadingApDetails(true);
 
-      // Step 1: Get list of AP slugs and environments
       const listResponse = await axiosInstance.get(
         `/v1/yivi/organizations/${organizationSlug}/attestation-provider/`
       );
@@ -119,7 +130,6 @@ export default function OrganizationPage() {
 
       const details: AttestationProvider[] = [];
 
-      // Step 2: For each, fetch full detail
       for (const ap of apList) {
         try {
           const detailResponse = await axiosInstance.get(
@@ -177,7 +187,7 @@ export default function OrganizationPage() {
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
-        <div className="text-lg">Loading organization details...</div>
+        <div className="text-lg">{t("organization.loading")}</div>
       </div>
     );
   }
@@ -192,11 +202,10 @@ export default function OrganizationPage() {
             </div>
             <div>
               <h2 className="text-lg font-semibold text-yellow-800 mb-1">
-                Organization not found
+                {t("organization.not_found")}
               </h2>
               <p className="text-sm text-yellow-700">
-                The organization you are looking for does not exist or is not
-                available.
+                {t("organization.not_found")}
               </p>
             </div>
           </CardContent>
@@ -215,7 +224,7 @@ export default function OrganizationPage() {
                 src={`${apiEndpoint}${organization.logo}`}
                 width={50}
                 height={50}
-                alt={`${organization.name_en} logo`}
+                alt={`${getLocalizedField(organization, "name")} logo`}
                 className="object-cover w-full h-full"
                 onError={(e) => {
                   e.currentTarget.src = "/logo-placeholder.svg";
@@ -225,8 +234,10 @@ export default function OrganizationPage() {
           )}
 
           <div>
-            <h1 className="text-3xl font-bold">{organization.name_en}</h1>
-            <p className="text-gray-500">{organization.name_nl}</p>
+            <h1 className="text-3xl font-bold">
+              {getLocalizedField(organization, "name")}
+            </h1>
+
             <div className="flex flex-wrap gap-1">
               {organization.trust_models?.map(
                 (tm) =>
@@ -289,12 +300,7 @@ export default function OrganizationPage() {
       {activeSection === "ap-details" && organization.is_AP === true && (
         <Card>
           <CardContent>
-            <p className="mb-4 text-gray-600">
-              The attestation providers listed below are configured for this
-              organization. If the credential or attestation provider in certain
-              environment has the deprecated flag, it means that it can no
-              longer be used to issue the credentials.
-            </p>
+            <p className="mb-4 text-gray-600">{t("ap_details.description")}</p>
             {loadingApDetails ? (
               <div className="py-8 text-center text-gray-500">
                 Loading AP details...
@@ -313,7 +319,9 @@ export default function OrganizationPage() {
                   )}
                   <div className="text-sm text-gray-700 mx-2 mt-2">
                     <div className="mt-1">
-                      <span className="font-medium "> Contact Email:</span>{" "}
+                      <span className="font-medium ">
+                        {t("organization.contact_email")}:
+                      </span>{" "}
                       <a
                         className="font-normal text-blue-600 hover:underline"
                         href={`mailto:${ap.contact_email}`}
@@ -322,7 +330,9 @@ export default function OrganizationPage() {
                       </a>
                     </div>
                     <div className="mt-1">
-                      <span className="font-medium">Contact Address:</span>{" "}
+                      <span className="font-medium ">
+                        {t("organization.contact_address")}:
+                      </span>{" "}
                       <a
                         className="font-normal text-blue-600 hover:underline"
                         href={`${ap.contact_address}`}
@@ -331,8 +341,7 @@ export default function OrganizationPage() {
                       </a>
                     </div>
                     <div className="font-normal mt-1">
-                      The following credentials can be issued by this
-                      Attestation Provider.
+                      {t("ap_details.credential")}
                     </div>
                     <div className="text-sm text-gray-700 mt-2">
                       {ap.credentials.length === 0 ? (
@@ -350,7 +359,7 @@ export default function OrganizationPage() {
                               <div className="flex flex-wrap gap-2 items-center justify-between">
                                 <div className="flex flex-wrap gap-2 items-center">
                                   <h1 className="text-lg font-semibold text-gray-800">
-                                    {cred.name_en}
+                                    {getLocalizedField(cred, "name")}
                                   </h1>
                                   <span className="text-sm text-gray-500 font-mono">
                                     ({cred.full_path})
@@ -366,16 +375,16 @@ export default function OrganizationPage() {
                                     to={`/attribute-index/credentials/${ap.environment}/${ap.ap_slug}/${cred.credential_id}`}
                                     className="text-sm text-blue-600 hover:text-blue-800 font-medium"
                                   >
-                                    View Details →
+                                    {t("ap_details.view_details")}
                                   </Link>
                                 </div>
                               </div>
-
-                              {cred.description_en && (
+                              {(cred.description_en || cred.description_nl) && (
                                 <p className="text-sm text-gray-600 mt-2">
-                                  {cred.description_en}
+                                  {getLocalizedField(cred, "description")}
                                 </p>
                               )}
+
                               <div className="mt-3"></div>
                             </div>
                           ))}
@@ -393,10 +402,7 @@ export default function OrganizationPage() {
       {activeSection === "rp-details" && organization.is_RP === true && (
         <Card>
           <CardContent>
-            <p className="mb-4 text-gray-600">
-              The relying parties listed below are configured for this
-              organization.
-            </p>
+            <p className="mb-4 text-gray-600">{t("rp_details.description")}</p>
             {loadingRpDetails ? (
               <div className="py-8 text-center text-gray-500">
                 Loading RP details...
@@ -414,7 +420,9 @@ export default function OrganizationPage() {
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div>
-                      <h4 className="font-medium">Authorized Hostnames</h4>
+                      <h4 className="font-medium">
+                        {t("rp_details.authorized_hostnames")}
+                      </h4>
                       <ul className="list-disc list-inside text-sm font-mono">
                         {rp.hostnames.length > 0 ? (
                           rp.hostnames.map((h, i) => (
@@ -422,7 +430,7 @@ export default function OrganizationPage() {
                           ))
                         ) : (
                           <li className="text-gray-500">
-                            No hostnames registered
+                            {t("rp_details.no_hostnames")}
                           </li>
                         )}
                       </ul>
@@ -431,9 +439,7 @@ export default function OrganizationPage() {
                 </Card>
               ))
             ) : (
-              <div className="text-gray-600">
-                No Relying Party configurations available for this organization.
-              </div>
+              <div className="text-gray-600">{t("rp_details.no_rps")}</div>
             )}
           </CardContent>
         </Card>

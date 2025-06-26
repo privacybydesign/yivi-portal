@@ -3,6 +3,7 @@ import { Link, Outlet } from "react-router-dom";
 import Header from "@/components/layout/Header";
 import { OrganizationContext } from "@/contexts/organization/OrganizationContext";
 import { axiosInstance } from "@/services/axiosInstance";
+import { useTranslation } from "react-i18next";
 import useStore from "@/store";
 import { buttonVariants } from "../ui/button";
 import { cn } from "@/lib/utils";
@@ -13,6 +14,7 @@ export default function Layout() {
     Record<string, string>
   >({});
   const organizationSlugs = useStore((state) => state.organizationSlugs);
+  const { t } = useTranslation();
 
   useEffect(() => {
     const fetchOrganizationNames = async () => {
@@ -59,13 +61,13 @@ export default function Layout() {
                 to="/terms-of-service"
                 className={cn(buttonVariants({ variant: "link" }))}
               >
-                Terms of Service
+                {t("terms")}
               </Link>
               <Link
                 to="/privacy-policy"
                 className={cn(buttonVariants({ variant: "link" }))}
               >
-                Privacy Policy
+                {t("privacy")}
               </Link>
             </div>
           </div>
