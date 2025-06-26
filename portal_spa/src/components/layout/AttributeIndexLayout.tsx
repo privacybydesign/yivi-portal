@@ -16,6 +16,7 @@ import { Button } from "../ui/button";
 import { HamburgerIcon } from "lucide-react";
 import { Skeleton } from "../ui/skeleton";
 import { Badge } from "@/components/ui/badge";
+import { filterAndRankCredentials } from "@/utils/credentialSearch";
 export default function AttributeIndexLayout() {
   const [credentials, setCredentials] = useState<Credential[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -44,46 +45,13 @@ export default function AttributeIndexLayout() {
     staging: 0.8,
     demo: 0.5,
   };
-  const q = searchQuery.toLowerCase().trim();
-
-  const filtered = credentials
-    .map((cred) => {
-      let score = 0;
-
-      const credMatch = cred.name_en?.toLowerCase() === q;
-      const nameMatch = cred.name_en?.toLowerCase().includes(q);
-      const attributeMatch = cred.attributes.some((attr) =>
-        attr.name_en?.toLowerCase().includes(q)
-      );
-
-      if (credMatch) score += 2;
-      if (nameMatch) score += 1;
-      if (attributeMatch) score += 0.5;
-
-      score *= environmentWeights[cred.environment] ?? 1;
-
-      let bucket = 3;
-      if (cred.deprecated_since) {
-        bucket = 4;
-      } else if (credMatch) {
-        bucket = 0;
-      } else if (nameMatch) {
-        bucket = 1;
-      } else if (attributeMatch) {
-        bucket = 2;
-      }
-
-      return { cred, score, bucket };
-    })
-    .filter(
-      (item) =>
-        searchQuery === "" || item.score > 0 || item.cred.deprecated_since
-    )
-    .sort((a, b) => {
-      if (a.bucket !== b.bucket) return a.bucket - b.bucket;
-      return b.score - a.score;
-    })
-    .map((item) => item.cred);
+  const filtered = filterAndRankCredentials({
+    query: searchQuery,
+    credentials,
+    environmentWeights,
+    // If you want to filter by env in this component, add:
+    // filterByEnv: { production: true, staging: true, demo: true }
+  });
 
   const isMainPage = useMatch("/attribute-index");
   const location = useLocation();

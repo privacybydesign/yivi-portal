@@ -1,10 +1,10 @@
 import { cn } from "@/lib/utils";
-import type { Environment } from "@/models/yivi-environment";
 import { Check } from "lucide-react";
 import { useMemo } from "react";
 import type { ControllerRenderProps } from "react-hook-form";
 import type { Credential } from "@/models/credential";
 import type { RelyingPartyFormData } from "@/components/forms/relying-party/validation-schema";
+import { filterAndRankCredentials } from "@/utils/credentialSearch";
 
 type CredentialSearchFilterProps = {
   search: string;
@@ -21,22 +21,12 @@ export default function CredentialSearchFilter({
   field,
 }: CredentialSearchFilterProps) {
   const filteredCredentials = useMemo(() => {
-    return credentials.filter((cred) => {
-      const matchesEnv = envFilter[cred.environment as Environment];
-
-      const inCredentialName =
-        cred.name_en.toLowerCase().includes(search.toLowerCase()) ||
-        cred.name_nl.toLowerCase().includes(search.toLowerCase());
-
-      const inAttributeName = cred.attributes?.some((attr) =>
-        [attr.name_en, attr.name_nl]
-          .filter(Boolean)
-          .some((name) => name?.toLowerCase().includes(search.toLowerCase()))
-      );
-
-      return matchesEnv && (inCredentialName || inAttributeName);
+    return filterAndRankCredentials({
+      query: search,
+      credentials,
+      filterByEnv: envFilter,
     });
-  }, [credentials, envFilter, search]);
+  }, [search, credentials, envFilter]);
 
   return (
     <div className="max-h-56 overflow-y-auto border-t pt-2">
