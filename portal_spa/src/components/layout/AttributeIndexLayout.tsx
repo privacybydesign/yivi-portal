@@ -15,7 +15,7 @@ import { Separator } from "../ui/separator";
 import { Button } from "../ui/button";
 import { HamburgerIcon } from "lucide-react";
 import { Skeleton } from "../ui/skeleton";
-
+import { Badge } from "@/components/ui/badge";
 export default function AttributeIndexLayout() {
   const [credentials, setCredentials] = useState<Credential[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -39,17 +39,51 @@ export default function AttributeIndexLayout() {
     if (!grouped[env][key]) grouped[env][key] = [];
     grouped[env][key].push(c);
   });
+  const environmentWeights: Record<string, number> = {
+    production: 1,
+    staging: 0.8,
+    demo: 0.5,
+  };
+  const q = searchQuery.toLowerCase().trim();
 
-  const filtered = credentials.filter((cred) => {
-    const q = searchQuery.toLowerCase();
+  const filtered = credentials
+    .map((cred) => {
+      let score = 0;
 
-    return (
-      cred.attributes.some((attr) => attr.name_en?.toLowerCase().includes(q)) ||
-      cred.name_en?.toLowerCase().includes(q) ||
-      cred.org_name?.toLowerCase().includes(q) ||
-      cred.ap_slug?.toLowerCase().includes(q)
-    );
-  });
+      const credMatch = cred.name_en?.toLowerCase() === q;
+      const nameMatch = cred.name_en?.toLowerCase().includes(q);
+      const attributeMatch = cred.attributes.some((attr) =>
+        attr.name_en?.toLowerCase().includes(q)
+      );
+
+      if (credMatch) score += 2;
+      if (nameMatch) score += 1;
+      if (attributeMatch) score += 0.5;
+
+      score *= environmentWeights[cred.environment] ?? 1;
+
+      let bucket = 3;
+      if (cred.deprecated_since) {
+        bucket = 4;
+      } else if (credMatch) {
+        bucket = 0;
+      } else if (nameMatch) {
+        bucket = 1;
+      } else if (attributeMatch) {
+        bucket = 2;
+      }
+
+      return { cred, score, bucket };
+    })
+    .filter(
+      (item) =>
+        searchQuery === "" || item.score > 0 || item.cred.deprecated_since
+    )
+    .sort((a, b) => {
+      if (a.bucket !== b.bucket) return a.bucket - b.bucket;
+      return b.score - a.score;
+    })
+    .map((item) => item.cred);
 
   const isMainPage = useMatch("/attribute-index");
   const location = useLocation();
@@ -76,17 +110,26 @@ export default function AttributeIndexLayout() {
             if (!credential_id || !ap_slug || !environment) return null;
 
             return (
-              <li key={id} className="p-2 hover:bg-gray-100">
+              <li key={id}>
                 <Link
                   to={`/attribute-index/credentials/${environment}/${ap_slug}/${credential_id}`}
                   onClick={onSelect}
-                  className="block text-sm font-medium text-gray-900"
+                  className="flex items-center justify-between p-2 hover:bg-gray-100 rounded cursor-pointer no-underline"
                 >
-                  {name_en}
+                  <div>
+                    <div className="text-sm font-medium text-gray-900">
+                      {name_en}
+                    </div>
+                    <p className="text-xs text-gray-500">
+                      {credential_id} ({environment})
+                    </p>
+                  </div>
+                  {cred.deprecated_since && (
+                    <div className="ml-2 shrink-0">
+                      <Badge variant="destructive">Deprecated</Badge>
+                    </div>
+                  )}
                 </Link>
-                <p className="text-xs text-gray-500">
-                  {credential_id} ({environment})
-                </p>
               </li>
             );
           })}
@@ -205,7 +248,7 @@ export default function AttributeIndexLayout() {
             : ``)
         }
       >
-        <div className="relative flex mb-4 -mt-6 -mx-6">
+        <div className="relative flex flex-col gap-2 mb-4 -mt-6 -mx-6">
           <div className="md:hidden flex border-r border-b min-w-[var(--topbar-height)]">
             <Button
               variant="ghost"
