@@ -45,7 +45,7 @@ const useStore = create<StateStore>((set) => ({
     try {
       const response = await axiosInstance.post<{ access: string }>(
         "/v1/refreshtoken",
-        data,
+        data
       );
 
       if (response.status !== 200) {
@@ -105,6 +105,25 @@ export function useAuthInit() {
       initializeAuth();
     }
   }, [initializeAuth, initialized]);
+}
+
+export function useIdleRefresh() {
+  const accessToken = useStore((state) => state.accessToken);
+  const refreshToken = useStore((state) => state.refreshToken);
+
+  let pageUnloaded = false;
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) {
+      pageUnloaded = true;
+    } else if (pageUnloaded && accessToken) {
+      const decoded = jwtDecode<AuthToken>(accessToken);
+      const currentTime = Math.floor(Date.now() / 1000);
+      if (decoded.exp < currentTime + 60) {
+        refreshToken();
+      }
+      pageUnloaded = false;
+    }
+  });
 }
 
 export default useStore;

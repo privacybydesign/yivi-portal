@@ -1,8 +1,9 @@
 import AppRoutes from "./routes";
 import { Toaster } from "sonner";
-import { useAuthInit } from "@/store";
+import { useIdleRefresh, useAuthInit } from "@/store";
 
 function App() {
+  useIdleRefresh();
   useAuthInit();
   return (
     <div>
