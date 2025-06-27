@@ -50,7 +50,7 @@ export const addMaintainerForOrganization = async (
         Object.entries(e.response.data).forEach(([key, value]) => {
           serverErrors[key as keyof MaintainerRegistrationInputs] = {
             type: "server",
-            message: String(value),
+            message: value as string,
           };
         });
 
@@ -64,7 +64,7 @@ export const addMaintainerForOrganization = async (
           values: formState.values,
           errors: {},
           globalError: Object.entries(e.response.data || {})
-            .map(([, value]) => `${String(value)}`)
+            .map(([, value]) => value as string)
             .join("; "),
         };
       }
