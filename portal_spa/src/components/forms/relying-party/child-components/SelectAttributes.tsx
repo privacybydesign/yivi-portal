@@ -36,14 +36,17 @@ export default function CredentialAttributeFields({
 }: CredentialAttributeFieldProps) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
-  const [envFilter, setEnvFilter] = useState({
-    [Environment.production]: true,
-    [Environment.staging]: false,
-    [Environment.demo]: false,
-  });
+  const [envFilter, setEnvFilter] = useState<Array<string>>([
+    Environment.production,
+  ]);
 
   const toggleEnv = (env: Environment) => {
-    setEnvFilter((prev) => ({ ...prev, [env]: !prev[env] }));
+    setEnvFilter((prev) => {
+      if (prev.includes(env)) {
+        return prev.filter((e) => e !== env);
+      }
+      return [...prev, env];
+    });
   };
 
   return (
@@ -104,7 +107,7 @@ export default function CredentialAttributeFields({
                         />
 
                         <CredentialSearchFilter
-                          search={search}
+                          searchQuery={search}
                           credentials={credentials}
                           envFilter={envFilter}
                           setOpen={setOpen}

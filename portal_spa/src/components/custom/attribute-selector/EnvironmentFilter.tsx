@@ -2,7 +2,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Environment } from "@/models/yivi-environment";
 
 type CredentialSearchFilterProps = {
-  envFilter: Record<string, boolean>;
+  envFilter: Array<string>;
   toggleEnv: (env: Environment) => void;
 };
 export default function CredentialSearchResult({
@@ -18,7 +18,7 @@ export default function CredentialSearchResult({
             className="flex items-center gap-2 cursor-pointer truncate"
           >
             <Checkbox
-              checked={envFilter[env] ?? false}
+              checked={envFilter.includes(env)}
               onCheckedChange={() => toggleEnv(env)}
             />
             <span className="capitalize text-muted-foreground break-normal">
