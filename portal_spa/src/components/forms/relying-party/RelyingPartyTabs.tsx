@@ -11,16 +11,16 @@ export default function RelyingPartyTabs() {
     isEditMode &&
     Array.isArray(defaultValues.hostnames) &&
     defaultValues.hostnames.some(
-      (h: { hostname?: string }) => h.hostname?.trim() !== ""
+      (h: { hostname?: string }) => h.hostname?.trim() !== "",
     );
 
   const [activeTab, setActiveTab] = useState<"form-tab" | "dns-tab">(
-    "form-tab"
+    "form-tab",
   );
 
   return (
     <>
-      <div className="flex gap-4 mb-6">
+      <div className="flex gap-4 mb-6 overflow-x-auto">
         <Button
           variant={activeTab === "form-tab" ? "default" : "outline"}
           onClick={() => setActiveTab("form-tab")}
