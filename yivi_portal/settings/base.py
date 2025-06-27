@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     "django_bootstrap5",
     "django_cron",
     "imagekit",
+    "silk",
     "portal_backend.apps.PortalBackendConfig",
     "yivi_portal",
 ]
@@ -52,6 +53,7 @@ MIDDLEWARE = [
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
+    "silk.middleware.SilkyMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
