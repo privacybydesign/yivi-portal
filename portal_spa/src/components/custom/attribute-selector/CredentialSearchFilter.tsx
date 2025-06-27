@@ -9,7 +9,7 @@ import { filterAndRankCredentials } from "@/utils/credentialSearch";
 type CredentialSearchFilterProps = {
   searchQuery: string;
   credentials: Credential[];
-  envFilter: Record<string, boolean>;
+  envFilter: Array<string>;
   setOpen: React.Dispatch<React.SetStateAction<boolean>>;
   field: ControllerRenderProps<RelyingPartyFormData>;
 };

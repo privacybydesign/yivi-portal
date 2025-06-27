@@ -5,26 +5,26 @@ export type SearchOptions = {
   searchQuery: string;
   credentials: Credential[];
   environmentWeights?: Record<string, number>;
-  selectedEnv?: Record<string, boolean>;
+  selectedEnv?: Array<string>;
 };
 
 const filterByEnvironment = (
   // Check whether to include a credential based on the selected environment
   cred: Credential,
-  selectedEnv?: Record<string, boolean>
+  selectedEnv?: Array<string>
 ): boolean => {
   if (!selectedEnv) return true;
-  return selectedEnv[cred.environment] ?? false;
+  return selectedEnv.includes(cred.environment);
 };
 
 export function filterAndRankCredentials({
   searchQuery,
   credentials,
-  selectedEnv, // e.g. {"production": true, "staging": true, "demo": true}
+  selectedEnv, // e.g. ["production", "staging"]
 }: SearchOptions): Credential[] {
   const environmentWeights = { production: 1, staging: 0.8, demo: 0.5 };
   const query = searchQuery.toLowerCase().trim();
-
+  console.log("selected envs", { selectedEnv });
   const filtered = credentials
     .filter((cred) => filterByEnvironment(cred, selectedEnv))
     .filter((cred) => !cred.deprecated_since);
