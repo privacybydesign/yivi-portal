@@ -68,7 +68,7 @@ jobs:
 
       - name: Run tests
         run: |
-          docker run --env .env.testing --rm ${{ env.TEST_TAG }} python manage.py test
+          docker run --env-file .env.testing --rm ${{ env.TEST_TAG }} python manage.py test
 
       - name: Build container and push to GitHub Container Registry
         uses: docker/build-push-action@v6
