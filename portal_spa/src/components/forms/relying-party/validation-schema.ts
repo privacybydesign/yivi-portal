@@ -21,7 +21,7 @@ export const RelyingPartySchema = z.object({
       hostname: z
         .string()
         .regex(
-          /^(?!:\/\/)([a-zA-Z0-9-_]+\.)+[a-zA-Z]{2,}$/,
+          /([a-z0-9A-Z]\.)*[a-z0-9-]+\.([a-z0-9]{2,24})+(\.co\.([a-z0-9]{2,24})|\.([a-z0-9]{2,24}))*/g,
           "Hostname must be a valid domain (e.g. example.com, sub.domain.dev)"
         ),
       id: z.number().optional(),
