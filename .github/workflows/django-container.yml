@@ -3,8 +3,14 @@ name: Build Django container
 on:
   pull_request:
     types: [synchronize, opened, reopened]
+    paths-ignore:
+      - portal_spa/**
+      - .github/workflows/react-*.yml
   push:
     branches: [main]
+    paths-ignore:
+      - portal_spa/**
+      - .github/workflows/react-*.yml
   release:
     # Note: a current limitation is that when a release is edited after publication, then the Docker tags are not automatically updated.
     types: [published]
@@ -16,6 +22,9 @@ on:
 permissions:
   contents: write
   packages: write
+
+env:
+  TEST_TAG: privacybydesign/portal-api:test
 
 jobs:
   publish-docker-image:
@@ -50,10 +59,19 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build container and push to GitHub Container Registry
-        uses: docker/build-push-action@v5
+      - name: Build and export to Docker
+        uses: docker/build-push-action@v6
         with:
-          context: .
+          file: Dockerfile.django
+          load: true
+
+      - name: Run tests
+        run: |
+          docker run --env .env.testing --rm ${{ env.TEST_TAG }} python manage.py test
+
+      - name: Build container and push to GitHub Container Registry
+        uses: docker/build-push-action@v6
+        with:
           file: Dockerfile.django
           push: ${{ ! contains(fromJSON('["schedule", "pull_request"]'), github.event_name) }}
           tags: ${{ steps.meta.outputs.tags }}
