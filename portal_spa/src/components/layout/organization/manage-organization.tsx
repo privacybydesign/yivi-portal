@@ -3,7 +3,6 @@ import { useParams } from "react-router-dom";
 import { useOrganizationNames } from "@/contexts/organization/OrganizationContext";
 import { SidebarNavigation } from "@/components/ui/sidebar-navigation";
 import { Separator } from "@/components/ui/separator";
-import { ScrollArea } from "@/components/ui/scroll-area";
 
 const menuItems = [
   { href: "/organizations/:organization/manage", title: "Basic information" },
