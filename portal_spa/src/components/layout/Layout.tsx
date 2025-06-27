@@ -56,6 +56,12 @@ export default function Layout() {
             </p>
             <div className="flex gap-4 justify-center">
               <Link
+                to="/faq"
+                className={cn(buttonVariants({ variant: "link" }))}
+              >
+                FAQ
+              </Link>
+              <Link
                 to="/terms-of-service"
                 className={cn(buttonVariants({ variant: "link" }))}
               >

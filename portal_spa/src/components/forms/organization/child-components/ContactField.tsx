@@ -30,7 +30,7 @@ export default function ContactField({
             <Label>Contact Number</Label>
             <FormDescription>
               Phone number of a contact person of this organization. Used only
-              for verification purposes.
+              for verification purposes and will not be public.
             </FormDescription>
           </div>
           <div>

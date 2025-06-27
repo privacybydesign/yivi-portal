@@ -114,17 +114,13 @@ export default function RelyingPartyForm() {
             }
           })}
         >
-          {/* Relying party slug  */}
           <RelyingPartySlug control={control} formErrors={errors} />
 
-          {/* Hostnames */}
           <Hostnames control={control} />
 
-          {/* Context Description */}
-          <ContextDescription control={control} />
-
-          {/* Credential Selection and Attributes */}
           <CredentialAttributes form={form} credentials={credentials} />
+
+          <ContextDescription control={control} />
 
           <ReadyCheckbox control={control} />
 
