@@ -3,8 +3,14 @@ name: Build React container
 on:
   pull_request:
     types: [synchronize, opened, reopened]
+    paths:
+      - portal_spa/**
+      - .github/workflows/react-*.yml
   push:
     branches: [main]
+    paths:
+      - portal_spa/**
+      - .github/workflows/react-*.yml
   release:
     # Note: a current limitation is that when a release is edited after publication, then the Docker tags are not automatically updated.
     types: [published]
