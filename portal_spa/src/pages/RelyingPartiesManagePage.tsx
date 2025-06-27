@@ -83,8 +83,8 @@ export default function RelyingPartyManager() {
               <Button variant="default">Add relying party</Button>
             </DialogTrigger>
 
-            <DialogContent className="sm:max-w-2xl max-h-[90vh] flex flex-col">
-              <DialogHeader className="flex-shrink-0 text-left">
+            <DialogContent>
+              <DialogHeader>
                 <DialogTitle>Add a new relying party</DialogTitle>
                 <DialogDescription>
                   Fill in the details for the relying party you want to add.
