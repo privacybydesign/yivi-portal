@@ -172,16 +172,26 @@ class OrganizationMaintainersView(APIView):
                 {"email": "Email is required"}, status=status.HTTP_400_BAD_REQUEST
             )
 
+        if not organization.is_verified:
+            return Response(
+                {
+                    "error": "Cannot add maintainers to an unverified organization. Wait for verification."
+                },
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
         try:
             user = User.objects.prefetch_related("organizations").get(email=email)
             if user:
                 if organization in user.organizations.all():
+
                     return Response(
                         {
                             "email": f"User with email {email} is already a maintainer of this organization"
                         },
                         status=status.HTTP_400_BAD_REQUEST,
                     )
+
         except User.DoesNotExist:
             user = User(email=email, role="maintainer")
             user.full_clean()

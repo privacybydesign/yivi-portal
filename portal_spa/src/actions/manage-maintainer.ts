@@ -42,23 +42,33 @@ export const addMaintainerForOrganization = async (
       success: true,
     };
   } catch (e: unknown) {
-    if (e instanceof AxiosError && e.response?.status === 400) {
-      const serverErrors: Partial<FieldErrors<MaintainerRegistrationInputs>> =
-        {};
+    if (e instanceof AxiosError) {
+      if (e.response?.status === 400) {
+        const serverErrors: Partial<FieldErrors<MaintainerRegistrationInputs>> =
+          {};
 
-      Object.entries(e.response.data).forEach(([key, value]) => {
-        serverErrors[key as keyof MaintainerRegistrationInputs] = {
-          type: "server",
-          message: String(value),
+        Object.entries(e.response.data).forEach(([key, value]) => {
+          serverErrors[key as keyof MaintainerRegistrationInputs] = {
+            type: "server",
+            message: String(value),
+          };
+        });
+
+        return {
+          values: formState.values,
+          errors: serverErrors,
         };
-      });
-
-      return {
-        values: formState.values,
-        errors: serverErrors,
-      };
+      }
+      if (e.response?.status === 403) {
+        return {
+          values: formState.values,
+          errors: {},
+          globalError: Object.entries(e.response.data || {})
+            .map(([, value]) => `${String(value)}`)
+            .join("; "),
+        };
+      }
     }
-
     return {
       values: formState.values,
       errors: {},
