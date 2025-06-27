@@ -38,7 +38,7 @@ export default function LogoUpload({
             <FormDescription>Upload your logo (PNG or JPEG).</FormDescription>
           </div>
           <div className="flex flex-col items-start w-full">
-            <div className="flex items-center justify-between w-full">
+            <div className="flex flex-wrap items-center justify-between w-full gap-2">
               <LogoPreview
                 control={form.control}
                 setValue={form.setValue}

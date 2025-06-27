@@ -22,7 +22,7 @@ export default function OrganizationNameFields({
   formState: RegistrationFormState;
 }) {
   return (
-    <div>
+    <>
       <FormField
         control={form.control}
         name="name_en"
@@ -42,7 +42,7 @@ export default function OrganizationNameFields({
                     if (!form.getValues("slug")) {
                       form.setValue(
                         "slug",
-                        generateSlug(event.target.value.trim())
+                        generateSlug(event.target.value.trim()),
                       );
                     }
                   }}
@@ -81,6 +81,6 @@ export default function OrganizationNameFields({
           </FormItem>
         )}
       />
-    </div>
+    </>
   );
 }
