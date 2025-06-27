@@ -89,7 +89,7 @@ export default function AddOrganizationMaintainerInformationForm({
         Add maintainer
       </DialogTrigger>
       <DialogContent>
-        <DialogHeader>
+        <DialogHeader className="text-left">
           <DialogTitle>Add maintainer</DialogTitle>
           <DialogDescription>
             The user will receive the following permissions:{" "}
