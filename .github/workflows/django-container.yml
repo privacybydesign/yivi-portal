@@ -64,6 +64,7 @@ jobs:
         with:
           file: Dockerfile.django
           load: true
+          tags: ${{ env.TEST_TAG }}
 
       - name: Run tests
         run: |
