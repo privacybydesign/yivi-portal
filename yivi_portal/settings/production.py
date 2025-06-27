@@ -1,11 +1,14 @@
-from base import *  # noqa: F405, F403
+from .base import *  # noqa: F405, F403
 import os
 
 SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY")
 
 DEBUG = False
 
+# Cross-Origin Resource Sharing (CORS)
 ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", "").split(",")
+CORS_ALLOWED_ORIGINS = os.environ.get("CORS_ALLOWED_ORIGINS", "").split(",")
+CORS_ALLOW_CREDENTIALS = True
 
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
@@ -24,12 +27,14 @@ DATABASES = {
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
-STATICFILES_STORAGE = "django.contrib.staticfiles.storage.ManifestStaticFilesStorage"
+STATICFILES_STORAGE = (
+    "django.contrib.staticfiles.storage.ManifestStaticFilesStorage"  # Storage provider
+)
 
-STATIC_URL = os.environ.get("DJANGO_STATIC_URL")
-MEDIA_URL = os.environ.get("DJANGO_MEDIA_URL")
-
-STATIC_ROOT = os.environ.get("DJANGO_STATIC_ROOT")
-MEDIA_ROOT = os.environ.get("DJANGO_MEDIA_ROOT")
+# Static and Media Paths specific to production docker image
+STATIC_URL = os.environ.get("STATIC_URL")
+MEDIA_URL = os.environ.get("MEDIA_URL")
+STATIC_ROOT = os.environ.get("STATIC_ROOT")
+MEDIA_ROOT = os.environ.get("MEDIA_ROOT")
 
 EMAIL_DISCLOSURE = [[["pbdf.sidn-pbdf.email.email"]]]

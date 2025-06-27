@@ -1,24 +1,36 @@
 from django.urls import path
 from portal_backend.views.trust_model import (
-    TrustModelListAPIView,
-    TrustModelDetailAPIView,
-    TrustModelEnvironments,
-    TrustModelEnvironment,
+    TrustModelListView,
+    TrustModelDetailView,
+    YiviTrustModelEnvListView,
 )
 from portal_backend.views.organization import (
-    OrganizationListAPIView,
-    OrganizationDetailAPIView,
-    OrganizationMaintainersAPIView,
+    OrganizationListView,
+    OrganizationCreateView,
+    OrganizationNameAndSlugView,
+    OrganizationUpdateView,
+    OrganizationDetailView,
+    OrganizationMaintainersView,
+    OrganizationMaintainerView,
 )
 from portal_backend.views.attestation_provider import (
-    AttestationProviderListAPIView,
+    AttestationProviderCredentialsListView,
+    AttestationProviderListView,
+    AttestationProviderRetrieveView,
+)
+from portal_backend.views.credentials import (
+    CredentialListView,
+    CredentialsListViewWithDeprecated,
 )
 from portal_backend.views.relying_party import (
-    RelyingPartyRegisterAPIView,
-    RelyingPartyListAPIView,
-    RelyingPartyHostnameStatusAPIView,
-    RelyingPartyRegistrationStatusAPIView,
+    RelyingPartyHostnameStatusView,
+    RelyingPartyListView,
+    RelyingPartyCreateView,
+    RelyingPartyUpdateView,
+    RelyingPartyRetrieveView,
+    RelyingPartyDeleteView,
 )
+
 from rest_framework import permissions
 from drf_yasg.views import get_schema_view  # type: ignore
 from drf_yasg import openapi  # type: ignore
@@ -44,62 +56,104 @@ urlpatterns = [
     path("redoc/", schema_view.with_ui("redoc", cache_timeout=0), name="schema-redoc"),
     # Organizations
     path(
-        "v1/organizations/", OrganizationListAPIView.as_view(), name="organization-list"
+        "v1/organizations/",
+        OrganizationListView.as_view(),
+        name="organization-list",
     ),
     path(
-        "v1/organizations/<uuid:pk>/",
-        OrganizationDetailAPIView.as_view(),
+        "v1/organizations/create/",
+        OrganizationCreateView.as_view(),  # TODO: update frontend to use this endpoint
+        name="organization-create",
+    ),
+    path(
+        "v1/organizations/<str:org_slug>/update/",  # TODO: update frontend to use this endpoint
+        OrganizationUpdateView.as_view(),
+        name="organization-update",
+    ),
+    path(
+        "v1/organizations/<str:org_slug>/",
+        OrganizationDetailView.as_view(),
         name="organization-detail",
     ),
     path(
-        "v1/organizations/<uuid:pk>/maintainers/",
-        OrganizationMaintainersAPIView.as_view(),
+        "v1/organizations/<str:org_slug>/maintainers/",
+        OrganizationMaintainersView.as_view(),
         name="organization-maintainers",
     ),
-    # Organization Registration as AP or RP
     path(
-        "v1/organizations/<uuid:pk>/register-rp/",
-        RelyingPartyRegisterAPIView.as_view(),
-        name="organization-register-rp",
+        "v1/organizations/<str:org_slug>/maintainers/<str:maintainer_id>/",
+        OrganizationMaintainerView.as_view(),
+        name="organization-maintainers",
+    ),
+    # Relying Party
+    path(
+        "v1/yivi/organizations/<str:org_slug>/relying-party/",
+        RelyingPartyListView.as_view(),
+        name="rp-list",
+    ),
+    path(
+        "v1/yivi/organizations/<str:org_slug>/relying-party/create/",
+        RelyingPartyCreateView.as_view(),
+        name="rp-create",
+    ),
+    path(
+        "v1/yivi/organizations/<str:org_slug>/relying-party/<str:rp_slug>/",
+        RelyingPartyUpdateView.as_view(),
+        name="rp-update",
+    ),
+    path(
+        "v1/yivi/organizations/<str:org_slug>/relying-party/<str:environment>/<str:rp_slug>/",
+        RelyingPartyRetrieveView.as_view(),
+        name="rp-detail",
+    ),
+    path(
+        "v1/yivi/organizations/<str:org_slug>/relying-party/<str:environment>/<str:rp_slug>/delete/",
+        RelyingPartyDeleteView.as_view(),
+        name="rp-delete",
+    ),
+    path(
+        "v1/yivi/organizations/<str:org_slug>/relying-party/<str:environment>/<str:rp_slug>/dns-verification/",
+        RelyingPartyHostnameStatusView.as_view(),
+        name="rp-hostname-status",
     ),
     # Trust Models
-    path("v1/trust-models/", TrustModelListAPIView.as_view(), name="trust-model-list"),
+    path("v1/trust-models/", TrustModelListView.as_view(), name="trust-model-list"),
     path(
         "v1/trust-models/<str:name>/",
-        TrustModelDetailAPIView.as_view(),
+        TrustModelDetailView.as_view(),
         name="trust-model-detail",
     ),
     # Trust Model Environments
     path(
-        "v1/<str:name>/environments/",
-        TrustModelEnvironments.as_view(),
+        "v1/<str:trust_model_name>/environments/",
+        YiviTrustModelEnvListView.as_view(),
         name="trust-model-environment-list",
     ),
+    # Credentials
+    path("v1/yivi/credentials/", CredentialListView.as_view(), name="credential-list"),
     path(
-        "v1/<str:trustmodel_name>/<str:environment>/",
-        TrustModelEnvironment.as_view(),
-        name="trust-model-environment-detail",
+        "v1/yivi/all-credentials/",
+        CredentialsListViewWithDeprecated.as_view(),
+        name="credentials-list-with-deprecated",
     ),
-    # Public Listings inside a Trust Model Environment
+    # Attestation Providers
     path(
-        "v1/<str:trustmodel_name>/<str:environment>/attestation-providers/",
-        AttestationProviderListAPIView.as_view(),
+        "v1/yivi/organizations/<str:org_slug>/attestation-provider/",
+        AttestationProviderListView.as_view(),
         name="trust-model-ap-list",
     ),
     path(
-        "v1/<str:trustmodel_name>/<str:environment>/relying-parties/",
-        RelyingPartyListAPIView.as_view(),
-        name="trust-model-rp-list",
-    ),
-    # Relying Party Statuses
-    path(
-        "v1/relying-party/<str:slug>/hostname-status/",
-        RelyingPartyHostnameStatusAPIView.as_view(),
-        name="rp-hostname-status",
+        "v1/yivi/organizations/<str:org_slug>/attestation-provider/<str:environment>/<str:ap_slug>/",
+        AttestationProviderRetrieveView.as_view(),
     ),
     path(
-        "v1/relying-parties/<str:slug>/registration-status/",
-        RelyingPartyRegistrationStatusAPIView.as_view(),
-        name="rp-registration-status",
+        "v1/yivi/organizations/<str:org_slug>/attestation-provider/<str:environment>/<str:ap_slug>/credentials/",
+        AttestationProviderCredentialsListView.as_view(),
+        name="ap-credentials-list",
+    ),
+    path(
+        "v1/profile",
+        OrganizationNameAndSlugView.as_view(),
+        name="organization-name-and-slug",
     ),
 ]

@@ -17,9 +17,7 @@ REST_FRAMEWORK = {
 }
 
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(
-        hours=24
-    ),  # TODO: make this shorter after testing
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=15),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
     "ROTATE_REFRESH_TOKENS": True,
     "BLACKLIST_AFTER_ROTATION": True,
@@ -39,6 +37,7 @@ INSTALLED_APPS = [
     "corsheaders",
     "rest_framework",
     "rest_framework_simplejwt",
+    "rest_framework_simplejwt.token_blacklist",
     "drf_yasg",
     "django_bootstrap5",
     "django_cron",
@@ -63,7 +62,7 @@ ROOT_URLCONF = "yivi_portal.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [BASE_DIR / "static"],
+        "DIRS": [BASE_DIR / "portal_backend" / "templates"],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -126,6 +125,7 @@ DJANGO_CRON_DELETE_LOGS_OLDER_THAN = 7
 YIVI_SERVER_URL = os.environ.get("YIVI_SERVER_URL")
 YIVI_SERVER_TOKEN = os.environ.get("YIVI_SERVER_TOKEN")
 
+
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
@@ -150,13 +150,12 @@ LOGGING = {
     },
 }
 
-# SPECIFIC SETTINGS FOR THE SCHEME MANAGER
-USE_SESSION_REQUEST_REGISTRATION = False
-
-STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, "static") 
-]
-
-STATIC_URL = "/static/"  # Keep this default
-MEDIA_URL = "/media/"
-MEDIA_ROOT = os.path.join(BASE_DIR, "assets")
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = os.environ.get("EMAIL_HOST")
+EMAIL_PORT = int(os.environ.get("EMAIL_PORT", 2587))
+EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER")
+EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD")
+EMAIL_FROM = os.environ.get("EMAIL_FROM")
+EMAIL_USE_TLS = True
+EMAIL_USE_SSL = False
+YIVI_PORTAL_URL = os.environ.get("YIVI_PORTAL_URL")

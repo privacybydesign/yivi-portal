@@ -2,8 +2,8 @@ from rest_framework import serializers
 from .models import (
     Organization,
     TrustModel,
+    User,
     YiviTrustModelEnv,
-    Status,
     RelyingPartyHostname,
     Condiscon,
     AttestationProvider,
@@ -12,45 +12,7 @@ from .models import (
     CondisconAttribute,
     RelyingParty,
 )
-
-
-class OrganizationSerializer(serializers.ModelSerializer):
-
-    trust_model = serializers.SerializerMethodField()
-
-    class Meta:
-        model = Organization
-        fields = [
-            "id",
-            "name_en",
-            "name_nl",
-            "slug",
-            "registration_number",
-            "contact_address",
-            "is_verified",
-            "verified_at",
-            "trade_names",
-            "logo",
-            "created_at",
-            "last_updated_at",
-            "is_RP",
-            "is_AP",
-            "trust_model",
-        ]
-        read_only_fields = ["is_verified"]
-
-    def get_trust_model(self, obj):
-        # check for trust model in AP
-        ap = AttestationProvider.objects.filter(organization=obj).first()
-        if ap and ap.yivi_tme and ap.yivi_tme.trust_model:
-            return ap.yivi_tme.trust_model.name
-
-        # check for trust model in RP
-        rp = RelyingParty.objects.filter(organization=obj).first()
-        if rp and rp.yivi_tme and rp.yivi_tme.trust_model:
-            return rp.yivi_tme.trust_model.name
-
-        return None
+from django_countries.serializers import CountryFieldMixin  # type: ignore
 
 
 class TrustModelSerializer(serializers.ModelSerializer):
@@ -65,10 +27,41 @@ class YiviTrustModelEnvSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
-class StatusSerializer(serializers.ModelSerializer):
+class OrganizationSerializer(CountryFieldMixin, serializers.ModelSerializer):
+    trust_models = TrustModelSerializer(many=True, read_only=True)
+    is_RP = serializers.BooleanField(source="is_rp", read_only=True)
+    is_AP = serializers.BooleanField(source="is_ap", read_only=True)
+    logo = serializers.ImageField(required=True)
+
+    # Force required fields when the serializer is used in api calls
+    street = serializers.CharField(required=True, allow_blank=False)
+    house_number = serializers.CharField(required=True, allow_blank=False)
+    postal_code = serializers.CharField(required=True, allow_blank=False)
+    city = serializers.CharField(required=True, allow_blank=False)
+    country = serializers.CharField(required=True)
+
     class Meta:
-        model = Status
-        fields = "__all__"
+        model = Organization
+        fields = [
+            "id",
+            "name_en",
+            "name_nl",
+            "slug",
+            "is_verified",
+            "logo",
+            "created_at",
+            "last_updated_at",
+            "is_RP",
+            "is_AP",
+            "trust_models",
+            "contact_number",
+            "country",
+            "house_number",
+            "street",
+            "postal_code",
+            "city",
+        ]
+        read_only_fields = ["is_verified"]
 
 
 class RelyingPartyHostnameSerializer(serializers.ModelSerializer):
@@ -87,37 +80,97 @@ class AttestationProviderSerializer(serializers.ModelSerializer):
     yivi_tme = serializers.CharField(source="yivi_tme.environment", read_only=True)
     organization = serializers.CharField(source="organization.name_en", read_only=True)
     status = serializers.BooleanField(source="status.reviewed_accepted", read_only=True)
+    organization_logo = serializers.ImageField(
+        source="organization.logo", read_only=True
+    )
 
     class Meta:
         model = AttestationProvider
-        fields = "__all__"
-
-
-class CredentialSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Credential
-        fields = "__all__"
+        fields = [
+            "id",
+            "ap_slug",
+            "organization",
+            "yivi_tme",
+            "contact_email",
+            "contact_address",
+            "credentials",
+            "full_path",
+            "status",
+            "organization_logo",
+            "deprecated_since",
+        ]
 
 
 class CredentialAttributeSerializer(serializers.ModelSerializer):
     class Meta:
         model = CredentialAttribute
-        fields = "__all__"
+        fields = [
+            "id",
+            "credential_attribute_tag",
+            "name_en",
+            "name_nl",
+            "description_en",
+            "description_nl",
+            "full_path",
+        ]
+
+
+class CredentialListSerializer(serializers.ModelSerializer):
+    attributes = CredentialAttributeSerializer(many=True, read_only=True)
+    org_slug = serializers.CharField(
+        source="attestation_provider.organization.slug", read_only=True
+    )
+    org_name = serializers.CharField(
+        source="attestation_provider.organization.name_en", read_only=True
+    )
+    environment = serializers.CharField(
+        source="attestation_provider.yivi_tme.environment", read_only=True
+    )
+    ap_slug = serializers.CharField(
+        source="attestation_provider.ap_slug", read_only=True
+    )
+
+    class Meta:
+        model = Credential
+        fields = [
+            "id",
+            "name_en",
+            "name_nl",
+            "org_slug",
+            "org_name",
+            "ap_slug",
+            "environment",
+            "credential_id",
+            "attributes",
+            "description_en",
+            "description_nl",
+            "full_path",
+            "issue_url",
+            "deprecated_since",
+        ]
 
 
 class CondisconAttributeSerializer(serializers.ModelSerializer):
+    credential_attribute = serializers.CharField(
+        source="credential_attribute.name_en", read_only=True
+    )
+
     class Meta:
         model = CondisconAttribute
-        fields = "__all__"
+        fields = ["reason_en", "credential_attribute"]
 
 
 class RelyingPartySerializer(serializers.ModelSerializer):
     yivi_tme = serializers.CharField(source="yivi_tme.environment", read_only=True)
     organization = serializers.CharField(source="organization.name_en", read_only=True)
-    status = serializers.BooleanField(source="status.reviewed_accepted", read_only=True)
-    hostname = serializers.CharField(source="hostname.hostname", read_only=True)
-    condiscon = serializers.JSONField(source="condiscon.condiscon", read_only=True)
+    status = serializers.CharField(source="status.rp_status", read_only=True)
 
     class Meta:
         model = RelyingParty
+        fields = "__all__"
+
+
+class MaintainerSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
         fields = "__all__"

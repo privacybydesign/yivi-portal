@@ -1,25 +1,26 @@
 from .base import *  # noqa: F405, F403
 import os
 
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-!ar%l1@3bkc52!3l(a^$x9j46p#7wlxm^2$l$rtp8d1m-=dvf)"
+SECRET_KEY = os.environ.get(
+    "DJANGO_SECRET_KEY",
+    "django-insecure-4@v3!$#)7&*0g1@5^2b6j8z3q9r+qk5x!_v#(d@f1h0w4g3m2",
+)
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", "").split(",")
+# Cross-Origin Resource Sharing (CORS)
+ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS").split(",")
+CORS_ALLOWED_ORIGINS = os.environ.get("CORS_ALLOWED_ORIGINS").split(",")
+CORS_ALLOW_CREDENTIALS = True
 
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
-
-ALLOWED_HOSTS = ["*", "localhost", "127.0.0.1"]
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",
-    "http://localhost:9000",
-]
 
 DATABASES = {
     "default": {
@@ -28,6 +29,8 @@ DATABASES = {
     }
 }
 
+# Swagger Settings
+# https://django-rest-swagger.readthedocs.io/en/latest/settings/
 SWAGGER_SETTINGS = {
     "LOGIN_URL": None,  # Disable Django login button
     "USE_SESSION_AUTH": False,  # Disable session authentication
@@ -46,10 +49,12 @@ SWAGGER_SETTINGS = {
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
-# STATIC_URL = "static/"
-# MEDIA_URL = "assets/"
+STATICFILES_DIRS = [BASE_DIR.parent / "portal_backend" / "static"]  # noqa: F405
 
-# STATIC_ROOT = BASE_DIR / "static"  # noqa: F405
-# MEDIA_ROOT = BASE_DIR / "assets"  # noqa: F405
+STATIC_ROOT = BASE_DIR / "static"  # noqa: F405
+MEDIA_ROOT = BASE_DIR / "assets"  # noqa: F405
+STATIC_URL = "/static/"  # noqa: F405
+MEDIA_URL = "/assets/"  # noqa: F405
+
 
 EMAIL_DISCLOSURE = [[["irma-demo.sidn-pbdf.email.email"]]]

@@ -1,8 +1,9 @@
 from django_cron import CronJobBase, Schedule  # type: ignore
 from portal_backend.dns_verification import verify_new_dns, verify_existing_dns
 from portal_backend.models.models import RelyingPartyHostname
-from portal_backend.import_schemes.trusted_aps_import import import_aps
-from portal_backend.import_schemes.trusted_rps_import import import_rps
+from portal_backend.scheme_utils.check_published import check_published_cron
+from portal_backend.scheme_utils.trusted_aps_import import import_aps
+from portal_backend.scheme_utils.trusted_rps_import import import_rps
 
 
 class NewDNSVerification(CronJobBase):
@@ -12,7 +13,7 @@ class NewDNSVerification(CronJobBase):
 
     def do(self):
         for hostname in RelyingPartyHostname.objects.filter(
-            dns_challenge_verified=False, manually_verified=False
+            dns_challenge_verified=False
         ):
             verify_new_dns(hostname)
 
@@ -45,3 +46,12 @@ class TrustedRPsImport(CronJobBase):
 
     def do(self):
         import_rps()
+
+
+class CheckPublishedRelyingParties(CronJobBase):
+    RUN_EVERY_MINS = 12 * 60
+    schedule = Schedule(run_every_mins=RUN_EVERY_MINS)
+    code = "portal_backend.check_published_relying_parties"
+
+    def do(self):
+        check_published_cron()

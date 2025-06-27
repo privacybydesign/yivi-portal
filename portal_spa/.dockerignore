@@ -1,0 +1,10 @@
+node_modules/
+npm
+debug.log
+Dockerfile.react
+Dockerfile.react.dev
+README.md
+.dockerignore
+.git/
+.gitignore
+.env

@@ -1,357 +1,343 @@
-from rest_framework.views import APIView
-from rest_framework.response import Response
+from django.db import transaction
+from django.shortcuts import get_object_or_404
+from django.utils import timezone
+from rest_framework import permissions
 from rest_framework import status
-from drf_yasg.utils import swagger_auto_schema  # type: ignore
-from drf_yasg import openapi  # type: ignore
+from rest_framework.request import Request
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from ..services.relying_party import (
+    create_relying_party,
+    create_hostnames,
+    create_condiscon,
+    create_condiscon_attributes,
+    make_condiscon_json,
+    update_relying_party_hostnames,
+    update_condiscon_context,
+    update_condiscon_attributes,
+    update_rp_environment,
+    update_rp_slug,
+)
+from ..swagger_specs.relying_party import (
+    relying_party_create_schema,
+    relying_party_patch_schema,
+    relying_party_delete_schema,
+    relying_party_dns_status_schema,
+    relying_party_list_schema,
+)
+from .permissions import IsOrganizationMaintainerOrAdmin
+from ..models.model_serializers import (
+    CondisconSerializer,
+    RelyingPartyHostnameSerializer,
+)
 from ..models.models import (
     RelyingParty,
     RelyingPartyHostname,
-    YiviTrustModelEnv,
     Organization,
     Condiscon,
     CondisconAttribute,
-    CredentialAttribute,
-    Status,
 )
-from django.shortcuts import get_object_or_404
-from ..models.model_serializers import RelyingPartySerializer
-from rest_framework import permissions
-from django.utils import timezone
-from django.db import transaction
-from ..dns_verification import generate_dns_challenge
-from .helpers import IsMaintainer, BelongsToOrganization
+from django.core.exceptions import ValidationError
 
 
-def check_existing_hostname(request):
-    request_hostname = request.data.get("hostname")
-
-    if RelyingPartyHostname.objects.filter(hostname=request_hostname).exists():
-        return Response(
-            {"error": "This hostname is already registered by another relying party"},
-            status=status.HTTP_400_BAD_REQUEST,
-        )
-
-    return None
-
-
-class RelyingPartyListAPIView(APIView):
-    permission_classes = [permissions.AllowAny]
-
-    @swagger_auto_schema(responses={200: "Success", 404: "Not Found"})
-    def get(self, request, trustmodel_name: str, environment: str):
-        """Gets a list of relying parties and its details"""
-        relying_parties = RelyingParty.objects.filter(
-            yivi_tme__trust_model__name__iexact=trustmodel_name,
-            yivi_tme__environment=environment,
-        )
-        serializer = RelyingPartySerializer(relying_parties, many=True)
-        return Response(data=serializer.data, status=status.HTTP_200_OK)
-
-
-class RelyingPartyRegisterAPIView(APIView):
+class RelyingPartyCreateView(APIView):
     permission_classes = [
         permissions.IsAuthenticated,
-        BelongsToOrganization,
-        IsMaintainer,
+        IsOrganizationMaintainerOrAdmin,
     ]
 
-    def make_condiscon_from_attributes(self, attributes_data):
-        """
-        Generate a condiscon JSON structure from attribute data
-        """
-        condiscon_json = {
-            "@context": "https://irma.app/ld/request/disclosure/v2",
-            "disclose": [[]],
-        }
+    @relying_party_create_schema
+    @transaction.atomic
+    def post(self, request: Request, org_slug: str) -> Response:
 
-        credential_attributes = {}
-
-        for attr in attributes_data:
-            credential_attribute = CredentialAttribute.objects.get(
-                credential__credential_tag=attr["credential_attribute_tag"],
-                name=attr["credential_attribute_name"],
+        try:
+            relying_party = create_relying_party(
+                request.data, org_slug, request.data.get("rp_slug")
             )
-            credential_id = credential_attribute.credential.id
-
-            if credential_id not in credential_attributes:
-                credential_attributes[credential_id] = []
-
-            credential_attributes[credential_id].append(credential_attribute.name)
-
-        for credential_id, attribute_list in credential_attributes.items():
-            condiscon_json["disclose"][0].append(attribute_list)
-
-        return condiscon_json
-
-    def save_rp(self, request, org_pk):
-        yivi_tme = get_object_or_404(
-            YiviTrustModelEnv, environment=request.data.get("trust_model_env")
-        )
-        organization = get_object_or_404(Organization, id=org_pk)
-        relying_party = RelyingParty(
-            yivi_tme=yivi_tme,
-            organization=organization,
-        )
-        relying_party.full_clean()
-        relying_party.save()
-        return relying_party
-
-    def save_hostname(self, request, rp):
-        hostname_text = request.data.get("hostname")
-        hostname, _ = RelyingPartyHostname.objects.get_or_create(
-            relying_party=rp,
-            hostname=hostname_text,
-            defaults={
-                "dns_challenge": generate_dns_challenge(),
-                "dns_challenge_created_at": timezone.now(),
-                "dns_challenge_verified": False,
-            },
-        )
-        hostname.full_clean()
-        hostname.save()
-        return hostname
-
-    def save_condiscon(self, request, attributes_data, rp):
-        condiscon_json = self.make_condiscon_from_attributes(attributes_data)
-        context_en = request.data.get("context_description_en")
-        context_nl = request.data.get("context_description_nl")
-        condiscon = Condiscon(
-            condiscon=condiscon_json,
-            context_description_en=context_en,
-            context_description_nl=context_nl,
-            relying_party=rp,
-        )
-        condiscon.full_clean()
-        condiscon.save()
-        return condiscon
-
-    def create_initial_status(self, rp):
-        status = Status(
-            relying_party=rp,
-        )
-        status.save()
-        return status
-
-    def save_condiscon_attributes(self, condiscon, attributes_data):
-        for attr_data in attributes_data:
-            credential_attribute = get_object_or_404(
-                CredentialAttribute,
-                credential__credential_tag=attr_data["credential_attribute_tag"],
-                name=attr_data["credential_attribute_name"],
+            hostnames = create_hostnames(
+                request.data.get("hostnames", []), relying_party
             )
+            if not hostnames:
+                raise ValidationError("At least one hostname is required.")
+            contexts = {}
+            contexts["en"] = request.data.get("context_description_en", "")
+            contexts["nl"] = request.data.get("context_description_nl", "")
 
-            condiscon_attr = CondisconAttribute(
-                credential_attribute=credential_attribute,
-                condiscon=condiscon,
-                reason_en=attr_data["reason_en"],
-                reason_nl=attr_data["reason_nl"],
+            condiscon = create_condiscon(
+                request.data.get("attributes", []), contexts, relying_party
             )
-            condiscon_attr.full_clean()
-            condiscon_attr.save()
-
-    def check_existing_rp(self, request, org_pk):
-        if RelyingParty.objects.filter(organization__id=org_pk).exists():
+            create_condiscon_attributes(condiscon, request.data.get("attributes", []))
+        except ValidationError as e:
+            transaction.set_rollback(True)
             return Response(
-                {"error": "The organization already has a relying party registered"},
+                {"error": str(e)},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        return None
-
-    @swagger_auto_schema(
-        responses={
-            201: "Created",
-            404: "Not Found",
-            400: "Bad Request",
-            401: "Unauthorized",
-        },
-        request_body=openapi.Schema(
-            type=openapi.TYPE_OBJECT,
-            required=[
-                "hostname",
-                "trust_model_env",
-                "attributes",
-                "context_description_en",
-                "context_description_nl",
-            ],
-            properties={
-                "hostname": openapi.Schema(type=openapi.TYPE_STRING),
-                "trust_model_env": openapi.Schema(type=openapi.TYPE_STRING),
-                "context_description_en": openapi.Schema(type=openapi.TYPE_STRING),
-                "context_description_nl": openapi.Schema(type=openapi.TYPE_STRING),
-                "attributes": openapi.Schema(
-                    type=openapi.TYPE_ARRAY,
-                    items=openapi.Schema(
-                        type=openapi.TYPE_OBJECT,
-                        properties={
-                            "credential_attribute_id": openapi.Schema(
-                                type=openapi.TYPE_INTEGER
-                            ),
-                            "reason_en": openapi.Schema(type=openapi.TYPE_STRING),
-                            "reason_nl": openapi.Schema(type=openapi.TYPE_STRING),
-                        },
-                    ),
-                ),
-            },
-        ),
-    )
-    @transaction.atomic  # rollback if any part of the transaction fails
-    def post(self, request, pk):
-        """Registers a new relying party, given the user is authenticated and is the maintainer of the org with same pk as in the URL"""
-
-        existing_rp = self.check_existing_rp(request, pk)
-        if existing_rp:
-            return existing_rp
-        existing_hostname = check_existing_hostname(request)
-        if existing_hostname:
-            return existing_hostname
-
-        relying_party = self.save_rp(request, pk)
-        rp_status = self.create_initial_status(relying_party)
-        hostname = self.save_hostname(request, relying_party)
-        attributes_data = request.data.get("attributes", [])
-        condiscon = self.save_condiscon(request, attributes_data, relying_party)
-        self.save_condiscon_attributes(condiscon, attributes_data)
+        except Exception as e:
+            transaction.set_rollback(True)
+            return Response(
+                {"error": "Failed to create relying party: " + str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
 
         return Response(
             {
-                "id": str(relying_party.id),
+                "slug": str(relying_party.rp_slug),
                 "message": "Relying party registration successful",
-                "dns_challenge": hostname.dns_challenge,
-                "hostname": hostname.hostname,
-                "current_status": rp_status.rp_status.label,
+                "hostnames": [
+                    {"hostname": h.hostname, "dns_challenge": h.dns_challenge}
+                    for h in hostnames
+                ],
+                "current_status": {
+                    "ready": relying_party.ready,
+                    "reviewed_accepted": relying_party.reviewed_accepted,
+                    "published_at": relying_party.published_at,
+                },
             },
-            status=status.HTTP_201_CREATED,
+            status=201,
         )
 
-    def patch(self, request, pk):
-        """Mark a relying party as ready, or update its details"""
-        relying_party = get_object_or_404(RelyingParty, organization__id=pk)
-        response_message = "Relying party updated successfully"
-        response_data = {"id": str(relying_party.id)}
 
-        if request.data.get("hostname") is not None:
-            hostname_text = request.data.get("hostname")
+class RelyingPartyListView(APIView):
+    permission_classes = [permissions.AllowAny]
 
-            existing_hostname = check_existing_hostname(request)
-            if existing_hostname:
-                return existing_hostname
+    @relying_party_list_schema
+    def get(self, request: Request, org_slug: str) -> Response:
+        organization = get_object_or_404(Organization, slug=org_slug)
+        relying_parties = RelyingParty.objects.filter(organization=organization)
+        return Response(
+            {
+                "relying_parties": [
+                    {
+                        "rp_slug": rp.rp_slug,
+                        "environment": rp.yivi_tme.environment,
+                        "status": rp.status,
+                    }
+                    for rp in relying_parties
+                ]
+            }
+        )
 
-            hostname_obj = get_object_or_404(
-                RelyingPartyHostname, relying_party=relying_party
+
+class RelyingPartyRetrieveView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def get(
+        self, request: Request, org_slug: str, environment: str, rp_slug: str
+    ) -> Response:
+        relying_party = get_object_or_404(
+            RelyingParty,
+            organization__slug=org_slug,
+            yivi_tme__environment=environment,
+            rp_slug=rp_slug,
+        )
+        hostnames = RelyingPartyHostname.objects.filter(relying_party=relying_party)
+        condiscon = Condiscon.objects.filter(relying_party=relying_party).first()
+        attributes, context_description_en, context_description_nl = [], "", ""
+
+        if condiscon:
+            condiscon_data = CondisconSerializer(condiscon).data
+            condiscon_attributes = CondisconAttribute.objects.filter(
+                condiscon=condiscon
             )
+            attributes = [
+                {
+                    "credential_id": attr.credential_attribute.credential_id,
+                    "credential_attribute_tag": attr.credential_attribute.name_en,
+                    "reason_en": attr.reason_en,
+                    "reason_nl": attr.reason_nl,
+                }
+                for attr in condiscon_attributes
+            ]
+            context_description_en = condiscon_data.get("context_description_en", "")
+            context_description_nl = condiscon_data.get("context_description_nl", "")
 
-            if hostname_obj.hostname != hostname_text:
-                hostname_obj.hostname = hostname_text
-                hostname_obj.dns_challenge = generate_dns_challenge()
-                hostname_obj.dns_challenge_created_at = timezone.now()
-                hostname_obj.dns_challenge_verified = False
-                hostname_obj.dns_challenge_verified_at = None
-                hostname_obj.save()
-                # add hostname dns challenge to response
-                response_data["hostname"] = hostname_obj.hostname
-                response_data["dns_challenge"] = hostname_obj.dns_challenge
-                response_message += ". Hostname updated. Please update your DNS record with the new challenge."
-            else:
-                hostname_obj.save()
+        return Response(
+            {
+                "rp_slug": relying_party.rp_slug,
+                "hostnames": RelyingPartyHostnameSerializer(hostnames, many=True).data,
+                "context_description_en": context_description_en,
+                "context_description_nl": context_description_nl,
+                "attributes": attributes,
+                "environment": relying_party.yivi_tme.environment,
+                "published_at": relying_party.published_at,
+                "ready": relying_party.ready,
+            }
+        )
 
-        if (
-            request.data.get("context_description_en") is not None
-            or request.data.get("context_description_nl") is not None
-        ):
-            condiscon = get_object_or_404(Condiscon, relying_party=relying_party)
-            if request.data.get("context_description_en") is not None:
-                condiscon.context_description_en = request.data.get(
-                    "context_description_en"
-                )
-            if request.data.get("context_description_nl") is not None:
-                condiscon.context_description_nl = request.data.get(
-                    "context_description_nl"
-                )
-            condiscon.save()
 
-        if request.data.get("attributes") is not None:
-            attributes_data = request.data.get("attributes")
-            condiscon = get_object_or_404(Condiscon, relying_party=relying_party)
-            CondisconAttribute.objects.filter(condiscon=condiscon).delete()
-            self.save_condiscon_attributes(condiscon, attributes_data)
-            condiscon.condiscon = self.make_condiscon_from_attributes(attributes_data)
-            condiscon.save()
+class RelyingPartyDeleteView(APIView):
+    permission_classes = [
+        permissions.IsAuthenticated,
+        IsOrganizationMaintainerOrAdmin,
+    ]
 
-        if request.data.get("trust_model_env") is not None:
-            yivi_tme = get_object_or_404(
-                YiviTrustModelEnv, environment=request.data.get("trust_model_env")
+    @relying_party_delete_schema
+    @transaction.atomic
+    def delete(
+        self, request: Request, org_slug: str, environment: str, rp_slug: str
+    ) -> Response:
+        rp = get_object_or_404(
+            RelyingParty,
+            organization__slug=org_slug,
+            rp_slug=rp_slug,
+            yivi_tme__environment=environment,
+        )
+        RelyingPartyHostname.objects.filter(
+            relying_party=rp
+        ).delete()  # TODO: we may wanna do this with signals in the future
+        condiscons = Condiscon.objects.filter(relying_party=rp)
+        for c in condiscons:
+            CondisconAttribute.objects.filter(condiscon=c).delete()
+        rp.delete()
+        return Response(
+            status=status.HTTP_200_OK,
+            data={"message": "Relying party deleted successfully"},
+        )
+
+
+class RelyingPartyUpdateView(APIView):
+    permission_classes = [permissions.IsAuthenticated, IsOrganizationMaintainerOrAdmin]
+
+    @relying_party_patch_schema
+    @transaction.atomic
+    def patch(self, request: Request, org_slug: str, rp_slug: str) -> Response:
+        try:
+            relying_party = get_object_or_404(
+                RelyingParty, organization__slug=org_slug, rp_slug=rp_slug
             )
-            relying_party.yivi_tme = yivi_tme
+            condiscon = Condiscon.objects.filter(relying_party=relying_party).first()
+
+            data = request.data
+            response_data = {"slug": str(relying_party.rp_slug)}
+            updated_fields = set()
+
+            def update_context():
+                nonlocal condiscon
+                if condiscon is None:
+                    condiscon = create_condiscon(
+                        attributes=data["attributes"],
+                        contexts={
+                            "en": data.get("context_description_en", ""),
+                            "nl": data.get("context_description_nl", ""),
+                        },
+                        relying_party=relying_party,
+                    )
+                    create_condiscon_attributes(condiscon, data["attributes"])
+                update_condiscon_context(condiscon, data)
+                updated_fields.add("context")
+
+            def update_attributes():
+                nonlocal condiscon
+
+                if condiscon is None:
+                    condiscon = create_condiscon(
+                        attributes=data["attributes"],
+                        contexts={
+                            "en": data.get("context_description_en", ""),
+                            "nl": data.get("context_description_nl", ""),
+                        },
+                        relying_party=relying_party,
+                    )
+                    create_condiscon_attributes(condiscon, data["attributes"])
+                else:
+                    update_condiscon_attributes(condiscon, data["attributes"])
+                    condiscon.condiscon = make_condiscon_json(data["attributes"])
+                    condiscon.full_clean()
+                    condiscon.save()
+
+                updated_fields.add("attributes")
+
+            def update_hostnames():
+                dns_challenges = update_relying_party_hostnames(
+                    relying_party, data["hostnames"]
+                )
+                if dns_challenges:
+                    response_data["hostnames"] = dns_challenges
+                updated_fields.add("hostnames")
+
+            def update_environment():
+                update_rp_environment(relying_party, data["environment"])
+                updated_fields.add("environment")
+
+            def update_slug():
+                updated_slug = update_rp_slug(relying_party, data["rp_slug"])
+                if updated_slug:
+                    response_data["rp_slug"] = updated_slug
+                updated_fields.add("rp_slug")
+
+            dispatcher = {
+                ("context_description_en", "context_description_nl"): update_context,
+                ("attributes",): update_attributes,
+                ("hostnames",): update_hostnames,
+                ("environment",): update_environment,
+                ("rp_slug",): update_slug,
+            }
+
+            for keys, handler in dispatcher.items():
+                if any(k in data for k in keys):
+                    handler()
+
+            if "ready" in data:
+                relying_party.ready = data["ready"]
+                relying_party.ready_at = timezone.now() if relying_party.ready else None
+                relying_party.reviewed_accepted = None
+                relying_party.reviewed_at = None
+                relying_party.rejection_remarks = None
+                relying_party.published_at = (
+                    None  # TODO: automatic public check not yet implemented
+                )
+
+            elif updated_fields:
+                relying_party.ready = False
+                relying_party.ready_at = None
+                relying_party.reviewed_accepted = None
+                relying_party.reviewed_at = None
+                relying_party.rejection_remarks = None
+                relying_party.published_at = None
+            relying_party.full_clean()
             relying_party.save()
 
-        if "ready" in request.data:
-            rp_status = Status.objects.get(relying_party=relying_party)
-            rp_status.ready = request.data.get("ready")
-            rp_status.ready_at = timezone.now() if request.data.get("ready") else None
-            rp_status.save()
+            response_data["message"] = "Relying party updated successfully"
+            return Response(response_data, status=200)
 
-        # if any of these fields are updated, set ready to False. User must explicitly set ready to make status PENDING FOR REVIEW
-        elif any(
-            field in request.data
-            for field in [
-                "hostname",
-                "context_description_en",
-                "context_description_nl",
-                "attributes",
-                "trust_model_env",
-            ]
-        ):
-            rp_status = Status.objects.get(relying_party=relying_party)
-            rp_status.ready = False
-            rp_status.save()
-
-        response_data["message"] = response_message
-        return Response(response_data, status=status.HTTP_200_OK)
+        except ValidationError as e:
+            transaction.set_rollback(True)
+            return Response(
+                {"error": str(e)},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        except Exception as e:
+            transaction.set_rollback(True)
+            return Response(
+                {"error": str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
 
 
-class RelyingPartyHostnameStatusAPIView(APIView):
+class RelyingPartyHostnameStatusView(APIView):
     permission_classes = [
         permissions.IsAuthenticated,
-        BelongsToOrganization,
-        IsMaintainer,
+        IsOrganizationMaintainerOrAdmin,
     ]
 
-    @swagger_auto_schema(responses={200: "Success"})
-    def get(self, request, slug):
+    @relying_party_dns_status_schema
+    def get(
+        self, request: Request, org_slug: str, environment: str, rp_slug: str
+    ) -> Response:
         """Get status of DNS verification for a hostname"""
-        relying_party = get_object_or_404(RelyingParty, organization__slug=slug)
-        hostname = get_object_or_404(RelyingPartyHostname, relying_party=relying_party)
-
-        return Response(
-            {
-                "hostname": hostname.hostname,
-                "dns_challenge": hostname.dns_challenge,
-                # hostname can be manually set as verified by admins in admin panel
-                "manually_verified": hostname.manually_verified,
-                "dns_challenge_verified": hostname.dns_challenge_verified,
-                "dns_challenge_verified_at": hostname.dns_challenge_verified_at,
-                "dns_challenge_invalidated_at": hostname.dns_challenge_invalidated_at,
-            }
+        relying_party: RelyingParty = get_object_or_404(
+            RelyingParty,
+            organization__slug=org_slug,
+            rp_slug=rp_slug,
+            yivi_tme__environment=environment,
         )
 
-
-class RelyingPartyRegistrationStatusAPIView(APIView):
-    permission_classes = [
-        permissions.IsAuthenticated,
-        BelongsToOrganization,
-        IsMaintainer,
-    ]
-
-    @swagger_auto_schema(responses={200: "Success"})
-    def get(self, request, slug):
-        """Get status of relying party registration"""
-        relying_party = get_object_or_404(RelyingParty, organization__slug=slug)
-        status = get_object_or_404(Status, relying_party=relying_party)
+        hostname: RelyingPartyHostname = get_object_or_404(
+            RelyingPartyHostname, relying_party=relying_party
+        )
 
         return Response(
-            {
-                "current_status": status.rp_status.label,
-                "ready": status.ready,
-                "ready_at": status.ready_at,
-            }
+            {RelyingPartyHostnameSerializer(hostname).data},
+            status=status.HTTP_200_OK,
         )
