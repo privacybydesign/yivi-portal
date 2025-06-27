@@ -51,7 +51,10 @@ export default function ManageOrganizationLayout({
 
       <div className="flex flex-col space-y-8 lg:flex-row lg:space-x-12 lg:space-y-0">
         <aside className="lg:w-1/5">
-          <SidebarNavigation items={menuItems} />
+          <SidebarNavigation
+            className="max-lg:space-y-2 flex-wrap"
+            items={menuItems}
+          />
         </aside>
         <div className="flex-1 lg:max-w-2xl">{children}</div>
       </div>
