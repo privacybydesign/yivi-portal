@@ -153,7 +153,6 @@ class OrganizationMaintainerActionsTest(APITestCase):
             {"email": "testemail@gmail.com"},
             format="json",
         )
-        print(response.data)
         self.assertEqual(response.status_code, 201)
         self.assertTrue(
             OrgUser.objects.filter(
