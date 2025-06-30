@@ -8,6 +8,7 @@ from portal_backend.scheme_utils.import_utils import load_logo_if_exists
 from rest_framework_simplejwt.tokens import AccessToken  # type: ignore
 from unittest.mock import patch
 from django.db import IntegrityError
+from django.core import mail
 
 
 User = get_user_model()
@@ -159,6 +160,7 @@ class OrganizationMaintainerActionsTest(APITestCase):
                 email="testemail@gmail.com", role="maintainer"
             ).exists()
         )
+        self.assertEqual(len(mail.outbox), 1)  # check if test email was sent
 
     def test_add_maintainer_invalid_email(self):
         """Test should fail when adding a maintainer with an invalid email."""
