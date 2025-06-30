@@ -17,6 +17,7 @@ import EnvironmentDetailsPage from "@/pages/EnvironmentDetailsPage";
 import AttestationProviderDetailsPage from "@/pages/AttestationProviderDetailsPage";
 import CredentialDetailsPage from "@/pages/CredentialDetailsPage";
 import AttributeIndexLayout from "@/components/layout/AttributeIndexLayout";
+import FAQPage from "@/pages/FAQPage";
 
 export default function AppRoutes() {
   return useRoutes([
@@ -33,6 +34,10 @@ export default function AppRoutes() {
         {
           path: "/organizations/:organization",
           element: <OrganizationDetailsPage />,
+        },
+        {
+          path: "/faq",
+          element: <FAQPage />,
         },
         {
           element: <ProtectedRoute />,

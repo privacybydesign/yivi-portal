@@ -57,6 +57,13 @@ export default function Layout() {
             <div className="flex gap-4 justify-center">
               <Link
                 to="https://yivi.app/en/terms_and_conditions_v3/"
+                to="/faq"
+                className={cn(buttonVariants({ variant: "link" }))}
+              >
+                FAQ
+              </Link>
+              <Link
+                to="/terms-of-service"
                 className={cn(buttonVariants({ variant: "link" }))}
               >
                 Terms of Service

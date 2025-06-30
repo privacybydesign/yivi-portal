@@ -14,6 +14,7 @@ import {
 import { Info } from "lucide-react";
 import type { RelyingPartyFormData } from "../validation-schema";
 import type { Control } from "react-hook-form";
+import { Link } from "react-router-dom";
 
 type ContextDescriptionProps = {
   control: Control<RelyingPartyFormData>;
@@ -33,10 +34,18 @@ export default function ContextDescription({
             </div>
           </TooltipTrigger>
           <TooltipContent side="top">
-            <p className="text-sm">
+            <p className="text-sm text-justify">
               Provide a short description of the context in which you're using
               Yivi and the selected attributes. For example: "Access to employee
-              portal" or "Proof of age for alcohol purchase".
+              portal" or "Proof of age for alcohol purchase". Read more about
+              why we ask for this information{" "}
+              <Link
+                to="/faq#why-context-description"
+                className="text-blue-600 hover:underline"
+              >
+                here
+              </Link>
+              .
             </p>
           </TooltipContent>
         </Tooltip>
