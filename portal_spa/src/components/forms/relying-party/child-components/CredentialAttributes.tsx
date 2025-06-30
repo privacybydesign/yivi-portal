@@ -10,6 +10,7 @@ import { Info } from "lucide-react";
 import type { Credential } from "@/models/credential";
 import type { RelyingPartyFormData } from "../validation-schema";
 import { useFieldArray, type UseFormReturn } from "react-hook-form";
+import { Link } from "react-router-dom";
 
 type CredentialAttributeProps = {
   form: UseFormReturn<RelyingPartyFormData>;
@@ -36,9 +37,16 @@ export function CredentialAttributes(props: CredentialAttributeProps) {
             </div>
           </TooltipTrigger>
           <TooltipContent side="top">
-            <p className="text-sm">
+            <p className="text-sm text-justify">
               In this section, specify the Yivi credential attributes you intend
-              to request from users through this relying party.
+              to request from users through this relying party. Read more about
+              why we ask for this information{" "}
+              <Link
+                to="/faq#why-select-attributes-for-relying-party"
+                className="text-blue-600 hover:underline"
+              >
+                here
+              </Link>
             </p>
           </TooltipContent>
         </Tooltip>

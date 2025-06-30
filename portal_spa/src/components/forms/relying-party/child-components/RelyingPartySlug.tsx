@@ -40,7 +40,7 @@ export default function RelyingPartySlug(props: RelyingPartySlugProps) {
                     </div>
                   </TooltipTrigger>
                   <TooltipContent side="top">
-                    <p className="text-sm">
+                    <p className="text-sm text-justify">
                       This will serve as a unique identifier for your relying
                       party. Each slug must be distinct — duplicate slugs are
                       not allowed.
