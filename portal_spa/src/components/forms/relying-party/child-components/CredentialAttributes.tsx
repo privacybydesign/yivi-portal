@@ -37,7 +37,7 @@ export function CredentialAttributes(props: CredentialAttributeProps) {
             </div>
           </TooltipTrigger>
           <TooltipContent side="top">
-            <p className="text-sm max-w-3xs">
+            <p className="text-sm text-justify">
               In this section, specify the Yivi credential attributes you intend
               to request from users through this relying party. Read more about
               why we ask for this information{" "}

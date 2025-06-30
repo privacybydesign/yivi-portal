@@ -313,8 +313,8 @@ export default function OrganizationsListPage() {
                     <Info className="w-3 h-3" />
                   </div>
                 </TooltipTrigger>
-                <TooltipContent side="top" className="max-w-2xs break-words">
-                  <p className="text-sm">
+                <TooltipContent side="top">
+                  <p className="text-sm text-justify">
                     The trust model indicates the scheme under which this
                     organization holds a valid credential. Currently, only the
                     privacy-first Yivi trust model is supported. Support for an
@@ -342,8 +342,10 @@ export default function OrganizationsListPage() {
                     <Info className="w-3 h-3" />
                   </div>
                 </TooltipTrigger>
-                <TooltipContent side="top" className="max-w-xs break-words">
-                  <p>Also known as attestation provider, or an issuer</p>
+                <TooltipContent side="top" className="max-w-xs">
+                  <p className="text-sm">
+                    Also known as attestation provider, or an issuer
+                  </p>
                 </TooltipContent>
               </Tooltip>{" "}
             </TableHead>
@@ -356,8 +358,10 @@ export default function OrganizationsListPage() {
                     <Info className="w-3 h-3" />
                   </div>
                 </TooltipTrigger>
-                <TooltipContent side="top" className="max-w-xs break-words">
-                  <p>Also known as a relying party, or a verifier</p>
+                <TooltipContent side="top" className="max-w-xs">
+                  <p className="text-sm">
+                    Also known as a relying party, or a verifier
+                  </p>
                 </TooltipContent>
               </Tooltip>{" "}
             </TableHead>

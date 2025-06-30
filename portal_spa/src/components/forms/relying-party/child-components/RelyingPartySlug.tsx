@@ -39,8 +39,8 @@ export default function RelyingPartySlug(props: RelyingPartySlugProps) {
                       <Info className="w-3 h-3" />
                     </div>
                   </TooltipTrigger>
-                  <TooltipContent side="top" className="max-w-3xs break-words">
-                    <p className="text-sm">
+                  <TooltipContent side="top">
+                    <p className="text-sm text-justify">
                       This will serve as a unique identifier for your relying
                       party. Each slug must be distinct — duplicate slugs are
                       not allowed.

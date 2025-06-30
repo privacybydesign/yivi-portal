@@ -47,8 +47,8 @@ export default function ReadyCheckbox(props: ReadyCheckboxProps) {
                     <Info className="w-3 h-3" />
                   </div>
                 </TooltipTrigger>
-                <TooltipContent side="top" className="max-w-xs break-words">
-                  <p className="justify-center text-sm">
+                <TooltipContent side="top">
+                  <p className="text-justify">
                     Marking this relying party as "ready" indicates that it is
                     prepared for review and publication. You may choose to leave
                     it unmarked — in that case, your registration will remain in

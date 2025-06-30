@@ -33,8 +33,8 @@ export default function ContextDescription({
               <Info className="w-3 h-3" />
             </div>
           </TooltipTrigger>
-          <TooltipContent side="top" className="max-w-xs break-words">
-            <p className="text-sm">
+          <TooltipContent side="top">
+            <p className="text-sm text-justify">
               Provide a short description of the context in which you're using
               Yivi and the selected attributes. For example: "Access to employee
               portal" or "Proof of age for alcohol purchase". Read more about
