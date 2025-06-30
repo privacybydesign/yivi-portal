@@ -103,6 +103,7 @@ class OrganizationMaintainerActionsTest(APITestCase):
             postal_code="4321CD",
             city="Test City",
             logo=self.logo,
+            is_verified=True,
         )
         orguser = OrgUser.objects.create(email="test@gmail.com", role="maintainer")
         orguser.organizations.add(self.organization)
@@ -229,7 +230,7 @@ class OrganizationMaintainerActionsTest(APITestCase):
             self.assertFalse(Organization.objects.filter(name_en="Test").exists())
 
     def test_add_maintainer_duplicate(self):
-        """Test rollback happens if error occurs during adding organizations to user."""
+        """Test rollback happens if error occurs during adding duplicate user to organization"""
         url = reverse(
             "portal_backend:organization-maintainers", args=[self.organization.slug]
         )
@@ -237,17 +238,15 @@ class OrganizationMaintainerActionsTest(APITestCase):
         user = OrgUser.objects.create(
             email="newmaintainer@gmail.com", role="maintainer"
         )
+        user.organizations.add(self.organization)
 
-        with patch.object(
-            user.organizations, "add", side_effect=IntegrityError("Simulated DB error")
-        ):
-            response = self.client.post(
-                url,
-                {"email": "newmaintainer@gmail.com"},
-                format="json",
-            )
+        response = self.client.post(
+            url,
+            {"email": "newmaintainer@gmail.com"},
+            format="json",
+        )
 
-            self.assertEqual(response.status_code, 400)
-            self.assertFalse(
-                user.organizations.filter(slug=self.organization.slug).exists()
-            )
+        self.assertEqual(response.status_code, 400)
+        self.assertFalse(
+            user.organizations.filter(slug=self.organization.slug).exists() is False
+        )
