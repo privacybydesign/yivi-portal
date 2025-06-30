@@ -11,7 +11,6 @@ import OrganizationRegisterPage from "@/pages/OrganizationRegisterPage";
 import Layout from "@/components/layout/Layout";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import PrivacyPolicyPage from "@/pages/PrivacyPolicyPage";
-import TermsOfServicePage from "@/pages/TermsOfServicePage";
 import ProtectedOrganizationRoute from "@/components/auth/ProtectedOrganizationRoute";
 import GuestRoute from "@/components/auth/GuestRoute";
 import EnvironmentDetailsPage from "@/pages/EnvironmentDetailsPage";
@@ -19,7 +18,6 @@ import AttestationProviderDetailsPage from "@/pages/AttestationProviderDetailsPa
 import CredentialDetailsPage from "@/pages/CredentialDetailsPage";
 import AttributeIndexLayout from "@/components/layout/AttributeIndexLayout";
 
-// We manage all routes here to keep App.tsx clean
 export default function AppRoutes() {
   return useRoutes([
     {
@@ -67,7 +65,6 @@ export default function AppRoutes() {
           ],
         },
         { path: "/privacy-policy", element: <PrivacyPolicyPage /> },
-        { path: "/terms-of-service", element: <TermsOfServicePage /> },
         {
           path: "/attribute-index",
           element: <AttributeIndexLayout />,
