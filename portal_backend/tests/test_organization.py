@@ -161,6 +161,9 @@ class OrganizationMaintainerActionsTest(APITestCase):
             ).exists()
         )
         self.assertEqual(len(mail.outbox), 1)  # check if test email was sent
+        self.assertEqual(
+            mail.outbox[0].subject, "Yivi Portal - You have been added as a maintainer"
+        )
 
     def test_add_maintainer_invalid_email(self):
         """Test should fail when adding a maintainer with an invalid email."""
