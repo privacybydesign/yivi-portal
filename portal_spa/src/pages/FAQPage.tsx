@@ -42,20 +42,46 @@ export default function FAQPage() {
             providers.
           </AccordionContent>
         </AccordionItem>
+        <AccordionItem value="access-management-page">
+          <AccordionTrigger className="text-lg font-medium">
+            I am already a part of Yivi. How do I access the management page?
+          </AccordionTrigger>
+          <AccordionContent className="text-gray-700">
+            Please send an email to{" "}
+            <a
+              className="text-blue-600 hover:underline"
+              href="mailto:support@yivi.app"
+            >
+              support@yivi.app
+            </a>{" "}
+            with the name of your organization and email(s) you would like to
+            have access to the management page. We will get back to you as soon
+            as possible. You will also be able to add maintainers yourself once
+            you gain access through the "Maintainer" tab in the management page.
+            The added maintainer will be notified via email and will be able to
+            login with that email using the Yivi app.
+          </AccordionContent>
+        </AccordionItem>
         <AccordionItem value="why-register-relying-party">
           <AccordionTrigger className="text-lg font-medium">
             Why should I register as a relying party?
           </AccordionTrigger>
           <AccordionContent className="text-gray-700">
-            Yivi is free open-source software which enables relying parties to
+            Yivi is open-source software which enables relying parties to
             request data from their users in a privacy-friendly way. Registering
             as a relying party means that you officially become a part of the
-            Yivi ecosystem. This allows your users to see a name and logo
-            associated with your organization when they are asked to share their
-            data. If this is not the case, the users will see only your hostname
-            and the Yivi app warns them that they are sharing their data with a
-            party not registered with Yivi so they can make an informed decision
-            about sharing their data.
+            Yivi ecosystem. <br /> This has two main benefits. Firstly, it
+            allows Yivi users to see a name and logo associated with your
+            organization when they are asked to share their data. They will see
+            a green checkmark that assures them that they are sharing their
+            information with a trusted party. If this is not the case, the users
+            will be notified that the relying party is not registered with Yivi
+            and therefore they should be cautious about sharing their data.
+            Secondly, Yivi works with authentication providers to help users
+            collect their data in a privacy-friendly way. These sessions have
+            costs, and these costs vary base on the usage of the relying party.
+            Therefore by registering, you help us keep track and participate in
+            these costs.
           </AccordionContent>
         </AccordionItem>
         <AccordionItem value="why-verify-hostname">
@@ -66,21 +92,38 @@ export default function FAQPage() {
             Verifying your hostname ensures that you are the legitimate owner of
             the domain you are registering.
           </AccordionContent>
-          <AccordionItem value="why-select-attributes-for-relying-party">
-            <AccordionTrigger className="text-lg font-medium">
-              Why does my relying party need to disclose which attributes are
-              being requested?
-            </AccordionTrigger>
-            <AccordionContent className="text-gray-700">
-              This helps us keep track of which attributes are used per relying
-              party, and how sensitive these attributes are. For example, if a
-              relying party needs to ask for a user's BSN (Burgerservicenummer),
-              it is important to for what purpose is this needed for and if the
-              use is justified. This is to prevent oversharing of sensitive data
-              and to keep our users' data private and shared only when
-              necessary.
-            </AccordionContent>
-          </AccordionItem>
+        </AccordionItem>
+        <AccordionItem value="when-verified">
+          <AccordionTrigger className="text-lg font-medium">
+            How do I know when my hostname is verified?
+          </AccordionTrigger>
+          <AccordionContent className="text-gray-700">
+            Check the status in the DNS Check section of the relying party edit
+            page. The status of it will change to verified if this is done. This
+            can take some time due to DNS propagation, so please be patient. If
+            this takes too long, please contact us at{" "}
+            <a
+              className="text-blue-600 hover:underline"
+              href="mailto:support@yivi.app"
+            >
+              support@yivi.app
+            </a>{" "}
+            and we will help you further.
+          </AccordionContent>
+        </AccordionItem>
+        <AccordionItem value="why-select-attributes-for-relying-party">
+          <AccordionTrigger className="text-lg font-medium">
+            Why does my relying party need to disclose which attributes are
+            being requested?
+          </AccordionTrigger>
+          <AccordionContent className="text-gray-700">
+            This helps us keep track of which attributes are used per relying
+            party, and how sensitive these attributes are. For example, if a
+            relying party needs to ask for a user's BSN (Burgerservicenummer),
+            it is important to for what purpose is this needed for and if the
+            use is justified. This is to prevent oversharing of sensitive data
+            and to keep our users' data private and shared only when necessary.
+          </AccordionContent>
         </AccordionItem>
         <AccordionItem value="why-context-description">
           <AccordionTrigger className="text-lg font-medium">
