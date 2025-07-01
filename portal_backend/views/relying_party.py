@@ -132,6 +132,7 @@ class RelyingPartyRetrieveView(APIView):
     def get(
         self, request: Request, org_slug: str, environment: str, rp_slug: str
     ) -> Response:
+
         relying_party = get_object_or_404(
             RelyingParty,
             organization__slug=org_slug,
@@ -139,15 +140,19 @@ class RelyingPartyRetrieveView(APIView):
             rp_slug=rp_slug,
         )
 
-        hostnames = RelyingPartyHostname.objects.filter(relying_party=relying_party)
-        condiscon = Condiscon.objects.filter(relying_party=relying_party).first()
-        attributes, context_description_en, context_description_nl = [], "", ""
-
         if not (
             request.user.is_authenticated
             and IsOrganizationMaintainerOrAdmin().has_permission(request, self)
         ):
-            relying_parties = relying_parties.filter(published=True)
+            if not relying_party.published:
+                return Response(
+                    {"error": "You are not allowed to view this relying party."},
+                    status=status.HTTP_404_NOT_FOUND,
+                )
+
+        hostnames = RelyingPartyHostname.objects.filter(relying_party=relying_party)
+        condiscon = Condiscon.objects.filter(relying_party=relying_party).first()
+        attributes, context_description_en, context_description_nl = [], "", ""
 
         if condiscon:
             condiscon_data = CondisconSerializer(condiscon).data

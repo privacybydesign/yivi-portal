@@ -1,6 +1,5 @@
 import logging
 from django.utils import timezone
-import os
 from .import_utils import load_config, download_extract_repo, load_json_to_dict
 from ..models.models import RelyingParty
 
