@@ -10,12 +10,18 @@ logger = logging.getLogger(__name__)
 def check_published_rps(rps_dict: dict) -> None:
     db_rps = RelyingParty.objects.all()
     for db_rp in db_rps:
+        if db_rp.status != "published":  # exclude existing rps editing their rp
+            continue
         if db_rp.rp_slug not in str(rps_dict):
-            db_rp.rp_published = False
+            db_rp.published = False
+            db_rp.reviewed_accepted = False
+            db_rp.ready = False
             db_rp.save()
         else:
-            db_rp.rp_published = True
-            db_rp.rp_published_at = timezone.now()
+            db_rp.published = True
+            db_rp.reviewed_accepted = True
+            db_rp.ready = True
+            db_rp.published_at = timezone.now()
             db_rp.save()
 
 
@@ -24,10 +30,9 @@ def check_published_cron() -> None:
     try:
 
         # load into dict
-        environment = os.environ.get("RP_ENV")
         config = load_config()
-        repo_url = config["RP"]["environment"][environment]["repo-url"]
-        repo_name = config["RP"]["environment"][environment]["name"]
+        repo_url = config["RP"]["repo-url"]
+        repo_name = config["RP"]["name"]
         repo_path = "downloads/relying-party-repo"
         download_extract_repo(repo_url, repo_name, repo_path)
         json_path = f"{repo_path}/{repo_name}-master/requestors.json"
