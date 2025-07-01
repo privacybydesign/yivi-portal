@@ -105,6 +105,13 @@ class RelyingPartyListView(APIView):
     def get(self, request: Request, org_slug: str) -> Response:
         organization = get_object_or_404(Organization, slug=org_slug)
         relying_parties = RelyingParty.objects.filter(organization=organization)
+
+        if not (
+            request.user.is_authenticated
+            and IsOrganizationMaintainerOrAdmin().has_permission(request, self)
+        ):
+            relying_parties = relying_parties.filter(published=True)
+
         return Response(
             {
                 "relying_parties": [
@@ -131,9 +138,16 @@ class RelyingPartyRetrieveView(APIView):
             yivi_tme__environment=environment,
             rp_slug=rp_slug,
         )
+
         hostnames = RelyingPartyHostname.objects.filter(relying_party=relying_party)
         condiscon = Condiscon.objects.filter(relying_party=relying_party).first()
         attributes, context_description_en, context_description_nl = [], "", ""
+
+        if not (
+            request.user.is_authenticated
+            and IsOrganizationMaintainerOrAdmin().has_permission(request, self)
+        ):
+            relying_parties = relying_parties.filter(published=True)
 
         if condiscon:
             condiscon_data = CondisconSerializer(condiscon).data
@@ -162,6 +176,7 @@ class RelyingPartyRetrieveView(APIView):
                 "environment": relying_party.yivi_tme.environment,
                 "published_at": relying_party.published_at,
                 "ready": relying_party.ready,
+                "status": relying_party.status,
             }
         )
 
