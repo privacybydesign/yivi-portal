@@ -197,7 +197,6 @@ class OrganizationMaintainersView(APIView):
             try:
                 user.full_clean()
                 user.save()
-                user.organizations.add(organization)
 
             except ValidationError as e:
                 transaction.set_rollback(True)
@@ -213,6 +212,8 @@ class OrganizationMaintainersView(APIView):
                     {"error": "Failed to create user"},
                     status=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 )
+
+            user.organizations.add(organization)
 
         # Send email notification to the maintainer that was just added
         try:

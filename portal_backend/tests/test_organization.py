@@ -252,6 +252,4 @@ class OrganizationMaintainerActionsTest(APITestCase):
         )
 
         self.assertEqual(response.status_code, 400)
-        self.assertFalse(
-            user.organizations.filter(slug=self.organization.slug).exists() is False
-        )
+        self.assertTrue(user.organizations.filter(slug=self.organization.slug).exists())
