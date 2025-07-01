@@ -298,3 +298,30 @@ class RelyingPartyCreateTest(APITestCase):
         self.client.credentials()
         response = self.client.delete(url)
         self.assertEqual(response.status_code, 401)
+
+    def test_unpublished_relying_party_no_perm(self):
+        """Test that a relying party is not visible to users if they are not a maintainer."""
+        url = reverse(
+            "portal_backend:rp-detail",
+            args=[
+                self.existing_rp.organization.slug,
+                self.existing_rp.yivi_tme.environment,
+                self.existing_rp.rp_slug,
+            ],
+        )
+        self.client.credentials()
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 404)
+
+    def test_unpublished_relying_party_with_perm(self):
+        """Test that a relying party is visible to users if they are a maintainer."""
+        url = reverse(
+            "portal_backend:rp-detail",
+            args=[
+                self.existing_rp.organization.slug,
+                self.existing_rp.yivi_tme.environment,
+                self.existing_rp.rp_slug,
+            ],
+        )
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
