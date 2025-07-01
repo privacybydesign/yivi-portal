@@ -24,9 +24,32 @@ permissions:
   packages: write
   security-events: write
 
+env:
+  TEST_TAG: privacybydesign/portal-app:test
+
 jobs:
+  run-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: portal_spa/package-lock.json
+
+      - name: Install packages
+        run: npm ci
+
+      - name: Run tests
+        run: npm run test
+
   publish-docker-image:
     runs-on: ubuntu-latest
+    needs: run-tests
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -58,7 +81,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build container and push to GitHub Container Registry
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: portal_spa
           file: portal_spa/Dockerfile.react
