@@ -42,10 +42,14 @@ jobs:
           cache-dependency-path: portal_spa/package-lock.json
 
       - name: Install packages
-        run: npm ci
+        run: |
+          cd portal_spa/
+          npm ci
 
       - name: Run tests
-        run: npm run test
+        run: |
+          cd portal_spa/
+          npm run test
 
   publish-docker-image:
     runs-on: ubuntu-latest
