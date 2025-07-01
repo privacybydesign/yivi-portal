@@ -113,7 +113,6 @@ def create_hostnames(
             )
 
 
-@transaction.atomic
 def create_org_rp(all_RPs_dict: dict, environment: str, repo_path: str) -> None:
     """
     For each Relying Party in the JSON file, create or update the corresponding
@@ -126,13 +125,21 @@ def create_org_rp(all_RPs_dict: dict, environment: str, repo_path: str) -> None:
     logger.info(f"Found {len(all_RPs_dict)} verifiers in the JSON.")
 
     for rp_dict in all_RPs_dict:
-        rpfields = RPFields(rp_dict, repo_path)
-        org = import_utils.create_org(
-            rpfields.slug, rpfields.name_en, rpfields.name_nl, rpfields.logo_path
-        )
-        yivi_tme = import_utils.get_trust_model_env(environment)
-        rp = create_rp(org, yivi_tme)
-        create_hostnames(rpfields, rp)
+        try:
+            with transaction.atomic():  # will rollback for bad data
+                rpfields = RPFields(rp_dict, repo_path)
+                org = import_utils.create_org(
+                    rpfields.slug,
+                    rpfields.name_en,
+                    rpfields.name_nl,
+                    rpfields.logo_path,
+                )
+                yivi_tme = import_utils.get_trust_model_env(environment)
+                rp = create_rp(org, yivi_tme)
+                create_hostnames(rpfields, rp)
+        except Exception as e:
+            logger.error(f"Failed to process Relying Party {rpfields.slug}: {e}")
+            continue
 
 
 # download requestors repo
