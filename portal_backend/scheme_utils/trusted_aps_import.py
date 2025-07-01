@@ -342,32 +342,36 @@ def get_trust_model_env(environment: str) -> YiviTrustModelEnv:
         )
 
 
-@transaction.atomic
 def create_update_APs(environment: str) -> None:
     with open(AP_JSON_PATH, "r", encoding="utf-8") as f:
         all_APs_dict = json.load(f)
         yivi_tme = get_trust_model_env(environment)
 
         for AP in all_APs_dict:
-            apfields = APFields(all_APs_dict, AP)
-            org = import_utils.create_org(
-                slug=apfields.slug,
-                name_en=apfields.name_en,
-                name_nl=apfields.name_nl,
-                logo_path=apfields.logo_path,
-            )
+            try:
+                with transaction.atomic():  # using atomic per AP makes sure only AP with bad data will not be created/updated
+                    apfields = APFields(all_APs_dict, AP)
+                    org = import_utils.create_org(
+                        slug=apfields.slug,
+                        name_en=apfields.name_en,
+                        name_nl=apfields.name_nl,
+                        logo_path=apfields.logo_path,
+                    )
 
-            ap = create_ap(
-                org,
-                yivi_tme,
-                apfields,
-                environment=environment,
-            )
+                    ap = create_ap(
+                        org,
+                        yivi_tme,
+                        apfields,
+                        environment=environment,
+                    )
 
-            for cred_id, cred_dict in apfields.credentials.items():
-                cfields = CredentialFields(cred_dict, apfields)
-                credential = create_credential(ap, cfields, environment)
-                create_credential_attributes(credential, cfields, environment)
+                    for cred_dict in apfields.credentials.items():
+                        cfields = CredentialFields(cred_dict, apfields)
+                        credential = create_credential(ap, cfields, environment)
+                        create_credential_attributes(credential, cfields, environment)
+            except Exception as e:
+                logger.error(f"Failed to process Attestation Provider {AP}: {e}")
+                continue
 
         logger.info(f"Found {len(all_APs_dict)} Attestation Providers in the JSON.")
 
