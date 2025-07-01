@@ -194,24 +194,26 @@ class OrganizationMaintainersView(APIView):
 
         except User.DoesNotExist:
             user = User(email=email, role="maintainer")
-            user.full_clean()
-            user.save()
+            try:
+                user.full_clean()
+                user.save()
 
-        except ValidationError as e:
-            transaction.set_rollback(True)
-            logger.error(f"Validation error creating user: {e}")
-            return Response(
-                {"error": e.message_dict},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        except Exception as e:
-            transaction.set_rollback(True)
-            logger.error(f"Unexpected error creating user: {e}")
-            return Response(
-                {"error": "Failed to create user"},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            )
-        user.organizations.add(organization)
+            except ValidationError as e:
+                transaction.set_rollback(True)
+                logger.error(f"Validation error creating user: {e}")
+                return Response(
+                    {"error": e.message_dict},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            except Exception as e:
+                transaction.set_rollback(True)
+                logger.error(f"Unexpected error creating user: {e}")
+                return Response(
+                    {"error": "Failed to create user"},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                )
+
+            user.organizations.add(organization)
 
         # Send email notification to the maintainer that was just added
         try:
