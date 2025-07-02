@@ -29,7 +29,11 @@ export default function CredentialSearchFilter({
   }, [searchQuery, credentials, envFilter]);
 
   return (
-    <div className="max-h-56 overflow-y-auto border-t pt-2">
+    <div
+      className="max-h-56 overflow-y-auto border-t pt-2"
+      onWheel={(e) => e.stopPropagation()} // Stop scroll event from bubbling up since inside a Dialog component scroll is prevented
+    >
+      {" "}
       {filteredCredentials.length === 0 ? (
         <div className="text-sm text-muted-foreground py-4 text-center">
           No matching credentials
