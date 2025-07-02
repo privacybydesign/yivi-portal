@@ -38,7 +38,7 @@ export default function SlugField({
             <FormControl>
               <Input
                 {...field}
-                pattern="[a-z0-9\-]+"
+                pattern="[a-zA-Z0-9\-]+"
                 onBlur={(event) => {
                   if (!event.target.value && form.getValues("name_en")) {
                     const newSlug = generateSlug(

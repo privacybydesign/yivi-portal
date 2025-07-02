@@ -5,6 +5,8 @@ import type { AuthToken } from "@/models/auth_token";
 import { axiosInstance } from "../services/axiosInstance";
 import { AxiosError } from "axios";
 
+let refreshInProgress: Promise<string | null> | null = null;
+
 interface StateStore {
   accessToken: string | null;
   email: string | null;
@@ -12,7 +14,7 @@ interface StateStore {
   organizationSlugs: string[];
   initialized: boolean;
   setAccessToken: (accessToken: string | null) => void;
-  initializeAuth: () => void;
+  initializeAuth: () => Promise<void>;
   refreshToken: (data?: unknown) => Promise<string | null>;
 }
 
@@ -42,28 +44,39 @@ const useStore = create<StateStore>((set) => ({
   },
 
   refreshToken: async (data?: unknown) => {
-    try {
-      const response = await axiosInstance.post<{ access: string }>(
-        "/v1/refreshtoken",
-        data
-      );
-
-      if (response.status !== 200) {
-        return null;
-      }
-
-      useStore.getState().setAccessToken(response.data.access);
-    } catch (error: unknown) {
-      if (error instanceof AxiosError) {
-        console.warn("Error refreshing token:", error.response?.data.detail);
-      } else {
-        console.warn("Unexpected error", error);
-      }
+    if (refreshInProgress) {
+      return refreshInProgress;
     }
-    return null;
+
+    refreshInProgress = (async () => {
+      try {
+        const response = await axiosInstance.post<{ access: string }>(
+          "/v1/refreshtoken",
+          data
+        );
+
+        if (response.status !== 200) {
+          return null;
+        }
+
+        useStore.getState().setAccessToken(response.data.access);
+        return response.data.access;
+      } catch (error: unknown) {
+        if (error instanceof AxiosError) {
+          console.warn("Error refreshing token:", error.response?.data.detail);
+        } else {
+          console.warn("Unexpected error", error);
+        }
+        return null;
+      } finally {
+        refreshInProgress = null;
+      }
+    })();
+
+    return refreshInProgress;
   },
 
-  initializeAuth: () => {
+  initializeAuth: async () => {
     const savedAccessToken = localStorage.getItem("accessToken");
 
     if (savedAccessToken) {
@@ -72,14 +85,13 @@ const useStore = create<StateStore>((set) => ({
 
       if (decoded.exp < currentTime + 60) {
         // Try refreshing token
-        useStore.getState().refreshToken();
+        await useStore.getState().refreshToken();
       } else {
         set({
           accessToken: savedAccessToken,
           email: decoded.email,
           role: decoded.role,
           organizationSlugs: decoded.organizationSlugs || [],
-          initialized: true,
         });
       }
     } else {
@@ -89,9 +101,9 @@ const useStore = create<StateStore>((set) => ({
         email: null,
         role: undefined,
         organizationSlugs: [],
-        initialized: true,
       });
     }
+    set({ initialized: true });
   },
 }));
 
@@ -100,9 +112,10 @@ export function useIdleRefresh() {
   const refreshToken = useStore((state) => state.refreshToken);
 
   useEffect(() => {
-    const handler = (event: Event) => {
+    const handler = (event?: Event) => {
       if (
-        (document.visibilityState === "visible" || event.type === "pageshow") &&
+        (document.visibilityState === "visible" ||
+          event?.type === "pageshow") &&
         accessToken
       ) {
         const currentTime = Math.floor(Date.now() / 1000);
@@ -113,9 +126,10 @@ export function useIdleRefresh() {
         }
       }
     };
-
     document.addEventListener("visibilitychange", handler);
     window.addEventListener("pageshow", handler);
+
+    handler(); // Run on first mount
 
     return () => {
       document.removeEventListener("visibilitychange", handler);
