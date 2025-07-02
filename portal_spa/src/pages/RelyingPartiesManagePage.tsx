@@ -17,6 +17,8 @@ import {
 import { toast } from "sonner";
 import RelyingPartyTabs from "@/components/forms/relying-party/RelyingPartyTabs";
 import { RelyingPartyContext } from "@/contexts/relying-party/RelyingPartyContext";
+import DjangoFieldErrors from "@/components/custom/DjangoErrorList";
+import { Separator } from "@/components/ui/separator";
 
 // This data will be used to prefill the Relying Party create form
 const initialData: RelyingPartyFormData = {
@@ -38,23 +40,24 @@ const initialData: RelyingPartyFormData = {
 export default function RelyingPartyManager() {
   const params = useParams();
   const organizationSlug = params?.organization as string;
-  const [saving, setSaving] = useState(false);
-  const [fieldErrors, setFieldErrors] = useState({});
-  const [globalError, setGlobalError] = useState<string | undefined>();
   const [isCreating, setIsCreating] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
 
   const handleSave = async (data: RelyingPartyFormData) => {
-    setSaving(true);
+    setIsCreating(true);
     const result = await registerRelyingParty(organizationSlug, data);
-    setSaving(false);
+    setIsCreating(false);
 
     if (!result.success) {
-      setFieldErrors(result.fieldErrors || {});
-      setGlobalError(result.globalError);
+      toast.error("Error creating relying party", {
+        description: result.fieldErrors ? (
+          <DjangoFieldErrors errors={result.fieldErrors} />
+        ) : (
+          result.globalError
+        ),
+      });
     } else {
-      setFieldErrors({});
-      setGlobalError(undefined);
-      setIsCreating(false);
+      setIsOpen(false);
       toast.success("Relying Party Created", {
         description: "The relying party has been created successfully.",
       });
@@ -66,17 +69,22 @@ export default function RelyingPartyManager() {
 
   return (
     <ManageOrganizationLayout>
-      <>
-        <RelyingPartyListEdit />
+      <div className="space-y-6">
+        <div className="flex flex-wrap gap-4 justify-between items-center">
+          <div>
+            <h2 className="text-lg font-medium">Relying parties</h2>
+            <p className="text-sm text-muted-foreground">
+              Update your organization's relying parties.
+            </p>
+          </div>
 
-        <div className="mt-6">
-          <Dialog open={isCreating} onOpenChange={setIsCreating}>
+          <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <DialogTrigger asChild>
-              <Button variant="default">Add a new relying party</Button>
+              <Button variant="default">Add relying party</Button>
             </DialogTrigger>
 
-            <DialogContent className="sm:max-w-2xl sm:max-h-[90vh] flex flex-col">
-              <DialogHeader className="flex-shrink-0">
+            <DialogContent>
+              <DialogHeader>
                 <DialogTitle>Add a new relying party</DialogTitle>
                 <DialogDescription>
                   Fill in the details for the relying party you want to add.
@@ -88,10 +96,8 @@ export default function RelyingPartyManager() {
                     isEditMode: false,
                     defaultValues: initialData,
                     onSubmit: handleSave,
-                    serverErrors: fieldErrors,
-                    globalError: globalError || "",
-                    isSaving: saving,
-                    onClose: () => setIsCreating(false),
+                    isProcessing: isCreating,
+                    onClose: () => setIsOpen(false),
                   }}
                 >
                   <RelyingPartyTabs />
@@ -100,7 +106,11 @@ export default function RelyingPartyManager() {
             </DialogContent>
           </Dialog>
         </div>
-      </>
+
+        <Separator />
+
+        <RelyingPartyListEdit />
+      </div>
     </ManageOrganizationLayout>
   );
 }

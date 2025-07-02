@@ -13,4 +13,3 @@ def save_logo_as_approved_logo(
 ) -> None:
     if instance.is_verified:
         instance.approved_logo = instance.logo
-        print(f"Approved logo set for Organization {instance}")

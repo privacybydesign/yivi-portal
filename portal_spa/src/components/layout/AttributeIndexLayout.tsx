@@ -15,7 +15,8 @@ import { Separator } from "../ui/separator";
 import { Button } from "../ui/button";
 import { HamburgerIcon } from "lucide-react";
 import { Skeleton } from "../ui/skeleton";
-
+import { Badge } from "@/components/ui/badge";
+import { filterAndRankCredentials } from "@/utils/credentialSearch";
 export default function AttributeIndexLayout() {
   const [credentials, setCredentials] = useState<Credential[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -40,15 +41,9 @@ export default function AttributeIndexLayout() {
     grouped[env][key].push(c);
   });
 
-  const filtered = credentials.filter((cred) => {
-    const q = searchQuery.toLowerCase();
-
-    return (
-      cred.attributes.some((attr) => attr.name_en?.toLowerCase().includes(q)) ||
-      cred.name_en?.toLowerCase().includes(q) ||
-      cred.org_name?.toLowerCase().includes(q) ||
-      cred.ap_slug?.toLowerCase().includes(q)
-    );
+  const filtered = filterAndRankCredentials({
+    searchQuery,
+    credentials,
   });
 
   const isMainPage = useMatch("/attribute-index");
@@ -76,17 +71,26 @@ export default function AttributeIndexLayout() {
             if (!credential_id || !ap_slug || !environment) return null;
 
             return (
-              <li key={id} className="p-2 hover:bg-gray-100">
+              <li key={id}>
                 <Link
                   to={`/attribute-index/credentials/${environment}/${ap_slug}/${credential_id}`}
                   onClick={onSelect}
-                  className="block text-sm font-medium text-gray-900"
+                  className="flex items-center justify-between p-2 hover:bg-gray-100 rounded cursor-pointer no-underline"
                 >
-                  {name_en}
+                  <div>
+                    <div className="text-sm font-medium text-gray-900">
+                      {name_en}
+                    </div>
+                    <p className="text-xs text-gray-500">
+                      {credential_id} ({environment})
+                    </p>
+                  </div>
+                  {cred.deprecated_since && (
+                    <div className="ml-2 shrink-0">
+                      <Badge variant="destructive">Deprecated</Badge>
+                    </div>
+                  )}
                 </Link>
-                <p className="text-xs text-gray-500">
-                  {credential_id} ({environment})
-                </p>
               </li>
             );
           })}
@@ -205,7 +209,7 @@ export default function AttributeIndexLayout() {
             : ``)
         }
       >
-        <div className="relative flex mb-4 -mt-6 -mx-6">
+        <div className="relative flex flex-col gap-2 mb-4 -mt-6 -mx-6">
           <div className="md:hidden flex border-r border-b min-w-[var(--topbar-height)]">
             <Button
               variant="ghost"

@@ -22,7 +22,7 @@ function HomePage() {
           {t("explore")}
         </p>
 
-        <div className="grid gap-4 grid-cols-2">
+        <div className="grid gap-4 sm:grid-cols-2">
           <Card>
             <CardHeader>
               <CardTitle>{t("join_ecosystem")}</CardTitle>

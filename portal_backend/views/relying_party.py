@@ -105,6 +105,13 @@ class RelyingPartyListView(APIView):
     def get(self, request: Request, org_slug: str) -> Response:
         organization = get_object_or_404(Organization, slug=org_slug)
         relying_parties = RelyingParty.objects.filter(organization=organization)
+
+        if not (
+            request.user.is_authenticated
+            and IsOrganizationMaintainerOrAdmin().has_permission(request, self)
+        ):
+            relying_parties = relying_parties.filter(published=True)
+
         return Response(
             {
                 "relying_parties": [
@@ -125,12 +132,24 @@ class RelyingPartyRetrieveView(APIView):
     def get(
         self, request: Request, org_slug: str, environment: str, rp_slug: str
     ) -> Response:
+
         relying_party = get_object_or_404(
             RelyingParty,
             organization__slug=org_slug,
             yivi_tme__environment=environment,
             rp_slug=rp_slug,
         )
+
+        if not (
+            request.user.is_authenticated
+            and IsOrganizationMaintainerOrAdmin().has_permission(request, self)
+        ):
+            if not relying_party.published:
+                return Response(
+                    {"error": "You are not allowed to view this relying party."},
+                    status=status.HTTP_404_NOT_FOUND,
+                )
+
         hostnames = RelyingPartyHostname.objects.filter(relying_party=relying_party)
         condiscon = Condiscon.objects.filter(relying_party=relying_party).first()
         attributes, context_description_en, context_description_nl = [], "", ""
@@ -162,6 +181,7 @@ class RelyingPartyRetrieveView(APIView):
                 "environment": relying_party.yivi_tme.environment,
                 "published_at": relying_party.published_at,
                 "ready": relying_party.ready,
+                "status": relying_party.status,
             }
         )
 
@@ -213,6 +233,17 @@ class RelyingPartyUpdateView(APIView):
             updated_fields = set()
 
             def update_context():
+                nonlocal condiscon
+                if condiscon is None:
+                    condiscon = create_condiscon(
+                        attributes=data["attributes"],
+                        contexts={
+                            "en": data.get("context_description_en", ""),
+                            "nl": data.get("context_description_nl", ""),
+                        },
+                        relying_party=relying_party,
+                    )
+                    create_condiscon_attributes(condiscon, data["attributes"])
                 update_condiscon_context(condiscon, data)
                 updated_fields.add("context")
 
@@ -232,6 +263,7 @@ class RelyingPartyUpdateView(APIView):
                 else:
                     update_condiscon_attributes(condiscon, data["attributes"])
                     condiscon.condiscon = make_condiscon_json(data["attributes"])
+                    condiscon.full_clean()
                     condiscon.save()
 
                 updated_fields.add("attributes")

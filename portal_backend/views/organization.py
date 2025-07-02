@@ -172,36 +172,48 @@ class OrganizationMaintainersView(APIView):
                 {"email": "Email is required"}, status=status.HTTP_400_BAD_REQUEST
             )
 
-        user = User.objects.prefetch_related("organizations").get(email=email)
+        if not organization.is_verified:
+            return Response(
+                {
+                    "error": "Cannot add maintainers to an unverified organization. Wait for verification."
+                },
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
         try:
+            user = User.objects.prefetch_related("organizations").get(email=email)
             if user:
                 if organization in user.organizations.all():
+
                     return Response(
                         {
                             "email": f"User with email {email} is already a maintainer of this organization"
                         },
                         status=status.HTTP_400_BAD_REQUEST,
                     )
-            else:
-                user = User(email=email, role="maintainer")
+
+        except User.DoesNotExist:
+            user = User(email=email, role="maintainer")
+            try:
                 user.full_clean()
                 user.save()
-            user.organizations.add(organization)
 
-        except ValidationError as e:
-            transaction.set_rollback(True)
-            logger.error(f"Validation error creating user: {e}")
-            return Response(
-                {"error": e.message_dict},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        except Exception as e:
-            transaction.set_rollback(True)
-            logger.error(f"Unexpected error creating user: {e}")
-            return Response(
-                {"error": "Failed to create user"},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            )
+            except ValidationError as e:
+                transaction.set_rollback(True)
+                logger.error(f"Validation error creating user: {e}")
+                return Response(
+                    {"error": e.message_dict},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            except Exception as e:
+                transaction.set_rollback(True)
+                logger.error(f"Unexpected error creating user: {e}")
+                return Response(
+                    {"error": "Failed to create user"},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                )
+
+            user.organizations.add(organization)
 
         # Send email notification to the maintainer that was just added
         try:
@@ -224,6 +236,7 @@ class OrganizationMaintainersView(APIView):
             email_notification.content_subtype = "html"
             email_notification.send()
         except Exception as e:
+            transaction.set_rollback(True)
             logger.error(f"Error sending email notification: {e}")
             return Response(
                 {"error": f"Failed to send email notification: {e}"},
@@ -274,3 +287,25 @@ class OrganizationMaintainerView(APIView):
                 {"error": "User is not a maintainer of this organization"},
                 status=status.HTTP_404_NOT_FOUND,
             )
+
+
+class OrganizationNameAndSlugView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    @swagger_auto_schema(responses={200: "Success", 404: "Not Found"})
+    def get(self, request: Request) -> Response:
+        """Get all of maintainer's organizations' names and slugs to display in the dropdown"""
+
+        user = User.objects.filter(email=request.user.email).first()
+        orgs = user.organizations.all()
+
+        return Response(
+            [
+                {
+                    "name_en": org.name_en,
+                    "slug": org.slug,
+                }
+                for org in orgs
+            ],
+            status=status.HTTP_200_OK,
+        )

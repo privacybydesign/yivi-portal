@@ -17,11 +17,10 @@ import type { RelyingPartyFormData } from "../validation-schema";
 
 type ReadyCheckboxProps = {
   control: Control<RelyingPartyFormData>;
-  serverErrors: Partial<Record<keyof RelyingPartyFormData, string>>;
 };
 
 export default function ReadyCheckbox(props: ReadyCheckboxProps) {
-  const { control, serverErrors } = props;
+  const { control } = props;
 
   return (
     <div className="space-y-2 mt-4">
@@ -48,8 +47,8 @@ export default function ReadyCheckbox(props: ReadyCheckboxProps) {
                     <Info className="w-3 h-3" />
                   </div>
                 </TooltipTrigger>
-                <TooltipContent side="top" className="max-w-md break-words">
-                  <p className="justify-center text-sm">
+                <TooltipContent side="top">
+                  <p className="text-justify">
                     Marking this relying party as "ready" indicates that it is
                     prepared for review and publication. You may choose to leave
                     it unmarked — in that case, your registration will remain in
@@ -58,7 +57,7 @@ export default function ReadyCheckbox(props: ReadyCheckboxProps) {
                 </TooltipContent>
               </Tooltip>
             </FormLabel>
-            <FormMessage>{serverErrors.ready}</FormMessage>
+            <FormMessage />
           </FormItem>
         )}
       />

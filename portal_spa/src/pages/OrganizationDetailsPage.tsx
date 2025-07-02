@@ -408,36 +408,37 @@ export default function OrganizationPage() {
                 Loading RP details...
               </div>
             ) : rpDetails.length > 0 ? (
-              rpDetails.map((rp, index) => (
-                <Card key={index} className="mb-6 border shadow-sm ">
-                  <CardHeader>
-                    <CardTitle>
-                      {rp.rp_slug}{" "}
-                      <span className="text-sm text-gray-500">
-                        ({rp.environment})
-                      </span>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div>
-                      <h4 className="font-medium">
-                        {t("rp_details.authorized_hostnames")}
-                      </h4>
-                      <ul className="list-disc list-inside text-sm font-mono">
-                        {rp.hostnames.length > 0 ? (
-                          rp.hostnames.map((h, i) => (
-                            <li key={i}>{h.hostname}</li>
-                          ))
-                        ) : (
-                          <li className="text-gray-500">
-                            {t("rp_details.no_hostnames")}
-                          </li>
-                        )}
-                      </ul>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))
+              rpDetails.map(
+                (rp, index) =>
+                  rp.status === "published" && (
+                    <Card key={index} className="mb-6 border shadow-sm ">
+                      <CardHeader>
+                        <CardTitle>
+                          {rp.rp_slug}{" "}
+                          <span className="text-sm text-gray-500">
+                            ({rp.environment})
+                          </span>
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <div>
+                          <h4 className="font-medium">Authorized Hostnames</h4>
+                          <ul className="list-disc list-inside text-sm font-mono">
+                            {rp.hostnames.length > 0 ? (
+                              rp.hostnames.map((h, i) => (
+                                <li key={i}>{h.hostname}</li>
+                              ))
+                            ) : (
+                              <li className="text-gray-500">
+                                No hostnames registered
+                              </li>
+                            )}
+                          </ul>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )
+              )
             ) : (
               <div className="text-gray-600">{t("rp_details.no_rps")}</div>
             )}

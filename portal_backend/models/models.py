@@ -153,7 +153,7 @@ class TrustModel(models.Model):
 class YiviTrustModelEnv(models.Model):
     ENV_CHOICES = [
         ("production", "Production"),
-        ("development", "Development"),
+        ("staging", "Staging"),
         ("demo", "Demo"),
     ]
     trust_model = models.ForeignKey(
@@ -406,7 +406,9 @@ class CredentialAttribute(models.Model):
 
 
 class RelyingPartyHostname(models.Model):
-    DOMAIN_REGEX = r"^(?!-)[A-Za-z0-9-]{1,63}(?<!-)(\.[A-Za-z0-9-]{1,63}(?<!-))*(\.[A-Za-z]{2,6})+$"
+    DOMAIN_REGEX = (
+        r"^(?=^.{1,253}$)(([a-z\d]([a-z\d-]{0,62}[a-z\d])*[\.]){1,3}[a-z]{1,61})$"
+    )
     hostname = models.CharField(
         max_length=255,
         unique=True,

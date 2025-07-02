@@ -41,7 +41,7 @@ export default function MaintainerManagePage() {
   useEffect(() => {
     if (slug) {
       fetchOrganization(slug as string).then((response) =>
-        setOrganization(response?.data)
+        setOrganization(response?.data),
       );
       refreshMaintersForOrganization(slug as string);
     }
@@ -50,7 +50,7 @@ export default function MaintainerManagePage() {
   const deleteMaintainer = async (maintainer: Maintainer) => {
     const { success, message } = await deleteMaintainerFromOrganization(
       maintainer,
-      organization
+      organization,
     );
     refreshMaintersForOrganization(organization?.slug ?? "");
 
@@ -66,7 +66,7 @@ export default function MaintainerManagePage() {
   return (
     <ManageOrganizationLayout>
       <div className="space-y-6">
-        <div className="flex justify-between items-center">
+        <div className="flex flex-wrap gap-4 justify-between items-center">
           <div>
             <h2 className="text-lg font-medium">Maintainers</h2>
             <p className="text-sm text-muted-foreground">

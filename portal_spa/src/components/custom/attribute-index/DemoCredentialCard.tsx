@@ -78,6 +78,7 @@ export function DemoCredentialCard({ credential }: Props) {
           attr={attr}
           value={attributeValues[attr.credential_attribute_tag] || ""}
           onChange={(val) => handleChange(attr.credential_attribute_tag, val)}
+          environment="demo"
         />
       ))}
       <Button type="submit" disabled={loading}>
