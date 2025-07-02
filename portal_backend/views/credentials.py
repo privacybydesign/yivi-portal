@@ -19,7 +19,7 @@ class CredentialListView(APIView):
             )
             .prefetch_related("attributes")
             .filter(deprecated_since__isnull=True)
-        )
+        ).order_by("name_en")
         serializer = CredentialListSerializer(credentials, many=True)
         return Response({"credentials": serializer.data})
 
