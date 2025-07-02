@@ -37,7 +37,6 @@ export default function OrganizationsListPage() {
 
   const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [loading, setLoading] = useState(true);
-  const [applyingFilters, setApplyingFilters] = useState(false);
 
   // Pagination state
   const [totalCount, setTotalCount] = useState(0);
@@ -81,12 +80,10 @@ export default function OrganizationsListPage() {
         setOrganizations(data.results);
 
         setLoading(false);
-        setApplyingFilters(false);
       })
       .catch((error) => {
         console.error("Error fetching organizations:", error);
         setLoading(false);
-        setApplyingFilters(false);
       });
   };
 
@@ -128,7 +125,6 @@ export default function OrganizationsListPage() {
     selectAPs: boolean,
     selectRPs: boolean
   ) => {
-    setApplyingFilters(true);
     updateQueryParams({
       page: "1",
       search: searchQuery || undefined,
@@ -292,7 +288,7 @@ export default function OrganizationsListPage() {
 
       <Table>
         <TableCaption>
-          {!loading && !applyingFilters && (
+          {!loading && (
             <>
               Showing {totalCount > 0 ? getVisibleRange().start : 0} to{" "}
               {getVisibleRange().end} of {totalCount} organizations
@@ -368,12 +364,10 @@ export default function OrganizationsListPage() {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {loading || applyingFilters ? (
+          {loading ? (
             <TableRow>
               <TableCell colSpan={5} className="text-center py-4 text-gray-500">
-                {applyingFilters
-                  ? "Applying filters..."
-                  : "Loading organizations..."}
+                Loading organizations...
               </TableCell>
             </TableRow>
           ) : (
