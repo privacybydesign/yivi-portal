@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import type { YiviEnvironment } from "@/models/yivi-environment";
 import { useParams } from "react-router-dom";
 import { AxiosError } from "axios";
+import { useTranslation } from "react-i18next";
 
 export default function EnvironmentDetailsPage() {
   const { environment: currentEnv } = useParams();
@@ -12,10 +13,11 @@ export default function EnvironmentDetailsPage() {
     []
   );
   const [loading, setLoading] = useState(true);
+  const { t } = useTranslation();
 
   useEffect(
     () => window.scrollTo({ top: 0, behavior: "smooth" }),
-    [currentEnv],
+    [currentEnv]
   );
 
   useEffect(() => {
@@ -24,11 +26,11 @@ export default function EnvironmentDetailsPage() {
         const response = await axiosInstance.get("/v1/yivi/environments/");
         setYiviEnvironment(response.data);
       } catch (error) {
-        toast.error("Something went wrong", {
+        toast.error(t("generic.something_went_wrong"), {
           description:
             error instanceof AxiosError
               ? error.message
-              : "Please try again at a later time.",
+              : t("generic.try_again_later"),
         });
       } finally {
         setLoading(false);
@@ -46,14 +48,14 @@ export default function EnvironmentDetailsPage() {
     <div className="space-y-8">
       <h1 className="text-3xl font-semibold">
         {currentEnv
-          ? `${
-              currentEnv.charAt(0).toUpperCase() + currentEnv.slice(1)
-            } Environment`
-          : "All Yivi Trust Model Environments"}
+          ? `${currentEnv.charAt(0).toUpperCase() + currentEnv.slice(1)} ${t(
+              "environment.details"
+            )}`
+          : t("environment.all")}
       </h1>
 
       {loading && (
-        <p className="text-muted-foreground">Loading environments...</p>
+        <p className="text-muted-foreground">{t("environment.loading")}</p>
       )}
 
       {!loading && selectedYiviEnvironment.length === 0 && (
@@ -70,17 +72,21 @@ export default function EnvironmentDetailsPage() {
             </CardHeader>
             <CardContent className="text-sm space-y-2">
               <div>
-                <span className="font-medium">ID:</span> {yiviEnv.scheme_id}
+                <span className="font-medium">{t("environment.id")}: </span>
+                {yiviEnv.scheme_id}
               </div>
               <div>
-                <span className="font-medium">Name:</span> {yiviEnv.name_en}
+                <span className="font-medium">{t("environment.name")}: </span>
+                {yiviEnv.name_en}
               </div>
               <div>
-                <span className="font-medium">Description:</span>{" "}
+                <span className="font-medium">
+                  {t("environment.description")}:{" "}
+                </span>{" "}
                 {yiviEnv.description_en}
               </div>
               <div>
-                <span className="font-medium">URL:</span>{" "}
+                <span className="font-medium">{t("environment.url")}: </span>{" "}
                 <a
                   href={`${yiviEnv.url}/description.xml`}
                   target="_blank"
@@ -91,7 +97,9 @@ export default function EnvironmentDetailsPage() {
                 </a>
               </div>
               <div>
-                <span className="font-medium">Timestamp Server:</span>{" "}
+                <span className="font-medium">
+                  {t("environment.timestamp_server")}:{" "}
+                </span>{" "}
                 <a
                   href={yiviEnv.timestamp_server}
                   target="_blank"
@@ -102,7 +110,9 @@ export default function EnvironmentDetailsPage() {
                 </a>
               </div>
               <div>
-                <span className="font-medium">Keyshare Server: </span>{" "}
+                <span className="font-medium">
+                  {t("environment.keyshare_server")}:{" "}
+                </span>{" "}
                 <a
                   href={yiviEnv.keyshare_server}
                   target="_blank"
@@ -113,7 +123,9 @@ export default function EnvironmentDetailsPage() {
                 </a>
               </div>
               <div>
-                <span className="font-medium">Keyshare Website: </span>{" "}
+                <span className="font-medium">
+                  {t("environment.keyshare_website")}:{" "}
+                </span>{" "}
                 <a
                   href={yiviEnv.keyshare_website}
                   target="_blank"
@@ -124,11 +136,15 @@ export default function EnvironmentDetailsPage() {
                 </a>
               </div>
               <div>
-                <span className="font-medium">Keyshare Attribute: </span>{" "}
+                <span className="font-medium">
+                  {t("environment.keyshare_attribute")}:{" "}
+                </span>{" "}
                 {yiviEnv.keyshare_attribute}
               </div>
               <div>
-                <span className="font-medium">Contact Website: </span>{" "}
+                <span className="font-medium">
+                  {t("environment.contact_website")}:{" "}
+                </span>{" "}
                 <a
                   href={yiviEnv.contact_website}
                   target="_blank"

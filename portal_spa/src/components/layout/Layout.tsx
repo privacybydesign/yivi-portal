@@ -54,7 +54,7 @@ export default function Layout() {
         <footer className="bg-white border-t p-4 shadow mt-4">
           <div className="container mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
             <p className="text-center text-sm text-gray-500">
-              &copy; 2025 Yivi Portal. All rights reserved.
+              {t("footer.copyright")}
             </p>
             <div className="flex gap-4 justify-center">
               <Link

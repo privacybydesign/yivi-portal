@@ -14,11 +14,13 @@ import { AxiosError } from "axios";
 import { X } from "lucide-react";
 import { useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 export default function MaintainerManagePage() {
   const slug = useParams()?.organization;
   const [maintainers, setMaintainers] = useState<Maintainer[]>([]);
   const [organization, setOrganization] = useState<Organization>();
+  const { t } = useTranslation();
 
   const refreshMaintersForOrganization = async (organisationSlug: string) => {
     try {
@@ -27,11 +29,9 @@ export default function MaintainerManagePage() {
     } catch (e: unknown) {
       setMaintainers([]);
 
-      toast.error("Something went wrong", {
+      toast.error(t("generic.something_went_wrong"), {
         description:
-          e instanceof AxiosError
-            ? e.message
-            : "Please try again at a later time.",
+          e instanceof AxiosError ? e.message : t("generic.try_again_later"),
       });
 
       console.error(e);
@@ -55,9 +55,9 @@ export default function MaintainerManagePage() {
     refreshMaintersForOrganization(organization?.slug ?? "");
 
     if (success) {
-      toast.success("Maintainer deleted successfully");
+      toast.success(t("maintainers.delete_success"));
     } else {
-      toast.error("Something went wrong", {
+      toast.error(t("generic.something_went_wrong"), {
         description: message,
       });
     }
@@ -68,9 +68,9 @@ export default function MaintainerManagePage() {
       <div className="space-y-6">
         <div className="flex flex-wrap gap-4 justify-between items-center">
           <div>
-            <h2 className="text-lg font-medium">Maintainers</h2>
+            <h2 className="text-lg font-medium">{t("maintainers.title")}</h2>
             <p className="text-sm text-muted-foreground">
-              Update your organization's maintainers.
+              {t("maintainers.description")}
             </p>
           </div>
           {organization && (

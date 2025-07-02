@@ -19,6 +19,7 @@ import RelyingPartyTabs from "@/components/forms/relying-party/RelyingPartyTabs"
 import { RelyingPartyContext } from "@/contexts/relying-party/RelyingPartyContext";
 import DjangoFieldErrors from "@/components/custom/DjangoErrorList";
 import { Separator } from "@/components/ui/separator";
+import { useTranslation } from "react-i18next";
 
 // This data will be used to prefill the Relying Party create form
 const initialData: RelyingPartyFormData = {
@@ -42,6 +43,7 @@ export default function RelyingPartyManager() {
   const organizationSlug = params?.organization as string;
   const [isCreating, setIsCreating] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+  const { t } = useTranslation();
 
   const handleSave = async (data: RelyingPartyFormData) => {
     setIsCreating(true);
@@ -58,8 +60,8 @@ export default function RelyingPartyManager() {
       });
     } else {
       setIsOpen(false);
-      toast.success("Relying Party Created", {
-        description: "The relying party has been created successfully.",
+      toast.success(t("relying_party.create_success"), {
+        description: t("relying_party.create_success_desc"),
       });
       setTimeout(() => {
         window.location.reload();
@@ -80,14 +82,14 @@ export default function RelyingPartyManager() {
 
           <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <DialogTrigger asChild>
-              <Button variant="default">Add relying party</Button>
+              <Button variant="default">{t("relying_party.add_button")}</Button>
             </DialogTrigger>
 
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Add a new relying party</DialogTitle>
+            <DialogContent className="sm:max-w-2xl sm:max-h-[90vh] flex flex-col">
+              <DialogHeader className="flex-shrink-0">
+                <DialogTitle>{t("relying_party.add_title")}</DialogTitle>
                 <DialogDescription>
-                  Fill in the details for the relying party you want to add.
+                  {t("relying_party.add_description")}
                 </DialogDescription>
               </DialogHeader>
               <div className="flex-1 overflow-y-auto pr-2">

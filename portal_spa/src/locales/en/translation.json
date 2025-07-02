@@ -49,5 +49,71 @@
     "relying_party": "Relying Party",
     "contact_email": "Contact Email",
     "contact_address": "Contact Address"
+  },
+  "manage": {
+    "title": "Manage {{name}}",
+    "description": "Manage your organization settings.",
+    "sidebar": {
+      "basic_information": "Basic information",
+      "maintainers": "Maintainers",
+      "relying_parties": "Relying parties",
+      "attestation_providers": "Attestation providers"
+    },
+    "basic_info_heading": "Basic information",
+    "update_basic_info": "Update your organization's basic information.",
+    "pending_verification": "Pending verification",
+    "pending_verification_desc": "Your organization details is waiting to be reviewed. This means it won't be publicly visible until it is verified."
+  },
+  "maintainers": {
+    "title": "Maintainers",
+    "description": "Update your organization's maintainers.",
+    "delete_success": "Maintainer deleted successfully"
+  },
+  "relying_party": {
+    "add_button": "Add a new relying party",
+    "add_title": "Add a new relying party",
+    "add_description": "Fill in the details for the relying party you want to add.",
+    "create_success": "Relying Party Created",
+    "create_success_desc": "The relying party has been created successfully."
+  },
+  "attribute_index": {
+
+  },
+  "generic": {
+    "something_went_wrong": "Something went wrong",
+    "try_again_later": "Please try again at a later time."
+  },
+  "environment": {
+    "all": "All Yivi Trust Model Environments",
+    "loading": "Loading environments...",
+    "no_match": "No matching environments found.",
+    "details": "Environment",
+    "id": "ID",
+    "name": "Name",
+    "description": "Description",
+    "url": "URL",
+    "timestamp_server": "Timestamp Server",
+    "keyshare_server": "Keyshare Server",
+    "keyshare_website": "Keyshare Website",
+    "keyshare_attribute": "Keyshare Attribute",
+    "contact_website": "Contact Website"
+  },
+  "ap_detail_page": {
+    "title": "Attestation Provider Details",
+    "identifier": "Identifier",
+    "full_identifier": "Full Identifier",
+    "organization": "Organization",
+    "environment": "Environment",
+    "contact_email": "Contact Email",
+    "contact_website": "Contact Website",
+    "credentials_title": "Credentials Issued by this Provider",
+    "no_credentials": "No credentials found for this provider.",
+    "deprecated": "Deprecated"
+  },
+  "auth": {
+    "not_authenticated": "You are not authenticated. Redirecting..."
+  },
+  "footer": {
+    "copyright": "© 2025 Yivi Portal. All rights reserved."
   }
 }
