@@ -12,7 +12,7 @@ interface StateStore {
   organizationSlugs: string[];
   initialized: boolean;
   setAccessToken: (accessToken: string | null) => void;
-  initializeAuth: () => void;
+  initializeAuth: () => Promise<void>;
   refreshToken: (data?: unknown) => Promise<string | null>;
 }
 
@@ -63,7 +63,7 @@ const useStore = create<StateStore>((set) => ({
     return null;
   },
 
-  initializeAuth: () => {
+  initializeAuth: async () => {
     const savedAccessToken = localStorage.getItem("accessToken");
 
     if (savedAccessToken) {
@@ -72,14 +72,13 @@ const useStore = create<StateStore>((set) => ({
 
       if (decoded.exp < currentTime + 60) {
         // Try refreshing token
-        useStore.getState().refreshToken();
+        await useStore.getState().refreshToken();
       } else {
         set({
           accessToken: savedAccessToken,
           email: decoded.email,
           role: decoded.role,
           organizationSlugs: decoded.organizationSlugs || [],
-          initialized: true,
         });
       }
     } else {
@@ -89,9 +88,9 @@ const useStore = create<StateStore>((set) => ({
         email: null,
         role: undefined,
         organizationSlugs: [],
-        initialized: true,
       });
     }
+    set({ initialized: true });
   },
 }));
 
@@ -100,9 +99,10 @@ export function useIdleRefresh() {
   const refreshToken = useStore((state) => state.refreshToken);
 
   useEffect(() => {
-    const handler = (event: Event) => {
+    const handler = (event?: Event) => {
       if (
-        (document.visibilityState === "visible" || event.type === "pageshow") &&
+        (document.visibilityState === "visible" ||
+          event?.type === "pageshow") &&
         accessToken
       ) {
         const currentTime = Math.floor(Date.now() / 1000);
@@ -113,9 +113,10 @@ export function useIdleRefresh() {
         }
       }
     };
-
     document.addEventListener("visibilitychange", handler);
     window.addEventListener("pageshow", handler);
+
+    handler(); // Run on first mount
 
     return () => {
       document.removeEventListener("visibilitychange", handler);
