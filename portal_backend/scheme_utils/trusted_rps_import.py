@@ -139,7 +139,7 @@ def create_org_rp(all_RPs_dict: dict, environment: str, repo_path: str) -> None:
                 create_hostnames(rpfields, rp)
         except Exception as e:
             logger.error(f"Failed to process Relying Party {rpfields.slug}: {e}")
-            continue
+            raise
 
 
 # download requestors repo
