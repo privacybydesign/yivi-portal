@@ -365,7 +365,7 @@ def create_update_APs(environment: str) -> None:
                         environment=environment,
                     )
 
-                    for cred_dict in apfields.credentials.items():
+                    for _, cred_dict in apfields.credentials.items():
                         cfields = CredentialFields(cred_dict, apfields)
                         credential = create_credential(ap, cfields, environment)
                         create_credential_attributes(credential, cfields, environment)
