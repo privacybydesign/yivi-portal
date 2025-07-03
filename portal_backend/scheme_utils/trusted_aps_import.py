@@ -371,7 +371,7 @@ def create_update_APs(environment: str) -> None:
                         create_credential_attributes(credential, cfields, environment)
             except Exception as e:
                 logger.error(f"Failed to process Attestation Provider {AP}: {e}")
-                continue
+                raise e
 
         logger.info(f"Found {len(all_APs_dict)} Attestation Providers in the JSON.")
 
