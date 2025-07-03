@@ -6,10 +6,13 @@ import { axiosInstance } from "@/services/axiosInstance";
 import { toast } from "sonner";
 import { apiEndpoint } from "@/services/axiosInstance";
 import { Badge } from "@/components/ui/badge";
+import { useTranslation } from "react-i18next";
 
 export default function AttestationProviderDetailsPage() {
   const { org_slug, environment, ap_slug } = useParams();
   const [apDetails, setApDetails] = useState<AttestationProvider | null>(null);
+
+  const { t } = useTranslation();
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -19,14 +22,14 @@ export default function AttestationProviderDetailsPage() {
     const fetchAttestationProviderDetails = async () => {
       try {
         const response = await axiosInstance.get(
-          `/v1/yivi/organizations/${org_slug}/attestation-provider/${environment}/${ap_slug}/`,
+          `/v1/yivi/organizations/${org_slug}/attestation-provider/${environment}/${ap_slug}/`
         );
         setApDetails(response.data);
       } catch (error) {
         toast.error(
           `Failed to fetch details for ${ap_slug}: ${
             error instanceof Error ? error.message : String(error)
-          }`,
+          }`
         );
       }
     };
@@ -50,7 +53,7 @@ export default function AttestationProviderDetailsPage() {
       <h1 className="text-3xl font-semibold flex items-center gap-3">
         {apDetails?.organization}
         {apDetails?.deprecated_since && (
-          <Badge variant="destructive">Deprecated</Badge>
+          <Badge variant="destructive">{t("ap_detail_page.deprecated")}</Badge>
         )}
       </h1>
 
@@ -70,18 +73,24 @@ export default function AttestationProviderDetailsPage() {
             </div>
             {apDetails?.full_path && (
               <div>
-                <span className="font-medium">Full Identifier:</span>{" "}
+                <span className="font-medium">
+                  {t("ap_detail_page.full_identifier")}:{" "}
+                </span>{" "}
                 {apDetails.full_path}
               </div>
             )}
             <div>
-              <span className="font-medium">Organization:</span>{" "}
+              <span className="font-medium">
+                {t("ap_detail_page.organization")}:{" "}
+              </span>{" "}
               <Link to={`/organizations/${org_slug}`} className="text-blue-600">
                 {apDetails?.organization}
               </Link>
             </div>
             <div>
-              <span className="font-medium">Environment:</span>{" "}
+              <span className="font-medium">
+                {t("ap_detail_page.environment")}:{" "}
+              </span>{" "}
               <Link
                 to={`/attribute-index/environments/${environment}/`}
                 className="text-blue-600"
@@ -91,7 +100,9 @@ export default function AttestationProviderDetailsPage() {
             </div>
             {apDetails?.contact_email && (
               <div>
-                <span className="font-medium">Contact Email:</span>{" "}
+                <span className="font-medium">
+                  {t("ap_detail_page.contact_email")}:{" "}
+                </span>{" "}
                 <a
                   href={`mailto:${apDetails.contact_email}`}
                   className="text-blue-600 hover:underline"
@@ -122,7 +133,7 @@ export default function AttestationProviderDetailsPage() {
       <Card>
         <CardHeader>
           <CardTitle className="text-lg">
-            Credentials Issued by this Provider
+            {t("ap_detail_page.credentials_title")}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4 text-sm">
@@ -142,7 +153,7 @@ export default function AttestationProviderDetailsPage() {
             ))
           ) : (
             <p className="text-gray-500">
-              No credentials found for this provider.
+              {t("ap_detail_page.no_credentials")}
             </p>
           )}
         </CardContent>

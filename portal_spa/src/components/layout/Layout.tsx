@@ -3,6 +3,7 @@ import { Link, Outlet } from "react-router-dom";
 import Header from "@/components/layout/Header";
 import { OrganizationContext } from "@/contexts/organization/OrganizationContext";
 import { axiosInstance } from "@/services/axiosInstance";
+import { useTranslation } from "react-i18next";
 import useStore from "@/store";
 import { buttonVariants } from "../ui/button";
 import { cn } from "@/lib/utils";
@@ -13,6 +14,7 @@ export default function Layout() {
     Record<string, string>
   >({});
   const organizationSlugs = useStore((state) => state.organizationSlugs);
+  const { t } = useTranslation();
 
   useEffect(() => {
     const fetchOrganizationNames = async () => {
@@ -52,7 +54,7 @@ export default function Layout() {
         <footer className="bg-white border-t p-4 shadow mt-4">
           <div className="container mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
             <p className="text-center text-sm text-gray-500">
-              &copy; 2025 Yivi Portal. All rights reserved.
+              {t("footer.copyright")}
             </p>
             <div className="flex gap-4 justify-center">
               <Link
@@ -65,13 +67,13 @@ export default function Layout() {
                 to="https://yivi.app/en/terms_and_conditions_v3/"
                 className={cn(buttonVariants({ variant: "link" }))}
               >
-                Terms of Service
+                {t("terms")}
               </Link>
               <Link
                 to="/privacy-policy"
                 className={cn(buttonVariants({ variant: "link" }))}
               >
-                Privacy Policy
+                {t("privacy")}
               </Link>
             </div>
           </div>

@@ -22,6 +22,7 @@ export interface Credential {
   org_slug: string;
   credential_id: string;
   description_en: string;
+  description_nl: string;
   attributes: CredentialAttribute[];
   full_path: string;
   issue_url: string;

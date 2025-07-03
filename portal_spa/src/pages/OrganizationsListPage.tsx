@@ -21,8 +21,10 @@ import {
   TooltipContent,
 } from "@/components/ui/tooltip";
 import { Info } from "lucide-react";
+import { useTranslation, Trans } from "react-i18next";
 
 export default function OrganizationsListPage() {
+  const { t } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
 
   const [searchQuery, setSearchQuery] = useState(
@@ -206,20 +208,19 @@ export default function OrganizationsListPage() {
         </div>
 
         <div className="mb-4">
-          In the Yivi ecosystem, organizations play one of two roles: they
-          either provide identity attributes or consume them. The list below
-          includes both Attestation Providers and Relying Parties — some
-          organizations may serve as both. You can filter by role or search by
-          name. Learn more about how Yivi works{" "}
-          <a
-            href="https://docs.yivi.app/what-is-yivi"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-blue-600 hover:underline"
-          >
-            here
-          </a>
-          .
+          <Trans
+            i18nKey="list_page.description"
+            components={{
+              a: (
+                <a
+                  href="https://docs.yivi.app/what-is-yivi"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 hover:underline"
+                />
+              ),
+            }}
+          />
         </div>
 
         <div className="border rounded-md p-2 mb-4">
@@ -227,16 +228,10 @@ export default function OrganizationsListPage() {
 
           <div className="grid grid-cols-1 gap-4 mb-4">
             <div>
-              <label
-                htmlFor="search"
-                className="block text-sm font-medium mb-1"
-              >
-                Search
-              </label>
               <input
                 id="search"
                 type="text"
-                placeholder="Search organizations..."
+                placeholder={t("list_page.search_placeholder")}
                 className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 value={searchQuery}
                 onChange={(e) => handleSearch(e.target.value)}
@@ -290,9 +285,20 @@ export default function OrganizationsListPage() {
         <TableCaption>
           {!loading && (
             <>
-              Showing {totalCount > 0 ? getVisibleRange().start : 0} to{" "}
-              {getVisibleRange().end} of {totalCount} organizations
-              {totalPages > 1 && ` (Page ${currentPage} of ${totalPages})`}
+              {totalCount > 0
+                ? t("list_page.showing_range", {
+                    start: getVisibleRange().start,
+                    end: getVisibleRange().end,
+                    total: totalCount,
+                    pageInfo:
+                      totalPages > 1
+                        ? t("list_page.page_info", {
+                            current: currentPage,
+                            totalPages: totalPages,
+                          })
+                        : "",
+                  })
+                : t("list_page.showing_range_no_data")}
             </>
           )}
         </TableCaption>

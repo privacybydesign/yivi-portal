@@ -6,10 +6,12 @@ import { useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import ManageOrganizationLayout from "@/components/layout/organization/manage-organization";
 import { Badge } from "@/components/ui/badge";
+import { useTranslation } from "react-i18next";
 
 export default function ManageLayout() {
   const { organization: slug } = useParams();
   const [organization, setOrganization] = useState<Organization | null>(null);
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (slug) {
@@ -24,9 +26,11 @@ export default function ManageLayout() {
       <ManageOrganizationLayout>
         <div className="space-y-6 ">
           <div>
-            <h2 className="text-lg font-medium">Basic information</h2>
+            <h2 className="text-lg font-medium">
+              {t("manage.basic_info_heading")}
+            </h2>
             <p className="text-sm text-muted-foreground">
-              Update your organization's basic information.
+              {t("manage.update_basic_info")}
             </p>
           </div>
           {organization && (
@@ -37,7 +41,7 @@ export default function ManageLayout() {
                     variant="secondary"
                     className="bg-green-100 text-green-800"
                   >
-                    Verified
+                    {t("organization.verified")}
                   </Badge>
                 </div>
               )}
@@ -47,11 +51,10 @@ export default function ManageLayout() {
                     variant="secondary"
                     className="bg-yellow-100 text-yellow-800"
                   >
-                    Pending verification
+                    {t("manage.pending_verification")}
                   </Badge>
                   <div className="text-sm text-muted-foreground pl-1 italic">
-                    Your organization details is waiting to be reviewed. This
-                    means it won't be publicly visible until it is verified.
+                    {t("manage.pending_verification_desc")}
                   </div>
                 </div>
               )}

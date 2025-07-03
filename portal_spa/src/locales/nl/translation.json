@@ -1,0 +1,117 @@
+{
+  "welcome": "Welkom bij het Yivi-portaal",
+  "explore": "Verken het Yivi-ecosysteem en ontdek hoe je kunt deelnemen.",
+  "join_ecosystem": "Word onderdeel van het Yivi-ecosysteem",
+  "join_ecosystem_desc": "Je kunt jouw organisatie registreren als relying party of attestation provider via het Yivi-portaal.",
+  "register_org": "Registreer een organisatie",
+  "ecosystem_card": "Het Yivi-ecosysteem",
+  "ecosystem_desc": "Ontdek meer over de organisaties die deelnemen aan het Yivi-ecosysteem.",
+  "view_orgs": "Bekijk organisaties",
+  "supported_credentials": "Ondersteunde attributen",
+  "supported_credentials_desc": "Nieuwsgierig naar Yivi? Zoek in de attributenindex van Yivi, waarin alle ondersteunde attributen worden weergegeven.",
+  "view_attribute_index": "Bekijk Attributenindex",
+  "login_scan": "Scan de QR-code met je Yivi-app om je te authenticeren met je e-mailadres. Heb je de app nog niet, download deze dan",
+  "download_here": "hier",
+  "faq_prefix": "Problemen? Lees onze",
+  "faq_link": "veelgestelde vragen",
+  "faq_suffix": "of neem contact op via",
+  "login": "Inloggen",
+  "organizations": "Organisaties",
+  "logout": "Uitloggen",
+  "terms": "Gebruiksvoorwaarden",
+  "privacy": "Privacyverklaring",
+  "ap_details": {
+    "description": "De onderstaande attestation providers zijn geconfigureerd voor deze organisatie. Als het attribuut of de attestation provider in een bepaalde omgeving als verouderd is gemarkeerd, betekent dit dat deze niet langer gebruikt kan worden om attributen uit te geven.",
+    "credential": "De volgende attributen kunnen worden uitgegeven door deze attestation provider.",
+    "no_credentials": "Geen attributen beschikbaar voor deze attestation provider.",
+    "loading": "AP-details laden...",
+    "view_details": "Bekijk details →"
+  },
+  "rp_details": {
+    "description": "De onderstaande relying parties zijn geconfigureerd voor deze organisatie.",
+    "authorized_hostnames": "Geautoriseerde hostnamen",
+    "no_rps": "Geen relying party-configuraties beschikbaar voor deze organisatie.",
+    "no_hostnames": "Geen geautoriseerde hostnamen beschikbaar voor deze relying party.",
+    "loading": "RP-details laden..."
+  },
+  "list_page": {
+    "description": "In het Yivi-ecosysteem hebben organisaties één van twee rollen: ze leveren identiteitsattributen of gebruiken deze. De onderstaande lijst bevat zowel attestation providers als relying parties — sommige organisaties vervullen beide rollen. Je kunt filteren op rol of zoeken op naam. Lees meer over hoe Yivi werkt <a>hier</a>.",
+    "search_placeholder": "Zoek organisaties...",
+    "showing_range": "Toont {{start}} tot {{end}} van {{total}} organisaties{{pageInfo}}",
+    "showing_range_no_data": "Toont 0 tot 0 van 0 organisaties",
+    "page_info": " (Pagina {{current}} van {{totalPages}})"
+
+  },
+  "organization": {
+    "not_found": "De organisatie die je zoekt bestaat niet of is niet beschikbaar.",
+    "loading": "Organisatiedetails laden...",
+    "verified": "Geverifieerd",
+    "attestation_provider": "Attestation Provider",
+    "relying_party": "Relying Party",
+    "contact_email": "Contact e-mail",
+    "contact_address": "Contactadres"
+  },
+  "manage": {
+    "title": "Beheer {{name}}",
+    "description": "Beheer de instellingen van je organisatie.",
+    "sidebar": {
+      "basic_information": "Basisinformatie",
+      "maintainers": "Beheerders",
+      "relying_parties": "Relying parties",
+      "attestation_providers": "Attestation providers"
+    },
+    "basic_info_heading": "Basisinformatie",
+    "update_basic_info": "Werk de basisinformatie van je organisatie bij.",
+    "pending_verification": "In afwachting van verificatie",
+    "pending_verification_desc": "De gegevens van je organisatie wachten op beoordeling. Dit betekent dat deze niet openbaar zichtbaar zijn totdat ze zijn geverifieerd."
+  },
+  "maintainers": {
+    "title": "Beheerders",
+    "description": "Werk de beheerders van je organisatie bij.",
+    "delete_success": "Beheerder succesvol verwijderd"
+  },
+  "relying_party": {
+    "add_button": "Voeg een nieuwe relying party toe",
+    "add_title": "Voeg een nieuwe relying party toe",
+    "add_description": "Vul de gegevens in voor de relying party die je wilt toevoegen.",
+    "create_success": "Relying party aangemaakt",
+    "create_success_desc": "De relying party is succesvol aangemaakt."
+  },
+  "generic": {
+    "something_went_wrong": "Er is iets misgegaan",
+    "try_again_later": "Probeer het later opnieuw."
+  },
+  "environment": {
+    "all": "Alle Yivi Trust Model-omgevingen",
+    "loading": "Omgevingen laden...",
+    "no_match": "Geen overeenkomende omgevingen gevonden.",
+    "details": "Omgeving",
+    "id": "ID",
+    "name": "Naam",
+    "description": "Beschrijving",
+    "url": "URL",
+    "timestamp_server": "Timestamp-server",
+    "keyshare_server": "Keyshare-server",
+    "keyshare_website": "Keyshare-website",
+    "keyshare_attribute": "Keyshare-attribuut",
+    "contact_website": "Contactwebsite"
+  },
+  "ap_detail_page": {
+    "title": "Details van attestation provider",
+    "identifier": "Identifier",
+    "full_identifier": "Volledige identifier",
+    "organization": "Organisatie",
+    "environment": "Omgeving",
+    "contact_email": "Contact e-mail",
+    "contact_website": "Contactwebsite",
+    "credentials_title": "Attributen uitgegeven door deze provider",
+    "no_credentials": "Geen attributen gevonden voor deze provider.",
+    "deprecated": "Verouderd"
+  },
+  "auth": {
+    "not_authenticated": "Je bent niet aangemeld. Je wordt doorgestuurd..."
+  },
+  "footer": {
+    "copyright": "© 2025 Yivi Portal. Alle rechten voorbehouden."
+  }
+}
