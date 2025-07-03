@@ -23,9 +23,8 @@ const DnsChallenges: React.FC<DnsChallengesProps> = ({ hostnames }) => {
     <div className="space-y-4 border border-muted rounded-md p-4 bg-muted/50">
       <h4 className="text-base font-semibold ">DNS challenges</h4>
       <p className="text-sm text-muted-foreground">
-        To make sure that the entered domains belongs to this organization, To
-        confirm that the entered domain belongs to this organization, please add
-        the provided TXT record to your DNS settings.
+        To make sure that the entered domains belongs to this organization,
+        please add the provided TXT record to your DNS settings.
         <br />
         This record must remain in place for as long as you intend to use the
         domain with Yivi. If the challenge record is removed after verification,
@@ -41,7 +40,7 @@ const DnsChallenges: React.FC<DnsChallengesProps> = ({ hostnames }) => {
                 key={index}
                 className="p-4 border rounded-lg bg-white shadow-sm space-y-2"
               >
-                <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-4">
+                <div className="flex-col md:flex-row md:justify-between md:items-start gap-4">
                   <div className="text-sm font-semibold text-gray-800">
                     {host.hostname}
 
