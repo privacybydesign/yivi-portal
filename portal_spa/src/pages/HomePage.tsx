@@ -39,6 +39,24 @@ function HomePage() {
           </Card>
           <Card>
             <CardHeader>
+              <CardTitle>Already a part of Yivi?</CardTitle>
+            </CardHeader>
+            <CardContent className=" flex-col flex-1">
+              <span>
+                Send an email to{" "}
+                <a
+                  className="text-blue-600 hover:underline"
+                  href="mailto:support@yivi.app"
+                >
+                  support@yivi.app
+                </a>{" "}
+                with the name of your organization and the email(s) and we will
+                get back to you as soon as possible.
+              </span>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
               <CardTitle>The Yivi ecosystem</CardTitle>
             </CardHeader>
             <CardContent className="flex flex-col justify-between flex-1">

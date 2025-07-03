@@ -71,7 +71,6 @@ def process_ap_directory(repo_path: str, ap_dir: str) -> dict | None:
 
     logo_path = f"{repo_path}/{ap_dir}/logo.png"
     if not os.path.isfile(logo_path):
-        logger.info(f"No logo found for {ap_dir}")
         raise Exception(f"No logo found for {ap_dir}")
 
     ap_data["logo_path"] = os.path.abspath(logo_path)

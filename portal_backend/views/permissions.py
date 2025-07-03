@@ -30,9 +30,6 @@ class IsOrganizationMaintainerOrAdmin(permissions.BasePermission):
         request_org_slug: str | None = view.kwargs.get("org_slug")
         if request_org_slug is None:  # checking if org slug is present in the request
             return False
-        logger.info(
-            f"Checking if user is maintainer to organization with slug: {request_org_slug}"
-        )
 
         if hasattr(request, "auth"):
             raw_token: AccessToken = str(request.auth)
