@@ -27,6 +27,7 @@ import type {
 import type { Organization } from "@/models/organization";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
 
 export default function AddOrganizationMaintainerInformationForm({
   organization,
@@ -35,6 +36,8 @@ export default function AddOrganizationMaintainerInformationForm({
   organization: Organization;
   onCreate: (organisationSlug: string) => unknown;
 }) {
+  const { t } = useTranslation();
+
   const [defaultFormInput] = useState({
     email: "",
     organizationSlug: organization.slug,
@@ -86,23 +89,19 @@ export default function AddOrganizationMaintainerInformationForm({
   return (
     <Dialog open={modalIsOpen} onOpenChange={setModalIsOpen}>
       <DialogTrigger className={cn(buttonVariants())}>
-        Add maintainer
+        {t("maintainer_form.add_button")}
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Add maintainer</DialogTitle>
+          <DialogTitle>{t("maintainer_form.title")}</DialogTitle>
           <DialogDescription>
-            The user will receive the following permissions:{" "}
+            {t("maintainer_form.description")}{" "}
             <ul className="list-disc pl-5">
-              <li>Modify organization's information such as name and logo</li>
-              <li>Add/remove a relying party</li>
-              <li>Add/remove other maintainers</li>
+              <li>{t("maintainer_form.permission_modify")}</li>
+              <li>{t("maintainer_form.permission_rp")}</li>
+              <li>{t("maintainer_form.permission_maintainers")}</li>
             </ul>
-            <p className="mt-2">
-              A confirmation email will be sent to notify them of their new
-              role. Once they log in with that email address, they’ll be able to
-              manage this organization.
-            </p>
+            <p className="mt-2">{t("maintainer_form.confirmation")}</p>
           </DialogDescription>
         </DialogHeader>
 
@@ -114,9 +113,9 @@ export default function AddOrganizationMaintainerInformationForm({
               render={({ field }) => (
                 <FormItem className="grid md:grid-cols-2 items-start md:gap-x-4">
                   <div className="py-1 space-y-0.5">
-                    <Label>Email address</Label>
+                    <Label>{t("maintainer_form.email_label")}</Label>
                     <FormDescription>
-                      Email address of the maintainer
+                      {t("maintainer_form.email_description")}
                     </FormDescription>
                   </div>
                   <FormControl>
@@ -139,7 +138,7 @@ export default function AddOrganizationMaintainerInformationForm({
 
             <div className="flex sm:justify-end">
               <Button type="submit" disabled={pending} className="col-span-2">
-                {pending ? "Submitting..." : "Submit"}
+                {pending ? t("generic.submitting") : t("generic.submit")}
               </Button>
             </div>
           </form>

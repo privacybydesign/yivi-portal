@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { axiosInstance } from "@/services/axiosInstance";
+import { getLocalizedField } from "@/utils/getLocalizedField";
+import i18n from "@/i18n";
 import { toast } from "sonner";
 import type { YiviEnvironment } from "@/models/yivi-environment";
 import { useParams } from "react-router-dom";
@@ -77,13 +79,13 @@ export default function EnvironmentDetailsPage() {
               </div>
               <div>
                 <span className="font-medium">{t("environment.name")}: </span>
-                {yiviEnv.name_en}
+                {getLocalizedField(yiviEnv, "name", i18n.language)}
               </div>
               <div>
                 <span className="font-medium">
                   {t("environment.description")}:{" "}
                 </span>{" "}
-                {yiviEnv.description_en}
+                {getLocalizedField(yiviEnv, "description", i18n.language)}
               </div>
               <div>
                 <span className="font-medium">{t("environment.url")}: </span>{" "}

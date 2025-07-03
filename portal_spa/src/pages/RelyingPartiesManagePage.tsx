@@ -74,9 +74,11 @@ export default function RelyingPartyManager() {
       <div className="space-y-6">
         <div className="flex flex-wrap gap-4 justify-between items-center">
           <div>
-            <h2 className="text-lg font-medium">Relying parties</h2>
+            <h2 className="text-lg font-medium">
+              {t("relying_party.heading")}
+            </h2>{" "}
             <p className="text-sm text-muted-foreground">
-              Update your organization's relying parties.
+              {t("relying_party.description")}
             </p>
           </div>
 

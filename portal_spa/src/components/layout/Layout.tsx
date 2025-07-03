@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { Link, Outlet } from "react-router-dom";
 import Header from "@/components/layout/Header";
+import { getLocalizedField } from "@/utils/getLocalizedField";
+import i18n from "@/i18n";
 import { OrganizationContext } from "@/contexts/organization/OrganizationContext";
 import { axiosInstance } from "@/services/axiosInstance";
 import { useTranslation } from "react-i18next";
@@ -26,7 +28,8 @@ export default function Layout() {
           const org = data.find(
             (org: Partial<Organization>) => org.slug === slug
           );
-          namesMap[slug] = org?.name_en || slug;
+          namesMap[slug] =
+            getLocalizedField(org, "name", i18n.language) || slug;
         });
 
         setOrganizationNames(namesMap);

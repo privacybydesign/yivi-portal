@@ -10,6 +10,8 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { getLocalizedField } from "@/utils/getLocalizedField";
+import i18n from "@/i18n";
 import { Checkbox } from "@/components/ui/checkbox";
 import { axiosInstance, apiEndpoint } from "@/services/axiosInstance";
 import { useSearchParams, Link } from "react-router-dom";
@@ -349,9 +351,7 @@ export default function OrganizationsListPage() {
                   </div>
                 </TooltipTrigger>
                 <TooltipContent side="top" className="max-w-xs">
-                  <p className="text-sm">
-                    Also known as attestation provider, or an issuer
-                  </p>
+                  <p className="text-sm">{t("list_page.ap_tooltip")}</p>
                 </TooltipContent>
               </Tooltip>{" "}
             </TableHead>
@@ -365,9 +365,7 @@ export default function OrganizationsListPage() {
                   </div>
                 </TooltipTrigger>
                 <TooltipContent side="top" className="max-w-xs">
-                  <p className="text-sm">
-                    Also known as a relying party, or a verifier
-                  </p>
+                  <p className="text-sm">{t("list_page.rp_tooltip")}</p>
                 </TooltipContent>
               </Tooltip>{" "}
             </TableHead>
@@ -378,8 +376,8 @@ export default function OrganizationsListPage() {
             <TableRow>
               <TableCell colSpan={5} className="text-center py-4 text-gray-500">
                 {applyingFilters
-                  ? "Applying filters..."
-                  : "Loading organizations..."}
+                  ? t("list_page.applying_filters")
+                  : t("list_page.loading")}
               </TableCell>
             </TableRow>
           ) : (
@@ -394,7 +392,11 @@ export default function OrganizationsListPage() {
                             src={`${apiEndpoint}${org.logo}`}
                             width={32}
                             height={32}
-                            alt={`${org.name_en} logo`}
+                            alt={`${getLocalizedField(
+                              org,
+                              "name",
+                              i18n.language
+                            )} logo`}
                             className="object-cover w-full h-full"
                             onError={(e) => {
                               e.currentTarget.src = "/logo-placeholder.svg";
@@ -404,7 +406,11 @@ export default function OrganizationsListPage() {
                       ) : (
                         <div className="h-8 w-8 rounded-full bg-gray-100 flex items-center justify-center">
                           <span className="text-gray-500 text-sm font-medium">
-                            {org.name_en.charAt(0)}
+                            {getLocalizedField(
+                              org,
+                              "name",
+                              i18n.language
+                            ).charAt(0)}
                           </span>
                         </div>
                       )}
@@ -414,7 +420,7 @@ export default function OrganizationsListPage() {
                         to={`/organizations/${org.slug}`}
                         className="hover:text-blue-600"
                       >
-                        {org.name_en}
+                        {getLocalizedField(org, "name", i18n.language)}
                       </Link>
                     </TableCell>
                     <TableCell>
@@ -442,7 +448,7 @@ export default function OrganizationsListPage() {
                     colSpan={5}
                     className="text-center py-4 text-gray-500"
                   >
-                    No organizations found matching your criteria
+                    {t("list_page.no_organizations")}
                   </TableCell>
                 </TableRow>
               )}
@@ -455,8 +461,12 @@ export default function OrganizationsListPage() {
       {totalPages > 1 && (
         <div className="flex justify-between items-center mt-6">
           <div className="text-sm text-gray-500">
-            Showing {totalCount > 0 ? getVisibleRange().start : 0} to{" "}
-            {getVisibleRange().end} of {totalCount} organizations
+            {t("list_page.showing_range", {
+              start: totalCount > 0 ? getVisibleRange().start : 0,
+              end: getVisibleRange().end,
+              total: totalCount,
+              pageInfo: "",
+            })}
           </div>
 
           <div className="flex-1 flex justify-center">
@@ -467,7 +477,7 @@ export default function OrganizationsListPage() {
                 onClick={() => handlePageChange(currentPage - 1)}
                 disabled={currentPage === 1 || loading}
               >
-                Previous
+                {t("list_page.previous")}
               </Button>
 
               {getPageNumbers().map((page, index) => (
@@ -490,15 +500,19 @@ export default function OrganizationsListPage() {
                 onClick={() => handlePageChange(currentPage + 1)}
                 disabled={currentPage === totalPages || loading}
               >
-                Next
+                {t("list_page.next")}
               </Button>
             </div>
           </div>
 
           <div className="invisible text-sm text-gray-500">
             {/* This invisible element helps maintain the layout balance */}
-            Showing {totalCount > 0 ? getVisibleRange().start : 0} to{" "}
-            {getVisibleRange().end} of {totalCount} organizations
+            {t("list_page.showing_range", {
+              start: totalCount > 0 ? getVisibleRange().start : 0,
+              end: getVisibleRange().end,
+              total: totalCount,
+              pageInfo: "",
+            })}
           </div>
         </div>
       )}

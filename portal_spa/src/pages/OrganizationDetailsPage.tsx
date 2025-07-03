@@ -9,18 +9,11 @@ import type { AttestationProvider } from "@/models/attestationprovider";
 import { toast } from "sonner";
 import { AlertTriangle } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { getLocalizedField } from "@/utils/getLocalizedField";
 import i18n from "@/i18n";
 
 export default function OrganizationPage() {
   const { t } = useTranslation();
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  function getLocalizedField(obj: any, key: string, lang = i18n.language) {
-    if (lang === "nl" && obj[`${key}_nl`]) return obj[`${key}_nl`];
-    if (obj[`${key}_en`]) return obj[`${key}_en`];
-    if (obj[`${key}_nl`]) return obj[`${key}_nl`];
-    return "";
-  }
 
   const params = useParams();
   const organizationSlug = params?.organization;
@@ -224,7 +217,11 @@ export default function OrganizationPage() {
                 src={`${apiEndpoint}${organization.logo}`}
                 width={50}
                 height={50}
-                alt={`${getLocalizedField(organization, "name")} logo`}
+                alt={`${getLocalizedField(
+                  organization,
+                  "name",
+                  i18n.language
+                )} logo`}
                 className="object-cover w-full h-full"
                 onError={(e) => {
                   e.currentTarget.src = "/logo-placeholder.svg";
@@ -235,7 +232,7 @@ export default function OrganizationPage() {
 
           <div>
             <h1 className="text-3xl font-bold">
-              {getLocalizedField(organization, "name")}
+              {getLocalizedField(organization, "name", i18n.language)}
             </h1>
 
             <div className="flex flex-wrap gap-1">
@@ -303,7 +300,7 @@ export default function OrganizationPage() {
             <p className="mb-4 text-gray-600">{t("ap_details.description")}</p>
             {loadingApDetails ? (
               <div className="py-8 text-center text-gray-500">
-                Loading AP details...
+                {t("ap_details.loading")}
               </div>
             ) : (
               apDetails.map((ap, index) => (
@@ -314,7 +311,7 @@ export default function OrganizationPage() {
                   </span>
                   {ap.deprecated_since && (
                     <Badge variant="destructive" className="ml-2">
-                      Deprecated
+                      {t("ap_detail_page.deprecated")}
                     </Badge>
                   )}
                   <div className="text-sm text-gray-700 mx-2 mt-2">
@@ -359,7 +356,11 @@ export default function OrganizationPage() {
                               <div className="flex flex-wrap gap-2 items-center justify-between">
                                 <div className="flex flex-wrap gap-2 items-center">
                                   <h1 className="text-lg font-semibold text-gray-800">
-                                    {getLocalizedField(cred, "name")}
+                                    {getLocalizedField(
+                                      cred,
+                                      "name",
+                                      i18n.language
+                                    )}
                                   </h1>
                                   <span className="text-sm text-gray-500 font-mono">
                                     ({cred.full_path})
@@ -368,7 +369,7 @@ export default function OrganizationPage() {
                                 <div className="flex gap-2">
                                   {cred.deprecated_since && (
                                     <Badge variant="destructive">
-                                      Deprecated
+                                      {t("ap_detail_page.deprecated")}
                                     </Badge>
                                   )}
                                   <Link
@@ -381,7 +382,11 @@ export default function OrganizationPage() {
                               </div>
                               {(cred.description_en || cred.description_nl) && (
                                 <p className="text-sm text-gray-600 mt-2">
-                                  {getLocalizedField(cred, "description")}
+                                  {getLocalizedField(
+                                    cred,
+                                    "description",
+                                    i18n.language
+                                  )}
                                 </p>
                               )}
 
@@ -405,7 +410,7 @@ export default function OrganizationPage() {
             <p className="mb-4 text-gray-600">{t("rp_details.description")}</p>
             {loadingRpDetails ? (
               <div className="py-8 text-center text-gray-500">
-                Loading RP details...
+                {t("rp_details.loading")}
               </div>
             ) : rpDetails.length > 0 ? (
               rpDetails.map(
@@ -422,7 +427,10 @@ export default function OrganizationPage() {
                       </CardHeader>
                       <CardContent className="space-y-4">
                         <div>
-                          <h4 className="font-medium">Authorized Hostnames</h4>
+                          <h4 className="font-medium">
+                            {" "}
+                            {t("rp_details.authorized_hostnames")}
+                          </h4>
                           <ul className="list-disc list-inside text-sm font-mono">
                             {rp.hostnames.length > 0 ? (
                               rp.hostnames.map((h, i) => (
@@ -430,7 +438,7 @@ export default function OrganizationPage() {
                               ))
                             ) : (
                               <li className="text-gray-500">
-                                No hostnames registered
+                                {t("rp_details.no_hostnames")}
                               </li>
                             )}
                           </ul>

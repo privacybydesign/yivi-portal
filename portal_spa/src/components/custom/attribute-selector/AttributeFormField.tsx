@@ -16,6 +16,8 @@ import {
 } from "@/components/ui/select";
 import type { UseFormReturn } from "react-hook-form";
 import type { Credential } from "@/models/credential";
+import { getLocalizedField } from "@/utils/getLocalizedField";
+import i18n from "@/i18n";
 
 type AttributeFormFieldProps = {
   index: number;
@@ -58,9 +60,9 @@ export default function AttributeFormField({
                     {selected.attributes.map((attr) => (
                       <SelectItem
                         key={attr.credential_attribute_tag}
-                        value={attr.name_en}
+                        value={getLocalizedField(attr, "name", i18n.language)}
                       >
-                        {attr.name_en}
+                        {getLocalizedField(attr, "name", i18n.language)}
                       </SelectItem>
                     ))}
                   </SelectContent>

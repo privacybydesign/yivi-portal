@@ -39,7 +39,9 @@
     "search_placeholder": "Zoek organisaties...",
     "showing_range": "Toont {{start}} tot {{end}} van {{total}} organisaties{{pageInfo}}",
     "showing_range_no_data": "Toont 0 tot 0 van 0 organisaties",
-    "page_info": " (Pagina {{current}} van {{totalPages}})"
+    "page_info": " (Pagina {{current}} van {{totalPages}})",
+    "no_organizations": "Geen organisaties gevonden"
+
 
   },
   "organization": {
@@ -75,11 +77,48 @@
     "add_title": "Voeg een nieuwe relying party toe",
     "add_description": "Vul de gegevens in voor de relying party die je wilt toevoegen.",
     "create_success": "Relying party aangemaakt",
-    "create_success_desc": "De relying party is succesvol aangemaakt."
+    "create_success_desc": "De relying party is succesvol aangemaakt.",
+    "heading": "Relying parties",
+    "description": "Werk de relying parties van je organisatie bij.",
+    "edit": "Bewerken",
+    "delete_failure": "Verwijderen van de relying party mislukt.",
+    "deleted_successfully": "Relying party succesvol verwijderd.",
+    "changes_saved": "Wijzigingen opgeslagen.",
+    "no_changes": "Geen wijzigingen gedetecteerd.",
+    "loading_form": "Formulier laden..."
+  },
+  "maintainer_form": {
+    "add_button": "Voeg een beheerder toe",
+    "title": "Beheerder toevoegen",
+    "description": "De gebruiker krijgt de volgende rechten:",
+    "permission_modify": "Organisatiegegevens aanpassen zoals naam en logo",
+    "permission_rp": "Relying party toevoegen/verwijderen",
+    "permission_maintainers": "Beheerders toevoegen/verwijderen",
+    "confirmation": "Er wordt een bevestigingsmail gestuurd om hen op de hoogte te stellen van hun nieuwe rol. Zodra ze met dat e-mailadres inloggen, kunnen ze deze organisatie beheren.",
+    "email_label": "E-mailadres",
+    "email_description": "E-mailadres van de beheerder"
+  },
+  "attribute_index": {
+    "credential_not_found": "Attribuut niet gevonden.",
+    "demo_info": "Je kunt dit attribuut verkrijgen door de velden hieronder in te vullen. Dit demo-attribuut heeft geen echte waarde maar demonstreert hoe een Yivi-uitgifte werkt.",
+    "deprecated_since": "Verouderd sinds",
+    "issue_url": "Issue-URL"
+  },
+  "register_org_page": {
+    "title": "Organisatie registreren",
+    "info": "Door je organisatie te registreren kun je deelnemen aan het Yivi-ecosysteem als relying party of attestation provider. Je contactgegevens worden alleen gebruikt voor verificatie.",
+    "already_member": "Als je al deel uitmaakt van het Yivi-ecosysteem zoals vermeld <1>hier</1>, hoef je dit formulier niet opnieuw in te vullen. Neem contact met ons op om toegang en beheerdersrechten te krijgen. Je ontvangt een e-mail zodra dit is verwerkt.",
+    "contact": "Als je vragen hebt of hulp nodig hebt, neem dan contact met ons op via <1>support@yivi.app</1>."
   },
   "generic": {
     "something_went_wrong": "Er is iets misgegaan",
-    "try_again_later": "Probeer het later opnieuw."
+    "try_again_later": "Probeer het later opnieuw.",
+    "success": "Succes",
+    "error": "Fout",
+    "info": "Info",
+    "submit": "Versturen",
+    "submitting": "Bezig met versturen...",
+    "loading": "Laden..."
   },
   "environment": {
     "all": "Alle Yivi Trust Model-omgevingen",

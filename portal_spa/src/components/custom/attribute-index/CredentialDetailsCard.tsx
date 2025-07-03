@@ -1,11 +1,15 @@
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Link } from "react-router-dom";
 import type { Credential } from "@/models/credential";
+import { useTranslation } from "react-i18next";
+import i18n from "@/i18n";
+import { getLocalizedField } from "@/utils/getLocalizedField";
 
 type Props = {
   credential: Credential;
 };
 export default function CredentialDetailsCard({ credential }: Props) {
+  const { t } = useTranslation();
   return (
     <Card>
       <CardHeader>
@@ -15,7 +19,9 @@ export default function CredentialDetailsCard({ credential }: Props) {
         <dl className="space-y-3 text-sm">
           <div>
             <dt className="font-medium">Description</dt>
-            <dd>{credential.description_en}</dd>
+            <dd>
+              {getLocalizedField(credential, "description", i18n.language)}
+            </dd>
           </div>
           <div>
             <dt className="font-medium">Short Identifier</dt>
@@ -48,7 +54,7 @@ export default function CredentialDetailsCard({ credential }: Props) {
             </dd>
           </div>
           <div>
-            <dt className="font-medium">Environment</dt>
+            <dt className="font-medium">{t("environment.details")}</dt>
             <dd>
               <Link
                 to={`/attribute-index/environments/${credential.environment}`}
@@ -60,13 +66,15 @@ export default function CredentialDetailsCard({ credential }: Props) {
           </div>
           {credential.deprecated_since && (
             <div>
-              <dt className="font-medium">Deprecated Since</dt>
+              <dt className="font-medium">
+                {t("attribute_index.deprecated_since")}
+              </dt>
               <dd>{credential.deprecated_since}</dd>
             </div>
           )}
           {credential.issue_url && credential.environment !== "demo" && (
             <div>
-              <dt className="font-medium">Issue URL</dt>
+              <dt className="font-medium">{t("attribute_index.issue_url")}</dt>
               <dd className="text-sm">
                 <a
                   href={credential.issue_url}

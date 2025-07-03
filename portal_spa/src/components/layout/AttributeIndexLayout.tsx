@@ -7,6 +7,9 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { useTranslation } from "react-i18next";
+import i18n from "@/i18n";
+import { getLocalizedField } from "@/utils/getLocalizedField";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
 import type { Credential } from "@/models/credential";
@@ -18,6 +21,8 @@ import { Skeleton } from "../ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { filterAndRankCredentials } from "@/utils/credentialSearch";
 export default function AttributeIndexLayout() {
+  const { t } = useTranslation();
+
   const [credentials, setCredentials] = useState<Credential[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [menuOpen, setMenuOpen] = useState(false);
@@ -67,7 +72,7 @@ export default function AttributeIndexLayout() {
       <div className="absolute z-40 bg-white rounded shadow w-full mt-[61px] max-h-80 overflow-auto">
         <ul className="divide-y divide-gray-100">
           {results.map((cred) => {
-            const { credential_id, ap_slug, environment, name_en, id } = cred;
+            const { credential_id, ap_slug, environment, id } = cred;
             if (!credential_id || !ap_slug || !environment) return null;
 
             return (
@@ -79,7 +84,7 @@ export default function AttributeIndexLayout() {
                 >
                   <div>
                     <div className="text-sm font-medium text-gray-900">
-                      {name_en}
+                      {getLocalizedField(cred, "name", i18n.language)}
                     </div>
                     <p className="text-xs text-gray-500">
                       {credential_id} ({environment})
@@ -87,7 +92,9 @@ export default function AttributeIndexLayout() {
                   </div>
                   {cred.deprecated_since && (
                     <div className="ml-2 shrink-0">
-                      <Badge variant="destructive">Deprecated</Badge>
+                      <Badge variant="destructive">
+                        {t("ap_detail_page.deprecated")}
+                      </Badge>{" "}
                     </div>
                   )}
                 </Link>
@@ -172,7 +179,11 @@ export default function AttributeIndexLayout() {
                                         to={`/attribute-index/credentials/${c.environment}/${c.ap_slug}/${c.credential_id}`}
                                         className="text-sm hover:underline transition"
                                       >
-                                        {c.name_en}
+                                        {getLocalizedField(
+                                          c,
+                                          "name",
+                                          i18n.language
+                                        )}
                                       </Link>
                                     </li>
                                   ))}

@@ -16,12 +16,13 @@ import DeleteRelyingPartyDialog, {
 import RelyingPartyTabs from "./RelyingPartyTabs";
 import { RelyingPartyContext } from "@/contexts/relying-party/RelyingPartyContext";
 import DjangoFieldErrors from "@/components/custom/DjangoErrorList";
+import { useTranslation } from "react-i18next";
 
 type FetchRelyingPartiesResponse = {
   relying_parties: RelyingParty[];
 };
-
 export default function RelyingPartyListEdit() {
+  const { t } = useTranslation();
   const params = useParams();
   const organizationSlug = params?.organization as string;
 
@@ -120,15 +121,14 @@ export default function RelyingPartyListEdit() {
     setDeleting(null);
 
     if (!result.success) {
-      toast.error("Error", {
-        description:
-          result.globalError || "Failed to delete the relying party.",
+      toast.error(t("generic.error"), {
+        description: result.globalError || t("relying_party.delete_failure"),
       });
       return;
     }
 
-    toast.success("Success", {
-      description: "Relying Party deleted successfully.",
+    toast.success(t("generic.success"), {
+      description: t("relying_party.deleted_successfully"),
     });
 
     setRelyingParties((prev) => prev.filter((rp) => rp.rp_slug !== rpSlug));
@@ -140,21 +140,21 @@ export default function RelyingPartyListEdit() {
 
   const handleSuccess = (type: "updated" | "nochange" | "error") => {
     if (type === "updated") {
-      toast.success("Success", {
-        description: "Changes saved.",
+      toast.success(t("generic.success"), {
+        description: t("relying_party.changes_saved"),
       });
     } else if (type === "nochange") {
-      toast("Info", {
-        description: "No changes detected.",
+      toast(t("generic.info"), {
+        description: t("relying_party.no_changes"),
       });
     } else {
-      toast.error("Error", {
-        description: "Something went wrong.",
+      toast.error(t("generic.error"), {
+        description: t("generic.something_went_wrong"),
       });
     }
   };
 
-  if (loading) return <p>Loading...</p>;
+  if (loading) return <p>{t("generic.loading")}</p>;
 
   return (
     <div>
@@ -175,7 +175,7 @@ export default function RelyingPartyListEdit() {
                       variant="outline"
                       onClick={() => handleEdit(rp.rp_slug)}
                     >
-                      Edit
+                      {t("relying_party.edit")}
                     </Button>
                   )}
 
@@ -202,7 +202,7 @@ export default function RelyingPartyListEdit() {
               {editingSlug === rp.rp_slug && (
                 <div className="mt-4">
                   {editingLoading || !editingRP ? (
-                    <p>Loading form...</p>
+                    <p>{t("relying_party.loading_form")}</p>
                   ) : (
                     <RelyingPartyContext.Provider
                       value={{

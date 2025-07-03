@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { axiosInstance } from "@/services/axiosInstance";
 import { CredentialAttributeDetails } from "./CredentialAttributeDetails";
+import { getLocalizedField } from "@/utils/getLocalizedField";
 import type { Credential } from "@/models/credential";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
@@ -28,7 +29,9 @@ export function DemoCredentialCard({ credential }: Props) {
       (attr) => !attributeValues[attr.credential_attribute_tag]?.trim()
     );
     if (missing) {
-      toast.error(`Please fill in: ${missing.name_en}`);
+      toast.error(
+        `Please fill in: ${getLocalizedField(missing, "name", i18n.language)}`
+      );
       return;
     }
     try {

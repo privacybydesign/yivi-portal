@@ -1,4 +1,6 @@
 import { Input } from "@/components/ui/input";
+import i18n from "@/i18n";
+import { getLocalizedField } from "@/utils/getLocalizedField";
 import type { CredentialAttribute } from "@/models/credential";
 
 type Props = {
@@ -15,12 +17,13 @@ export function CredentialAttributeDetails({
   onChange,
   environment,
 }: Props) {
-  console.log("env", environment);
   return (
     <div className="border text-sm rounded-lg overflow-hidden">
       <div className="overflow-x-auto p-4 space-y-1">
         <div className="w-max">
-          <span className="font-mono font-bold">{attr.name_en}</span>
+          <span className="font-mono font-bold">
+            {getLocalizedField(attr, "name", i18n.language)}
+          </span>
           <span className="italic"> ({attr.credential_attribute_tag})</span>
         </div>
         <div className="w-max">
@@ -29,13 +32,13 @@ export function CredentialAttributeDetails({
         </div>
         <div className="w-max">
           <span className="font-medium">Description:</span>{" "}
-          {attr.description_en}
+          {getLocalizedField(attr, "description", i18n.language)}
         </div>
         {environment === "demo" && (
           <div className="w-max pt-3">
             <Input
               id={`attribute-${attr.credential_attribute_tag}`}
-              placeholder={attr.name_en}
+              placeholder={getLocalizedField(attr, "name", i18n.language)}
               value={value || ""}
               onChange={(e) => onChange?.(e.target.value)}
             />

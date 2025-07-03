@@ -1,6 +1,8 @@
 import { cn } from "@/lib/utils";
 import { Check } from "lucide-react";
 import { useMemo } from "react";
+import { getLocalizedField } from "@/utils/getLocalizedField";
+import i18n from "@/i18n";
 import type { ControllerRenderProps } from "react-hook-form";
 import type { Credential } from "@/models/credential";
 import type { RelyingPartyFormData } from "@/components/forms/relying-party/validation-schema";
@@ -51,7 +53,8 @@ export default function CredentialSearchFilter({
             >
               <div className="flex justify-between gap-2 w-full items-start">
                 <span className="break-words w-full text-left">
-                  {cred.name_en} ({cred.environment})
+                  {getLocalizedField(cred, "name", i18n.language)} (
+                  {cred.environment}){" "}
                 </span>
                 {cred.id === field.value && (
                   <Check className="h-4 w-4 text-primary shrink-0 mt-1" />

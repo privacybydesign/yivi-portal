@@ -4,6 +4,8 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import i18n from "@/i18n";
+import { getLocalizedField } from "@/utils/getLocalizedField";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import type { Credential } from "@/models/credential";
@@ -78,7 +80,8 @@ export default function CredentialAttributeFields({
                       >
                         {selected ? (
                           <span className="truncate">
-                            {selected.name_en} ({selected.environment})
+                            {getLocalizedField(selected, "name", i18n.language)}{" "}
+                            ({selected.environment})
                           </span>
                         ) : (
                           <span className="text-muted-foreground">

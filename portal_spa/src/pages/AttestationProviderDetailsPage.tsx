@@ -3,6 +3,8 @@ import { useParams, Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { AttestationProvider } from "@/models/attestationprovider";
 import { axiosInstance } from "@/services/axiosInstance";
+import { getLocalizedField } from "@/utils/getLocalizedField";
+import i18n from "@/i18n";
 import { toast } from "sonner";
 import { apiEndpoint } from "@/services/axiosInstance";
 import { Badge } from "@/components/ui/badge";
@@ -145,10 +147,13 @@ export default function AttestationProviderDetailsPage() {
                     to={`/attribute-index/credentials/${environment}/${ap_slug}/${cred.credential_id}`}
                     className="text-blue-600 hover:underline"
                   >
-                    {cred.name_en} ({cred.credential_id})
+                    {getLocalizedField(cred, "name", i18n.language)} (
+                    {cred.credential_id})
                   </Link>
                 </h3>
-                <p className="text-muted-foreground">{cred.description_en}</p>
+                <p className="text-muted-foreground">
+                  {getLocalizedField(cred, "description", i18n.language)}
+                </p>
               </div>
             ))
           ) : (

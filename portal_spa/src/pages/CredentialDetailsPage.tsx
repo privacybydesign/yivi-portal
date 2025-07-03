@@ -1,6 +1,8 @@
 import { useOutletContext, useParams } from "react-router-dom";
 import type { Credential } from "@/models/credential";
 import { Badge } from "@/components/ui/badge";
+import { useTranslation } from "react-i18next";
+import { getLocalizedField } from "@/utils/getLocalizedField";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useEffect } from "react";
 import { Info } from "lucide-react";
@@ -12,6 +14,8 @@ type OutletContext = {
 };
 
 export default function CredentialDetailsPage() {
+  const { t, i18n } = useTranslation();
+
   const { credentials } = useOutletContext<OutletContext>();
   const { environment, ap_slug, credential_id } = useParams();
 
@@ -37,16 +41,20 @@ export default function CredentialDetailsPage() {
   }
 
   if (!credential) {
-    return <div className="text-sm text-red-500">Credential not found.</div>;
+    return (
+      <div className="text-sm text-red-500">
+        {t("attribute_index.credential_not_found")}
+      </div>
+    );
   }
 
   return (
     <div className="space-y-8">
       {/* Header */}
       <h1 className="text-3xl font-semibold flex items-center gap-x-3">
-        {credential.name_en}
+        {getLocalizedField(credential, "name", i18n.language)}
         {credential.deprecated_since && (
-          <Badge variant="destructive">Deprecated</Badge>
+          <Badge variant="destructive">{t("ap_detail_page.deprecated")}</Badge>
         )}
       </h1>
 
@@ -54,11 +62,7 @@ export default function CredentialDetailsPage() {
       {credential.environment === "demo" && (
         <div className="flex items-center gap-x-2 rounded-md bg-yellow-50 p-4 text-yellow-800">
           <Info className="h-8 w-8 mr-3" />
-          <span>
-            You can obtain this credential by filling out the attribute fields
-            below. This demo credential has no real value, other than to
-            demonstrate the experience of a Yivi credential issuance.
-          </span>
+          <span>{t("attribute_index.demo_info")}</span>
         </div>
       )}
 
