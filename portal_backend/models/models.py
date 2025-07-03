@@ -86,7 +86,6 @@ class Organization(models.Model):
         blank=True,
         validators=[FileExtensionValidator(allowed_extensions=["png", "jpg", "jpeg"])],
     )
-    approved_logo = models.ImageField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     last_updated_at = models.DateTimeField(auto_now=True)
 
@@ -107,8 +106,7 @@ class Organization(models.Model):
     def save(self, *args, **kwargs):
         if not self.slug:
             self.slug = slugify(self.name_en)
-        # If the logo has changed when saving, delete the old one
-        # But only if it's not the same as the approved logo, since we keep a copy of all logos that have ever been approved.
+
         if self._logo != self.logo and self._logo:
             if not self.approved_logo == self._logo:
                 self.logo.storage.delete(self._logo.path)

@@ -82,7 +82,6 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     def get_token(cls, user):
         token = super().get_token(user)
 
-        logger.info("User with email: " + user.email + " logged in.")
         # # Add custom claims
         token["email"] = user.email
 
@@ -108,8 +107,6 @@ class YiviSessionProxyStartView(APIView):
     )
     def post(self, request):
         """Start a Yivi session as proxy to the Yivi server."""
-
-        logger.info("Starting a Yivi session: " + settings.YIVI_SERVER_TOKEN)
 
         yivi_server = YiviServer(
             settings.YIVI_SERVER_URL, token=settings.YIVI_SERVER_TOKEN
@@ -147,7 +144,6 @@ class YiviSessionProxyResultView(APIView):
                 return Response(status=400, data="Invalid Yivi session token.")
 
             email = yivi_session_result.get("disclosed")[0][0]["rawvalue"]
-            logger.info("Yivi session result received for:  " + email)
 
             User = get_user_model()
             user, created = User.objects.get_or_create(username=email, email=email)
