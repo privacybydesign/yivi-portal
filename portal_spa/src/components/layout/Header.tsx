@@ -65,7 +65,7 @@ export default function Header() {
           Portal
         </Link>
 
-        <div className="flex items-center gap-6">
+        <div className="flex items-center gap-3">
           <Link
             to="/organizations"
             className={cn(
@@ -79,6 +79,21 @@ export default function Header() {
             )}
           >
             Organizations
+          </Link>
+
+          <Link
+            to="/attribute-index"
+            className={cn(
+              buttonVariants({
+                variant: "ghost",
+                className:
+                  location.pathname === "/attribute-index"
+                    ? "bg-muted hover:bg-muted"
+                    : "",
+              })
+            )}
+          >
+            Attribute Index
           </Link>
 
           {email ? (
