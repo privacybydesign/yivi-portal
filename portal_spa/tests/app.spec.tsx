@@ -1,8 +1,21 @@
-import { it } from 'vitest';
-
+import { expect, it } from "vitest";
+import { generateJwt, renderWithRouter } from "tests/utils";
 import App from "@/App";
-import { renderWithRouter } from "tests/utils";
+import useStore from "@/store";
+import { act } from "@testing-library/react";
 
 it("should render app", () => {
-    renderWithRouter(<App />);
+  renderWithRouter(<App />);
+});
+
+it("should hide login button when logged in", () => {
+  const screen = renderWithRouter(<App />);
+
+  act(() => {
+    useStore.getState().setAccessToken(generateJwt());
+  });
+
+  expect(
+    screen.queryByTestId("header-login-button"),
+  ).to.not.toBeInTheDocument();
 });
