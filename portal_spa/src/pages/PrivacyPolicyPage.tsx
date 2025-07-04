@@ -20,8 +20,8 @@ function PrivacyPolicyPage() {
               The Yivi portal is software by Yivi B.V. (here in after referred
               to as ‘operators’) that uses the Yivi app for user authentication
               to provide services to organizations that want to participate in
-              the Yivi echosystem. For full details on how the Yivi app handles
-              your personal data, please refer to the Yivi privacy statement{" "}
+              the Yivi ecosystem. For full details on how the Yivi app handles
+              your personal data, please refer to the{" "}
               <a
                 href="https://yivi.app/en/privacy/"
                 target="_blank"
