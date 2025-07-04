@@ -51,7 +51,11 @@ function HomePage() {
                   support@yivi.app
                 </a>{" "}
                 with the name of your organization and the email(s) and we will
-                get back to you as soon as possible.
+                get back to you as soon as possible. Read more about this in the{" "}
+                <Link to="/faq" className="text-blue-600 hover:underline">
+                  FAQ
+                </Link>
+                .
               </span>
             </CardContent>
           </Card>
