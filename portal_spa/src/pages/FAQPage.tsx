@@ -132,9 +132,9 @@ export default function FAQPage() {
           <AccordionContent className="text-gray-700">
             The context description is a short description on why you need the
             combination of attributes you are requesting. For example you have
-            an alcohol web shop and you need to ask the user for their age
-            range, as well as an email address to send them a receipt.This will
-            be the context of your relying party's request.
+            an alcohol webshop and you need to ask the user for their age range,
+            as well as an email address to send them a receipt. This will be the
+            context of your relying party's request.
           </AccordionContent>
         </AccordionItem>
       </Accordion>
