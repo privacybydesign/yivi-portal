@@ -52,7 +52,10 @@ function HomePage() {
                 </a>{" "}
                 with the name of your organization and the email(s) and we will
                 get back to you as soon as possible. Read more about this in the{" "}
-                <Link to="/faq" className="text-blue-600 hover:underline">
+                <Link
+                  to="/faq#access-management-page"
+                  className="text-blue-600 hover:underline"
+                >
                   FAQ
                 </Link>
                 .
