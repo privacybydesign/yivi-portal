@@ -14,14 +14,14 @@ function PrivacyPolicyPage() {
       <div className="grid gap-8">
         <div className="grid gap-4">
           <h3 className="text-xl sm:text-3xl font-bold">Privacy Statement</h3>
-          <p className="text-sm">First version authored 1st of July 2025</p>
+          <p className="text-sm">First version authored on 1st of July 2025</p>
           <div>
             <p>
-              The Yivi portal is software by Yivi B.V. (here in after referred
-              to as ‘operators’) that uses the Yivi app for user authentication
-              to provide services to organizations that want to participate in
-              the Yivi echosystem. For full details on how the Yivi app handles
-              your personal data, please refer to the Yivi privacy statement{" "}
+              The Yivi portal is software by Yivi B.V. (hereinafter referred to
+              as ‘operators’) that uses the Yivi app for user authentication to
+              provide services to organizations that want to participate in the
+              Yivi ecosystem. For full details on how the Yivi app handles your
+              personal data, please refer to the{" "}
               <a
                 href="https://yivi.app/en/privacy/"
                 target="_blank"
@@ -50,7 +50,7 @@ function PrivacyPolicyPage() {
               The operators only collect and process data required for the
               operation and security of the Yivi Portal. This includes your
               email address for portal access, and phone number as a point of
-              contact and your organization’s contact address, which are used
+              contact, and your organization’s contact address, which are used
               solely to verify the legitimacy of portal registrations and to
               manage organizational accounts.
             </p>
@@ -63,10 +63,11 @@ function PrivacyPolicyPage() {
             <p>
               When acting as a data controller, the operators have legitimate
               grounds for processing personal data in connection with Yivi: they
-              have your consent, and processing is necessary for fulfillment of
-              their agreement with you. We process personal data only to ensure
-              the essential functions of the portal, such as registration,
-              verification, and secure access for your organization.
+              have your consent, and processing is necessary for the fulfillment
+              of their agreement with you. We process personal data only to
+              ensure the essential functions of the portal, such as
+              registration, verification, and secure access for your
+              organization.
             </p>
           </div>
         </div>
