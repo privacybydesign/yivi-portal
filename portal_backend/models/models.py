@@ -108,8 +108,8 @@ class Organization(models.Model):
             self.slug = slugify(self.name_en)
 
         if self._logo != self.logo and self._logo:
-            if not self.approved_logo == self._logo:
-                self.logo.storage.delete(self._logo.path)
+            self.logo.storage.delete(self._logo.path)
+
         # if any of the fields changed is_verified resets to False
         if (
             self._logo != self.logo
@@ -129,10 +129,6 @@ class Organization(models.Model):
     def delete(self, *args, **kwargs):
         if self.logo:
             storage, path = self.logo.storage, self.logo.path
-            storage.delete(path)
-
-        if self.approved_logo:
-            storage, path = self.approved_logo.storage, self.approved_logo.path
             storage.delete(path)
 
         super().delete(*args, **kwargs)
