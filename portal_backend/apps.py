@@ -7,4 +7,4 @@ class PortalBackendConfig(AppConfig):
 
     def ready(self):
         import portal_backend.signals  # noqa: F401
-        import portal_backend.notify
+        import portal_backend.notify  # noqa: F401 linter thinks it's unused, but it's needed to register the signals
