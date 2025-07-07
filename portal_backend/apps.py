@@ -7,3 +7,4 @@ class PortalBackendConfig(AppConfig):
 
     def ready(self):
         import portal_backend.signals  # noqa: F401
+        import portal_backend.notify
