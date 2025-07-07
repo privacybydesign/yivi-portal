@@ -6,11 +6,13 @@ from portal_backend.models.model_serializers import (
     CredentialListSerializer,
 )
 from rest_framework import permissions, status
+from silk.profiling.profiler import silk_profile
 
 
 class CredentialListView(APIView):
     permission_classes = [permissions.AllowAny]
 
+    @silk_profile(name="CredentialListView.get")
     def get(self, request: Request) -> Response:
         credentials = (
             Credential.objects.select_related(
@@ -31,6 +33,7 @@ class CredentialsListViewWithDeprecated(APIView):
     This view returns all credentials for the attribute index page, including deprecated ones.
     """
 
+    @silk_profile(name="CredentialsListViewWithDeprecated.get")
     def get(
         self,
         request: Request,

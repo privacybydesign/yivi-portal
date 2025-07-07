@@ -25,7 +25,7 @@ organization_update_schema = swagger_auto_schema(
 )
 
 
-organization_maintainer_create_schama = swagger_auto_schema(
+organization_maintainer_create_schema = swagger_auto_schema(
     request_body=openapi.Schema(
         type=openapi.TYPE_OBJECT,
         required=["email"],

@@ -38,6 +38,7 @@ from ..models.models import (
     CondisconAttribute,
 )
 from django.core.exceptions import ValidationError
+from silk.profiling.profiler import silk_profile
 
 
 class RelyingPartyCreateView(APIView):
@@ -47,6 +48,7 @@ class RelyingPartyCreateView(APIView):
     ]
 
     @relying_party_create_schema
+    @silk_profile("RelyingPartyCreateView.post")
     @transaction.atomic
     def post(self, request: Request, org_slug: str) -> Response:
 
@@ -102,6 +104,7 @@ class RelyingPartyListView(APIView):
     permission_classes = [permissions.AllowAny]
 
     @relying_party_list_schema
+    @silk_profile("RelyingPartyListView.get")
     def get(self, request: Request, org_slug: str) -> Response:
         organization = get_object_or_404(Organization, slug=org_slug)
         relying_parties = RelyingParty.objects.filter(organization=organization)
@@ -129,6 +132,7 @@ class RelyingPartyListView(APIView):
 class RelyingPartyRetrieveView(APIView):
     permission_classes = [permissions.AllowAny]
 
+    @silk_profile("RelyingPartyRetrieveView.get")
     def get(
         self, request: Request, org_slug: str, environment: str, rp_slug: str
     ) -> Response:
@@ -193,6 +197,7 @@ class RelyingPartyDeleteView(APIView):
     ]
 
     @relying_party_delete_schema
+    @silk_profile("RelyingPartyDeleteView.delete")
     @transaction.atomic
     def delete(
         self, request: Request, org_slug: str, environment: str, rp_slug: str
@@ -220,6 +225,7 @@ class RelyingPartyUpdateView(APIView):
     permission_classes = [permissions.IsAuthenticated, IsOrganizationMaintainerOrAdmin]
 
     @relying_party_patch_schema
+    @silk_profile("RelyingPartyUpdateView.patch")
     @transaction.atomic
     def patch(self, request: Request, org_slug: str, rp_slug: str) -> Response:
         try:
@@ -342,6 +348,7 @@ class RelyingPartyHostnameStatusView(APIView):
     ]
 
     @relying_party_dns_status_schema
+    @silk_profile("RelyingPartyHostnameStatusView.get")
     def get(
         self, request: Request, org_slug: str, environment: str, rp_slug: str
     ) -> Response:
