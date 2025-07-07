@@ -27,13 +27,16 @@ def slack_notify_handler(input: str) -> None | Exception:
 
 @receiver(post_save, sender=Organization)
 def notify_organization_creation(sender, instance, created, **kwargs):
-    text = f"New organization created: {instance.name_en} on {YIVI_PORTAL_URL} (ID: {instance.id})  "
     if created:
+        text = f"New organization created: {instance.name_en} on {YIVI_PORTAL_URL} (ID: {instance.id})  "
         slack_notify_handler(text)
 
 
 @receiver(post_save, sender=RelyingParty)
 def notify_relying_party_creation(sender, instance, created, **kwargs):
-    text = f"New relying party created: {instance.rp_slug} on {YIVI_PORTAL_URL} (ID: {instance.id}) "
     if created:
+        text = f"New relying party created: {instance.rp_slug} on {YIVI_PORTAL_URL} (ID: {instance.id}) "
+        slack_notify_handler(text)
+    if instance.tracker.has_changed("ready") and instance.ready:
+        text = f"Relying party '{instance.rp_slug}' is now READY FOR REVIEW on {YIVI_PORTAL_URL} (ID: {instance.id})"
         slack_notify_handler(text)

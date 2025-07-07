@@ -12,6 +12,7 @@ from django.utils.text import slugify
 from django_countries.fields import CountryField  # type: ignore
 from PIL import Image
 from phonenumber_field.modelfields import PhoneNumberField  # type: ignore
+from model_utils import FieldTracker  # type: ignore
 
 
 class LogoStorage(FileSystemStorage):
@@ -300,6 +301,7 @@ class RelyingParty(models.Model):
     published_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     last_updated_at = models.DateTimeField(auto_now=True)
+    tracker = FieldTracker()
 
     def __str__(self):
         return f"{self.organization.name_en}"
