@@ -1,4 +1,4 @@
-import { beforeAll, beforeEach, expect, it, vi } from "vitest";
+import { beforeEach, expect, it, vi } from "vitest";
 import { generateJwt, renderWithRouter } from "tests/utils";
 import { screen, waitFor } from "@testing-library/dom";
 

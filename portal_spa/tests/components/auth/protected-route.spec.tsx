@@ -4,7 +4,7 @@ import { screen, waitFor } from "@testing-library/dom";
 
 import App from "@/App";
 
-import "../../mocks";
+import "tests/mocks";
 
 beforeEach(() => {
   vi.clearAllMocks();

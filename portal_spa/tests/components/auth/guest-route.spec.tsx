@@ -2,7 +2,7 @@ import { beforeEach, expect, it, vi } from "vitest";
 import { generateJwt, renderWithRouter } from "tests/utils";
 import { screen, waitFor } from "@testing-library/dom";
 
-import "../../mocks";
+import "tests/mocks";
 
 import useStore from "@/store";
 import App from "@/App";
