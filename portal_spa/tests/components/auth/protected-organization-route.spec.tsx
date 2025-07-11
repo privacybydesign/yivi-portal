@@ -4,13 +4,8 @@ import { screen, waitFor } from "@testing-library/dom";
 
 import useStore from "@/store";
 import App from "@/App";
-import { fetchOrganization } from "@/actions/manage-organization";
-import { generateOrganization } from "../../utils";
-import "../../mocks";
-
-beforeAll(() => {
-  vi.mock("@/actions/manage-organization");
-});
+import { generateOrganization } from "tests/utils";
+import "tests/mocks";
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -19,9 +14,6 @@ beforeEach(() => {
 it("renders the organization management page when authorized", async () => {
   const organization = generateOrganization();
   const claims = { organizationSlugs: [organization.slug] };
-
-  //@ts-expect-error Function is mocked.
-  fetchOrganization.mockResolvedValueOnce(organization);
 
   useStore.getState().setAccessToken(generateJwt(claims));
 
