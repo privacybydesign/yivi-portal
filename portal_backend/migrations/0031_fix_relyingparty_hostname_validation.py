@@ -20,7 +20,7 @@ class Migration(migrations.Migration):
                     django.core.validators.RegexValidator(
                         code="invalid_domain",
                         message="Enter a valid domain (e.g., example.com).",
-                        regex=r"^(?!.{255})[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.(?!-)[a-zA-Z0-9-]{1,63}(?<!-))*\.(?!-)(?:[a-zA-Z0-9-]{2,63})(?<!-)\.?$",
+                        regex=r"^((?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+(?:[a-z]{1,63}))+$",
                     )
                 ],
             ),
