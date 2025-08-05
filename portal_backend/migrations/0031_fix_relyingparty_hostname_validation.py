@@ -17,10 +17,9 @@ class Migration(migrations.Migration):
                 max_length=255,
                 unique=True,
                 validators=[
-                    django.core.validators.RegexValidator(
+                    django.core.validators.DomainNameValidator(
                         code="invalid_domain",
                         message="Enter a valid domain (e.g., example.com).",
-                        regex="^(?!.{256})(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+(?:[a-z]{1,63})$",
                     )
                 ],
             ),
