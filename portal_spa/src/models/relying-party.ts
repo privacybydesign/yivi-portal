@@ -18,6 +18,7 @@ export interface RelyingParty {
   published_at: string | null;
   reviewed_at: string | null;
   status?: string;
+  rejection_remarks?: string;
   context_description_en?: string;
   context_description_nl?: string;
   attributes: CredentialAttribute[];
