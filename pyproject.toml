@@ -26,6 +26,7 @@ djangorestframework-simplejwt = "^5.4.0"
 xmltodict= "0.14.2"
 python-dotenv = "1.0.1"
 django_countries = "7.6.1"
+django-model-utils = "^5.0.0"
 
 [tool.poetry.group.dev.dependencies]
 black = "^23.12.1"

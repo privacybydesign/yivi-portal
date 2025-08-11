@@ -41,7 +41,7 @@ export default function Header() {
         { path: "organizations/:organization/manage/:section" },
         { path: "organizations/register" },
       ],
-      location.pathname
+      location.pathname,
     );
 
     if (isOnProtectedRoute?.length) {
@@ -75,7 +75,7 @@ export default function Header() {
                   location.pathname === "/organizations"
                     ? "bg-muted hover:bg-muted"
                     : "",
-              })
+              }),
             )}
           >
             Organizations
@@ -90,7 +90,7 @@ export default function Header() {
                   location.pathname === "/attribute-index"
                     ? "bg-muted hover:bg-muted"
                     : "",
-              })
+              }),
             )}
           >
             Attribute Index
@@ -146,7 +146,11 @@ export default function Header() {
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
-            <Link to="/login" className={cn(buttonVariants())}>
+            <Link
+              to="/login"
+              className={cn(buttonVariants())}
+              data-testid="header-login-button"
+            >
               Login
             </Link>
           )}

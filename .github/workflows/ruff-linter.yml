@@ -1,9 +1,12 @@
 name: Ruff Linter
 
 on:
-  workflow_dispatch:   
-  pull_request:       
+  workflow_dispatch:
+  pull_request:
     branches: [main]
+    paths-ignore:
+      - portal_spa/**
+      - .github/workflows/react-*.yml
 
 jobs:
   ruff-lint:
