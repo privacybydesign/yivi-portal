@@ -7,7 +7,7 @@ import { AxiosError } from "axios";
 
 let refreshInProgress: Promise<string | null> | null = null;
 
-interface StateStore {
+export interface StateStore {
   accessToken: string | null;
   email: string | null;
   role?: "admin" | "maintainer" | undefined;
@@ -52,7 +52,7 @@ const useStore = create<StateStore>((set) => ({
       try {
         const response = await axiosInstance.post<{ access: string }>(
           "/v1/refreshtoken",
-          data
+          data,
         );
 
         if (response.status !== 200) {

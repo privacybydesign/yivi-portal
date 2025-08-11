@@ -12,6 +12,7 @@ from django.utils.text import slugify
 from django_countries.fields import CountryField  # type: ignore
 from PIL import Image
 from phonenumber_field.modelfields import PhoneNumberField  # type: ignore
+from model_utils import FieldTracker  # type: ignore
 
 
 class LogoStorage(FileSystemStorage):
@@ -108,8 +109,8 @@ class Organization(models.Model):
             self.slug = slugify(self.name_en)
 
         if self._logo != self.logo and self._logo:
-            if not self.approved_logo == self._logo:
-                self.logo.storage.delete(self._logo.path)
+            self.logo.storage.delete(self._logo.path)
+
         # if any of the fields changed is_verified resets to False
         if (
             self._logo != self.logo
@@ -129,10 +130,6 @@ class Organization(models.Model):
     def delete(self, *args, **kwargs):
         if self.logo:
             storage, path = self.logo.storage, self.logo.path
-            storage.delete(path)
-
-        if self.approved_logo:
-            storage, path = self.approved_logo.storage, self.approved_logo.path
             storage.delete(path)
 
         super().delete(*args, **kwargs)
@@ -300,6 +297,7 @@ class RelyingParty(models.Model):
     published_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     last_updated_at = models.DateTimeField(auto_now=True)
+    tracker = FieldTracker()
 
     def __str__(self):
         return f"{self.organization.name_en}"

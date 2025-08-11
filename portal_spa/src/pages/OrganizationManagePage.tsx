@@ -22,7 +22,7 @@ export default function ManageLayout() {
   return (
     <>
       <ManageOrganizationLayout>
-        <div className="space-y-6 ">
+        <div className="space-y-6" data-testid="organization-management">
           <div>
             <h2 className="text-lg font-medium">Basic information</h2>
             <p className="text-sm text-muted-foreground">
