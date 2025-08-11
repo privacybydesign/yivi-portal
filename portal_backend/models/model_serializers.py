@@ -112,6 +112,7 @@ class CredentialAttributeSerializer(serializers.ModelSerializer):
             "description_en",
             "description_nl",
             "full_path",
+            "optional",
         ]
 
 

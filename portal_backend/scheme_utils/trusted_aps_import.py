@@ -252,6 +252,7 @@ def create_credential_attributes(
 
             name = attr.get("Name", {})
             desc = attr.get("Description", {})
+            optional = attr.get("@optional") == "true"
 
             CredentialAttribute.objects.update_or_create(
                 credential=credential,
@@ -264,6 +265,7 @@ def create_credential_attributes(
                     "name_nl": name.get("nl") or name.get("en"),
                     "description_en": desc.get("en") or "No description provided",
                     "description_nl": desc.get("nl") or "No description provided",
+                    "optional": optional,
                 },
             )
         except Exception as e:
