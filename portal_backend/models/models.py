@@ -402,9 +402,7 @@ class CredentialAttribute(models.Model):
 
 
 class RelyingPartyHostname(models.Model):
-    DOMAIN_REGEX = (
-        r"^(?=^.{1,253}$)(([a-z\d]([a-z\d-]{0,62}[a-z\d])*[\.]){1,3}[a-z]{1,61})$"
-    )
+    DOMAIN_REGEX = r"^((?:([a-z0-9]\.|[a-z0-9][a-z0-9\-]{0,61}[a-z0-9])\.)+)([a-z0-9]{2,63}|(?:[a-z0-9][a-z0-9\-]{0,61}[a-z0-9]))\.?$"  # Using https://regexr.com/3e8n2
     hostname = models.CharField(
         max_length=255,
         unique=True,
