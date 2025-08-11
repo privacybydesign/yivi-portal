@@ -325,3 +325,27 @@ class RelyingPartyCreateTest(APITestCase):
         )
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
+
+    def test_hostname_validation_malformed(self):
+        """Test that the hostname validation will not accept malformed hostnames"""
+        url = reverse("portal_backend:rp-create", args=[self.organization.slug])
+
+        new_data = self.relying_party_data
+        new_data["hostnames"].append({"hostname": "-invalid.domain.nl"})
+        response = self.client.post(url, self.relying_party_data, format="json")
+        self.assertEqual(response.status_code, 400)
+        self.assertFalse(
+            RelyingParty.objects.filter(rp_slug="test-relying-party").exists()
+        )
+
+    def test_hostname_validation_correct_format(self):
+        """Test that the hostname validation accepts  standard domains and subdomains"""
+
+        url = reverse("portal_backend:rp-create", args=[self.organization.slug])
+        new_data = self.relying_party_data
+        new_data["hostnames"].append({"hostname": "test.domain.many.sub.domains.nl"})
+        response = self.client.post(url, self.relying_party_data, format="json")
+        self.assertEqual(response.status_code, 201)
+        self.assertTrue(
+            RelyingParty.objects.filter(rp_slug="test-relying-party").exists()
+        )
