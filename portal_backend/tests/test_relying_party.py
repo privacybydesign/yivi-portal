@@ -372,7 +372,6 @@ class RelyingPartyCreateTest(APITestCase):
                 new_data["hostnames"].append(case)
 
                 response = self.client.post(url, new_data, format="json")
-                print(response.data)
                 self.assertEqual(response.status_code, 201)
                 self.assertTrue(
                     RelyingParty.objects.filter(rp_slug=new_data["rp_slug"]).exists()
