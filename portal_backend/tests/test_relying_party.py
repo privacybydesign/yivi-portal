@@ -327,25 +327,53 @@ class RelyingPartyCreateTest(APITestCase):
         self.assertEqual(response.status_code, 200)
 
     def test_hostname_validation_malformed(self):
-        """Test that the hostname validation will not accept malformed hostnames"""
+        """Test various invalid hostnames"""
         url = reverse("portal_backend:rp-create", args=[self.organization.slug])
 
-        new_data = self.relying_party_data
-        new_data["hostnames"].append({"hostname": "-invalid.domain.nl"})
-        response = self.client.post(url, self.relying_party_data, format="json")
-        self.assertEqual(response.status_code, 400)
-        self.assertFalse(
-            RelyingParty.objects.filter(rp_slug="test-relying-party").exists()
-        )
+        INVALID_HOSTNAMES = [
+            {"hostname": "-invalid.domain.nl"},
+            {"hostname": "example-.com"},
+            {"hostname": "ex..ample.com"},
+            {"hostname": ".example.test.com"},
+            {"hostname": "exa*mple.t?est.com"},
+        ]
+
+        for case in INVALID_HOSTNAMES:
+            with self.subTest():
+                new_data = self.relying_party_data.copy()
+                new_data["hostnames"] = []
+                new_data["hostnames"].append(case)
+
+                response = self.client.post(url, new_data, format="json")
+
+                self.assertEqual(response.status_code, 400)
+                self.assertIn("Enter a valid domain", str(response.data))
+                self.assertFalse(
+                    RelyingParty.objects.filter(rp_slug="test-relying-party").exists()
+                )
 
     def test_hostname_validation_correct_format(self):
-        """Test that the hostname validation accepts  standard domains and subdomains"""
-
+        """Test various valid hostnames"""
         url = reverse("portal_backend:rp-create", args=[self.organization.slug])
-        new_data = self.relying_party_data
-        new_data["hostnames"].append({"hostname": "test.domain.many.sub.domains.nl"})
-        response = self.client.post(url, self.relying_party_data, format="json")
-        self.assertEqual(response.status_code, 201)
-        self.assertTrue(
-            RelyingParty.objects.filter(rp_slug="test-relying-party").exists()
-        )
+
+        VALID_HOSTNAMES = [
+            {"hostname": "valid.domain.nl"},
+            {"hostname": "me.yivi.app.science.ru.nl"},
+            {"hostname": "valid-123domain.nl"},
+            {"hostname": "valid-domain.nl"},
+            {"hostname": "example.app.test.edu"},
+        ]
+
+        for i, case in enumerate(VALID_HOSTNAMES, start=1):
+            with self.subTest():
+                new_data = self.relying_party_data.copy()
+                new_data["rp_slug"] = f"test-rp{i}"
+                new_data["hostnames"] = []
+                new_data["hostnames"].append(case)
+
+                response = self.client.post(url, new_data, format="json")
+                print(response.data)
+                self.assertEqual(response.status_code, 201)
+                self.assertTrue(
+                    RelyingParty.objects.filter(rp_slug=new_data["rp_slug"]).exists()
+                )
