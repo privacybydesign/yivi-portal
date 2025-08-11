@@ -18,12 +18,10 @@ export const RelyingPartySchema = z.object({
 
   hostnames: z.array(
     z.object({
-      hostname: z
-        .string()
-        .regex(
-          /^(?=^.{1,253}$)(([a-z\d]([a-z\d-]{0,62}[a-z\d])*[\.]){1,3}[a-z]{1,61})$/gm,
-          "Hostname must be a valid domain (e.g. example.com, sub.domain.dev)"
-        ),
+      hostname: z.string().regex(
+        /^((?:([a-z0-9]\.|[a-z0-9][a-z0-9-]{0,61}[a-z0-9])\.)+)([a-z0-9]{2,63}|(?:[a-z0-9][a-z0-9-]{0,61}[a-z0-9]))\.?$/gim, // Regex pattern here: https://regexr.com/3e8n2
+        "Hostname must be a valid domain (e.g. example.com, sub.domain.dev)"
+      ),
       id: z.number().optional(),
     })
   ),
