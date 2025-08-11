@@ -389,6 +389,7 @@ class CredentialAttribute(models.Model):
     name_nl = models.CharField(max_length=255)
     description_en = models.TextField()
     description_nl = models.TextField()
+    optional = models.BooleanField(default=False)
 
     class Meta:
         unique_together = ("credential", "name_en")

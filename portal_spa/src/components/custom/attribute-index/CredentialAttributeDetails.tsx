@@ -15,7 +15,6 @@ export function CredentialAttributeDetails({
   onChange,
   environment,
 }: Props) {
-  console.log("env", environment);
   return (
     <div className="border text-sm rounded-lg overflow-hidden">
       <div className="overflow-x-auto p-4 space-y-1">
@@ -33,14 +32,19 @@ export function CredentialAttributeDetails({
         </div>
         {environment === "demo" && (
           <div className="w-max pt-3">
+            {attr.optional ? (
+              <span className="text-gray-500">Optional</span>
+            ) : (
+              ""
+            )}
             <Input
               id={`attribute-${attr.credential_attribute_tag}`}
               placeholder={attr.name_en}
               value={value || ""}
-              onChange={(e) => onChange?.(e.target.value)}
+              onChange={(e) => onChange?.(e.target.value)}       
             />
           </div>
-        )}
+      )} 
       </div>
     </div>
   );

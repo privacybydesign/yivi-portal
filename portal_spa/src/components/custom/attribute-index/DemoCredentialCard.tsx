@@ -25,7 +25,7 @@ export function DemoCredentialCard({ credential }: Props) {
     const missing = credential.attributes.find(
       (attr) => !attributeValues[attr.credential_attribute_tag]?.trim()
     );
-    if (missing) {
+    if (missing && missing.optional === false) {
       toast.error(`Please fill in: ${missing.name_en}`);
       return;
     }
