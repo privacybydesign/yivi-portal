@@ -1,4 +1,5 @@
 import React from "react";
+import { Badge } from "../ui/badge";
 
 const statusColors: Record<string, string> = {
   draft: "bg-gray-200 text-gray-800",
@@ -18,11 +19,9 @@ const StatusBadge: React.FC<StatusBadgeProps> = ({ status }) => {
     statusColors[status.toLowerCase()] || statusColors["unknown"];
 
   return (
-    <span
-      className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold ${badgeClass}`}
-    >
+    <Badge className={badgeClass}>
       {status.charAt(0).toUpperCase() + status.slice(1)}
-    </span>
+    </Badge>
   );
 };
 
