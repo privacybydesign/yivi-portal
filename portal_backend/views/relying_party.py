@@ -119,6 +119,7 @@ class RelyingPartyListView(APIView):
                         "rp_slug": rp.rp_slug,
                         "environment": rp.yivi_tme.environment,
                         "status": rp.status,
+                        "condiscon": rp.condiscon.condiscon or {},
                     }
                     for rp in relying_parties
                 ]
@@ -182,6 +183,7 @@ class RelyingPartyRetrieveView(APIView):
                 "published_at": relying_party.published_at,
                 "ready": relying_party.ready,
                 "status": relying_party.status,
+                "condiscon": condiscon.condiscon or {},
             }
         )
 
