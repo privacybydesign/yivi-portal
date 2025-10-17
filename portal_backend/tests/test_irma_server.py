@@ -2,7 +2,6 @@ import os
 from rest_framework.test import APITestCase, APIClient
 from django.urls import reverse
 from portal_backend.models.models import IrmaServer
-from portal_backend.models.models import User
 from django.contrib.auth import get_user_model
 from portal_backend.scheme_utils.import_utils import load_logo_if_exists
 
@@ -35,7 +34,7 @@ class IrmaServerCreateTest(APITestCase):
     def test_create_irma_server(self):
         url = reverse("portal_backend:irma-server-create")
 
-        response = self.client.post(url, self.irma_server_data, format="multipart");
+        response = self.client.post(url, self.irma_server_data, format="multipart")
         self.assertEqual(response.status_code, 201)
         self.assertTrue(
             IrmaServer.objects.filter(email=TEST_MAIL, version=VERSION).exists()

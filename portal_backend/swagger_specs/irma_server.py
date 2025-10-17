@@ -1,6 +1,5 @@
-from drf_yasg import openapi  # type: ignore
 from drf_yasg.utils import swagger_auto_schema  # type: ignore
-from portal_backend.models.model_serializers import IrmaServerSerializer  # type: ignore
+from portal_backend.models.model_serializers import IrmaServerSerializer
 
 irma_server_create_schema = swagger_auto_schema(
     request_body=IrmaServerSerializer,
