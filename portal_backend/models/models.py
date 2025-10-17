@@ -1,6 +1,6 @@
 from django.db import models
 from django.db.models import Exists, OuterRef
-from django.core.validators import URLValidator, RegexValidator, FileExtensionValidator
+from django.core.validators import URLValidator, RegexValidator, FileExtensionValidator, EmailValidator
 from django.core.files.storage import FileSystemStorage
 import uuid
 import os
@@ -470,3 +470,16 @@ class User(models.Model):
 
     def __str__(self):
         return f"{self.email} - {self.role}"
+
+class IrmaServer(models.Model):
+    class Meta:
+        verbose_name = "Irma Server"
+        verbose_name_plural = "Irma Servers"
+    email = models.EmailField(max_length=255, null=False, unique=False, validators=[EmailValidator()])
+    version = models.CharField(max_length=50, null=False, unique=False)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    last_updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.email} - ({self.version})"

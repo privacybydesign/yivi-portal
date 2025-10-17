@@ -30,6 +30,13 @@ from portal_backend.views.relying_party import (
     RelyingPartyRetrieveView,
     RelyingPartyDeleteView,
 )
+from portal_backend.views.irma_server import ( 
+    IrmaServerCreateView, 
+    IrmaServerDetailView,
+    IrmaServerListView,
+    IrmaServerUpdateView, 
+    IrmaServerDeleteView,
+)
 
 from rest_framework import permissions
 from drf_yasg.views import get_schema_view  # type: ignore
@@ -155,5 +162,31 @@ urlpatterns = [
         "v1/profile",
         OrganizationNameAndSlugView.as_view(),
         name="organization-name-and-slug",
+    ),
+    # Irma Servers
+    path(
+        "v1/irma-servers/create/",
+        IrmaServerCreateView.as_view(),
+        name="irma-server-create",
+    ),
+    path(
+        "v1/irma-servers/<int:pk>/",
+        IrmaServerDetailView.as_view(),
+        name="irma-server-detail",
+    ),
+    path(
+        "v1/irma-servers/",
+        IrmaServerListView.as_view(),
+        name="irma-server-list",
+    ),
+    path(
+        "v1/irma-servers/<int:pk>/update/",
+        IrmaServerUpdateView.as_view(),
+        name="irma-server-update",
+    ),
+    path(
+        "v1/irma-servers/<int:pk>/delete/",
+        IrmaServerDeleteView.as_view(),
+        name="irma-server-delete",
     ),
 ]

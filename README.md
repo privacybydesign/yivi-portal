@@ -36,7 +36,7 @@ The project consists of two main components:
 ### Running the Project
 
 Build and run the project with Docker. To check for unapplied migrations do 
-`docker compose exec django manage.py makemigrations`. If you have any unapplied migrations do `docker compose exec django manage.py migrate`
+`docker compose exec django python manage.py makemigrations`. If you have any unapplied migrations do `docker compose exec django python manage.py migrate`
 
 Create a `.env` file using `.env.sample`
 
