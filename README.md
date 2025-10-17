@@ -58,6 +58,14 @@ docker compose exec django python manage.py createsuperuser
 ```
 Then access with your credentials at `http://{host}:8000/admin/`
 
+### Run Django Tests
+
+To run the tests in portal_backend/tests, use this command:
+
+```bash
+docker compose exec django python manage.py test
+```
+
 ### Cronjobs
 
 Currently, 3 types of  cronjobs are set. `DNS Verification`, `Import Trusted RPs`, `Import Trusted APs`. The latter two use appropriate scheme repositories to create or update entities in the database.
