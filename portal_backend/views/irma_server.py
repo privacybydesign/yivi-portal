@@ -4,7 +4,6 @@ from rest_framework import permissions
 from rest_framework.response import Response
 from rest_framework.request import Request    
 from rest_framework import status
-from portal_backend.models.models import IrmaServer
 from portal_backend.models.model_serializers import IrmaServerSerializer
 from portal_backend.swagger_specs.irma_server import irma_server_create_schema
 from rest_framework.parsers import MultiPartParser, FormParser
