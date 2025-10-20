@@ -11,6 +11,7 @@ from portal_backend.models.models import (
     CondisconAttribute,
     RelyingParty,
     User,
+    IrmaServer,
 )
 
 
@@ -148,3 +149,8 @@ class UserAdmin(admin.ModelAdmin):
     @admin.display(description="Organizations")
     def get_organizations(self, obj):
         return ", ".join([org.slug for org in obj.organizations.all()])
+
+@admin.register(IrmaServer)
+class IrmaServerAdmin(admin.ModelAdmin):
+    list_display = ("email", "version")
+    search_fields = ("email", "version")

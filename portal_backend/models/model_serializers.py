@@ -11,6 +11,7 @@ from .models import (
     CredentialAttribute,
     CondisconAttribute,
     RelyingParty,
+    IrmaServer,
 )
 from django_countries.serializers import CountryFieldMixin  # type: ignore
 
@@ -175,3 +176,8 @@ class MaintainerSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = "__all__"
+
+class IrmaServerSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = IrmaServer
+        fields =  "__all__"

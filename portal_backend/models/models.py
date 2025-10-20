@@ -1,6 +1,6 @@
 from django.db import models
 from django.db.models import Exists, OuterRef
-from django.core.validators import URLValidator, RegexValidator, FileExtensionValidator
+from django.core.validators import URLValidator, RegexValidator, FileExtensionValidator, EmailValidator
 from django.core.files.storage import FileSystemStorage
 import uuid
 import os
@@ -470,3 +470,15 @@ class User(models.Model):
 
     def __str__(self):
         return f"{self.email} - {self.role}"
+
+class IrmaServer(models.Model):
+    email = models.EmailField(max_length=255, null=False, validators=[EmailValidator()])
+    version = models.CharField(max_length=35, null=False)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=["email", "version"], name="unique_email_version")
+        ]
+
+    def __str__(self):
+        return f"{self.email} - ({self.version})"
