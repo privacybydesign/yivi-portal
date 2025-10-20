@@ -32,10 +32,6 @@ from portal_backend.views.relying_party import (
 )
 from portal_backend.views.irma_server import ( 
     IrmaServerCreateView, 
-    IrmaServerDetailView,
-    IrmaServerListView,
-    IrmaServerUpdateView, 
-    IrmaServerDeleteView,
 )
 
 from rest_framework import permissions
@@ -165,28 +161,8 @@ urlpatterns = [
     ),
     # Irma Servers
     path(
-        "v1/irma-servers/create/",
+        "",
         IrmaServerCreateView.as_view(),
         name="irma-server-create",
-    ),
-    path(
-        "v1/irma-servers/<int:pk>/",
-        IrmaServerDetailView.as_view(),
-        name="irma-server-detail",
-    ),
-    path(
-        "v1/irma-servers/",
-        IrmaServerListView.as_view(),
-        name="irma-server-list",
-    ),
-    path(
-        "v1/irma-servers/<int:pk>/update/",
-        IrmaServerUpdateView.as_view(),
-        name="irma-server-update",
-    ),
-    path(
-        "v1/irma-servers/<int:pk>/delete/",
-        IrmaServerDeleteView.as_view(),
-        name="irma-server-delete",
     ),
 ]

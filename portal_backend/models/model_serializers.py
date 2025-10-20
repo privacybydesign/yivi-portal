@@ -180,5 +180,4 @@ class MaintainerSerializer(serializers.ModelSerializer):
 class IrmaServerSerializer(serializers.ModelSerializer):
     class Meta:
         model = IrmaServer
-        fields = ["id", "email", "version", "created_at", "last_updated_at"]
-        read_only_fields = ["id", "created_at", "last_updated_at"]
+        fields =  "__all__"

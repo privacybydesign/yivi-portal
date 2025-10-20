@@ -152,7 +152,5 @@ class UserAdmin(admin.ModelAdmin):
 
 @admin.register(IrmaServer)
 class IrmaServerAdmin(admin.ModelAdmin):
-    list_display = ("email", "version", "created_at", "last_updated_at")
+    list_display = ("email", "version")
     search_fields = ("email", "version")
-    readonly_fields = ("created_at", "last_updated_at")
-    list_filter = ("created_at", "last_updated_at")

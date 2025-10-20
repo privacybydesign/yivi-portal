@@ -472,14 +472,13 @@ class User(models.Model):
         return f"{self.email} - {self.role}"
 
 class IrmaServer(models.Model):
-    class Meta:
-        verbose_name = "Irma Server"
-        verbose_name_plural = "Irma Servers"
-    email = models.EmailField(max_length=255, null=False, unique=False, validators=[EmailValidator()])
-    version = models.CharField(max_length=50, null=False, unique=False)
+    email = models.EmailField(max_length=255, null=False, validators=[EmailValidator()])
+    version = models.CharField(max_length=35, null=False)
 
-    created_at = models.DateTimeField(auto_now_add=True)
-    last_updated_at = models.DateTimeField(auto_now=True)
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=["email", "version"], name="unique_email_version")
+        ]
 
     def __str__(self):
         return f"{self.email} - ({self.version})"
