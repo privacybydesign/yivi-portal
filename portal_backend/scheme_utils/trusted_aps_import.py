@@ -242,6 +242,8 @@ def create_credential(
 def create_credential_attributes(
     credential: Credential, cfields: CredentialFields, environment: str
 ) -> None:
+    seen_attribute_names = set()
+
     for attr in cfields.attributes:
         try:
             if not attr.get("Name"):  # Skipping incomplete attributes
@@ -254,12 +256,12 @@ def create_credential_attributes(
             desc = attr.get("Description", {})
             optional = attr.get("@optional") == "true"
 
+            name_en = name.get("en") or name.get("nl")
+            seen_attribute_names.add(name_en)
+
             CredentialAttribute.objects.update_or_create(
                 credential=credential,
-                name_en=name.get("en")
-                or name.get(
-                    "nl"
-                ),  # fallback for irma-demo scheme missing attribute names
+                name_en=name_en,  # fallback for irma-demo scheme missing attribute names
                 defaults={
                     "credential_attribute_tag": attr.get("@id"),
                     "name_nl": name.get("nl") or name.get("en"),
@@ -272,6 +274,14 @@ def create_credential_attributes(
             raise Exception(
                 f"Error creating attribute for credential {credential.credential_id}: {e}"
             )
+
+    # Delete attributes that no longer exist in the source scheme
+    removed_attributes = credential.attributes.exclude(name_en__in=seen_attribute_names)
+    for attr in removed_attributes:
+        logger.info(
+            f"Deleting attribute '{attr.name_en}' from credential {credential.credential_id} in environment {environment} - no longer in source scheme"
+        )
+    removed_attributes.delete()
 
 
 def get_scheme_description(scheme_description_xml: str) -> dict:
