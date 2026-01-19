@@ -11,7 +11,6 @@ from portal_backend.models.models import (
 from portal_backend.scheme_utils.trusted_aps_import import (
     create_credential_attributes,
     CredentialFields,
-    APFields,
 )
 from unittest.mock import MagicMock
 
