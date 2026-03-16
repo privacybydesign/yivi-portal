@@ -34,7 +34,7 @@
     "cmdk": "^1.1.1",
     "country-data-list": "^1.4.1",
     "crypto": "^1.0.1",
-    "dicebear": "^9.2.2",
+    "dicebear": "^9.4.0",
     "jwt-decode": "^4.0.0",
     "lodash": "^4.17.23",
     "lucide-react": "^0.508.0",
