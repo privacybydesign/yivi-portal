@@ -29,7 +29,7 @@ django_countries = "7.6.1"
 django-model-utils = "^5.0.0"
 
 [tool.poetry.group.dev.dependencies]
-black = "^23.12.1"
+black = ">=23.12.1,<27.0.0"
 
 [tool.poetry.group.prod.dependencies]
 uwsgi = "^2.0.23"
