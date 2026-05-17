@@ -119,6 +119,7 @@ class RelyingPartyListView(APIView):
                         "rp_slug": rp.rp_slug,
                         "environment": rp.yivi_tme.environment,
                         "status": rp.status,
+                        "rejection_remarks": rp.rejection_remarks,
                     }
                     for rp in relying_parties
                 ]
