@@ -36,7 +36,7 @@ The project consists of two main components:
 ### Running the Project
 
 Build and run the project with Docker. To check for unapplied migrations do 
-`docker compose exec django manage.py makemigrations`. If you have any unapplied migrations do `docker compose exec django manage.py migrate`
+`docker compose exec django python manage.py makemigrations`. If you have any unapplied migrations do `docker compose exec django python manage.py migrate`
 
 Create a `.env` file using `.env.sample`
 
@@ -57,6 +57,14 @@ The easiest way to view the database is with Django admin. You will need a super
 docker compose exec django python manage.py createsuperuser
 ```
 Then access with your credentials at `http://{host}:8000/admin/`
+
+### Run Django Tests
+
+To run the tests in portal_backend/tests, use this command:
+
+```bash
+docker compose exec django python manage.py test
+```
 
 ### Cronjobs
 
