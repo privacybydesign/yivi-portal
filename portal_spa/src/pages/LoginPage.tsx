@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { apiEndpoint } from "@/services/axiosInstance";
+import { newWeb, type YiviSession } from "@/services/yivi";
 import useStore from "@/store";
 import { useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -10,39 +11,45 @@ export default function Login() {
   const location = useLocation();
 
   useEffect(() => {
-    let web: any;
-    import("@privacybydesign/yivi-frontend").then((yivi: any) => {
-      web = yivi.newWeb({
-        debugging: import.meta.env.DEV,
-        element: "#yivi-web-form",
-        language: "en",
-        session: {
-          url: apiEndpoint + "/v1",
-          start: {
-            url: (o: any) => `${o.url}/session/`,
-            method: "POST",
-            credentials: "include",
-          },
-          result: {
-            url: (o: any, { sessionToken }: any) =>
-              `${o.url}/token/${sessionToken}`,
-            method: "GET",
-            credentials: "include",
-          },
+    const web: YiviSession = newWeb({
+      debugging: import.meta.env.DEV,
+      element: "#yivi-web-form",
+      language: "en",
+      session: {
+        url: apiEndpoint + "/v1",
+        start: {
+          url: (o: any) => `${o.url}/session/`,
+          method: "POST",
+          credentials: "include",
         },
-      });
+        result: {
+          url: (o: any, { sessionToken }: any) =>
+            `${o.url}/token/${sessionToken}`,
+          method: "GET",
+          credentials: "include",
+        },
+      },
+    });
 
-      web.start().then((result: any) => {
+    web
+      .start()
+      .then((result: any) => {
         setAccessToken(result.access);
         if (location.state?.from) {
           navigate(location.state.from.pathname, { replace: true });
         } else {
           navigate(-1);
         }
+      })
+      .catch((err: unknown) => {
+        if (err !== "Aborted") {
+          console.error("Yivi session error:", err);
+        }
       });
-    });
 
-    return () => web?.abort();
+    return () => {
+      web.abort();
+    };
   }, [navigate, setAccessToken, location]);
 
   return (
