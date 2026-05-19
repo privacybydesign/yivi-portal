@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { axiosInstance } from "@/services/axiosInstance";
+import { newPopup } from "@/services/yivi";
 import { CredentialAttributeDetails } from "./CredentialAttributeDetails";
 import type { Credential } from "@/models/credential";
 import { toast } from "sonner";
@@ -31,8 +32,7 @@ export function DemoCredentialCard({ credential }: Props) {
     }
     try {
       setLoading(true);
-      const yivi: any = await import("@privacybydesign/yivi-frontend");
-      const popup = yivi.newPopup({
+      const popup = newPopup({
         debugging: import.meta.env.DEV,
         language: "en",
         translations: {
