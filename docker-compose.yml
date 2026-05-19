@@ -50,6 +50,8 @@ services:
       - 9000:5173
     depends_on:
       - django
+    environment:
+      - VITE_API_ENDPOINT=${VITE_API_ENDPOINT:-http://localhost:8000}
     volumes:
       - ./portal_spa:/app
       - /app/node_modules/ # This will exclude node_modules from syncing to the container and prevents a crash on a missing library when working on Mac.
