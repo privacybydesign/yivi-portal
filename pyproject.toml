@@ -6,7 +6,7 @@ authors = ["Job Doesburg <job.doesburg@gmail.com>"]
 
 [tool.poetry.dependencies]
 python = "^3.11"
-django = "5.1.15" # TODO: bump to 5.2.8+ to clear Django CVEs (see issue #287)
+django = "^5.2.8"
 django-phonenumber-field= {extras = ["phonenumberslite"], version = "^8.1.0"}
 dnspython = "^2.4.2"
 httpx = "^0.27.0"
