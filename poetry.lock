@@ -465,18 +465,18 @@ test-randomorder = ["pytest-randomly"]
 
 [[package]]
 name = "django"
-version = "5.0.14"
+version = "5.2.14"
 description = "A high-level Python web framework that encourages rapid development and clean, pragmatic design."
 optional = false
 python-versions = ">=3.10"
 groups = ["main"]
 files = [
-    {file = "Django-5.0.14-py3-none-any.whl", hash = "sha256:e762bef8629ee704de215ebbd32062b84f4e56327eed412e5544f6f6eb1dfd74"},
-    {file = "Django-5.0.14.tar.gz", hash = "sha256:29019a5763dbd48da1720d687c3522ef40d1c61be6fb2fad27ed79e9f655bc11"},
+    {file = "django-5.2.14-py3-none-any.whl", hash = "sha256:6f712143bd3064310d1f50fac859c3e9a274bdcfc9595339853be7779297fc76"},
+    {file = "django-5.2.14.tar.gz", hash = "sha256:58a63ba841662e5c686b57ba1fec52ddd68c0b93bd96ac3029d55728f00bf8a2"},
 ]
 
 [package.dependencies]
-asgiref = ">=3.7.0,<4"
+asgiref = ">=3.8.1"
 sqlparse = ">=0.3.1"
 tzdata = {version = "*", markers = "sys_platform == \"win32\""}
 
@@ -551,21 +551,6 @@ dev = ["black", "django", "djangorestframework", "graphene-django", "pytest", "p
 maintainer = ["django", "zest.releaser[recommended]"]
 pyuca = ["pyuca"]
 test = ["djangorestframework", "graphene-django", "pytest", "pytest-cov", "pytest-django"]
-
-[[package]]
-name = "django-cron"
-version = "0.6.0"
-description = "Running python crons in a Django project"
-optional = false
-python-versions = "*"
-groups = ["main"]
-files = [
-    {file = "django-cron-0.6.0.tar.gz", hash = "sha256:dc3c0d3433a2e4e7012f77f6d8415ad90367ba068649db2674325bc36f935841"},
-    {file = "django_cron-0.6.0-py3-none-any.whl", hash = "sha256:016203554748512b7f19d7363b4fde8741c6ff63fe8a15051f3031f4a0506a41"},
-]
-
-[package.dependencies]
-Django = ">=3.2"
 
 [[package]]
 name = "django-imagekit"
@@ -1482,4 +1467,4 @@ files = [
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.11"
-content-hash = "8aad30075037abcd14f7cdbc8434a17c1b855cddd53187c5c4587efc38c492d0"
+content-hash = "531bb0989dcd4fa664797ee71235bc040eb23ec63bf50119057e3957d779ace5"

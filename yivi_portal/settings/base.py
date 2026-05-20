@@ -40,7 +40,6 @@ INSTALLED_APPS = [
     "rest_framework_simplejwt.token_blacklist",
     "drf_yasg",
     "django_bootstrap5",
-    "django_cron",
     "imagekit",
     "portal_backend.apps.PortalBackendConfig",
     "yivi_portal",
@@ -112,15 +111,6 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
-
-CRON_CLASSES = [
-    "portal_backend.crons.NewDNSVerification",
-    "portal_backend.crons.ExistingDNSVerification",
-    "portal_backend.crons.TrustedAPsImport",
-    "portal_backend.crons.TrustedRPsImport",
-]
-
-DJANGO_CRON_DELETE_LOGS_OLDER_THAN = 7
 
 YIVI_SERVER_URL = os.environ.get("YIVI_SERVER_URL")
 YIVI_SERVER_TOKEN = os.environ.get("YIVI_SERVER_TOKEN")

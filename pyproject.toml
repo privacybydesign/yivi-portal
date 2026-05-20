@@ -6,7 +6,7 @@ authors = ["Job Doesburg <job.doesburg@gmail.com>"]
 
 [tool.poetry.dependencies]
 python = "^3.11"
-django = "~5.0.14" # TODO: bump to 5.2.8+ once django-cron is replaced (uses removed index_together; see issue #287)
+django = "^5.2.8"
 django-phonenumber-field= {extras = ["phonenumberslite"], version = "^8.1.0"}
 dnspython = "^2.4.2"
 httpx = "^0.27.0"
@@ -18,7 +18,6 @@ django-bootstrap5 = ">=23.3"
 requests = "^2.31.0"
 djangorestframework = "^3.14.0"
 fqdn = "^1.5.1"
-django-cron = "^0.6.0"
 django-imagekit = "^5.0.0"
 drf-yasg = "^1.21.8"
 django-cors-headers = "^4.7.0"
