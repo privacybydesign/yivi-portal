@@ -96,9 +96,9 @@ def create_hostnames(
     for hostname in rpfields.hostnames:
         try:
             _, hostname_created = RelyingPartyHostname.objects.update_or_create(
-                relying_party=rp,
                 hostname=hostname,
                 defaults={
+                    "relying_party": rp,
                     "manually_verified": True,
                     "dns_challenge": None,
                     "dns_challenge_created_at": None,
