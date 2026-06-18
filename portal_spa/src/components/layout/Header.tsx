@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { Link, useNavigate, useLocation, matchRoutes } from "react-router-dom";
-import { createAvatar } from "@dicebear/core";
-import { initials } from "@dicebear/collection";
+import { Avatar as DiceBearAvatar, Style } from "@dicebear/core";
+import initialsDefinition from "@dicebear/styles/initials.json";
 import useStore from "@/store";
 import { axiosInstance } from "@/services/axiosInstance";
 import { Avatar, AvatarImage } from "@/components/ui/avatar";
@@ -28,9 +28,8 @@ export default function Header() {
   const setAccessToken = useStore((state) => state.setAccessToken);
   const organizationNames = useOrganizationNames();
 
-  const svg = createAvatar(initials, {
+  const svg = new DiceBearAvatar(new Style(initialsDefinition), {
     seed: email ?? "default-user",
-    radius: 50,
     backgroundColor: ["d1d4f9", "ffd5dc", "c0aede"],
   }).toString();
 

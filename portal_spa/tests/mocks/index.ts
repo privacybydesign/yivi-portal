@@ -1,8 +1,7 @@
 import { generateJwt } from "tests/utils";
 import { vi } from "vitest";
 
-vi.mock("@privacybydesign/yivi-frontend", async (importOriginal) => ({
-  ...(await importOriginal()),
+vi.mock("@privacybydesign/yivi-frontend", () => ({
   newWeb: vi.fn(() => ({
     start: vi.fn(() =>
       Promise.resolve({

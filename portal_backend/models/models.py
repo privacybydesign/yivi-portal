@@ -392,7 +392,12 @@ class CredentialAttribute(models.Model):
     optional = models.BooleanField(default=False)
 
     class Meta:
-        unique_together = ("credential", "name_en")
+        constraints = [
+            models.UniqueConstraint(
+                fields=["credential", "name_en"],
+                name="unique_credentialattribute_credential_name_en",
+            )
+        ]
 
     def __str__(self):
         return self.name_en
