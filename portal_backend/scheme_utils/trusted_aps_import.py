@@ -12,6 +12,7 @@ from portal_backend.models.models import (
 from django.db import transaction
 import logging
 import portal_backend.scheme_utils.import_utils as import_utils
+from portal_backend.scheme_utils.demo_credential_values import DEMO_CREDENTIAL_VALUES
 from django.utils import timezone
 
 
@@ -244,6 +245,13 @@ def create_credential_attributes(
 ) -> None:
     seen_attribute_names = set()
 
+    # Curated demo values that pre-fill the demo-issuance form, keyed by attribute id.
+    # Only applied for the demo environment; other environments keep demo_value="".
+    demo_values = {}
+    if environment == "demo":
+        cred_key = f"{credential.attestation_provider.organization.slug}.{credential.credential_id}"
+        demo_values = DEMO_CREDENTIAL_VALUES.get(cred_key, {})
+
     for attr in cfields.attributes:
         try:
             if not attr.get("Name"):  # Skipping incomplete attributes
@@ -259,16 +267,20 @@ def create_credential_attributes(
             name_en = name.get("en") or name.get("nl")
             seen_attribute_names.add(name_en)
 
+            defaults = {
+                "credential_attribute_tag": attr.get("@id"),
+                "name_nl": name.get("nl") or name.get("en"),
+                "description_en": desc.get("en") or "No description provided",
+                "description_nl": desc.get("nl") or "No description provided",
+                "optional": optional,
+            }
+            if environment == "demo":
+                defaults["demo_value"] = demo_values.get(attr.get("@id"), "")
+
             CredentialAttribute.objects.update_or_create(
                 credential=credential,
                 name_en=name_en,  # fallback for irma-demo scheme missing attribute names
-                defaults={
-                    "credential_attribute_tag": attr.get("@id"),
-                    "name_nl": name.get("nl") or name.get("en"),
-                    "description_en": desc.get("en") or "No description provided",
-                    "description_nl": desc.get("nl") or "No description provided",
-                    "optional": optional,
-                },
+                defaults=defaults,
             )
         except Exception as e:
             raise Exception(
