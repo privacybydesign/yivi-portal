@@ -43,13 +43,14 @@ export function DemoCredentialCard({ credential }: Props) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const missing = credential.attributes.find(
-      (attr) => !attributeValues[attr.credential_attribute_tag]?.trim()
+    // Empty values are allowed: a card can be issued without filling in every
+    // field. Send every attribute, defaulting unfilled ones to an empty string.
+    const attributes = Object.fromEntries(
+      credential.attributes.map((attr) => [
+        attr.credential_attribute_tag,
+        attributeValues[attr.credential_attribute_tag] ?? "",
+      ])
     );
-    if (missing && missing.optional === false) {
-      toast.error(`Please fill in: ${missing.name_en}`);
-      return;
-    }
     try {
       setLoading(true);
       const yivi: any = await import("@privacybydesign/yivi-frontend");
@@ -69,7 +70,7 @@ export function DemoCredentialCard({ credential }: Props) {
             credentials: "include",
             body: JSON.stringify({
               credential: credential.full_path,
-              attributes: attributeValues,
+              attributes,
             }),
           },
           result: {
