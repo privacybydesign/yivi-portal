@@ -12,7 +12,11 @@ from portal_backend.scheme_utils.trusted_aps_import import (
     create_credential_attributes,
     CredentialFields,
 )
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
+
+DEMO_VALUES_PATH = (
+    "portal_backend.scheme_utils.trusted_aps_import.DEMO_CREDENTIAL_VALUES"
+)
 
 
 class CreateCredentialAttributesTest(TestCase):
@@ -392,3 +396,104 @@ class CreateCredentialAttributesTest(TestCase):
         attr = attrs.first()
         self.assertEqual(attr.description_en, "No description provided")
         self.assertEqual(attr.description_nl, "No description provided")
+
+    def test_demo_value_seeded_per_credential_for_demo_env(self):
+        """Demo env fills demo_value from the curated map, keyed per credential;
+        attributes not in the map get an empty demo_value."""
+        cfields = self._create_mock_cfields([
+            {
+                "@id": "rekeninghouder",
+                "Name": {"en": "Account holder", "nl": "Rekeninghouder"},
+                "Description": {"en": "x", "nl": "x"},
+            },
+            {
+                "@id": "uitgever",
+                "Name": {"en": "Issuer", "nl": "Uitgever"},
+                "Description": {"en": "x", "nl": "x"},
+            },
+            {
+                "@id": "unmapped",
+                "Name": {"en": "Unmapped", "nl": "Unmapped"},
+                "Description": {"en": "x", "nl": "x"},
+            },
+        ])
+        demo_values = {
+            "test-org.test-cred": {
+                "rekeninghouder": "Jan de Vries",
+                "uitgever": "De Hollandsche Bank",
+            }
+        }
+
+        with patch(DEMO_VALUES_PATH, demo_values):
+            create_credential_attributes(self.credential, cfields, "demo")
+
+        attrs = {
+            a.credential_attribute_tag: a
+            for a in CredentialAttribute.objects.filter(credential=self.credential)
+        }
+        self.assertEqual(attrs["rekeninghouder"].demo_value, "Jan de Vries")
+        self.assertEqual(attrs["uitgever"].demo_value, "De Hollandsche Bank")
+        # attribute not present in the map keeps the empty default
+        self.assertEqual(attrs["unmapped"].demo_value, "")
+
+    def test_demo_value_not_clobbered_across_credentials_with_shared_tag(self):
+        """Regression for the global-tag seeding bug: a generic tag shared by
+        multiple credentials only receives the value for its own credential."""
+        other_credential = Credential.objects.create(
+            attestation_provider=self.attestation_provider,
+            name_en="Other Credential",
+            name_nl="Andere Credential",
+            shortname_en="OtherCred",
+            shortname_nl="OtherCred",
+            credential_id="other-cred",
+            should_be_singleton=False,
+            description_en="x",
+            description_nl="x",
+        )
+        # The shared tag is mapped only for test-cred, not other-cred.
+        demo_values = {"test-org.test-cred": {"datum_uitgifte": "01-01-2024"}}
+        shared_attr = [
+            {
+                "@id": "datum_uitgifte",
+                "Name": {"en": "Date of issuance", "nl": "Datum uitgifte"},
+                "Description": {"en": "x", "nl": "x"},
+            }
+        ]
+
+        with patch(DEMO_VALUES_PATH, demo_values):
+            create_credential_attributes(
+                self.credential, self._create_mock_cfields(shared_attr), "demo"
+            )
+            create_credential_attributes(
+                other_credential, self._create_mock_cfields(shared_attr), "demo"
+            )
+
+        main_attr = CredentialAttribute.objects.get(
+            credential=self.credential, credential_attribute_tag="datum_uitgifte"
+        )
+        other_attr = CredentialAttribute.objects.get(
+            credential=other_credential, credential_attribute_tag="datum_uitgifte"
+        )
+        self.assertEqual(main_attr.demo_value, "01-01-2024")
+        # Same tag on a different credential is NOT clobbered.
+        self.assertEqual(other_attr.demo_value, "")
+
+    def test_demo_value_empty_for_non_demo_environment(self):
+        """Non-demo environments never receive demo values, even if the
+        credential happens to have an entry in the map."""
+        demo_values = {"test-org.test-cred": {"rekeninghouder": "Jan de Vries"}}
+        cfields = self._create_mock_cfields([
+            {
+                "@id": "rekeninghouder",
+                "Name": {"en": "Account holder", "nl": "Rekeninghouder"},
+                "Description": {"en": "x", "nl": "x"},
+            }
+        ])
+
+        with patch(DEMO_VALUES_PATH, demo_values):
+            create_credential_attributes(self.credential, cfields, "production")
+
+        attr = CredentialAttribute.objects.get(
+            credential=self.credential, credential_attribute_tag="rekeninghouder"
+        )
+        self.assertEqual(attr.demo_value, "")
