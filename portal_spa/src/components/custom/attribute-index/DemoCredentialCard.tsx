@@ -13,7 +13,13 @@ type Props = {
 export function DemoCredentialCard({ credential }: Props) {
   const [attributeValues, setAttributeValues] = useState<{
     [key: string]: string;
-  }>({});
+  }>(
+    Object.fromEntries(
+      credential.attributes
+        .filter((attr) => attr.demo_value)
+        .map((attr) => [attr.credential_attribute_tag, attr.demo_value!])
+    )
+  );
   const [loading, setLoading] = useState(false);
 
   const handleChange = (id: string, value: string) => {

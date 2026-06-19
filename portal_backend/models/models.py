@@ -390,6 +390,7 @@ class CredentialAttribute(models.Model):
     description_en = models.TextField()
     description_nl = models.TextField()
     optional = models.BooleanField(default=False)
+    demo_value = models.CharField(max_length=500, blank=True, default="")
 
     class Meta:
         constraints = [
