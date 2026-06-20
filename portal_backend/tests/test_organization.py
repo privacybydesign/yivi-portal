@@ -1,4 +1,5 @@
 import os
+import uuid
 from rest_framework.test import APITestCase, APIClient
 from django.urls import reverse
 from portal_backend.models.models import Organization
@@ -164,6 +165,37 @@ class OrganizationMaintainerActionsTest(APITestCase):
             mail.outbox[0].subject, "Yivi Portal - You have been added as a maintainer"
         )
 
+    def test_maintainers_list_exposes_uuid_not_integer_id(self):
+        """The maintainers list must expose the non-sequential UUID, never the integer pk."""
+        maintainer = OrgUser.objects.create(email="uuid@test.com", role="maintainer")
+        maintainer.organizations.add(self.organization)
+        url = reverse(
+            "portal_backend:organization-maintainers", args=[self.organization.slug]
+        )
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        listed = next(
+            item for item in response.json() if item["email"] == "uuid@test.com"
+        )
+        # id is the public UUID, not the auto-increment pk.
+        self.assertEqual(listed["id"], str(maintainer.public_id))
+        self.assertNotEqual(listed["id"], str(maintainer.pk))
+        self.assertNotIn("public_id", listed)
+
+    def test_delete_maintainer_by_integer_pk_not_found(self):
+        """The integer pk must not resolve a maintainer; only the public UUID works."""
+        maintainer = OrgUser.objects.create(email="bypk@test.com", role="maintainer")
+        maintainer.organizations.add(self.organization)
+        # Routing only accepts UUIDs, so the integer pk can never reach the view;
+        # a different (random) UUID must return 404 rather than delete by guessing.
+        url = reverse(
+            "portal_backend:organization-maintainers",
+            args=[self.organization.slug, uuid.uuid4()],
+        )
+        response = self.client.delete(url)
+        self.assertEqual(response.status_code, 404)
+        self.assertTrue(OrgUser.objects.filter(email="bypk@test.com").exists())
+
     def test_add_maintainer_invalid_email(self):
         """Test should fail when adding a maintainer with an invalid email."""
         url = reverse(
@@ -182,7 +214,7 @@ class OrganizationMaintainerActionsTest(APITestCase):
         maintainer.organizations.add(self.organization)
         url = reverse(
             "portal_backend:organization-maintainers",
-            args=[self.organization.slug, maintainer.id],
+            args=[self.organization.slug, maintainer.public_id],
         )
         response = self.client.delete(url)
         self.assertEqual(response.status_code, 200)
@@ -209,7 +241,7 @@ class OrganizationMaintainerActionsTest(APITestCase):
         maintainer.organizations.add(other_org)
         url = reverse(
             "portal_backend:organization-maintainers",
-            args=[other_org.slug, maintainer.id],
+            args=[other_org.slug, maintainer.public_id],
         )
         response = self.client.delete(url)
         self.assertEqual(response.status_code, 403)
