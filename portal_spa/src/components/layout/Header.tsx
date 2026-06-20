@@ -58,13 +58,16 @@ export default function Header() {
 
   return (
     <div className="sticky top-0 z-50 bg-white border-b border-gray-200">
-      <nav className="container mx-auto flex justify-between items-center px-4 py-3">
-        <Link to="/" className="text-xl font-semibold flex items-center gap-4">
+      <nav className="container mx-auto flex flex-wrap justify-between items-center gap-x-4 gap-y-2 px-4 py-3">
+        <Link
+          to="/"
+          className="text-xl font-semibold flex items-center gap-4 shrink-0"
+        >
           <img src="/yivi-logo.svg" alt="Yivi Logo" height={32} width={54} />
           Portal
         </Link>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center justify-end gap-3">
           <Link
             to="/organizations"
             className={cn(
