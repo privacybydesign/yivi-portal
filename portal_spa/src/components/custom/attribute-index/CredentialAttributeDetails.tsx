@@ -35,7 +35,7 @@ export function CredentialAttributeDetails({
             {attr.optional ? (
               <span className="text-gray-500">Optional</span>
             ) : (
-              ""
+              <span className="text-gray-500">Required</span>
             )}
             <Input
               id={`attribute-${attr.credential_attribute_tag}`}
