@@ -125,9 +125,18 @@ def delete_stale_hostnames(
 
     Without this, hostnames removed from the scheme would linger in the database
     indefinitely and keep accumulating across cron runs.
+
+    Pruning is restricted to scheme-managed hostnames (``manually_verified=True``,
+    the flag set when a hostname is imported from the scheme). Portal-registered
+    hostnames — added by a maintainer through the UI and pending DNS verification
+    (``manually_verified`` unset, ``dns_challenge_verified=False``) — are not yet
+    reflected in ``requestors.json`` and must survive the sync, otherwise the cron
+    would silently delete them on its next run.
     """
 
-    stale_hostnames = rp.hostnames.exclude(hostname__in=scheme_hostnames)
+    stale_hostnames = rp.hostnames.filter(manually_verified=True).exclude(
+        hostname__in=scheme_hostnames
+    )
     stale_names = list(stale_hostnames.values_list("hostname", flat=True))
 
     if not stale_names:

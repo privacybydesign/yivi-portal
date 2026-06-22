@@ -95,6 +95,32 @@ class DeleteStaleHostnamesTest(TestCase):
         remaining = set(self.rp.hostnames.values_list("hostname", flat=True))
         self.assertEqual(remaining, {"new.example.com"})
 
+    def test_portal_registered_hostname_survives(self):
+        """A maintainer-registered hostname that is pending DNS verification is
+        not yet in the scheme (``manually_verified`` unset). Pruning must leave it
+        alone, otherwise the cron silently deletes it on its next run."""
+        self._make_hostname("scheme.example.com")
+        # Portal-registered, pending verification: not a scheme-managed hostname.
+        RelyingPartyHostname.objects.create(
+            hostname="pending.example.com",
+            relying_party=self.rp,
+            manually_verified=None,
+            dns_challenge_verified=False,
+        )
+
+        # The scheme only lists the scheme-managed hostname.
+        trusted_rps_import.delete_stale_hostnames(
+            self.rp, ["scheme.example.com"], self.rp.rp_slug
+        )
+
+        remaining = set(self.rp.hostnames.values_list("hostname", flat=True))
+        self.assertEqual(remaining, {"scheme.example.com", "pending.example.com"})
+        self.assertTrue(
+            RelyingPartyHostname.objects.filter(
+                hostname="pending.example.com"
+            ).exists()
+        )
+
     def test_stale_hostname_of_other_rp_is_untouched(self):
         """Pruning is scoped to the RP being synced and never touches another RP."""
         other_org = Organization.objects.create(
