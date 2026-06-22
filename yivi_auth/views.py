@@ -31,7 +31,18 @@ class YiviIssueDemosView(APIView):
         """Start a Yivi session as proxy to the Yivi server to issue demo credentials."""
 
         credential: str = request.data.get("credential", None)
-        attributes: dict = request.data.get("attributes", None)
+        attributes: dict = request.data.get("attributes", None) or {}
+
+        # Omit attributes that were left empty so a demo credential can be
+        # issued without filling in every field. Only attributes with a
+        # non-empty value are forwarded to the Yivi server; the server still
+        # rejects issuance when a genuinely required (non-optional) attribute
+        # is missing.
+        filtered_attributes = {
+            tag: value
+            for tag, value in attributes.items()
+            if value is not None and str(value).strip() != ""
+        }
 
         yivi_server = YiviServer(
             settings.YIVI_SERVER_URL,
@@ -47,7 +58,7 @@ class YiviIssueDemosView(APIView):
                     {
                         "credential": credential,
                         "validity": validity,
-                        "attributes": attributes,
+                        "attributes": filtered_attributes,
                     }
                 ],
             }
