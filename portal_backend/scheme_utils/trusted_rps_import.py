@@ -45,6 +45,7 @@ class RPFields:
 def create_rp(
     org: import_utils.Organization,
     yivi_tme: import_utils.YiviTrustModelEnv,
+    rpfields: "RPFields",
 ) -> RelyingParty:
     if not org or not yivi_tme:
         raise ValueError("Missing organization or trust model environment")
@@ -56,11 +57,16 @@ def create_rp(
 
     try:
         now = timezone.now()
+        # rp_slug is globally unique and can differ from the organization slug
+        # (e.g. RPs registered through the portal pick their own slug). Look the
+        # RP up by rp_slug only and reassign its organization / environment via
+        # defaults, so an existing RP with this slug under another organization
+        # is updated instead of triggering a UNIQUE-constraint IntegrityError.
         rp, rp_created = RelyingParty.objects.update_or_create(
-            organization=org,
-            rp_slug=org.slug,
-            yivi_tme=yivi_tme,
+            rp_slug=rpfields.slug,
             defaults={
+                "organization": org,
+                "yivi_tme": yivi_tme,
                 "ready": True,
                 "reviewed_accepted": True,
                 "published": True,
@@ -135,7 +141,7 @@ def create_org_rp(all_RPs_dict: dict, environment: str, repo_path: str) -> None:
                     rpfields.logo_path,
                 )
                 yivi_tme = import_utils.get_trust_model_env(environment)
-                rp = create_rp(org, yivi_tme)
+                rp = create_rp(org, yivi_tme, rpfields)
                 create_hostnames(rpfields, rp)
         except Exception as e:
             logger.error(f"Failed to process Relying Party {rpfields.slug}: {e}")
