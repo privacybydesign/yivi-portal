@@ -34,10 +34,8 @@ const useStore = create<StateStore>((set) => ({
         role: decoded.role,
         organizationSlugs: decoded.organizationSlugs || [],
       });
-      localStorage.setItem("accessToken", accessToken);
     } else {
       set({ email: null, role: undefined, organizationSlugs: [] });
-      localStorage.removeItem("accessToken");
     }
 
     set({ accessToken });
@@ -77,25 +75,13 @@ const useStore = create<StateStore>((set) => ({
   },
 
   initializeAuth: async () => {
-    const savedAccessToken = localStorage.getItem("accessToken");
+    // The access token is kept in memory only, so on (re)load we restore the
+    // session from the httpOnly refresh cookie instead of localStorage. A
+    // successful refresh populates the store via setAccessToken.
+    const accessToken = await useStore.getState().refreshToken();
 
-    if (savedAccessToken) {
-      const decoded = jwtDecode<AuthToken>(savedAccessToken);
-      const currentTime = Math.floor(Date.now() / 1000);
-
-      if (decoded.exp < currentTime + 60) {
-        // Try refreshing token
-        await useStore.getState().refreshToken();
-      } else {
-        set({
-          accessToken: savedAccessToken,
-          email: decoded.email,
-          role: decoded.role,
-          organizationSlugs: decoded.organizationSlugs || [],
-        });
-      }
-    } else {
-      // No valid token - clear
+    if (!accessToken) {
+      // No valid refresh cookie - clear any stale state
       set({
         accessToken: null,
         email: null,

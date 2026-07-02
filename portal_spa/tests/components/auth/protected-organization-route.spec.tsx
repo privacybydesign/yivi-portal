@@ -6,6 +6,7 @@ import useStore from "@/store";
 import App from "@/App";
 import { generateOrganization } from "tests/utils";
 import "tests/mocks";
+import { setRefreshResponse } from "tests/mocks/api";
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -15,6 +16,9 @@ it("renders the organization management page when authorized", async () => {
   const organization = generateOrganization();
   const claims = { organizationSlugs: [organization.slug] };
 
+  // The session is restored from the refresh cookie on load, so the refreshed
+  // token must carry the maintainer's organization membership.
+  setRefreshResponse(200, claims);
   useStore.getState().setAccessToken(generateJwt(claims));
 
   renderWithRouter(<App />, {

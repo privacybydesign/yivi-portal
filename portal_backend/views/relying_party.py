@@ -38,6 +38,9 @@ from ..models.models import (
     CondisconAttribute,
 )
 from django.core.exceptions import ValidationError
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class RelyingPartyCreateView(APIView):
@@ -75,8 +78,9 @@ class RelyingPartyCreateView(APIView):
             )
         except Exception as e:
             transaction.set_rollback(True)
+            logger.exception("Failed to create relying party: %s", e)
             return Response(
-                {"error": "Failed to create relying party: " + str(e)},
+                {"error": "Failed to create relying party."},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
@@ -329,8 +333,9 @@ class RelyingPartyUpdateView(APIView):
             )
         except Exception as e:
             transaction.set_rollback(True)
+            logger.exception("Failed to update relying party: %s", e)
             return Response(
-                {"error": str(e)},
+                {"error": "Failed to update relying party."},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 

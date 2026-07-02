@@ -235,9 +235,9 @@ class OrganizationMaintainersView(APIView):
             email_notification.send()
         except Exception as e:
             transaction.set_rollback(True)
-            logger.error(f"Error sending email notification: {e}")
+            logger.exception("Error sending email notification: %s", e)
             return Response(
-                {"error": f"Failed to send email notification: {e}"},
+                {"error": "Failed to send email notification."},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
@@ -288,7 +288,7 @@ class OrganizationMaintainerView(APIView):
 
 
 class OrganizationNameAndSlugView(APIView):
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [permissions.IsAuthenticated]
 
     @swagger_auto_schema(responses={200: "Success", 404: "Not Found"})
     def get(self, request: Request) -> Response:

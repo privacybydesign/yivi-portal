@@ -231,7 +231,10 @@ class RefreshTokenView(APIView):
                 response = Response({"access": access_token}, status=200)
             return response
         except Exception as e:
-            return Response({"error": str(e)}, status=400)
+            logger.exception("Failed to refresh token: %s", e)
+            return Response(
+                {"error": "Could not refresh the access token."}, status=400
+            )
 
 
 class LogoutView(APIView):
@@ -247,4 +250,5 @@ class LogoutView(APIView):
             return response
 
         except Exception as e:
-            return Response({"error": str(e)}, status=400)
+            logger.exception("Failed to log out: %s", e)
+            return Response({"error": "Could not log out."}, status=400)
