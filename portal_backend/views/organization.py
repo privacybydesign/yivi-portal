@@ -235,9 +235,9 @@ class OrganizationMaintainersView(APIView):
             email_notification.send()
         except Exception as e:
             transaction.set_rollback(True)
-            logger.error(f"Error sending email notification: {e}")
+            logger.exception("Failed to send email notification: %s", e)
             return Response(
-                {"error": f"Failed to send email notification: {e}"},
+                {"error": "Failed to send email notification."},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
