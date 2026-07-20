@@ -262,7 +262,7 @@ class OrganizationMaintainerView(APIView):
                 {"error": "Maintainer id is required"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        maintainer = get_object_or_404(User, pk=maintainer_id)
+        maintainer = get_object_or_404(User, public_id=maintainer_id)
 
         if maintainer.email == request.user.email:
             return Response(
@@ -272,7 +272,7 @@ class OrganizationMaintainerView(APIView):
 
         organization = get_object_or_404(Organization, slug=org_slug)
         deleted, _ = User.objects.filter(
-            pk=maintainer_id, organizations=organization
+            public_id=maintainer_id, organizations=organization
         ).delete()
 
         if deleted:

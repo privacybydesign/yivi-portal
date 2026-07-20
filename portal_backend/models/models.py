@@ -466,6 +466,7 @@ class User(models.Model):
         ("admin", "Admin"),
         ("maintainer", "Maintainer"),
     ]
+    public_id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     email = models.EmailField(max_length=255, null=False, unique=True)
     organizations = models.ManyToManyField(Organization, related_name="users")
     role = models.CharField(max_length=20, choices=ROLE_CHOICES)
