@@ -9,7 +9,6 @@ from django.utils import timezone
 import logging
 import portal_backend.scheme_utils.import_utils as import_utils
 
-
 logger = logging.getLogger(__name__)
 load_dotenv()
 
@@ -117,6 +116,43 @@ def create_hostnames(
             raise Exception(
                 f"Failed to create/update Hostname {hostname} for RP {rpfields.slug}: {hostname_error}"
             )
+
+    delete_stale_hostnames(rp, rpfields.hostnames, rpfields.slug)
+
+
+def delete_stale_hostnames(
+    rp: RelyingParty,
+    scheme_hostnames: list,
+    slug: str,
+) -> None:
+    """
+    Remove RelyingPartyHostname objects belonging to this RP that are no longer
+    present in the latest scheme pull, so local state matches the scheme.
+
+    Without this, hostnames removed from the scheme would linger in the database
+    indefinitely and keep accumulating across cron runs.
+
+    Pruning is restricted to scheme-managed hostnames (``manually_verified=True``,
+    the flag set when a hostname is imported from the scheme). Portal-registered
+    hostnames — added by a maintainer through the UI and pending DNS verification
+    (``manually_verified`` unset, ``dns_challenge_verified=False``) — are not yet
+    reflected in ``requestors.json`` and must survive the sync, otherwise the cron
+    would silently delete them on its next run.
+    """
+
+    stale_hostnames = rp.hostnames.filter(manually_verified=True).exclude(
+        hostname__in=scheme_hostnames
+    )
+    stale_names = list(stale_hostnames.values_list("hostname", flat=True))
+
+    if not stale_names:
+        return
+
+    deleted_count, _ = stale_hostnames.delete()
+    logger.info(
+        f"Deleted {deleted_count} stale hostname(s) for RP {slug} "
+        f"no longer in the scheme: {', '.join(stale_names)}"
+    )
 
 
 def create_org_rp(all_RPs_dict: dict, environment: str, repo_path: str) -> None:
