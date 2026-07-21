@@ -173,6 +173,8 @@ class RelyingPartySerializer(serializers.ModelSerializer):
 
 
 class MaintainerSerializer(serializers.ModelSerializer):
+    id = serializers.UUIDField(source="public_id", read_only=True)
+
     class Meta:
         model = User
-        fields = "__all__"
+        fields = ["id", "email", "role", "organizations"]

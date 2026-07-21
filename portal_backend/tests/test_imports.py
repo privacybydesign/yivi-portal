@@ -146,3 +146,81 @@ class DeleteStaleHostnamesTest(TestCase):
         self.assertFalse(
             RelyingPartyHostname.objects.filter(hostname="stale.example.com").exists()
         )
+
+
+class ImportSlugMismatchTests(TestCase):
+    """Regression tests for the RP import cron when a relying party's slug
+    differs from its organization slug.
+
+    ``rp_slug`` is globally unique, so a relying party registered through the
+    portal can already hold a slug under one organization while the scheme maps
+    that same slug to a different organization. The import must reconcile the
+    existing relying party instead of attempting an INSERT that violates the
+    unique constraint (which previously made the cron job error out).
+    """
+
+    REPO_PATH = "downloads/relying-party-repo"
+
+    def setUp(self):
+        self.trust_model = TrustModel.objects.create(
+            name="Yivi", description="Yivi Trust Model", eudi_compliant=False
+        )
+        self.yivi_tme = YiviTrustModelEnv.objects.create(
+            trust_model=self.trust_model,
+            environment="production",
+        )
+
+    def _requestor(self, requestor_id, hostname):
+        return {
+            "id": requestor_id,
+            "name": {"en": "Acme Verifier", "nl": "Acme Verifier"},
+            "hostnames": [hostname],
+            "logo": "nonexistent",
+        }
+
+    def test_import_reconciles_rp_with_mismatched_org_slug(self):
+        """An existing RP whose slug differs from its org slug must not cause a
+        UNIQUE-constraint IntegrityError during import."""
+        existing_org = Organization.objects.create(
+            name_en="Acme", name_nl="Acme", slug="acme"
+        )
+        RelyingParty.objects.create(
+            rp_slug="acme-verifier",
+            organization=existing_org,
+            yivi_tme=self.yivi_tme,
+        )
+
+        # The scheme maps requestor "acme-verifier" to its own organization,
+        # which differs from the "acme" organization the RP currently belongs to.
+        rps_dict = [self._requestor("pbdf.acme-verifier", "acme-verifier.example.com")]
+
+        # Should complete without raising (previously: IntegrityError on rp_slug).
+        trusted_rps_import.create_org_rp(rps_dict, "production", self.REPO_PATH)
+
+        rps = RelyingParty.objects.filter(rp_slug="acme-verifier")
+        self.assertEqual(rps.count(), 1, "RP must be reused, not duplicated")
+        rp = rps.get()
+        self.assertTrue(rp.published)
+        # Reconciled to the organization derived from the scheme requestor id.
+        self.assertEqual(rp.organization.slug, "acme-verifier")
+
+    def test_import_creates_new_rp_when_slug_unseen(self):
+        """A brand-new requestor still creates its RP (happy path unchanged)."""
+        rps_dict = [self._requestor("pbdf.fresh-rp", "fresh-rp.example.com")]
+
+        trusted_rps_import.create_org_rp(rps_dict, "production", self.REPO_PATH)
+
+        rp = RelyingParty.objects.get(rp_slug="fresh-rp")
+        self.assertEqual(rp.organization.slug, "fresh-rp")
+        self.assertTrue(rp.published)
+
+    def test_import_is_idempotent(self):
+        """Running the import twice (as the cron does) must not error."""
+        rps_dict = [self._requestor("pbdf.acme-verifier", "acme-verifier.example.com")]
+
+        trusted_rps_import.create_org_rp(rps_dict, "production", self.REPO_PATH)
+        trusted_rps_import.create_org_rp(rps_dict, "production", self.REPO_PATH)
+
+        self.assertEqual(
+            RelyingParty.objects.filter(rp_slug="acme-verifier").count(), 1
+        )
