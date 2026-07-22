@@ -1,4 +1,5 @@
 import os
+import uuid
 from rest_framework.test import APITestCase, APIClient
 from django.urls import reverse
 from portal_backend.models.models import Organization
@@ -9,7 +10,7 @@ from rest_framework_simplejwt.tokens import AccessToken  # type: ignore
 from unittest.mock import patch
 from django.db import IntegrityError
 from django.core import mail
-
+from django.test import override_settings
 
 User = get_user_model()
 
@@ -164,6 +165,37 @@ class OrganizationMaintainerActionsTest(APITestCase):
             mail.outbox[0].subject, "Yivi Portal - You have been added as a maintainer"
         )
 
+    def test_maintainers_list_exposes_uuid_not_integer_id(self):
+        """The maintainers list must expose the non-sequential UUID, never the integer pk."""
+        maintainer = OrgUser.objects.create(email="uuid@test.com", role="maintainer")
+        maintainer.organizations.add(self.organization)
+        url = reverse(
+            "portal_backend:organization-maintainers", args=[self.organization.slug]
+        )
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        listed = next(
+            item for item in response.json() if item["email"] == "uuid@test.com"
+        )
+        # id is the public UUID, not the auto-increment pk.
+        self.assertEqual(listed["id"], str(maintainer.public_id))
+        self.assertNotEqual(listed["id"], str(maintainer.pk))
+        self.assertNotIn("public_id", listed)
+
+    def test_delete_maintainer_by_integer_pk_not_found(self):
+        """The integer pk must not resolve a maintainer; only the public UUID works."""
+        maintainer = OrgUser.objects.create(email="bypk@test.com", role="maintainer")
+        maintainer.organizations.add(self.organization)
+        # Routing only accepts UUIDs, so the integer pk can never reach the view;
+        # a different (random) UUID must return 404 rather than delete by guessing.
+        url = reverse(
+            "portal_backend:organization-maintainers",
+            args=[self.organization.slug, uuid.uuid4()],
+        )
+        response = self.client.delete(url)
+        self.assertEqual(response.status_code, 404)
+        self.assertTrue(OrgUser.objects.filter(email="bypk@test.com").exists())
+
     def test_add_maintainer_invalid_email(self):
         """Test should fail when adding a maintainer with an invalid email."""
         url = reverse(
@@ -182,7 +214,7 @@ class OrganizationMaintainerActionsTest(APITestCase):
         maintainer.organizations.add(self.organization)
         url = reverse(
             "portal_backend:organization-maintainers",
-            args=[self.organization.slug, maintainer.id],
+            args=[self.organization.slug, maintainer.public_id],
         )
         response = self.client.delete(url)
         self.assertEqual(response.status_code, 200)
@@ -209,9 +241,25 @@ class OrganizationMaintainerActionsTest(APITestCase):
         maintainer.organizations.add(other_org)
         url = reverse(
             "portal_backend:organization-maintainers",
-            args=[other_org.slug, maintainer.id],
+            args=[other_org.slug, maintainer.public_id],
         )
         response = self.client.delete(url)
+        self.assertEqual(response.status_code, 403)
+
+    def test_patch_organization_missing_org_slugs_claim(self):
+        """Maintainer whose JWT lacks the organizationSlugs claim (e.g. an older
+        token issued before the claim existed) must be denied with 403, not crash
+        with a 500 from a TypeError on the None membership test."""
+        token = AccessToken.for_user(self.user)  # no organizationSlugs claim set
+        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {str(token)}")
+        url = reverse(
+            "portal_backend:organization-update", args=[self.organization.slug]
+        )
+        response = self.client.patch(
+            url,
+            {"name_en": "Updated Name"},
+            format="multipart",
+        )
         self.assertEqual(response.status_code, 403)
 
     def test_patch_organization_rollback(self):
@@ -253,3 +301,46 @@ class OrganizationMaintainerActionsTest(APITestCase):
 
         self.assertEqual(response.status_code, 400)
         self.assertTrue(user.organizations.filter(slug=self.organization.slug).exists())
+
+    @override_settings(YIVI_PORTAL_URL="portal.yivi.app")
+    @patch("portal_backend.views.organization.EmailMessage.send")
+    def test_add_maintainer_created_mocked_email(self, mock_send):
+        """Happy path: maintainer is added and the notification email is sent."""
+        url = reverse(
+            "portal_backend:organization-maintainers", args=[self.organization.slug]
+        )
+        response = self.client.post(
+            url,
+            {"email": "mocked@gmail.com"},
+            format="json",
+        )
+        self.assertEqual(response.status_code, 201)
+        mock_send.assert_called_once()
+        self.assertTrue(
+            OrgUser.objects.filter(email="mocked@gmail.com", role="maintainer").exists()
+        )
+
+    @override_settings(YIVI_PORTAL_URL="portal.yivi.app")
+    @patch("portal_backend.views.organization.EmailMessage.send")
+    def test_add_maintainer_email_failure_returns_generic_error(self, mock_send):
+        """When sending the notification email fails, the response must return a
+        generic 500 error without leaking the exception detail, and the newly
+        created maintainer must be rolled back."""
+        secret_detail = "SMTP connection refused: super secret internal detail"
+        mock_send.side_effect = Exception(secret_detail)
+
+        url = reverse(
+            "portal_backend:organization-maintainers", args=[self.organization.slug]
+        )
+        response = self.client.post(
+            url,
+            {"email": "willfail@gmail.com"},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 500)
+        # Generic message only — the underlying exception must not be exposed.
+        self.assertEqual(response.data, {"error": "Failed to send email notification."})
+        self.assertNotIn(secret_detail, str(response.data))
+        # The transaction is rolled back, so the maintainer is not persisted.
+        self.assertFalse(OrgUser.objects.filter(email="willfail@gmail.com").exists())

@@ -81,7 +81,7 @@ urlpatterns = [
         name="organization-maintainers",
     ),
     path(
-        "v1/organizations/<str:org_slug>/maintainers/<str:maintainer_id>/",
+        "v1/organizations/<str:org_slug>/maintainers/<uuid:maintainer_id>/",
         OrganizationMaintainerView.as_view(),
         name="organization-maintainers",
     ),
