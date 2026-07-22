@@ -10,7 +10,7 @@ from rest_framework_simplejwt.tokens import AccessToken  # type: ignore
 from unittest.mock import patch
 from django.db import IntegrityError
 from django.core import mail
-
+from django.test import override_settings
 
 User = get_user_model()
 
@@ -301,3 +301,46 @@ class OrganizationMaintainerActionsTest(APITestCase):
 
         self.assertEqual(response.status_code, 400)
         self.assertTrue(user.organizations.filter(slug=self.organization.slug).exists())
+
+    @override_settings(YIVI_PORTAL_URL="portal.yivi.app")
+    @patch("portal_backend.views.organization.EmailMessage.send")
+    def test_add_maintainer_created_mocked_email(self, mock_send):
+        """Happy path: maintainer is added and the notification email is sent."""
+        url = reverse(
+            "portal_backend:organization-maintainers", args=[self.organization.slug]
+        )
+        response = self.client.post(
+            url,
+            {"email": "mocked@gmail.com"},
+            format="json",
+        )
+        self.assertEqual(response.status_code, 201)
+        mock_send.assert_called_once()
+        self.assertTrue(
+            OrgUser.objects.filter(email="mocked@gmail.com", role="maintainer").exists()
+        )
+
+    @override_settings(YIVI_PORTAL_URL="portal.yivi.app")
+    @patch("portal_backend.views.organization.EmailMessage.send")
+    def test_add_maintainer_email_failure_returns_generic_error(self, mock_send):
+        """When sending the notification email fails, the response must return a
+        generic 500 error without leaking the exception detail, and the newly
+        created maintainer must be rolled back."""
+        secret_detail = "SMTP connection refused: super secret internal detail"
+        mock_send.side_effect = Exception(secret_detail)
+
+        url = reverse(
+            "portal_backend:organization-maintainers", args=[self.organization.slug]
+        )
+        response = self.client.post(
+            url,
+            {"email": "willfail@gmail.com"},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 500)
+        # Generic message only — the underlying exception must not be exposed.
+        self.assertEqual(response.data, {"error": "Failed to send email notification."})
+        self.assertNotIn(secret_detail, str(response.data))
+        # The transaction is rolled back, so the maintainer is not persisted.
+        self.assertFalse(OrgUser.objects.filter(email="willfail@gmail.com").exists())
