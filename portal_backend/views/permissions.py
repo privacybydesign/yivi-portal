@@ -31,6 +31,7 @@ class IsOrganizationMaintainerOrAdmin(permissions.BasePermission):
         if request_org_slug is None:  # checking if org slug is present in the request
             return False
 
+        token_org_slugs = None
         if hasattr(request, "auth"):
             raw_token: AccessToken = str(request.auth)
             token = AccessToken(raw_token)
@@ -45,6 +46,8 @@ class IsOrganizationMaintainerOrAdmin(permissions.BasePermission):
             return True
 
         if user_obj.role == "maintainer":
+            if not token_org_slugs:
+                return False
             if request_org_slug in token_org_slugs:
                 return True
 

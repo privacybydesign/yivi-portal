@@ -246,6 +246,22 @@ class OrganizationMaintainerActionsTest(APITestCase):
         response = self.client.delete(url)
         self.assertEqual(response.status_code, 403)
 
+    def test_patch_organization_missing_org_slugs_claim(self):
+        """Maintainer whose JWT lacks the organizationSlugs claim (e.g. an older
+        token issued before the claim existed) must be denied with 403, not crash
+        with a 500 from a TypeError on the None membership test."""
+        token = AccessToken.for_user(self.user)  # no organizationSlugs claim set
+        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {str(token)}")
+        url = reverse(
+            "portal_backend:organization-update", args=[self.organization.slug]
+        )
+        response = self.client.patch(
+            url,
+            {"name_en": "Updated Name"},
+            format="multipart",
+        )
+        self.assertEqual(response.status_code, 403)
+
     def test_patch_organization_rollback(self):
         """Test rollback happens if error occurs during patch request."""
         url = reverse(
