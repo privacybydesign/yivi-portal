@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { Menu } from "lucide-react";
 import { Link, useNavigate, useLocation, matchRoutes } from "react-router-dom";
 import { Avatar as DiceBearAvatar, Style } from "@dicebear/core";
 import initialsDefinition from "@dicebear/styles/initials.json";
@@ -58,7 +59,7 @@ export default function Header() {
 
   return (
     <div className="sticky top-0 z-50 bg-white border-b border-gray-200">
-      <nav className="container mx-auto flex flex-wrap justify-between items-center gap-x-4 gap-y-2 px-4 py-3">
+      <nav className="container mx-auto flex justify-between items-center gap-4 px-4 py-3">
         <Link
           to="/"
           className="text-xl font-semibold flex items-center gap-4 shrink-0"
@@ -67,36 +68,38 @@ export default function Header() {
           Portal
         </Link>
 
-        <div className="flex flex-wrap items-center justify-end gap-3">
-          <Link
-            to="/organizations"
-            className={cn(
-              buttonVariants({
-                variant: "ghost",
-                className:
-                  location.pathname === "/organizations"
-                    ? "bg-muted hover:bg-muted"
-                    : "",
-              }),
-            )}
-          >
-            Organizations
-          </Link>
+        <div className="flex items-center gap-3">
+          <div className="hidden sm:flex items-center gap-3">
+            <Link
+              to="/organizations"
+              className={cn(
+                buttonVariants({
+                  variant: "ghost",
+                  className:
+                    location.pathname === "/organizations"
+                      ? "bg-muted hover:bg-muted"
+                      : "",
+                }),
+              )}
+            >
+              Organizations
+            </Link>
 
-          <Link
-            to="/attribute-index"
-            className={cn(
-              buttonVariants({
-                variant: "ghost",
-                className:
-                  location.pathname === "/attribute-index"
-                    ? "bg-muted hover:bg-muted"
-                    : "",
-              }),
-            )}
-          >
-            Attribute Index
-          </Link>
+            <Link
+              to="/attribute-index"
+              className={cn(
+                buttonVariants({
+                  variant: "ghost",
+                  className:
+                    location.pathname === "/attribute-index"
+                      ? "bg-muted hover:bg-muted"
+                      : "",
+                }),
+              )}
+            >
+              Attribute Index
+            </Link>
+          </div>
 
           {email ? (
             <DropdownMenu>
@@ -156,6 +159,42 @@ export default function Header() {
               Login
             </Link>
           )}
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="sm:hidden"
+                aria-label="Open navigation menu"
+              >
+                <Menu className="size-5" />
+              </Button>
+            </DropdownMenuTrigger>
+
+            <DropdownMenuContent className="w-48 sm:hidden" align="end">
+              <Link to="/organizations">
+                <DropdownMenuItem
+                  className={cn(
+                    "!cursor-pointer",
+                    location.pathname === "/organizations" && "bg-muted",
+                  )}
+                >
+                  Organizations
+                </DropdownMenuItem>
+              </Link>
+              <Link to="/attribute-index">
+                <DropdownMenuItem
+                  className={cn(
+                    "!cursor-pointer",
+                    location.pathname === "/attribute-index" && "bg-muted",
+                  )}
+                >
+                  Attribute Index
+                </DropdownMenuItem>
+              </Link>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </nav>
     </div>
