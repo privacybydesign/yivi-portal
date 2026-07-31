@@ -3,9 +3,17 @@ import { jwtDecode } from "jwt-decode";
 import { useEffect } from "react";
 import type { AuthToken } from "@/models/auth_token";
 import { axiosInstance } from "../services/axiosInstance";
-import { AxiosError } from "axios";
+import { isAxiosError } from "axios";
 
 let refreshInProgress: Promise<string | null> | null = null;
+
+const decodeToken = (token: string): AuthToken | null => {
+  try {
+    return jwtDecode<AuthToken>(token);
+  } catch {
+    return null;
+  }
+};
 
 export interface StateStore {
   accessToken: string | null;
@@ -62,7 +70,11 @@ const useStore = create<StateStore>((set) => ({
         useStore.getState().setAccessToken(response.data.access);
         return response.data.access;
       } catch (error: unknown) {
-        if (error instanceof AxiosError) {
+        if (isAxiosError(error) && error.response?.status === 401) {
+          // The session is gone (expired or never existed). Drop the stale
+          // token so we stop retrying on every request and every page load.
+          useStore.getState().setAccessToken(null);
+        } else if (isAxiosError(error)) {
           console.warn("Error refreshing token:", error.response?.data.detail);
         } else {
           console.warn("Unexpected error", error);
@@ -78,9 +90,14 @@ const useStore = create<StateStore>((set) => ({
 
   initializeAuth: async () => {
     const savedAccessToken = localStorage.getItem("accessToken");
+    const decoded = savedAccessToken ? decodeToken(savedAccessToken) : null;
 
-    if (savedAccessToken) {
-      const decoded = jwtDecode<AuthToken>(savedAccessToken);
+    if (savedAccessToken && !decoded) {
+      // Unreadable token - drop it instead of letting it fail on every call.
+      localStorage.removeItem("accessToken");
+    }
+
+    if (decoded) {
       const currentTime = Math.floor(Date.now() / 1000);
 
       if (decoded.exp < currentTime + 60) {
@@ -119,9 +136,9 @@ export function useIdleRefresh() {
         accessToken
       ) {
         const currentTime = Math.floor(Date.now() / 1000);
-        const decoded = jwtDecode<AuthToken>(accessToken);
+        const decoded = decodeToken(accessToken);
 
-        if (decoded.exp < currentTime + 60) {
+        if (decoded && decoded.exp < currentTime + 60) {
           refreshToken();
         }
       }
