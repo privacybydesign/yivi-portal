@@ -131,6 +131,19 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 YIVI_SERVER_URL = os.environ.get("YIVI_SERVER_URL")
 YIVI_SERVER_TOKEN = os.environ.get("YIVI_SERVER_TOKEN")
 
+# Demo credentials are issued via a dedicated SD-JWT capable Yivi server.
+# The pair falls back together: the issuance token must never be sent to the
+# general server, nor the general token to the issuance server.
+YIVI_ISSUANCE_SERVER_URL = os.environ.get("YIVI_ISSUANCE_SERVER_URL")
+YIVI_ISSUANCE_SERVER_TOKEN = os.environ.get("YIVI_ISSUANCE_SERVER_TOKEN")
+if not YIVI_ISSUANCE_SERVER_URL:
+    YIVI_ISSUANCE_SERVER_URL = YIVI_SERVER_URL
+    YIVI_ISSUANCE_SERVER_TOKEN = YIVI_SERVER_TOKEN
+
+# Number of SD-JWT VC instances issued per credential; batching preserves
+# unlinkability since SD-JWTs are trackable when reused.
+YIVI_SDJWT_BATCH_SIZE = int(os.environ.get("YIVI_SDJWT_BATCH_SIZE") or "50")
+
 
 LOGGING = {
     "version": 1,

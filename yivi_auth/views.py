@@ -49,8 +49,8 @@ class YiviIssueDemosView(APIView):
         }
 
         yivi_server = YiviServer(
-            settings.YIVI_SERVER_URL,
-            token=settings.YIVI_SERVER_TOKEN,
+            settings.YIVI_ISSUANCE_SERVER_URL,
+            token=settings.YIVI_ISSUANCE_SERVER_TOKEN,
         )
         # UNIX timestamp in the future, 6 months from now
         validity = int(time.time()) + 6 * 30 * 24 * 60 * 60
@@ -63,6 +63,7 @@ class YiviIssueDemosView(APIView):
                         "credential": credential,
                         "validity": validity,
                         "attributes": filtered_attributes,
+                        "sdJwtBatchSize": settings.YIVI_SDJWT_BATCH_SIZE,
                     }
                 ],
             }
@@ -81,7 +82,8 @@ class YiviDemoIssuanceResultView(APIView):
 
     def get(self, request, yivi_token: str):
         yivi_server = YiviServer(
-            settings.YIVI_SERVER_URL, token=settings.YIVI_SERVER_TOKEN
+            settings.YIVI_ISSUANCE_SERVER_URL,
+            token=settings.YIVI_ISSUANCE_SERVER_TOKEN,
         )
         try:
             result = yivi_server.session_result(yivi_token)
