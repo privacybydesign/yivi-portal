@@ -1,7 +1,8 @@
-from .base import *  # noqa: F405, F403
 import os
 
-SECRET_KEY = require_env("DJANGO_SECRET_KEY")  # noqa: F405
+from .base import *
+
+SECRET_KEY = require_env("DJANGO_SECRET_KEY")
 
 DEBUG = False
 

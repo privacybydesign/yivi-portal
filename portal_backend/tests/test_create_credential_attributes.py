@@ -1,5 +1,8 @@
+from unittest.mock import MagicMock, patch
+
 from django.test import TestCase
 from django.utils import timezone
+
 from portal_backend.models.models import (
     AttestationProvider,
     Credential,
@@ -9,10 +12,9 @@ from portal_backend.models.models import (
     YiviTrustModelEnv,
 )
 from portal_backend.scheme_utils.trusted_aps_import import (
-    create_credential_attributes,
     CredentialFields,
+    create_credential_attributes,
 )
-from unittest.mock import MagicMock, patch
 
 DEMO_VALUES_PATH = (
     "portal_backend.scheme_utils.trusted_aps_import.DEMO_CREDENTIAL_VALUES"

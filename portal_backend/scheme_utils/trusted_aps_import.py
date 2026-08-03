@@ -1,19 +1,25 @@
-import xmltodict  # type: ignore
 import json
+import logging
 import os
+
+import xmltodict  # type: ignore
+from django.db import transaction
+from django.utils import timezone
 from dotenv import load_dotenv  # type: ignore
+
 from portal_backend.models.models import (
-    TrustModel,
-    YiviTrustModelEnv,
     AttestationProvider,
     Credential,
     CredentialAttribute,
+    TrustModel,
+    YiviTrustModelEnv,
 )
-from django.db import transaction
-import logging
-import portal_backend.scheme_utils.import_utils as import_utils
+from portal_backend.scheme_utils import import_utils
 from portal_backend.scheme_utils.demo_credential_values import DEMO_CREDENTIAL_VALUES
-from django.utils import timezone
+
+
+class TrustedApsImportError(Exception):
+    """Raised when importing trusted attestation providers fails."""
 
 
 logger = logging.getLogger(__name__)
@@ -43,12 +49,12 @@ def convert_xml_to_json(repo_name: str, branch: str) -> None:
         write_aps_to_json(all_APs_dict)
 
         if not all_APs_dict:
-            raise Exception("No Attestation Providers found")
+            raise TrustedApsImportError("No Attestation Providers found")
 
         logger.info(f"Found {len(all_APs_dict)} Attestation Providers.")
 
-    except Exception as e:
-        raise Exception(f"Error converting XML to JSON: {e}")
+    except Exception as e:  # noqa: BLE001
+        raise TrustedApsImportError(f"Error converting XML to JSON: {e}")
 
 
 def find_ap_directories(repo_path: str) -> list[str]:
@@ -72,7 +78,7 @@ def process_ap_directory(repo_path: str, ap_dir: str) -> dict | None:
 
     logo_path = f"{repo_path}/{ap_dir}/logo.png"
     if not os.path.isfile(logo_path):
-        raise Exception(f"No logo found for {ap_dir}")
+        raise TrustedApsImportError(f"No logo found for {ap_dir}")
 
     ap_data["logo_path"] = os.path.abspath(logo_path)
 
@@ -122,8 +128,8 @@ class APFields:
             self.logo_path = self.all_APs_dict[self.AP]["logo_path"]
             self.credentials = self.all_APs_dict[self.AP].get("credentials", {})
 
-        except Exception as e:
-            raise Exception(f"Error extracting fields from issuer: {e}")
+        except Exception as e:  # noqa: BLE001
+            raise TrustedApsImportError(f"Error extracting fields from issuer: {e}")
 
 
 class CredentialFields:
@@ -167,8 +173,8 @@ class CredentialFields:
                 self.attributes = attributes
             else:
                 self.attributes = [attributes]
-        except Exception as e:
-            raise Exception(f"Error extracting fields from credential: {e}")
+        except Exception as e:  # noqa: BLE001
+            raise TrustedApsImportError(f"Error extracting fields from credential: {e}")
 
 
 def create_ap(
@@ -207,8 +213,8 @@ def create_ap(
         )
 
         return ap
-    except Exception as e:
-        raise Exception(f"Error creating Attestation Provider for {apfields.slug}: {e}")
+    except Exception as e:  # noqa: BLE001
+        raise TrustedApsImportError(f"Error creating Attestation Provider for {apfields.slug}: {e}")
 
 
 def create_credential(
@@ -236,8 +242,8 @@ def create_credential(
         )
 
         return credential
-    except Exception as e:
-        raise Exception(f"Error creating credential {cfields.credential_id}: {e}")
+    except Exception as e:  # noqa: BLE001
+        raise TrustedApsImportError(f"Error creating credential {cfields.credential_id}: {e}")
 
 
 def create_credential_attributes(
@@ -282,8 +288,8 @@ def create_credential_attributes(
                 name_en=name_en,  # fallback for irma-demo scheme missing attribute names
                 defaults=defaults,
             )
-        except Exception as e:
-            raise Exception(
+        except Exception as e:  # noqa: BLE001
+            raise TrustedApsImportError(
                 f"Error creating attribute for credential {credential.credential_id}: {e}"
             )
 
@@ -300,8 +306,8 @@ def get_scheme_description(scheme_description_xml: str) -> dict:
     try:
         with open(scheme_description_xml, "r", encoding="utf-8") as f:
             return xmltodict.parse(f.read())
-    except Exception as e:
-        raise Exception(
+    except Exception as e:  # noqa: BLE001
+        raise TrustedApsImportError(
             f"Failed to parse scheme description at {scheme_description_xml}: {e}"
         )
 
@@ -351,8 +357,8 @@ def create_update_trust_model_env(
         )
         return yivi_tme
 
-    except Exception as e:
-        raise Exception(f"Failed to create/update YiviTrustModelEnv: {e}")
+    except Exception as e:  # noqa: BLE001
+        raise TrustedApsImportError(f"Failed to create/update YiviTrustModelEnv: {e}")
 
 
 def get_trust_model_env(environment: str) -> YiviTrustModelEnv:
@@ -360,7 +366,7 @@ def get_trust_model_env(environment: str) -> YiviTrustModelEnv:
         yivi_tme = YiviTrustModelEnv.objects.get(environment=environment)
         return yivi_tme
     except YiviTrustModelEnv.DoesNotExist:
-        raise Exception(
+        raise TrustedApsImportError(
             f"YiviTrustModelEnv for environment '{environment}' does not exist"
         )
 
@@ -388,13 +394,13 @@ def create_update_APs(environment: str) -> None:
                         environment=environment,
                     )
 
-                    for _, cred_dict in apfields.credentials.items():
+                    for cred_dict in apfields.credentials.values():
                         cfields = CredentialFields(cred_dict, apfields)
                         credential = create_credential(ap, cfields, environment)
                         create_credential_attributes(credential, cfields, environment)
             except Exception as e:
                 logger.error(f"Failed to process Attestation Provider {AP}: {e}")
-                raise e
+                raise
 
         logger.info(f"Found {len(all_APs_dict)} Attestation Providers in the JSON.")
 
@@ -419,5 +425,5 @@ def import_aps(config_file=CONFIG_FILE) -> None:
             convert_xml_to_json(repo_name, branch)
             create_update_APs(env)
 
-    except Exception as e:
-        raise Exception(f"Failed to import Attestation Providers: {e}")
+    except Exception as e:  # noqa: BLE001
+        raise TrustedApsImportError(f"Failed to import Attestation Providers: {e}")

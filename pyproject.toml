@@ -36,6 +36,11 @@ black = ">=23.12.1,<27.0.0"
 uwsgi = "^2.0.23"
 psycopg2-binary = "^2.9.1"
 
+[tool.ruff]
+# Django writes the migration files; linting generated code adds noise and the
+# fixes recur every time a migration is regenerated.
+extend-exclude = ["**/migrations/**"]
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"

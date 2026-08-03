@@ -1,25 +1,29 @@
-from django.contrib.auth import get_user_model
+import logging
+import time
+from datetime import datetime, timezone
+from typing import ClassVar
+
 from django.conf import settings
+from django.contrib.auth import get_user_model
+from drf_yasg import openapi  # type: ignore
+from drf_yasg.utils import swagger_auto_schema  # type: ignore
+from rest_framework.permissions import AllowAny
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework.permissions import AllowAny
-from datetime import datetime, timezone
-import logging
-from drf_yasg.utils import swagger_auto_schema  # type: ignore
-from drf_yasg import openapi  # type: ignore
+from rest_framework_simplejwt.serializers import (
+    TokenObtainPairSerializer,  # type: ignore
+)
 from rest_framework_simplejwt.tokens import RefreshToken  # type: ignore
-from rest_framework_simplejwt.serializers import TokenObtainPairSerializer  # type: ignore
-from portal_backend.models.models import User
-from yivi_auth.yivi import YiviServer, YiviException
-import time
 
+from portal_backend.models.models import User
+from yivi_auth.yivi import YiviException, YiviServer
 
 logger = logging.getLogger(__name__)
 
 
 class YiviIssueDemosView(APIView):
-    permission_classes = [AllowAny]
+    permission_classes: ClassVar[list] = [AllowAny]
 
     @swagger_auto_schema(
         request_body=openapi.Schema(
@@ -73,7 +77,7 @@ class YiviIssueDemosView(APIView):
 
 
 class YiviDemoIssuanceResultView(APIView):
-    permission_classes = [AllowAny]
+    permission_classes: ClassVar[list] = [AllowAny]
 
     def get(self, request, yivi_token: str):
         yivi_server = YiviServer(
@@ -108,7 +112,7 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
 
 
 class YiviSessionProxyStartView(APIView):
-    permission_classes = [AllowAny]
+    permission_classes: ClassVar[list] = [AllowAny]
 
     @swagger_auto_schema(
         request_body=openapi.Schema(
@@ -140,7 +144,7 @@ class YiviSessionProxyStartView(APIView):
 
 
 class YiviSessionProxyResultView(APIView):
-    permission_classes = [AllowAny]
+    permission_classes: ClassVar[list] = [AllowAny]
 
     @swagger_auto_schema(responses={200: "Success", 400: "Invalid Yivi session token."})
     def get(self, request, yivi_token: str):
@@ -157,7 +161,7 @@ class YiviSessionProxyResultView(APIView):
             email = yivi_session_result.get("disclosed")[0][0]["rawvalue"]
 
             User = get_user_model()
-            user, created = User.objects.get_or_create(username=email, email=email)
+            user, _ = User.objects.get_or_create(username=email, email=email)
 
             refresh = CustomTokenObtainPairSerializer.get_token(user)
             access_token = str(refresh.access_token)
@@ -186,7 +190,7 @@ class GetTokenView(APIView):
 
 
 class RefreshTokenView(APIView):
-    permission_classes = [AllowAny]
+    permission_classes: ClassVar[list] = [AllowAny]
 
     @swagger_auto_schema(
         responses={
@@ -230,8 +234,8 @@ class RefreshTokenView(APIView):
                 access_token = str(token.access_token)
                 response = Response({"access": access_token}, status=200)
             return response
-        except Exception as e:
-            logger.exception("Failed to refresh token: %s", e)
+        except Exception:
+            logger.exception("Failed to refresh token")
             return Response(
                 {"error": "Could not refresh the access token."}, status=400
             )
@@ -249,6 +253,6 @@ class LogoutView(APIView):
             response.delete_cookie("refresh_token")
             return response
 
-        except Exception as e:
-            logger.exception("Failed to log out: %s", e)
+        except Exception:
+            logger.exception("Failed to log out")
             return Response({"error": "Could not log out."}, status=400)

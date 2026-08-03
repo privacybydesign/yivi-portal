@@ -1,8 +1,9 @@
 from django.core.management.base import BaseCommand
+
 from portal_backend.crons import (
     CheckPublishedRelyingParties,
-    NewDNSVerification,
     ExistingDNSVerification,
+    NewDNSVerification,
     TrustedAPsImport,
     TrustedRPsImport,
 )

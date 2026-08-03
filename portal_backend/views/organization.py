@@ -1,38 +1,38 @@
 import logging
-from typing import Optional
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from drf_yasg.utils import swagger_auto_schema  # type: ignore
-from rest_framework import status
-from portal_backend.services.organization import filter_organizations
-from ..models.model_serializers import MaintainerSerializer, OrganizationSerializer
-from ..models.models import Organization
-from rest_framework import permissions
-from rest_framework.parsers import FormParser, MultiPartParser
-from ..models.models import User
-from rest_framework.pagination import LimitOffsetPagination
-from .permissions import IsOrganizationMaintainerOrAdmin
-from django.shortcuts import get_object_or_404
-from django.db import transaction
-from rest_framework.request import Request
-from ..swagger_specs.organization import (
-    organization_create_schema,
-    organization_update_schema,
-    organization_maintainer_create_schama,
-    organization_maintainer_delete_schema,
-)
+from typing import ClassVar
+
+from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.mail import EmailMessage
+from django.db import transaction
+from django.shortcuts import get_object_or_404
 from django.template.loader import render_to_string
-from django.conf import settings
+from drf_yasg.utils import swagger_auto_schema  # type: ignore
+from rest_framework import permissions, status
+from rest_framework.pagination import LimitOffsetPagination
+from rest_framework.parsers import FormParser, MultiPartParser
+from rest_framework.request import Request
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
+from portal_backend.services.organization import filter_organizations
+
+from ..models.model_serializers import MaintainerSerializer, OrganizationSerializer
+from ..models.models import Organization, User
+from ..swagger_specs.organization import (
+    organization_create_schema,
+    organization_maintainer_create_schama,
+    organization_maintainer_delete_schema,
+    organization_update_schema,
+)
+from .permissions import IsOrganizationMaintainerOrAdmin
 
 logger = logging.getLogger(__name__)
 
 
 class OrganizationCreateView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
-    parser_classes = [MultiPartParser, FormParser]
+    permission_classes: ClassVar[list] = [permissions.IsAuthenticated]
+    parser_classes: ClassVar[list] = [MultiPartParser, FormParser]
 
     @organization_create_schema
     @transaction.atomic
@@ -52,7 +52,7 @@ class OrganizationCreateView(APIView):
             )
             user.organizations.add(organization)
 
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             transaction.set_rollback(True)
             logger.error(f"Error creating user: {e}")
             return Response(
@@ -67,7 +67,7 @@ class OrganizationCreateView(APIView):
 
 
 class OrganizationListView(APIView):
-    permission_classes = [permissions.AllowAny]
+    permission_classes: ClassVar[list] = [permissions.AllowAny]
 
     @swagger_auto_schema(responses={200: "Success", 404: "Not Found"})
     def get(self, request: Request) -> Response:
@@ -82,7 +82,7 @@ class OrganizationListView(APIView):
 
 
 class OrganizationDetailView(APIView):
-    permission_classes = [permissions.AllowAny]
+    permission_classes: ClassVar[list] = [permissions.AllowAny]
 
     @swagger_auto_schema(responses={200: "Success", 404: "Not Found"})
     def get(self, request: Request, org_slug: str) -> Response:
@@ -110,11 +110,11 @@ class OrganizationDetailView(APIView):
 
 
 class OrganizationUpdateView(APIView):
-    permission_classes = [
+    permission_classes: ClassVar[list] = [
         permissions.IsAuthenticated,
         IsOrganizationMaintainerOrAdmin,
     ]
-    parser_classes = [MultiPartParser, FormParser]
+    parser_classes: ClassVar[list] = [MultiPartParser, FormParser]
 
     @organization_update_schema
     # @transaction.atomic
@@ -134,7 +134,7 @@ class OrganizationUpdateView(APIView):
             )
         try:
             serializer.save()
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             logger.error(f"Error saving to database: {e}")
             return Response(
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -143,7 +143,7 @@ class OrganizationUpdateView(APIView):
 
 
 class OrganizationMaintainersView(APIView):
-    permission_classes = [
+    permission_classes: ClassVar[list] = [
         permissions.IsAuthenticated,
         IsOrganizationMaintainerOrAdmin,
     ]
@@ -152,9 +152,7 @@ class OrganizationMaintainersView(APIView):
     def get(self, request: Request, org_slug: str) -> Response:
         """Get all maintainers for an organization"""
         organization = get_object_or_404(Organization, slug=org_slug)
-        maintainers = maintainers = User.objects.filter(
-            organizations=organization
-        ).distinct()
+        maintainers = User.objects.filter(organizations=organization).distinct()
         serializer = MaintainerSerializer(maintainers, many=True)
         return Response(serializer.data)
 
@@ -163,7 +161,7 @@ class OrganizationMaintainersView(APIView):
     def post(self, request: Request, org_slug: str) -> Response:
         """Add a maintainer to an organization"""
         organization = get_object_or_404(Organization, slug=org_slug)
-        email: Optional[str] = request.data.get("email")
+        email: str | None = request.data.get("email")
 
         if not email:
             return Response(
@@ -180,15 +178,13 @@ class OrganizationMaintainersView(APIView):
 
         try:
             user = User.objects.prefetch_related("organizations").get(email=email)
-            if user:
-                if organization in user.organizations.all():
-
-                    return Response(
-                        {
-                            "email": f"User with email {email} is already a maintainer of this organization"
-                        },
-                        status=status.HTTP_400_BAD_REQUEST,
-                    )
+            if user and organization in user.organizations.all():
+                return Response(
+                    {
+                        "email": f"User with email {email} is already a maintainer of this organization"
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
 
         except User.DoesNotExist:
             user = User(email=email, role="maintainer")
@@ -203,7 +199,7 @@ class OrganizationMaintainersView(APIView):
                     {"error": e.message_dict},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001
                 transaction.set_rollback(True)
                 logger.error(f"Unexpected error creating user: {e}")
                 return Response(
@@ -233,9 +229,9 @@ class OrganizationMaintainersView(APIView):
             )
             email_notification.content_subtype = "html"
             email_notification.send()
-        except Exception as e:
+        except Exception:
             transaction.set_rollback(True)
-            logger.exception("Failed to send email notification: %s", e)
+            logger.exception("Failed to send email notification")
             return Response(
                 {"error": "Failed to send email notification."},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -248,7 +244,7 @@ class OrganizationMaintainersView(APIView):
 
 
 class OrganizationMaintainerView(APIView):
-    permission_classes = [
+    permission_classes: ClassVar[list] = [
         permissions.IsAuthenticated,
         IsOrganizationMaintainerOrAdmin,
     ]
@@ -288,7 +284,7 @@ class OrganizationMaintainerView(APIView):
 
 
 class OrganizationNameAndSlugView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes: ClassVar[list] = [permissions.IsAuthenticated]
 
     @swagger_auto_schema(responses={200: "Success", 404: "Not Found"})
     def get(self, request: Request) -> Response:

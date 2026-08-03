@@ -1,13 +1,20 @@
+import logging
 import os
-from dotenv import load_dotenv
+
 from django.db import transaction
+from django.utils import timezone
+from dotenv import load_dotenv
+
 from portal_backend.models.models import (
     RelyingParty,
     RelyingPartyHostname,
 )
-from django.utils import timezone
-import logging
-import portal_backend.scheme_utils.import_utils as import_utils
+from portal_backend.scheme_utils import import_utils
+
+
+class TrustedRpsImportError(Exception):
+    """Raised when importing trusted relying parties fails."""
+
 
 logger = logging.getLogger(__name__)
 load_dotenv()
@@ -38,7 +45,7 @@ class RPFields:
                 self.repo_path, "assets", f"{self.rp_dict.get('logo')}.png"
             )
         except (KeyError, IndexError) as e:
-            raise Exception(f"Error extracting fields from verifier: {e}")
+            raise TrustedRpsImportError(f"Error extracting fields from verifier: {e}")
 
 
 def create_rp(
@@ -79,8 +86,10 @@ def create_rp(
 
         logger.info(f"{'Created' if rp_created else 'Updated'} Relying Party: {org}")
 
-    except Exception as rp_error:
-        raise Exception(f"Failed to create/update RelyingParty for {org}: {rp_error}")
+    except Exception as rp_error:  # noqa: BLE001
+        raise TrustedRpsImportError(
+            f"Failed to create/update RelyingParty for {org}: {rp_error}"
+        )
 
     return rp
 
@@ -112,8 +121,8 @@ def create_hostnames(
             logger.info(
                 f"{'Created' if hostname_created else 'Updated'} Hostname: {hostname} for RP {rpfields.slug}"
             )
-        except Exception as hostname_error:
-            raise Exception(
+        except Exception as hostname_error:  # noqa: BLE001
+            raise TrustedRpsImportError(
                 f"Failed to create/update Hostname {hostname} for RP {rpfields.slug}: {hostname_error}"
             )
 
@@ -199,5 +208,5 @@ def import_rps() -> None:
         all_RPs_dict = import_utils.load_json_to_dict(f"{repo_path}/requestors.json")
         create_org_rp(all_RPs_dict, "production", repo_path)
 
-    except Exception as e:
-        raise Exception(f"Failed to import relying parties: {e}")
+    except Exception as e:  # noqa: BLE001
+        raise TrustedRpsImportError(f"Failed to import relying parties: {e}")

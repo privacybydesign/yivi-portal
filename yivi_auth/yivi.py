@@ -16,9 +16,7 @@ class YiviException(Exception):
         self.headers = headers
 
     def __str__(self):
-        return "http status: {0}, code:{1} - {2}, reason: {3}".format(
-            self.http_status, self.code, self.msg, self.reason
-        )
+        return f"http status: {self.http_status}, code:{self.code} - {self.msg}, reason: {self.reason}"
 
 
 class YiviServer:
@@ -30,7 +28,7 @@ class YiviServer:
 
     def _auth_headers(self):
         if self.token is None:
-            return dict()
+            return {}
         else:
             return {"Authorization": self.token}
 
@@ -68,7 +66,7 @@ class YiviServer:
             raise YiviException(
                 response.status_code,
                 -1,
-                "%s:\n %s" % (response.url, msg),
+                f"{response.url}:\n {msg}",
                 reason=reason,
                 headers=response.headers,
             )
@@ -79,7 +77,7 @@ class YiviServer:
             except (IndexError, AttributeError):
                 reason = None
             raise YiviException(
-                429, -1, "%s:\n %s" % (request.path_url, "Max Retries"), reason=reason
+                429, -1, f"{request.path_url}:\n Max Retries", reason=reason
             )
         except ValueError:
             results = None

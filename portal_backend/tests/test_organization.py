@@ -1,16 +1,18 @@
 import os
 import uuid
-from rest_framework.test import APITestCase, APIClient
+from unittest.mock import patch
+
+from django.contrib.auth import get_user_model
+from django.core import mail
+from django.db import IntegrityError
+from django.test import override_settings
 from django.urls import reverse
+from rest_framework.test import APIClient, APITestCase
+from rest_framework_simplejwt.tokens import AccessToken  # type: ignore
+
 from portal_backend.models.models import Organization
 from portal_backend.models.models import User as OrgUser
-from django.contrib.auth import get_user_model
 from portal_backend.scheme_utils.import_utils import load_logo_if_exists
-from rest_framework_simplejwt.tokens import AccessToken  # type: ignore
-from unittest.mock import patch
-from django.db import IntegrityError
-from django.core import mail
-from django.test import override_settings
 
 User = get_user_model()
 
@@ -111,7 +113,7 @@ class OrganizationMaintainerActionsTest(APITestCase):
         orguser.organizations.add(self.organization)
         token = AccessToken.for_user(self.user)
         token["organizationSlugs"] = [self.organization.slug]
-        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {str(token)}")
+        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {token!s}")
 
     def test_patch_organization_success(self):
         """Test updating an organization with valid data."""
@@ -251,7 +253,7 @@ class OrganizationMaintainerActionsTest(APITestCase):
         token issued before the claim existed) must be denied with 403, not crash
         with a 500 from a TypeError on the None membership test."""
         token = AccessToken.for_user(self.user)  # no organizationSlugs claim set
-        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {str(token)}")
+        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {token!s}")
         url = reverse(
             "portal_backend:organization-update", args=[self.organization.slug]
         )
