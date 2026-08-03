@@ -46,7 +46,6 @@ const addCachedLogoToFormData = (
   const logo = formData.get("logo");
   if ((!logo || (logo instanceof File && logo.size === 0)) && cachedLogo) {
     formData.set("logo", cachedLogo);
-    console.log("Adding cached logo to form data");
   }
 };
 

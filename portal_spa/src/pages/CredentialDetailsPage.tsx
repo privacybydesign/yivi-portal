@@ -22,10 +22,9 @@ export default function CredentialDetailsPage() {
       c.credential_id === credential_id
   );
 
-  useEffect(
-    () => window.scrollTo({ top: 0, behavior: "smooth" }),
-    [credential]
-  );
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [credential]);
 
   if (!credentials?.length) {
     return (
