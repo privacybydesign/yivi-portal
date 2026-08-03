@@ -24,3 +24,6 @@ Django backend in `portal_backend/` + `yivi_portal/`, React SPA in `portal_spa/`
 - `.github/workflows/django-container.yml` and `ruff-linter.yml` cover the backend; they use
   `paths-ignore: portal_spa/**`, so the two halves never both run on one pull request.
 - A change outside `portal_spa/**` therefore gets no React run at all.
+- `ruff-linter.yml` runs `pip install ruff` unpinned, so the linter can change under the
+  repo. The rule set lives in `[tool.ruff.lint]` in `pyproject.toml` instead, which keeps
+  `ruff check .` deterministic across ruff releases.
