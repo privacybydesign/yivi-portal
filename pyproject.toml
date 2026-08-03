@@ -36,6 +36,9 @@ black = ">=23.12.1,<27.0.0"
 uwsgi = "^2.0.23"
 psycopg2-binary = "^2.9.1"
 
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F"]
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
