@@ -1,23 +1,25 @@
-from django.utils import timezone
-from rest_framework.test import APITestCase, APIClient
+from unittest.mock import patch
+
+from django.contrib.auth import get_user_model
+from django.db import IntegrityError
 from django.urls import reverse
+from django.utils import timezone
+from rest_framework.test import APIClient, APITestCase
+from rest_framework_simplejwt.tokens import AccessToken  # type: ignore
+
 from portal_backend.models.models import (
     AttestationProvider,
-    Organization,
-    RelyingParty,
-    RelyingPartyHostname,
     Condiscon,
     CondisconAttribute,
     Credential,
     CredentialAttribute,
+    Organization,
+    RelyingParty,
+    RelyingPartyHostname,
     TrustModel,
     YiviTrustModelEnv,
 )
 from portal_backend.models.models import User as OrgUser
-from django.contrib.auth import get_user_model
-from rest_framework_simplejwt.tokens import AccessToken  # type: ignore
-from unittest.mock import patch
-from django.db import IntegrityError
 
 User = get_user_model()
 
@@ -132,7 +134,7 @@ class RelyingPartyCreateTest(APITestCase):
         token = AccessToken.for_user(self.user)
         token["organizationSlugs"] = [self.organization.slug]
 
-        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {str(token)}")
+        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {token!s}")
 
     def test_create_relying_party_success(self):
         """Test creating a relying party with valid data."""

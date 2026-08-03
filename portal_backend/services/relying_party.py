@@ -1,7 +1,7 @@
-from typing import List
+
+from django.core.exceptions import ValidationError
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
-from django.core.exceptions import ValidationError
 
 from portal_backend.services.helpers import (
     extract_hostnames,
@@ -9,21 +9,21 @@ from portal_backend.services.helpers import (
     validate_and_save,
 )
 
+from ..dns_verification import generate_dns_challenge
 from ..models.models import (
+    Condiscon,
+    CondisconAttribute,
+    CredentialAttribute,
     Organization,
     RelyingParty,
     RelyingPartyHostname,
     YiviTrustModelEnv,
-    Condiscon,
-    CondisconAttribute,
-    CredentialAttribute,
 )
-from ..dns_verification import generate_dns_challenge
 from ..types import (
-    HostnameEntry,
     AttributeEntry,
-    CredentialAttributesEntry,
     CondisconJSON,
+    CredentialAttributesEntry,
+    HostnameEntry,
     RelyingPartyResponse,
 )
 
@@ -53,7 +53,7 @@ def create_relying_party(
     return relying_party
 
 
-def parse_and_validate_hostnames(hostnames: HostnameEntry) -> List[str]:
+def parse_and_validate_hostnames(hostnames: HostnameEntry) -> list[str]:
     new_hostnames = extract_hostnames(hostnames)
     duplicates = [h for h in new_hostnames if hostname_exists(h)]
     if duplicates:
@@ -64,8 +64,8 @@ def parse_and_validate_hostnames(hostnames: HostnameEntry) -> List[str]:
 
 
 def create_hostname_objects(
-    hostnames: List[str], relying_party: RelyingParty
-) -> List[RelyingPartyHostname]:
+    hostnames: list[str], relying_party: RelyingParty
+) -> list[RelyingPartyHostname]:
     created = []
     for hostname in hostnames:
         obj = RelyingPartyHostname(
@@ -80,8 +80,8 @@ def create_hostname_objects(
 
 
 def create_hostnames(
-    hostnames: List[HostnameEntry], relying_party: RelyingParty
-) -> List[RelyingPartyHostname]:
+    hostnames: list[HostnameEntry], relying_party: RelyingParty
+) -> list[RelyingPartyHostname]:
     new_hostnames = parse_and_validate_hostnames(hostnames)
     return create_hostname_objects(new_hostnames, relying_party)
 
@@ -89,7 +89,7 @@ def create_hostnames(
 # TODO: right now we are making a condiscon with OR for each credential type, we will need a more advanced
 # condiscon maker that can handle full possibilities of the condiscon supported by the frontend
 def make_condiscon_json(
-    attributes_data: List[AttributeEntry],
+    attributes_data: list[AttributeEntry],
 ) -> CondisconJSON:
     condiscon_json = {
         "@context": "https://irma.app/ld/request/disclosure/v2",
@@ -113,7 +113,7 @@ def make_condiscon_json(
 
 
 def create_condiscon(
-    attributes: List[AttributeEntry],
+    attributes: list[AttributeEntry],
     contexts: dict[str, str],
     relying_party: RelyingParty,
 ) -> Condiscon:
@@ -132,7 +132,7 @@ def create_condiscon(
 
 def create_condiscon_attributes(
     condiscon: Condiscon,
-    attributes_data: List[AttributeEntry],
+    attributes_data: list[AttributeEntry],
 ) -> None:
     for attr in attributes_data:
         cred_attr = get_object_or_404(
@@ -150,8 +150,8 @@ def create_condiscon_attributes(
 
 
 def update_relying_party_hostnames(
-    relying_party: RelyingParty, submitted_hostnames: List[HostnameEntry]
-) -> List[dict[str, str]]:
+    relying_party: RelyingParty, submitted_hostnames: list[HostnameEntry]
+) -> list[dict[str, str]]:
     rp_existing_hostnames = {
         str(h.id): h
         for h in RelyingPartyHostname.objects.filter(relying_party=relying_party)
@@ -205,7 +205,7 @@ def update_relying_party_hostnames(
 
 
 def update_condiscon_attributes(
-    condiscon: Condiscon, attributes_data: List[AttributeEntry]
+    condiscon: Condiscon, attributes_data: list[AttributeEntry]
 ) -> None:
     if condiscon.condiscon is None:
         raise ValidationError("Condiscon JSON is not set.")

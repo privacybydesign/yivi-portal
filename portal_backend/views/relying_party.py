@@ -1,47 +1,52 @@
+import logging
+from typing import ClassVar
+
+from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
-from rest_framework import permissions
-from rest_framework import status
+from rest_framework import permissions, status
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from ..services.relying_party import (
-    create_relying_party,
-    create_hostnames,
-    create_condiscon,
-    create_condiscon_attributes,
-    make_condiscon_json,
-    update_relying_party_hostnames,
-    update_condiscon_context,
-    update_condiscon_attributes,
-    update_rp_environment,
-    update_rp_slug,
-)
-from ..swagger_specs.relying_party import (
-    relying_party_create_schema,
-    relying_party_patch_schema,
-    relying_party_delete_schema,
-    relying_party_dns_status_schema,
-    relying_party_list_schema,
-)
-from .permissions import IsOrganizationMaintainerOrAdmin
+
 from ..models.model_serializers import (
     CondisconSerializer,
     RelyingPartyHostnameSerializer,
 )
 from ..models.models import (
-    RelyingParty,
-    RelyingPartyHostname,
-    Organization,
     Condiscon,
     CondisconAttribute,
+    Organization,
+    RelyingParty,
+    RelyingPartyHostname,
 )
-from django.core.exceptions import ValidationError
+from ..services.relying_party import (
+    create_condiscon,
+    create_condiscon_attributes,
+    create_hostnames,
+    create_relying_party,
+    make_condiscon_json,
+    update_condiscon_attributes,
+    update_condiscon_context,
+    update_relying_party_hostnames,
+    update_rp_environment,
+    update_rp_slug,
+)
+from ..swagger_specs.relying_party import (
+    relying_party_create_schema,
+    relying_party_delete_schema,
+    relying_party_dns_status_schema,
+    relying_party_list_schema,
+    relying_party_patch_schema,
+)
+from .permissions import IsOrganizationMaintainerOrAdmin
+
+logger = logging.getLogger(__name__)
 
 
 class RelyingPartyCreateView(APIView):
-    permission_classes = [
+    permission_classes: ClassVar[list] = [
         permissions.IsAuthenticated,
         IsOrganizationMaintainerOrAdmin,
     ]
@@ -73,10 +78,11 @@ class RelyingPartyCreateView(APIView):
                 {"error": str(e)},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        except Exception as e:
+        except Exception:
             transaction.set_rollback(True)
+            logger.exception("Failed to create relying party.")
             return Response(
-                {"error": "Failed to create relying party: " + str(e)},
+                {"error": "Failed to create relying party."},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
@@ -99,7 +105,7 @@ class RelyingPartyCreateView(APIView):
 
 
 class RelyingPartyListView(APIView):
-    permission_classes = [permissions.AllowAny]
+    permission_classes: ClassVar[list] = [permissions.AllowAny]
 
     @relying_party_list_schema
     def get(self, request: Request, org_slug: str) -> Response:
@@ -127,7 +133,7 @@ class RelyingPartyListView(APIView):
 
 
 class RelyingPartyRetrieveView(APIView):
-    permission_classes = [permissions.AllowAny]
+    permission_classes: ClassVar[list] = [permissions.AllowAny]
 
     def get(
         self, request: Request, org_slug: str, environment: str, rp_slug: str
@@ -140,15 +146,17 @@ class RelyingPartyRetrieveView(APIView):
             rp_slug=rp_slug,
         )
 
-        if not (
-            request.user.is_authenticated
-            and IsOrganizationMaintainerOrAdmin().has_permission(request, self)
+        if (
+            not (
+                request.user.is_authenticated
+                and IsOrganizationMaintainerOrAdmin().has_permission(request, self)
+            )
+            and not relying_party.published
         ):
-            if not relying_party.published:
-                return Response(
-                    {"error": "You are not allowed to view this relying party."},
-                    status=status.HTTP_404_NOT_FOUND,
-                )
+            return Response(
+                {"error": "You are not allowed to view this relying party."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
 
         hostnames = RelyingPartyHostname.objects.filter(relying_party=relying_party)
         condiscon = Condiscon.objects.filter(relying_party=relying_party).first()
@@ -187,7 +195,7 @@ class RelyingPartyRetrieveView(APIView):
 
 
 class RelyingPartyDeleteView(APIView):
-    permission_classes = [
+    permission_classes: ClassVar[list] = [
         permissions.IsAuthenticated,
         IsOrganizationMaintainerOrAdmin,
     ]
@@ -217,7 +225,10 @@ class RelyingPartyDeleteView(APIView):
 
 
 class RelyingPartyUpdateView(APIView):
-    permission_classes = [permissions.IsAuthenticated, IsOrganizationMaintainerOrAdmin]
+    permission_classes: ClassVar[list] = [
+        permissions.IsAuthenticated,
+        IsOrganizationMaintainerOrAdmin,
+    ]
 
     @relying_party_patch_schema
     @transaction.atomic
@@ -327,16 +338,17 @@ class RelyingPartyUpdateView(APIView):
                 {"error": str(e)},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        except Exception as e:
+        except Exception:
             transaction.set_rollback(True)
+            logger.exception("Failed to update relying party.")
             return Response(
-                {"error": str(e)},
+                {"error": "Failed to update relying party."},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
 
 class RelyingPartyHostnameStatusView(APIView):
-    permission_classes = [
+    permission_classes: ClassVar[list] = [
         permissions.IsAuthenticated,
         IsOrganizationMaintainerOrAdmin,
     ]

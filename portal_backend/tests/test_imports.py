@@ -1,5 +1,7 @@
+from typing import ClassVar
+
 from django.test import TestCase
-from portal_backend.scheme_utils import trusted_rps_import, trusted_aps_import
+
 from portal_backend.models.models import (
     Organization,
     RelyingParty,
@@ -7,6 +9,7 @@ from portal_backend.models.models import (
     TrustModel,
     YiviTrustModelEnv,
 )
+from portal_backend.scheme_utils import trusted_aps_import, trusted_rps_import
 
 
 class ImportTests(TestCase):
@@ -88,7 +91,7 @@ class DeleteStaleHostnamesTest(TestCase):
 
         class _Fields:
             slug = "test-rp"
-            hostnames = ["new.example.com"]
+            hostnames: ClassVar[list] = ["new.example.com"]
 
         trusted_rps_import.create_hostnames(_Fields(), self.rp)
 

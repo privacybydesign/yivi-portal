@@ -1,7 +1,9 @@
 from drf_yasg import openapi  # type: ignore
 from drf_yasg.utils import swagger_auto_schema  # type: ignore
-from portal_backend.models.model_serializers import OrganizationSerializer  # type: ignore
 
+from portal_backend.models.model_serializers import (
+    OrganizationSerializer,  # type: ignore
+)
 
 organization_create_schema = swagger_auto_schema(
     request_body=OrganizationSerializer,

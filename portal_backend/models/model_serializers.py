@@ -1,24 +1,27 @@
+from typing import ClassVar
+
+from django_countries.serializers import CountryFieldMixin  # type: ignore
 from rest_framework import serializers
+
 from .models import (
+    AttestationProvider,
+    Condiscon,
+    CondisconAttribute,
+    Credential,
+    CredentialAttribute,
     Organization,
+    RelyingParty,
+    RelyingPartyHostname,
     TrustModel,
     User,
     YiviTrustModelEnv,
-    RelyingPartyHostname,
-    Condiscon,
-    AttestationProvider,
-    Credential,
-    CredentialAttribute,
-    CondisconAttribute,
-    RelyingParty,
 )
-from django_countries.serializers import CountryFieldMixin  # type: ignore
 
 
 class TrustModelSerializer(serializers.ModelSerializer):
     class Meta:
         model = TrustModel
-        fields = ["id", "name", "description", "eudi_compliant"]
+        fields: ClassVar[list] = ["id", "name", "description", "eudi_compliant"]
 
 
 class YiviTrustModelEnvSerializer(serializers.ModelSerializer):
@@ -42,7 +45,7 @@ class OrganizationSerializer(CountryFieldMixin, serializers.ModelSerializer):
 
     class Meta:
         model = Organization
-        fields = [
+        fields: ClassVar[list] = [
             "id",
             "name_en",
             "name_nl",
@@ -61,7 +64,7 @@ class OrganizationSerializer(CountryFieldMixin, serializers.ModelSerializer):
             "postal_code",
             "city",
         ]
-        read_only_fields = ["is_verified"]
+        read_only_fields: ClassVar[list] = ["is_verified"]
 
 
 class RelyingPartyHostnameSerializer(serializers.ModelSerializer):
@@ -86,7 +89,7 @@ class AttestationProviderSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = AttestationProvider
-        fields = [
+        fields: ClassVar[list] = [
             "id",
             "ap_slug",
             "organization",
@@ -104,7 +107,7 @@ class AttestationProviderSerializer(serializers.ModelSerializer):
 class CredentialAttributeSerializer(serializers.ModelSerializer):
     class Meta:
         model = CredentialAttribute
-        fields = [
+        fields: ClassVar[list] = [
             "id",
             "credential_attribute_tag",
             "name_en",
@@ -134,7 +137,7 @@ class CredentialListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Credential
-        fields = [
+        fields: ClassVar[list] = [
             "id",
             "name_en",
             "name_nl",
@@ -159,7 +162,7 @@ class CondisconAttributeSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CondisconAttribute
-        fields = ["reason_en", "credential_attribute"]
+        fields: ClassVar[list] = ["reason_en", "credential_attribute"]
 
 
 class RelyingPartySerializer(serializers.ModelSerializer):
@@ -177,4 +180,4 @@ class MaintainerSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ["id", "email", "role", "organizations"]
+        fields: ClassVar[list] = ["id", "email", "role", "organizations"]

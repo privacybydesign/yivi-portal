@@ -1,16 +1,18 @@
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework.request import Request
-from rest_framework import status
-from drf_yasg.utils import swagger_auto_schema  # type: ignore
-from ..models.models import TrustModel
+from typing import ClassVar
+
 from django.shortcuts import get_object_or_404
+from drf_yasg.utils import swagger_auto_schema  # type: ignore
+from rest_framework import permissions, status
+from rest_framework.request import Request
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
 from ..models.model_serializers import TrustModelSerializer, YiviTrustModelEnvSerializer
-from rest_framework import permissions
+from ..models.models import TrustModel
 
 
 class TrustModelListView(APIView):
-    permission_classes = [permissions.AllowAny]
+    permission_classes: ClassVar[list] = [permissions.AllowAny]
 
     @swagger_auto_schema(responses={200: "Success"})
     def get(self, request: Request) -> Response:
@@ -21,7 +23,7 @@ class TrustModelListView(APIView):
 
 
 class TrustModelDetailView(APIView):
-    permission_classes = [permissions.AllowAny]
+    permission_classes: ClassVar[list] = [permissions.AllowAny]
 
     @swagger_auto_schema(responses={200: "Success", 404: "Not found"})
     def get(self, request: Request, name: str) -> Response:
@@ -32,7 +34,7 @@ class TrustModelDetailView(APIView):
 
 
 class YiviTrustModelEnvListView(APIView):
-    permission_classes = [permissions.AllowAny]
+    permission_classes: ClassVar[list] = [permissions.AllowAny]
 
     @swagger_auto_schema(responses={200: "Success", 404: "Not found"})
     def get(self, request: Request, trust_model_name: str) -> Response:

@@ -1,7 +1,7 @@
 import { expect, afterEach } from "vitest";
 import { cleanup } from "@testing-library/react";
 import * as matchers from "@testing-library/jest-dom/matchers";
-import mock from "./mocks/api";
+import mock, { resetRefreshResponse } from "./mocks/api";
 
 // Node exposes its own experimental `localStorage` global, which stays
 // undefined without --localstorage-file and shadows the one jsdom would
@@ -44,4 +44,5 @@ afterEach(() => {
   cleanup();
 
   mock.resetHistory();
+  resetRefreshResponse();
 });

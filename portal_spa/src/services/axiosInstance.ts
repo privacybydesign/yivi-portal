@@ -23,20 +23,19 @@ const isTokenExpiring = (token: string): boolean => {
 
 const getValidAccessToken = async (): Promise<string | null> => {
   const { accessToken, refreshToken } = useStore.getState();
-  // The store is still empty on the very first request of a page load, but the
-  // token survives in localStorage.
-  const token = accessToken ?? localStorage.getItem("accessToken");
 
-  if (token && !isTokenExpiring(token)) {
-    return token;
+  // The access token is kept in memory only - there is no localStorage
+  // fallback. On the very first request of a page load the store may still be
+  // empty; there is nothing to send and a refresh would be a guaranteed 401 for
+  // anonymous visitors, so the request goes out unauthenticated. The session of
+  // a returning user is restored separately by initializeAuth() via the
+  // HttpOnly refresh cookie.
+  if (!accessToken) {
+    return null;
   }
 
-  // The refresh token itself lives in an HttpOnly cookie, so the app cannot
-  // read it. A stored access token is the only evidence that a session ever
-  // existed; without one a refresh is guaranteed to 401, so anonymous visitors
-  // send the request unauthenticated instead.
-  if (!token) {
-    return null;
+  if (!isTokenExpiring(accessToken)) {
+    return accessToken;
   }
 
   return refreshToken();

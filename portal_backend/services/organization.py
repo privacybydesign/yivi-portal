@@ -1,12 +1,13 @@
-from typing import Optional
+
 from django.db.models import Q, QuerySet
+from rest_framework.request import Request
+
 from portal_backend.models.models import (
     Organization,
 )
-from rest_framework.request import Request
 
 
-def to_nullable_bool(value: Optional[str]) -> Optional[bool]:
+def to_nullable_bool(value: str | None) -> bool | None:
     if value is None:
         return None
     value = value.lower()
@@ -22,10 +23,10 @@ def filter_organizations(
 ) -> QuerySet:
     """Filter organizations based on query parameters"""
 
-    search_query: Optional[str] = request.query_params.get("search")
-    trust_model: Optional[str] = request.query_params.get("trust_model")
-    select_aps: Optional[bool] = to_nullable_bool(request.query_params.get("ap"))
-    select_rps: Optional[bool] = to_nullable_bool(request.query_params.get("rp"))
+    search_query: str | None = request.query_params.get("search")
+    trust_model: str | None = request.query_params.get("trust_model")
+    select_aps: bool | None = to_nullable_bool(request.query_params.get("ap"))
+    select_rps: bool | None = to_nullable_bool(request.query_params.get("rp"))
 
     queryset = Organization.objects.all().with_role_annotations()
 

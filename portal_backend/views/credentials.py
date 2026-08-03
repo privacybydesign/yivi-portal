@@ -1,15 +1,18 @@
+from typing import ClassVar
+
+from rest_framework import permissions, status
 from rest_framework.request import Request
-from rest_framework.views import APIView
 from rest_framework.response import Response
-from portal_backend.models.models import Credential
+from rest_framework.views import APIView
+
 from portal_backend.models.model_serializers import (
     CredentialListSerializer,
 )
-from rest_framework import permissions, status
+from portal_backend.models.models import Credential
 
 
 class CredentialListView(APIView):
-    permission_classes = [permissions.AllowAny]
+    permission_classes: ClassVar[list] = [permissions.AllowAny]
 
     def get(self, request: Request) -> Response:
         credentials = (
@@ -25,7 +28,7 @@ class CredentialListView(APIView):
 
 
 class CredentialsListViewWithDeprecated(APIView):
-    permission_classes = [permissions.AllowAny]
+    permission_classes: ClassVar[list] = [permissions.AllowAny]
 
     """
     This view returns all credentials for the attribute index page, including deprecated ones.
