@@ -36,6 +36,11 @@ black = ">=23.12.1,<27.0.0"
 uwsgi = "^2.0.23"
 psycopg2-binary = "^2.9.1"
 
+[tool.ruff]
+# Django writes the migration files; linting generated code adds noise and the
+# fixes recur every time a migration is regenerated.
+extend-exclude = ["**/migrations/**"]
+
 [tool.ruff.lint]
 # The rule set ruff-linter.yml has been checking all along: ruff's own default up to
 # 0.15.x. Pinned here because the workflow installs ruff unpinned, and 0.16 widened the

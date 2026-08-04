@@ -8,7 +8,6 @@ const mock = new AxiosMockAdapter(axiosInstance);
 
 beforeEach(() => {
   mock.reset();
-  localStorage.clear();
   useStore.getState().setAccessToken(null);
 });
 
@@ -25,8 +24,8 @@ it("does not attempt a refresh for anonymous visitors", async () => {
   expect(mock.history.post).toHaveLength(0);
 });
 
-it("refreshes when a stored session exists but the token expired", async () => {
-  localStorage.setItem("accessToken", generateJwt({ exp: 0 }));
+it("refreshes when the in-memory token has expired", async () => {
+  useStore.getState().setAccessToken(generateJwt({ exp: 0 }));
   mock.onPost("/v1/refreshtoken").reply(200, { access: generateJwt() });
   mock.onGet("/v1/profile").reply(200, []);
 
@@ -37,7 +36,7 @@ it("refreshes when a stored session exists but the token expired", async () => {
 });
 
 it("stops retrying once the session is gone", async () => {
-  localStorage.setItem("accessToken", generateJwt({ exp: 0 }));
+  useStore.getState().setAccessToken(generateJwt({ exp: 0 }));
   mock.onPost("/v1/refreshtoken").reply(401, { detail: "Refresh token missing." });
   mock.onGet("/v1/profile").reply(200, []);
 
@@ -47,5 +46,5 @@ it("stops retrying once the session is gone", async () => {
   // The dead session is cleared on the first failure, so the second request
   // goes out unauthenticated instead of firing another doomed refresh.
   expect(mock.history.post).toHaveLength(1);
-  expect(localStorage.getItem("accessToken")).toBeNull();
+  expect(useStore.getState().accessToken).toBeNull();
 });

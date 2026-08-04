@@ -2,8 +2,24 @@ import os
 from datetime import timedelta
 from pathlib import Path
 
+from django.core.exceptions import ImproperlyConfigured
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+
+def require_env(name):
+    """Return the value of a required environment variable.
+
+    Fails loudly at startup when the variable is unset or empty, so that no
+    insecure fallback is ever used in a deployed environment.
+    """
+    value = os.environ.get(name)
+    if not value:
+        raise ImproperlyConfigured(
+            f"The {name} environment variable must be set to a non-empty value."
+        )
+    return value
 
 # Application definition
 
@@ -21,7 +37,7 @@ SIMPLE_JWT = {
     "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
     "ROTATE_REFRESH_TOKENS": True,
     "BLACKLIST_AFTER_ROTATION": True,
-    "SIGNING_KEY": "test",
+    "SIGNING_KEY": require_env("JWT_SIGNING_KEY"),
     "USER_ID_FIELD": "email",
     "USER_ID_CLAIM": "email",
     # Prevent user_id from being used
@@ -115,6 +131,19 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 YIVI_SERVER_URL = os.environ.get("YIVI_SERVER_URL")
 YIVI_SERVER_TOKEN = os.environ.get("YIVI_SERVER_TOKEN")
 
+# Demo credentials are issued via a dedicated SD-JWT capable Yivi server.
+# The pair falls back together: the issuance token must never be sent to the
+# general server, nor the general token to the issuance server.
+YIVI_ISSUANCE_SERVER_URL = os.environ.get("YIVI_ISSUANCE_SERVER_URL")
+YIVI_ISSUANCE_SERVER_TOKEN = os.environ.get("YIVI_ISSUANCE_SERVER_TOKEN")
+if not YIVI_ISSUANCE_SERVER_URL:
+    YIVI_ISSUANCE_SERVER_URL = YIVI_SERVER_URL
+    YIVI_ISSUANCE_SERVER_TOKEN = YIVI_SERVER_TOKEN
+
+# Number of SD-JWT VC instances issued per credential; batching preserves
+# unlinkability since SD-JWTs are trackable when reused.
+YIVI_SDJWT_BATCH_SIZE = int(os.environ.get("YIVI_SDJWT_BATCH_SIZE") or "50")
+
 
 LOGGING = {
     "version": 1,
@@ -142,7 +171,7 @@ LOGGING = {
 
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 EMAIL_HOST = os.environ.get("EMAIL_HOST")
-EMAIL_PORT = int(os.environ.get("EMAIL_PORT", 2587))
+EMAIL_PORT = int(os.environ.get("EMAIL_PORT", "2587"))
 EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER")
 EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD")
 EMAIL_FROM = os.environ.get("EMAIL_FROM")

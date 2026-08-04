@@ -1,18 +1,20 @@
+import hashlib
+import os
+import uuid
+from typing import ClassVar
+
+from django.conf import settings
+from django.core.files.storage import FileSystemStorage
+from django.core.validators import FileExtensionValidator, RegexValidator, URLValidator
 from django.db import models
 from django.db.models import Exists, OuterRef
-from django.core.validators import URLValidator, RegexValidator, FileExtensionValidator
-from django.core.files.storage import FileSystemStorage
-import uuid
-import os
-import hashlib
-from imagekit.models import ProcessedImageField  # type: ignore
-from django.conf import settings
 from django.utils import timezone
 from django.utils.text import slugify
 from django_countries.fields import CountryField  # type: ignore
-from PIL import Image
-from phonenumber_field.modelfields import PhoneNumberField  # type: ignore
+from imagekit.models import ProcessedImageField  # type: ignore
 from model_utils import FieldTracker  # type: ignore
+from phonenumber_field.modelfields import PhoneNumberField  # type: ignore
+from PIL import Image
 
 
 class LogoStorage(FileSystemStorage):
@@ -57,7 +59,7 @@ class OrganizationQuerySet(models.QuerySet):
         )
 
 
-class ConvertToRGB(object):
+class ConvertToRGB:
     def process(self, image):
         if image.mode in ("RGBA", "LA"):
             background = Image.new("RGBA", image.size, (255, 255, 255, 255))
@@ -146,7 +148,7 @@ class TrustModel(models.Model):
 
 
 class YiviTrustModelEnv(models.Model):
-    ENV_CHOICES = [
+    ENV_CHOICES: ClassVar[list] = [
         ("production", "Production"),
         ("staging", "Staging"),
         ("demo", "Demo"),
@@ -212,7 +214,7 @@ class AttestationProvider(models.Model):
     published = models.BooleanField(default=False)
 
     class Meta:
-        constraints = [
+        constraints: ClassVar[list] = [
             models.UniqueConstraint(
                 fields=["yivi_tme", "ap_slug"], name="unique_ap_slug_per_yivi_tme"
             )
@@ -268,9 +270,7 @@ class AttestationProvider(models.Model):
             AttestationProvider.objects.filter(pk=self.pk).first() if self.pk else None
         )
 
-        if previous and not previous.reviewed_accepted and self.reviewed_accepted:
-            self.reviewed_at = timezone.now()
-        elif not previous and self.reviewed_accepted:
+        if previous and not previous.reviewed_accepted and self.reviewed_accepted or not previous and self.reviewed_accepted:
             self.reviewed_at = timezone.now()
 
         super().save(*args, **kwargs)
@@ -393,7 +393,7 @@ class CredentialAttribute(models.Model):
     demo_value = models.CharField(max_length=500, blank=True, default="")
 
     class Meta:
-        constraints = [
+        constraints: ClassVar[list] = [
             models.UniqueConstraint(
                 fields=["credential", "name_en"],
                 name="unique_credentialattribute_credential_name_en",
@@ -462,7 +462,7 @@ class CondisconAttribute(models.Model):
 
 
 class User(models.Model):
-    ROLE_CHOICES = [
+    ROLE_CHOICES: ClassVar[list] = [
         ("admin", "Admin"),
         ("maintainer", "Maintainer"),
     ]

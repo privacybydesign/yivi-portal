@@ -1,9 +1,11 @@
 import logging
+
 from rest_framework import permissions
 from rest_framework.request import Request
 from rest_framework.views import View
-from ..models.models import User
 from rest_framework_simplejwt.tokens import AccessToken  # type: ignore
+
+from ..models.models import User
 
 logger = logging.getLogger(__name__)
 

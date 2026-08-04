@@ -1,4 +1,4 @@
-from portal_backend.dns_verification import verify_new_dns, verify_existing_dns
+from portal_backend.dns_verification import verify_existing_dns, verify_new_dns
 from portal_backend.models.models import RelyingPartyHostname
 from portal_backend.scheme_utils.check_published import check_published_cron
 from portal_backend.scheme_utils.trusted_aps_import import import_aps

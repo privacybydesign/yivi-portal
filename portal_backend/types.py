@@ -1,4 +1,4 @@
-from typing import TypedDict, List, Union
+from typing import TypedDict
 
 
 class HostnameEntry(TypedDict):
@@ -13,9 +13,9 @@ class AttributeEntry(TypedDict):
 
 
 class RelyingPartyBaseResponse(TypedDict):
-    hostnames: List[HostnameEntry]
+    hostnames: list[HostnameEntry]
     environment: str
-    attributes: List[AttributeEntry]
+    attributes: list[AttributeEntry]
     context_description_en: str
     context_description_nl: str
 
@@ -29,14 +29,14 @@ class RelyingPartyCreateResponse(RelyingPartyBaseResponse):
     rp_slug: str
 
 
-RelyingPartyResponse = Union[RelyingPartyCreateResponse, RelyingPartyUpdateResponse]
+RelyingPartyResponse = RelyingPartyCreateResponse | RelyingPartyUpdateResponse
 
 
-AttributesList = List[str]
+AttributesList = list[str]
 
 
 class CondisconJSON(TypedDict):
-    disclose: List[List[AttributesList]]
+    disclose: list[list[AttributesList]]
 
 
 CredentialAttributeID = int

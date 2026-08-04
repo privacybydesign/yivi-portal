@@ -1,18 +1,8 @@
 from django.urls import path
-from portal_backend.views.trust_model import (
-    TrustModelListView,
-    TrustModelDetailView,
-    YiviTrustModelEnvListView,
-)
-from portal_backend.views.organization import (
-    OrganizationListView,
-    OrganizationCreateView,
-    OrganizationNameAndSlugView,
-    OrganizationUpdateView,
-    OrganizationDetailView,
-    OrganizationMaintainersView,
-    OrganizationMaintainerView,
-)
+from drf_yasg import openapi  # type: ignore
+from drf_yasg.views import get_schema_view  # type: ignore
+from rest_framework import permissions
+
 from portal_backend.views.attestation_provider import (
     AttestationProviderCredentialsListView,
     AttestationProviderListView,
@@ -22,18 +12,28 @@ from portal_backend.views.credentials import (
     CredentialListView,
     CredentialsListViewWithDeprecated,
 )
+from portal_backend.views.organization import (
+    OrganizationCreateView,
+    OrganizationDetailView,
+    OrganizationListView,
+    OrganizationMaintainersView,
+    OrganizationMaintainerView,
+    OrganizationNameAndSlugView,
+    OrganizationUpdateView,
+)
 from portal_backend.views.relying_party import (
+    RelyingPartyCreateView,
+    RelyingPartyDeleteView,
     RelyingPartyHostnameStatusView,
     RelyingPartyListView,
-    RelyingPartyCreateView,
-    RelyingPartyUpdateView,
     RelyingPartyRetrieveView,
-    RelyingPartyDeleteView,
+    RelyingPartyUpdateView,
 )
-
-from rest_framework import permissions
-from drf_yasg.views import get_schema_view  # type: ignore
-from drf_yasg import openapi  # type: ignore
+from portal_backend.views.trust_model import (
+    TrustModelDetailView,
+    TrustModelListView,
+    YiviTrustModelEnvListView,
+)
 
 app_name = "portal_backend"
 

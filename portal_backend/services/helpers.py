@@ -1,4 +1,4 @@
-from typing import List
+
 from portal_backend.models.models import RelyingPartyHostname
 from portal_backend.types import HostnameEntry
 
@@ -19,7 +19,7 @@ def hostname_exists(hostname: str) -> bool:
     return RelyingPartyHostname.objects.filter(hostname=hostname).exists()
 
 
-def extract_hostnames(entries: List[HostnameEntry]) -> List[str]:
+def extract_hostnames(entries: list[HostnameEntry]) -> list[str]:
     """
     Extracts non-empty hostname strings from entry dicts.
     """

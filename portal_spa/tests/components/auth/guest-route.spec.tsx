@@ -3,6 +3,7 @@ import { generateJwt, renderWithRouter } from "tests/utils";
 import { screen, waitFor } from "@testing-library/dom";
 
 import "tests/mocks";
+import { setRefreshResponse } from "tests/mocks/api";
 
 import useStore from "@/store";
 import App from "@/App";
@@ -12,6 +13,9 @@ beforeEach(() => {
 });
 
 it("renders the login page when not authenticated", async () => {
+  // No valid refresh cookie => the session cannot be restored on load.
+  setRefreshResponse(401);
+
   renderWithRouter(<App />, { route: "/login" });
 
   await waitFor(() => {
