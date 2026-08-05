@@ -16,6 +16,13 @@ ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS").split(",")
 CORS_ALLOWED_ORIGINS = os.environ.get("CORS_ALLOWED_ORIGINS").split(",")
 CORS_ALLOW_CREDENTIALS = True
 
+# Query profiling with django-silk. Every request is recorded together with the
+# SQL it ran; browse it at /silk/. Deliberately not in base.py: silk stores
+# request and response bodies (including Authorization headers) in the database
+# and serves that dashboard unauthenticated, so it must never load in production.
+INSTALLED_APPS = [*INSTALLED_APPS, "silk"]  # noqa: F405
+MIDDLEWARE = [*MIDDLEWARE, "silk.middleware.SilkyMiddleware"]  # noqa: F405
+
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 

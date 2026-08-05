@@ -11,3 +11,8 @@ urlpatterns = [
     path("", include("yivi_auth.urls")),
     # Serve media files separately
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+# The silk profiling dashboard is only mounted where silk is installed, which is
+# the development settings module.
+if "silk" in settings.INSTALLED_APPS:
+    urlpatterns += [path("silk/", include("silk.urls"))]
