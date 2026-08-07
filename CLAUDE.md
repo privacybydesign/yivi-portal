@@ -17,6 +17,14 @@ Django backend in `portal_backend/` + `yivi_portal/`, React SPA in `portal_spa/`
   carry `libc` arrays). An older npm silently drops those fields on any lockfile *write*, so
   use a matching major for anything that rewrites it: `npx -y npm@12 install`. `npm ci` only
   reads the lockfile, so CI running plain `npm ci` on node 22 (npm 10.9.x) is fine.
+- npm 12 refuses `remote`-type tarballs by default and dies with `EALLOWREMOTE` on
+  `@tailwindcss/oxide-wasm32-wasi` before it writes anything. Pass `--allow-remote=all`.
+- Any npm 11+ write also adds six `@tailwindcss/oxide-wasm32-wasi/node_modules/*` entries the
+  current lockfile is missing (`inBundle: true`, `optional: true`, wasm32-wasi only, so never
+  installed here). Expect them in the diff of an otherwise unrelated bump.
+- Entries in the `overrides` block need an upper bound. An override *replaces* the dependent's
+  own range, so a bare `">=x"` lets a fresh resolve pick the next major — `js-yaml` is pinned
+  `">=4.3.1 <5"` because `@eslint/eslintrc` asks for `^4.1.0` and js-yaml 5 exists.
 
 ## portal_backend
 
@@ -39,6 +47,15 @@ Django backend in `portal_backend/` + `yivi_portal/`, React SPA in `portal_spa/`
   `settings/development.py` and guarded in `yivi_portal/urls.py` by an `INSTALLED_APPS` check.
   Keep it out of `settings/base.py`; silk records request and response bodies and serves an
   unauthenticated dashboard.
+- Poetry 2.x `poetry lock` keeps whatever the lockfile already resolved as long as it still
+  satisfies `pyproject.toml`, and `poetry update <pkg> --lock` walks to the newest release the
+  manifest range allows — with `django = "^6.0"` that is the next *minor*, not the security
+  patch. To land a patch without changing the manifest: narrow the constraint temporarily
+  (`~6.0.6`), `poetry update django --lock`, restore the constraint, `poetry lock` again. The
+  second lock recomputes the content hash off the restored manifest and leaves the version
+  alone, so the diff stays at the one package and `poetry check --lock` passes.
+- `pip-audit` reads requirements, not `poetry.lock`. Flatten it first:
+  `python3 -c "import tomllib;[print(f\"{p['name']}=={p['version']}\") for p in tomllib.load(open('poetry.lock','rb'))['package']]" > /tmp/reqs.txt && pip-audit -r /tmp/reqs.txt --no-deps`
 
 ## CI
 
