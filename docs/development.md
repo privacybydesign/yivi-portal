@@ -36,6 +36,11 @@ commands are in the [README](../README.md); this file is the small print under i
 - Two tests in `portal_backend/tests/test_imports.py` read `/app/config.json`, the
   path the config lands on inside the container. They pass in CI and error out on a
   checkout run outside Docker; that is the environment, not the code.
+- `portal_backend/tests/test_claude_md_orientation.py` reads `CLAUDE.md` from the
+  repository root and the suite runs *inside* the image, so `CLAUDE.md` has to stay
+  out of `.dockerignore` — which already excludes `README.md`, a file of the same
+  kind. Adding it, or a `*.md` pattern, errors both tests with `FileNotFoundError`
+  in CI rather than skipping them.
 - `test_add_maintainer_created` needs `YIVI_PORTAL_URL` set, otherwise the invite
   mail blows up and the view answers 500. Note that `.env.testing` writes it as
   `YIVI_PORTAL_URL= portal.yivi.app` with a leading space: `docker run --env-file`

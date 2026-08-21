@@ -2,8 +2,9 @@
 
 Onboarding for parties joining Yivi as an Issuer or a Verifier, including the
 Trusted Verifier Program for Relying Parties. Django REST backend in
-`portal_backend/` + `yivi_portal/`, React SPA in `portal_spa/`, Yivi login as a
-reusable Django app in `yivi_auth/`.
+`portal_backend/` + `yivi_portal/`, React SPA in `portal_spa/`, Yivi login in
+`yivi_auth/` — views plus a namespaced URLconf, included from `yivi_portal/urls.py`
+and not registered in `INSTALLED_APPS`.
 
 ## The position it takes
 
