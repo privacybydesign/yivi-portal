@@ -32,6 +32,8 @@ The project consists of two main components:
 
 ## Development Setup
 
+Build and test details that are not obvious from the code are in
+[`docs/development.md`](docs/development.md).
 
 ### Running the Project
 
