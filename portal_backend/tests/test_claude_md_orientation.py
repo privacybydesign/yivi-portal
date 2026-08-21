@@ -1,3 +1,4 @@
+import re
 from pathlib import Path
 
 from django.test import SimpleTestCase
@@ -35,10 +36,17 @@ class ClaudeMdOrientationTest(SimpleTestCase):
             for line in CLAUDE_MD.read_text(encoding="utf-8").splitlines()
             if line.startswith("#")
         ]
-        for section in CUT_SECTIONS:
-            self.assertNotIn(
-                section,
-                headings,
-                f'CLAUDE.md has a "{section}" heading again. That section was cut with '
-                "the operational corpus; its content lives in docs/development.md now.",
-            )
+        for heading in headings:
+            # Whole tokens, not the whole heading: a section comes back under a
+            # longer name ("Frontend (`portal_spa`)") as readily as under its old
+            # one, and equality waves that through. `\w` keeps `portal_spa` a single
+            # token while splitting "yivi-portal", this file's own title.
+            tokens = {token.casefold() for token in re.findall(r"\w+", heading)}
+            for section in CUT_SECTIONS:
+                self.assertNotIn(
+                    section.casefold(),
+                    tokens,
+                    f'CLAUDE.md heading "{heading}" names "{section}" again. That '
+                    "section was cut with the operational corpus; its content lives "
+                    "in docs/development.md now.",
+                )
