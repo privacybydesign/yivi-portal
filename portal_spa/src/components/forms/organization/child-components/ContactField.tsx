@@ -1,7 +1,4 @@
-import type {
-  RegistrationInputs,
-  RegistrationFormState,
-} from "@/actions/manage-organization";
+import type { RegistrationInputs } from "@/actions/manage-organization";
 import {
   FormControl,
   FormField,
@@ -15,19 +12,32 @@ import type { UseFormReturn } from "react-hook-form";
 import { PhoneInput } from "react-international-phone";
 import "react-international-phone/style.css";
 
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+// An untouched phone input still holds the dial code of its default country,
+// so "is it empty" cannot be answered by comparing against "". No dial code is
+// longer than four digits, so anything above that means a number was typed.
+const hasPhoneNumber = (value: string | undefined) =>
+  (value ?? "").replace(/\D/g, "").length > 4;
+
 export default function ContactField({
   form,
-  formState,
 }: {
   form: UseFormReturn<RegistrationInputs>;
-  formState: RegistrationFormState;
 }) {
   return (
     <>
       <FormField
         control={form.control}
         name="contact_email"
-        render={({ field }) => (
+        rules={{
+          required: "An email address is required.",
+          pattern: {
+            value: EMAIL_PATTERN,
+            message: "Enter a valid email address.",
+          },
+        }}
+        render={({ field, fieldState }) => (
           <FormItem className="grid md:grid-cols-2 items-start md:gap-4">
             <div className="py-1">
               <Label>Contact Email</Label>
@@ -38,11 +48,11 @@ export default function ContactField({
             </div>
             <div>
               <FormControl>
-                <Input type="email" {...field} />
+                <Input type="email" {...field} value={field.value ?? ""} />
               </FormControl>
-              {formState.errors.contact_email && (
+              {fieldState.error && (
                 <FormMessage className="text-sm text-red-600 mt-1">
-                  {formState.errors.contact_email.message}
+                  {fieldState.error.message}
                 </FormMessage>
               )}
             </div>
@@ -53,7 +63,11 @@ export default function ContactField({
       <FormField
         control={form.control}
         name="contact_number"
-        render={({ field: { value, onChange, ...field } }) => (
+        rules={{
+          validate: (value) =>
+            hasPhoneNumber(value) || "A phone number is required.",
+        }}
+        render={({ field: { value, onChange, ...field }, fieldState }) => (
           <FormItem className="grid md:grid-cols-2 items-start md:gap-4">
             <div className="py-1">
               <Label>Contact Number</Label>
@@ -82,9 +96,9 @@ export default function ContactField({
                   }
                 `}</style>
               </div>
-              {formState.errors.contact_number && (
+              {fieldState.error && (
                 <FormMessage className="text-sm text-red-600 mt-1">
-                  {formState.errors.contact_number.message}
+                  {fieldState.error.message}
                 </FormMessage>
               )}
             </div>
