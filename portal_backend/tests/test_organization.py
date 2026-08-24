@@ -39,6 +39,8 @@ class OrganizationCreateTest(APITestCase):
             "street": "Test Street",
             "postal_code": "1234AB",
             "city": "Test City",
+            "contact_email": "contact@test-organization.com",
+            "contact_number": "+31612345678",
             "logo": self.logo,
         }
 
@@ -54,6 +56,56 @@ class OrganizationCreateTest(APITestCase):
         self.assertTrue(
             OrgUser.objects.filter(email="test@gmail.com", role="maintainer").exists()
         )
+
+    def test_create_organization_stores_contact_details(self):
+        """Contact email and phone number are persisted on the organization."""
+        url = reverse("portal_backend:organization-create")
+
+        response = self.client.post(url, self.organization_data, format="multipart")
+        self.assertEqual(response.status_code, 201)
+        organization = Organization.objects.get(slug="test-organization")
+        self.assertEqual(organization.contact_email, "contact@test-organization.com")
+        self.assertEqual(str(organization.contact_number), "+31612345678")
+
+    def test_create_organization_missing_contact_email(self):
+        """An organization cannot be registered without an email address."""
+        url = reverse("portal_backend:organization-create")
+        invalid_data = self.organization_data.copy()
+        del invalid_data["contact_email"]
+        response = self.client.post(url, invalid_data, format="multipart")
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("contact_email", response.json())
+        self.assertFalse(Organization.objects.filter(slug="test-organization").exists())
+
+    def test_create_organization_missing_contact_number(self):
+        """An organization cannot be registered without a phone number."""
+        url = reverse("portal_backend:organization-create")
+        invalid_data = self.organization_data.copy()
+        del invalid_data["contact_number"]
+        response = self.client.post(url, invalid_data, format="multipart")
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("contact_number", response.json())
+        self.assertFalse(Organization.objects.filter(slug="test-organization").exists())
+
+    def test_create_organization_blank_contact_details(self):
+        """Blank contact details are rejected the same way as missing ones."""
+        url = reverse("portal_backend:organization-create")
+        invalid_data = self.organization_data.copy()
+        invalid_data["contact_email"] = ""
+        invalid_data["contact_number"] = ""
+        response = self.client.post(url, invalid_data, format="multipart")
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("contact_email", response.json())
+        self.assertIn("contact_number", response.json())
+
+    def test_create_organization_invalid_contact_email(self):
+        """A malformed email address is rejected."""
+        url = reverse("portal_backend:organization-create")
+        invalid_data = self.organization_data.copy()
+        invalid_data["contact_email"] = "not-an-email"
+        response = self.client.post(url, invalid_data, format="multipart")
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("contact_email", response.json())
 
     def test_create_organization_invalid_data(self):
         """Test creating an organization with invalid data."""
@@ -106,6 +158,8 @@ class OrganizationMaintainerActionsTest(APITestCase):
             street="Test Street",
             postal_code="4321CD",
             city="Test City",
+            contact_email="contact@test-name.com",
+            contact_number="+31612345678",
             logo=self.logo,
             is_verified=True,
         )
@@ -145,6 +199,86 @@ class OrganizationMaintainerActionsTest(APITestCase):
             format="multipart",
         )
         self.assertEqual(response.status_code, 400)
+
+    def test_patch_organization_blank_contact_details(self):
+        """Contact details cannot be emptied out on an existing organization."""
+        url = reverse(
+            "portal_backend:organization-update", args=[self.organization.slug]
+        )
+        for field in ("contact_email", "contact_number"):
+            with self.subTest(field=field):
+                response = self.client.patch(url, {field: ""}, format="multipart")
+                self.assertEqual(response.status_code, 400)
+                self.assertIn(field, response.json())
+
+        self.organization.refresh_from_db()
+        self.assertEqual(self.organization.contact_email, "contact@test-name.com")
+        self.assertEqual(str(self.organization.contact_number), "+31612345678")
+
+    def test_detail_hides_contact_details_from_the_public(self):
+        """Contact details are verification data, and the form promises they
+        stay private - the detail view is AllowAny, so they cannot be part of
+        an anonymous response."""
+        url = reverse(
+            "portal_backend:organization-detail", args=[self.organization.slug]
+        )
+        response = APIClient().get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertNotIn("contact_email", response.json())
+        self.assertNotIn("contact_number", response.json())
+
+    def test_list_hides_contact_details_from_the_public(self):
+        """Same for the list view, which is AllowAny as well."""
+        url = reverse("portal_backend:organization-list")
+        response = APIClient().get(url)
+        self.assertEqual(response.status_code, 200)
+        for organization in response.json()["results"]:
+            self.assertNotIn("contact_email", organization)
+            self.assertNotIn("contact_number", organization)
+
+    def test_detail_shows_contact_details_to_its_maintainer(self):
+        """A maintainer needs them: the manage form prefills from this view."""
+        url = reverse(
+            "portal_backend:organization-detail", args=[self.organization.slug]
+        )
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["contact_email"], "contact@test-name.com")
+        self.assertEqual(response.json()["contact_number"], "+31612345678")
+
+    def test_detail_hides_contact_details_from_another_organizations_maintainer(self):
+        """Maintaining one organization does not expose another's details."""
+        other = Organization.objects.create(
+            name_en="Other Organization",
+            name_nl="Other Organization",
+            slug="other-name",
+            contact_email="contact@other-name.com",
+            contact_number="+31612345679",
+            logo=load_logo_if_exists(self.logo_path),
+            is_verified=True,
+        )
+        url = reverse("portal_backend:organization-detail", args=[other.slug])
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertNotIn("contact_email", response.json())
+        self.assertNotIn("contact_number", response.json())
+
+    def test_detail_shows_contact_details_to_an_admin(self):
+        """Admins review registrations, so they see every organization's."""
+        admin = User.objects.create_user(
+            email="admin@gmail.com", username="admin@gmail.com"
+        )
+        OrgUser.objects.create(email="admin@gmail.com", role="admin")
+        admin_client = APIClient()
+        admin_client.credentials(
+            HTTP_AUTHORIZATION=f"Bearer {AccessToken.for_user(admin)!s}"
+        )
+        url = reverse(
+            "portal_backend:organization-detail", args=[self.organization.slug]
+        )
+        response = admin_client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["contact_email"], "contact@test-name.com")
 
     def test_add_maintainer_created(self):
         """Test adding a maintainer to an organization."""
