@@ -4,6 +4,7 @@ import {
   FormField,
   FormItem,
   FormDescription,
+  FormLabel,
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -13,6 +14,8 @@ import { PhoneInput } from "react-international-phone";
 import "react-international-phone/style.css";
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+const PHONE_INPUT_ID = "organization-contact-number";
 
 // An untouched phone input still holds the dial code of its default country,
 // so "is it empty" cannot be answered by comparing against "". No dial code is
@@ -40,7 +43,7 @@ export default function ContactField({
         render={({ field, fieldState }) => (
           <FormItem className="grid md:grid-cols-2 items-start md:gap-4">
             <div className="py-1">
-              <Label>Contact Email</Label>
+              <FormLabel>Contact Email</FormLabel>
               <FormDescription>
                 Email address of a contact person of this organization. Used
                 only for verification purposes and will not be public.
@@ -70,7 +73,9 @@ export default function ContactField({
         render={({ field: { value, onChange, ...field }, fieldState }) => (
           <FormItem className="grid md:grid-cols-2 items-start md:gap-4">
             <div className="py-1">
-              <Label>Contact Number</Label>
+              {/* PhoneInput takes no id of its own, so FormControl cannot
+                  hand it the generated one - label its inner input directly. */}
+              <Label htmlFor={PHONE_INPUT_ID}>Contact Number</Label>
               <FormDescription>
                 Phone number of a contact person of this organization. Used only
                 for verification purposes and will not be public.
@@ -79,6 +84,7 @@ export default function ContactField({
             <div>
               <div className="border rounded-md shadow-xs">
                 <PhoneInput
+                  inputProps={{ id: PHONE_INPUT_ID }}
                   defaultCountry="nl"
                   value={value || ""}
                   onChange={onChange}

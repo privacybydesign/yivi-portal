@@ -18,11 +18,10 @@ const submit = async () => {
   await userEvent.click(screen.getByRole("button", { name: "Register" }));
 };
 
-const phoneInput = () =>
-  document.querySelector<HTMLInputElement>('input[name="contact_number"]')!;
+const emailInput = () => screen.getByLabelText("Contact Email");
 
-const emailInput = () =>
-  document.querySelector<HTMLInputElement>('input[name="contact_email"]')!;
+const phoneInput = () =>
+  screen.getByLabelText("Contact Number") as HTMLInputElement;
 
 it("does not register an organization without contact details", async () => {
   const post = vi.spyOn(axiosInstance, "post");
