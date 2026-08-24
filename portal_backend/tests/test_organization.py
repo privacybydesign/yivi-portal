@@ -215,6 +215,71 @@ class OrganizationMaintainerActionsTest(APITestCase):
         self.assertEqual(self.organization.contact_email, "contact@test-name.com")
         self.assertEqual(str(self.organization.contact_number), "+31612345678")
 
+    def test_detail_hides_contact_details_from_the_public(self):
+        """Contact details are verification data, and the form promises they
+        stay private - the detail view is AllowAny, so they cannot be part of
+        an anonymous response."""
+        url = reverse(
+            "portal_backend:organization-detail", args=[self.organization.slug]
+        )
+        response = APIClient().get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertNotIn("contact_email", response.json())
+        self.assertNotIn("contact_number", response.json())
+
+    def test_list_hides_contact_details_from_the_public(self):
+        """Same for the list view, which is AllowAny as well."""
+        url = reverse("portal_backend:organization-list")
+        response = APIClient().get(url)
+        self.assertEqual(response.status_code, 200)
+        for organization in response.json()["results"]:
+            self.assertNotIn("contact_email", organization)
+            self.assertNotIn("contact_number", organization)
+
+    def test_detail_shows_contact_details_to_its_maintainer(self):
+        """A maintainer needs them: the manage form prefills from this view."""
+        url = reverse(
+            "portal_backend:organization-detail", args=[self.organization.slug]
+        )
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["contact_email"], "contact@test-name.com")
+        self.assertEqual(response.json()["contact_number"], "+31612345678")
+
+    def test_detail_hides_contact_details_from_another_organizations_maintainer(self):
+        """Maintaining one organization does not expose another's details."""
+        other = Organization.objects.create(
+            name_en="Other Organization",
+            name_nl="Other Organization",
+            slug="other-name",
+            contact_email="contact@other-name.com",
+            contact_number="+31612345679",
+            logo=load_logo_if_exists(self.logo_path),
+            is_verified=True,
+        )
+        url = reverse("portal_backend:organization-detail", args=[other.slug])
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertNotIn("contact_email", response.json())
+        self.assertNotIn("contact_number", response.json())
+
+    def test_detail_shows_contact_details_to_an_admin(self):
+        """Admins review registrations, so they see every organization's."""
+        admin = User.objects.create_user(
+            email="admin@gmail.com", username="admin@gmail.com"
+        )
+        OrgUser.objects.create(email="admin@gmail.com", role="admin")
+        admin_client = APIClient()
+        admin_client.credentials(
+            HTTP_AUTHORIZATION=f"Bearer {AccessToken.for_user(admin)!s}"
+        )
+        url = reverse(
+            "portal_backend:organization-detail", args=[self.organization.slug]
+        )
+        response = admin_client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["contact_email"], "contact@test-name.com")
+
     def test_add_maintainer_created(self):
         """Test adding a maintainer to an organization."""
         url = reverse(

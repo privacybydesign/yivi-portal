@@ -16,8 +16,9 @@ export interface Organization {
   is_AP: boolean;
   trust_models?: trust_model[];
   verification_status: string;
-  contact_number: string;
-  contact_email: string;
+  // Only serialized for a maintainer of this organization, or for an admin.
+  contact_number?: string;
+  contact_email?: string;
 }
 export type trust_model = {
   name: string;
