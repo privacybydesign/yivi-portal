@@ -35,6 +35,7 @@ export default function OrganizationForm({
     city: "",
     country: "NL",
     contact_number: "",
+    contact_email: "",
     ...(organization || {}),
   } as RegistrationInputs);
 
