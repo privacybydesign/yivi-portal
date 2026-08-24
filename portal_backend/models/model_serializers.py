@@ -1,6 +1,7 @@
 from typing import ClassVar
 
 from django_countries.serializers import CountryFieldMixin  # type: ignore
+from phonenumber_field.serializerfields import PhoneNumberField  # type: ignore
 from rest_framework import serializers
 
 from .models import (
@@ -42,6 +43,8 @@ class OrganizationSerializer(CountryFieldMixin, serializers.ModelSerializer):
     postal_code = serializers.CharField(required=True, allow_blank=False)
     city = serializers.CharField(required=True, allow_blank=False)
     country = serializers.CharField(required=True)
+    contact_number = PhoneNumberField(required=True, allow_blank=False)
+    contact_email = serializers.EmailField(required=True, allow_blank=False)
 
     class Meta:
         model = Organization
@@ -58,6 +61,7 @@ class OrganizationSerializer(CountryFieldMixin, serializers.ModelSerializer):
             "is_AP",
             "trust_models",
             "contact_number",
+            "contact_email",
             "country",
             "house_number",
             "street",

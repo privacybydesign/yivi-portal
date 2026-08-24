@@ -16,6 +16,7 @@ export type RegistrationInputs = {
   country: string;
   logo: File | string | undefined;
   contact_number: string;
+  contact_email: string;
 };
 
 export type RegistrationFormState = {
