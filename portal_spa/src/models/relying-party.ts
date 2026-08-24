@@ -22,4 +22,5 @@ export interface RelyingParty {
   context_description_nl?: string;
   attributes: CredentialAttribute[];
   ready: boolean;
+  condiscon: Record<string, []>;
 }
