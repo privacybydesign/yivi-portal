@@ -303,6 +303,10 @@ class RelyingParty(models.Model):
         return f"{self.organization.name_en}"
 
     @property
+    def condiscon(self):
+        return Condiscon.objects.get(relying_party=self)
+
+    @property
     def has_invalidated_hostname(self):
         return RelyingPartyHostname.objects.filter(
             relying_party=self,
