@@ -16,6 +16,7 @@ import DeleteRelyingPartyDialog, {
 import RelyingPartyTabs from "./RelyingPartyTabs";
 import { RelyingPartyContext } from "@/contexts/relying-party/RelyingPartyContext";
 import DjangoFieldErrors from "@/components/custom/DjangoErrorList";
+import { Separator } from "@/components/ui/separator";
 
 type FetchRelyingPartiesResponse = {
   relying_parties: RelyingParty[];
@@ -53,7 +54,7 @@ export default function RelyingPartyListEdit() {
     const sorted = [...(relying_parties || [])].sort(
       (a, b) =>
         order[a.environment as keyof typeof order] -
-        order[b.environment as keyof typeof order]
+        order[b.environment as keyof typeof order],
     );
 
     setRelyingParties(sorted);
@@ -85,7 +86,7 @@ export default function RelyingPartyListEdit() {
     const result = await fetchRelyingParty(
       organizationSlug,
       slug,
-      rp.environment
+      rp.environment,
     );
     setEditingLoading(false);
 
@@ -114,7 +115,7 @@ export default function RelyingPartyListEdit() {
     const result = await deleteRelyingParty(
       organizationSlug,
       environment,
-      rpSlug
+      rpSlug,
     );
 
     setDeleting(null);
@@ -165,11 +166,12 @@ export default function RelyingPartyListEdit() {
           return (
             <li key={rp.rp_slug} className="border p-4 rounded shadow-sm">
               <div className="flex justify-between items-center">
-                <div>
+                <div className="flex space-x-2 items-center">
                   <div className="font-medium text-lg">{rp.rp_slug}</div>
+                  <span className="text-muted-foreground">&mdash;</span>
+                  {rp.status ? <StatusBadge status={rp.status} /> : null}
                 </div>
                 <div className="flex items-center space-x-4">
-                  {rp.status ? <StatusBadge status={rp.status} /> : null}
                   {editingSlug !== rp.rp_slug && (
                     <Button
                       variant="outline"
@@ -198,9 +200,19 @@ export default function RelyingPartyListEdit() {
                   )}
                 </div>
               </div>
+              {rp.status === "rejected" ? (
+                <>
+                  <Separator className="my-4" />
+                  <p className="text-muted-foreground text-sm">
+                    Reason for rejection
+                  </p>
+                  <p>{rp.rejection_remarks}</p>
+                </>
+              ) : null}
 
               {editingSlug === rp.rp_slug && (
-                <div className="mt-4">
+                <>
+                  <Separator className="my-4" />
                   {editingLoading || !editingRP ? (
                     <p>Loading form...</p>
                   ) : (
@@ -235,14 +247,14 @@ export default function RelyingPartyListEdit() {
                             }[];
                             ready: boolean;
                           }>,
-                          originalSlug: string
+                          originalSlug: string,
                         ) => {
                           setSaving(true);
 
                           const result = await updateRelyingParty(
                             organizationSlug,
                             formData,
-                            originalSlug
+                            originalSlug,
                           );
                           setSaving(false);
 
@@ -272,7 +284,7 @@ export default function RelyingPartyListEdit() {
                       <RelyingPartyTabs />
                     </RelyingPartyContext.Provider>
                   )}
-                </div>
+                </>
               )}
             </li>
           );
