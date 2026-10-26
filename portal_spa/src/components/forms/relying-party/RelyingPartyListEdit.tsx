@@ -16,6 +16,8 @@ import DeleteRelyingPartyDialog, {
 import RelyingPartyTabs from "./RelyingPartyTabs";
 import { RelyingPartyContext } from "@/contexts/relying-party/RelyingPartyContext";
 import DjangoFieldErrors from "@/components/custom/DjangoErrorList";
+import { Textarea } from "@/components/ui/textarea";
+import { CodeBlock } from "@/components/ui/code-block";
 
 type FetchRelyingPartiesResponse = {
   relying_parties: RelyingParty[];
@@ -53,7 +55,7 @@ export default function RelyingPartyListEdit() {
     const sorted = [...(relying_parties || [])].sort(
       (a, b) =>
         order[a.environment as keyof typeof order] -
-        order[b.environment as keyof typeof order]
+        order[b.environment as keyof typeof order],
     );
 
     setRelyingParties(sorted);
@@ -85,7 +87,7 @@ export default function RelyingPartyListEdit() {
     const result = await fetchRelyingParty(
       organizationSlug,
       slug,
-      rp.environment
+      rp.environment,
     );
     setEditingLoading(false);
 
@@ -114,7 +116,7 @@ export default function RelyingPartyListEdit() {
     const result = await deleteRelyingParty(
       organizationSlug,
       environment,
-      rpSlug
+      rpSlug,
     );
 
     setDeleting(null);
@@ -199,6 +201,8 @@ export default function RelyingPartyListEdit() {
                 </div>
               </div>
 
+              <CodeBlock className="mt-4" code={rp.condiscon} />
+
               {editingSlug === rp.rp_slug && (
                 <div className="mt-4">
                   {editingLoading || !editingRP ? (
@@ -235,14 +239,14 @@ export default function RelyingPartyListEdit() {
                             }[];
                             ready: boolean;
                           }>,
-                          originalSlug: string
+                          originalSlug: string,
                         ) => {
                           setSaving(true);
 
                           const result = await updateRelyingParty(
                             organizationSlug,
                             formData,
-                            originalSlug
+                            originalSlug,
                           );
                           setSaving(false);
 
