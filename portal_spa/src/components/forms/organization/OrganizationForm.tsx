@@ -1,4 +1,10 @@
-import { useActionState, useEffect, useState } from "react";
+import {
+  startTransition,
+  useActionState,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
 import { registerOrganization } from "@/actions/manage-organization";
@@ -35,6 +41,7 @@ export default function OrganizationForm({
     city: "",
     country: "NL",
     contact_number: "",
+    contact_email: "",
     ...(organization || {}),
   } as RegistrationInputs);
 
@@ -57,12 +64,32 @@ export default function OrganizationForm({
     }
   }, [cachedLogo, formState]);
 
-  if (formState?.success && formState?.redirectTo) {
-    navigate(formState.redirectTo);
-  }
+  // Navigating from the render body re-runs the render it was called from, so
+  // the redirect after a successful submit belongs in an effect.
+  useEffect(() => {
+    if (formState?.success && formState?.redirectTo) {
+      navigate(formState.redirectTo);
+    }
+  }, [formState?.success, formState?.redirectTo, navigate]);
 
   const form = useForm<RegistrationInputs>({
     defaultValues: defaultFormInput,
+  });
+
+  const formRef = useRef<HTMLFormElement>(null);
+
+  // The action is dispatched by hand instead of through the form's `action`
+  // attribute: react-hook-form validates asynchronously, so a React action
+  // would already be on its way before the required contact details are
+  // checked. handleSubmit blocks the submit event itself and only calls back
+  // once every field passes, and the API still receives the multipart
+  // FormData of the form element (the logo is a file).
+  const handleSubmit = form.handleSubmit(() => {
+    if (formRef.current) {
+      const formData = new FormData(formRef.current);
+      // Dispatching outside a transition leaves `pending` stuck on false.
+      startTransition(() => formSubmit(formData));
+    }
   });
 
   useEffect(() => {
@@ -86,7 +113,14 @@ export default function OrganizationForm({
 
   return (
     <Form {...form}>
-      <form action={formSubmit} className="space-y-4">
+      <form
+        ref={formRef}
+        onSubmit={handleSubmit}
+        // Field errors are rendered inline, so keep the browser from stepping
+        // in front of them with its own bubbles for type="email" and friends.
+        noValidate
+        className="space-y-4"
+      >
         <LogoUpload
           form={form}
           formState={formState}
@@ -98,7 +132,7 @@ export default function OrganizationForm({
 
         <SlugField form={form} formState={formState} />
 
-        <ContactField form={form} formState={formState} />
+        <ContactField form={form} />
 
         <ContactAddressBox form={form} formState={formState} />
 

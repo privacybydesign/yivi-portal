@@ -77,6 +77,7 @@ class Organization(models.Model):
     street = models.CharField(max_length=35, null=True, blank=True)
     house_number = models.CharField(max_length=35, null=True, blank=True)
     contact_number = PhoneNumberField(blank=True, null=True)
+    contact_email = models.EmailField(max_length=255, null=True, blank=True)
     postal_code = models.CharField(max_length=35, null=True, blank=True)
     city = models.CharField(max_length=35, null=True, blank=True)
     country = CountryField(null=True, blank=True)
