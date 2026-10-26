@@ -88,6 +88,6 @@
     "source-map-js": ">=1.2.2",
     "browserslist": ">=4.28.7",
     "baseline-browser-mapping": ">=2.11.0",
-    "@humanfs/node": ">=0.16.8"
+    "@humanfs/node": ">=0.16.8 <0.17"
   }
 }
