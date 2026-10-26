@@ -8,7 +8,7 @@ commands are in the [README](../README.md); this file is the small print under i
 
 - `npm run build` is `tsc -b && vite build`, so a type error fails the build.
   `npm test` type-checks first (`pretest` -> `typecheck`), which surfaces type
-  errors in the `run-tests` job instead of only in the slower Docker build.
+  errors in the `frontend` job instead of only in the slower Docker build.
 - `vite.config.ts` imports `defineConfig` from `vitest/config`, not from `vite`.
   The `test` block is only typed there: vitest 4 no longer widens Vite's config
   type through `/// <reference types="vitest" />`, so importing from `vite` breaks
@@ -56,16 +56,20 @@ commands are in the [README](../README.md); this file is the small print under i
 
 ## CI
 
-- `.github/workflows/react-container.yml` runs `npm run test` in `portal_spa/`,
-  then builds `Dockerfile.react`. The image is only pushed outside pull requests
-  and scheduled runs.
-- `.github/workflows/django-container.yml` and `ruff-linter.yml` cover the backend.
-  They use `paths-ignore: portal_spa/**`, which skips the run only when *every*
-  changed file is under `portal_spa/**`, so a pull request touching both halves
-  runs both and shows four checks.
-- `react-container.yml` filters the other way round (`paths: portal_spa/**` plus
-  `.github/workflows/react-*.yml`), so a change touching neither of those gets no
-  React run at all.
-- `ruff-linter.yml` runs `pip install ruff` unpinned, so the linter can change
+CI uses the shared workflows from `privacybydesign/github-workflows`; the
+callers are in `.github/workflows/`.
+
+- `status-checks.yml` runs on every pull request, with no path filters:
+  `frontend` (`npm run lint`, `test`, `build` in `portal_spa/`), `ruff`,
+  `django-tests` (builds `Dockerfile.django` and runs `manage.py test` inside
+  it), a build and scan of both images without pushing them, dependency review
+  and workflow lint. `Status checks passed` is the one check to require.
+- `delivery.yml` pushes `ghcr.io/privacybydesign/django-portal` and
+  `ghcr.io/privacybydesign/react-portal`: `:edge` from `main`, `:X.Y.Z` and
+  `:latest` from a release. Both images are built on every push, whichever half
+  changed.
+- `image-rescan.yml` re-scans the published `:edge` and latest-release images
+  every Monday.
+- The `ruff` job runs `pip install ruff` unpinned, so the linter can change
   under the repo. The rule set lives in `[tool.ruff.lint]` in `pyproject.toml`
   instead, which keeps `ruff check .` deterministic across ruff releases.

@@ -1,0 +1,41 @@
+# Delivery: builds, scans and pushes ghcr.io/privacybydesign/django-portal and
+# ghcr.io/privacybydesign/react-portal. Push to main -> :edge, release
+# X.Y.Z / vX.Y.Z -> :X.Y.Z and :latest. PR builds are scanned in Status
+# checks; published images are re-scanned weekly by image-rescan.yml.
+name: Delivery
+
+on:
+  push:
+    branches: [main]
+  release:
+    # Note: a current limitation is that when a release is edited after publication, then the Docker tags are not automatically updated.
+    types: [published]
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  docker:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - image-name: ghcr.io/privacybydesign/django-portal
+            context: .
+            dockerfile: Dockerfile.django
+          - image-name: ghcr.io/privacybydesign/react-portal
+            context: portal_spa
+            dockerfile: portal_spa/Dockerfile.react
+    uses: privacybydesign/github-workflows/.github/workflows/docker-publish.yml@v1
+    permissions:
+      contents: read
+      packages: write
+      security-events: write
+      id-token: write
+      attestations: write
+    with:
+      image-name: ${{ matrix.image-name }}
+      context: ${{ matrix.context }}
+      dockerfile: ${{ matrix.dockerfile }}
+      # The old workflows tagged :latest on every stable release; keep doing so.
+      tag-latest: true

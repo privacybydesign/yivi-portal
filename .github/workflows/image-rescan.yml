@@ -1,0 +1,27 @@
+# Weekly re-scan of the PUBLISHED images (all platforms) for new CVEs.
+name: Image rescan
+
+on:
+  schedule:
+    - cron: "23 6 * * 1" # Mondays 06:23 UTC
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  rescan:
+    strategy:
+      fail-fast: false
+      matrix:
+        image-name:
+          - ghcr.io/privacybydesign/django-portal
+          - ghcr.io/privacybydesign/react-portal
+    uses: privacybydesign/github-workflows/.github/workflows/image-rescan.yml@v1
+    permissions:
+      contents: read
+      packages: read
+      security-events: write
+    with:
+      image-name: ${{ matrix.image-name }}
+      tags: edge latest-release
+      severity-cutoff: high
