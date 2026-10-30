@@ -9,7 +9,6 @@ by its RFC 7638 JWK thumbprint.
 import base64
 import hashlib
 import json
-import re
 import secrets
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
@@ -63,18 +62,23 @@ def b64encode(value: bytes) -> str:
 # Keys
 
 
-PEM_PUBLIC_KEY = re.compile(
-    r"-----BEGIN PUBLIC KEY-----.+?-----END PUBLIC KEY-----", re.DOTALL
-)
+PEM_BEGIN = "-----BEGIN PUBLIC KEY-----"
+PEM_END = "-----END PUBLIC KEY-----"
+# A P-256 public key in PEM is under 200 characters; anything much longer is not one.
+MAX_PEM_INPUT = 4096
 
 
 def public_key_from_pem(pem: str) -> ec.EllipticCurvePublicKey:
-    # Accept the whole output of `irma server usage-key`, which also prints the thumbprint.
-    match = PEM_PUBLIC_KEY.search(pem)
-    if match is None:
+    # Accept the whole output of `yivi irma server usage-key`, which also prints the
+    # thumbprint. Plain string search, so the cost stays linear in the input.
+    start = pem.find(PEM_BEGIN) if len(pem) <= MAX_PEM_INPUT else -1
+    end = pem.find(PEM_END, start) if start >= 0 else -1
+    if end < 0:
         raise ValueError("Not a PEM encoded public key")
     try:
-        key = serialization.load_pem_public_key(match.group(0).encode())
+        key = serialization.load_pem_public_key(
+            pem[start : end + len(PEM_END)].encode()
+        )
     except ValueError as e:
         raise ValueError("Not a PEM encoded public key") from e
     if not isinstance(key, ec.EllipticCurvePublicKey) or not isinstance(
