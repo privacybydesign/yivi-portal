@@ -477,3 +477,102 @@ class User(models.Model):
 
     def __str__(self):
         return f"{self.email} - {self.role}"
+
+
+class UsageServerKey(models.Model):
+    """The public key a self-hosted Yivi server signs its usage reports with.
+
+    An organization maintainer registers the key; the server finds its account by the key's
+    RFC 7638 JWK thumbprint. A deactivated key can no longer report.
+    """
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    organization = models.ForeignKey(
+        Organization, on_delete=models.CASCADE, related_name="usage_keys"
+    )
+    label = models.CharField(max_length=255, blank=True)
+    public_key_pem = models.TextField()
+    thumbprint = models.CharField(max_length=64, unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    deactivated_at = models.DateTimeField(null=True, blank=True)
+
+    def __str__(self):
+        return f"{self.organization} - {self.label or self.thumbprint}"
+
+    @property
+    def is_active(self) -> bool:
+        return self.deactivated_at is None
+
+
+class UsageNonce(models.Model):
+    """A single-use anti-replay nonce for the usage API (RFC 8555 section 6.5)."""
+
+    value = models.CharField(max_length=64, unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+
+class UsageReport(models.Model):
+    """One sealed interval of session counts, as sent by a Yivi server."""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    server_key = models.ForeignKey(
+        UsageServerKey, on_delete=models.CASCADE, related_name="reports"
+    )
+    report_id = models.CharField(max_length=64)
+    schema = models.PositiveSmallIntegerField()
+    server_instance = models.CharField(max_length=255)
+    run_id = models.CharField(max_length=64)
+    sequence = models.PositiveBigIntegerField()
+    final = models.BooleanField(default=False)
+    irmago_version = models.CharField(max_length=50)
+    period_from = models.DateTimeField()
+    period_to = models.DateTimeField()
+    received_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints: ClassVar[list] = [
+            models.UniqueConstraint(
+                fields=["server_key", "report_id"], name="unique_usage_report_id"
+            ),
+        ]
+        indexes: ClassVar[list] = [
+            models.Index(fields=["server_key", "run_id", "sequence"]),
+        ]
+
+    def __str__(self):
+        return f"{self.server_instance} {self.run_id} #{self.sequence}"
+
+
+USAGE_OUTCOME_CHOICES: list = [
+    ("done", "Done"),
+    ("cancelled", "Cancelled"),
+    ("failed", "Failed"),
+    ("timeout", "Timeout"),
+]
+
+
+class UsageDisclosureCount(models.Model):
+    """Sessions with an outcome that disclosed (done) or requested a credential type."""
+
+    report = models.ForeignKey(
+        UsageReport, on_delete=models.CASCADE, related_name="disclosures"
+    )
+    day = models.DateField()
+    requestor = models.CharField(max_length=255, blank=True)
+    action = models.CharField(max_length=20)
+    credential_type = models.CharField(max_length=255)
+    outcome = models.CharField(max_length=20, choices=USAGE_OUTCOME_CHOICES)
+    count = models.PositiveBigIntegerField()
+
+
+class UsageSessionCount(models.Model):
+    """Sessions that reached a final status with an outcome."""
+
+    report = models.ForeignKey(
+        UsageReport, on_delete=models.CASCADE, related_name="sessions"
+    )
+    day = models.DateField()
+    requestor = models.CharField(max_length=255, blank=True)
+    action = models.CharField(max_length=20)
+    outcome = models.CharField(max_length=20, choices=USAGE_OUTCOME_CHOICES)
+    count = models.PositiveBigIntegerField()

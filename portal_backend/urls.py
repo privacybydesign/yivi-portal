@@ -34,6 +34,16 @@ from portal_backend.views.trust_model import (
     TrustModelListView,
     YiviTrustModelEnvListView,
 )
+from portal_backend.views.usage import (
+    UsageServerKeysView,
+    UsageServerKeyView,
+    UsageSummaryView,
+    usage_account,
+    usage_directory,
+    usage_new_account,
+    usage_new_nonce,
+    usage_reports,
+)
 
 app_name = "portal_backend"
 
@@ -150,6 +160,32 @@ urlpatterns = [
         "v1/yivi/organizations/<str:org_slug>/attestation-provider/<str:environment>/<str:ap_slug>/credentials/",
         AttestationProviderCredentialsListView.as_view(),
         name="ap-credentials-list",
+    ),
+    # Usage reporting by self-hosted Yivi servers (ACME-shaped, authenticated by JWS)
+    path("usage/v1/directory", usage_directory, name="usage-directory"),
+    path("usage/v1/new-nonce", usage_new_nonce, name="usage-new-nonce"),
+    path("usage/v1/new-account", usage_new_account, name="usage-new-account"),
+    path("usage/v1/accounts/<uuid:key_id>", usage_account, name="usage-account"),
+    path(
+        "usage/v1/accounts/<uuid:key_id>/reports",
+        usage_reports,
+        name="usage-reports",
+    ),
+    # Usage reporting keys and usage of an organization
+    path(
+        "v1/organizations/<str:org_slug>/usage-keys/",
+        UsageServerKeysView.as_view(),
+        name="usage-keys",
+    ),
+    path(
+        "v1/organizations/<str:org_slug>/usage-keys/<uuid:key_id>/",
+        UsageServerKeyView.as_view(),
+        name="usage-key",
+    ),
+    path(
+        "v1/organizations/<str:org_slug>/usage/",
+        UsageSummaryView.as_view(),
+        name="usage-summary",
     ),
     path(
         "v1/profile",

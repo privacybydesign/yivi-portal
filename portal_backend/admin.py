@@ -12,9 +12,12 @@ from portal_backend.models.models import (
     RelyingParty,
     RelyingPartyHostname,
     TrustModel,
+    UsageReport,
+    UsageServerKey,
     User,
     YiviTrustModelEnv,
 )
+from portal_backend.services import usage
 
 
 @admin.register(CredentialAttribute)
@@ -151,3 +154,36 @@ class UserAdmin(admin.ModelAdmin):
     @admin.display(description="Organizations")
     def get_organizations(self, obj):
         return ", ".join([org.slug for org in obj.organizations.all()])
+
+
+@admin.register(UsageServerKey)
+class UsageServerKeyAdmin(admin.ModelAdmin):
+    list_display = (
+        "organization",
+        "label",
+        "thumbprint",
+        "created_at",
+        "deactivated_at",
+    )
+    search_fields = ("organization__slug", "label", "thumbprint")
+    readonly_fields = ("thumbprint",)
+
+    def save_model(self, request, obj, form, change):
+        # The thumbprint is how a server finds its account, so it always follows the key.
+        obj.thumbprint = usage.thumbprint(usage.public_key_from_pem(obj.public_key_pem))
+        super().save_model(request, obj, form, change)
+
+
+@admin.register(UsageReport)
+class UsageReportAdmin(admin.ModelAdmin):
+    list_display = (
+        "server_key",
+        "server_instance",
+        "run_id",
+        "sequence",
+        "final",
+        "period_to",
+        "received_at",
+    )
+    list_filter = ("final",)
+    search_fields = ("server_key__organization__slug", "server_instance", "run_id")
