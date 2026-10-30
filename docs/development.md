@@ -73,3 +73,12 @@ callers are in `.github/workflows/`.
 - The `ruff` job runs `pip install ruff` unpinned, so the linter can change
   under the repo. The rule set lives in `[tool.ruff.lint]` in `pyproject.toml`
   instead, which keeps `ruff check .` deterministic across ruff releases.
+
+## Admin login
+
+- The Django admin asks for a Yivi disclosure of the account's email after the
+  password (`yivi_portal/admin_site.py`). The widget it uses,
+  `portal_backend/static/admin_yivi/yivi.js`, is the checked-in browser bundle of
+  `@privacybydesign/yivi-frontend` 1.0.4, so the admin runs no third-party
+  script. After bumping that package in `portal_spa`, copy its
+  `dist/yivi.js` over it.

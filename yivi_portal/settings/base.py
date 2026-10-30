@@ -44,7 +44,7 @@ SIMPLE_JWT = {
 }
 
 INSTALLED_APPS = [
-    "django.contrib.admin",
+    "yivi_portal.apps.PortalAdminConfig",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
