@@ -10,6 +10,19 @@
     headers: { "X-CSRFToken": config.csrfToken },
   };
 
+  function getSafeNextUrl(next) {
+    try {
+      const url = new URL(next, window.location.origin);
+      const isHttp = url.protocol === "http:" || url.protocol === "https:";
+      if (!isHttp || url.origin !== window.location.origin) {
+        return null;
+      }
+      return url.toString();
+    } catch (_) {
+      return null;
+    }
+  }
+
   window.yivi
     .newWeb({
       element: "#yivi-web-form",
@@ -20,7 +33,14 @@
       },
     })
     .start()
-    .then(() => window.location.assign(config.next))
+    .then(() => {
+      const safeNext = getSafeNextUrl(config.next);
+      if (!safeNext) {
+        document.getElementById("yivi-error").hidden = false;
+        return;
+      }
+      window.location.assign(safeNext);
+    })
     .catch(() => {
       document.getElementById("yivi-error").hidden = false;
     });
