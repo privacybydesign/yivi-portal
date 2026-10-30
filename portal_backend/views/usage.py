@@ -194,8 +194,12 @@ class UsageServerKeysView(APIView):
             )
         try:
             server_key = usage.register_key(organization, public_key_pem, label[:255])
-        except ValueError as e:
-            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        except ValueError:
+            logger.exception("Invalid usage server key registration input")
+            return Response(
+                {"error": "Invalid key registration request"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         except IntegrityError:
             return Response(
                 {"error": "This key is already registered"},
