@@ -18,11 +18,7 @@ export default tseslint.config(
       'react-refresh': reactRefresh,
     },
     rules: {
-      // react-hooks 7's `recommended` set adds the React Compiler rules, which
-      // flag existing code across the SPA. Keep the two rules version 5
-      // recommended until the codebase is ready for the rest.
-      'react-hooks/rules-of-hooks': 'error',
-      'react-hooks/exhaustive-deps': 'warn',
+      ...reactHooks.configs.recommended.rules,
       'react-refresh/only-export-components': [
         'warn',
         { allowConstantExport: true },

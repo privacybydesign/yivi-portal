@@ -17,6 +17,52 @@ import { HamburgerIcon } from "lucide-react";
 import { Skeleton } from "../ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { filterAndRankCredentials } from "@/utils/credentialSearch";
+// At module level: a component defined inside another remounts on every render.
+function SearchDropdown({
+  results,
+  onSelect,
+}: {
+  results: Credential[];
+  onSelect: () => void;
+}) {
+  if (results.length === 0) return null;
+
+  return (
+    <div className="absolute z-40 bg-white rounded shadow w-full mt-[61px] max-h-80 overflow-auto">
+      <ul className="divide-y divide-gray-100">
+        {results.map((cred) => {
+          const { credential_id, ap_slug, environment, name_en, id } = cred;
+          if (!credential_id || !ap_slug || !environment) return null;
+
+          return (
+            <li key={id}>
+              <Link
+                to={`/attribute-index/credentials/${environment}/${ap_slug}/${credential_id}`}
+                onClick={onSelect}
+                className="flex items-center justify-between p-2 hover:bg-gray-100 rounded cursor-pointer no-underline"
+              >
+                <div>
+                  <div className="text-sm font-medium text-gray-900">
+                    {name_en}
+                  </div>
+                  <p className="text-xs text-gray-500">
+                    {credential_id} ({environment})
+                  </p>
+                </div>
+                {cred.deprecated_since && (
+                  <div className="ml-2 shrink-0">
+                    <Badge variant="destructive">Deprecated</Badge>
+                  </div>
+                )}
+              </Link>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
+}
+
 export default function AttributeIndexLayout() {
   const [credentials, setCredentials] = useState<Credential[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -49,54 +95,13 @@ export default function AttributeIndexLayout() {
   const isMainPage = useMatch("/attribute-index");
   const location = useLocation();
 
-  useEffect(() => {
-    // Clearing search searchQuery when navigating to a different page (mainly from main page to details page so the search bar is cleared)
+  // Clear the search on every navigation (mainly from the main page to a
+  // details page), without an effect:
+  // https://react.dev/learn/you-might-not-need-an-effect#adjusting-some-state-when-a-prop-changes
+  const [shownLocation, setShownLocation] = useState(location.key);
+  if (location.key !== shownLocation) {
+    setShownLocation(location.key);
     setSearchQuery("");
-  }, [location]);
-
-  function SearchDropdown({
-    results,
-    onSelect,
-  }: {
-    results: Credential[];
-    onSelect: () => void;
-  }) {
-    if (results.length === 0) return null;
-
-    return (
-      <div className="absolute z-40 bg-white rounded shadow w-full mt-[61px] max-h-80 overflow-auto">
-        <ul className="divide-y divide-gray-100">
-          {results.map((cred) => {
-            const { credential_id, ap_slug, environment, name_en, id } = cred;
-            if (!credential_id || !ap_slug || !environment) return null;
-
-            return (
-              <li key={id}>
-                <Link
-                  to={`/attribute-index/credentials/${environment}/${ap_slug}/${credential_id}`}
-                  onClick={onSelect}
-                  className="flex items-center justify-between p-2 hover:bg-gray-100 rounded cursor-pointer no-underline"
-                >
-                  <div>
-                    <div className="text-sm font-medium text-gray-900">
-                      {name_en}
-                    </div>
-                    <p className="text-xs text-gray-500">
-                      {credential_id} ({environment})
-                    </p>
-                  </div>
-                  {cred.deprecated_since && (
-                    <div className="ml-2 shrink-0">
-                      <Badge variant="destructive">Deprecated</Badge>
-                    </div>
-                  )}
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
-      </div>
-    );
   }
 
   function capitalizeFirstLetter(string: string): string {

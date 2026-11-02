@@ -4,19 +4,22 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useLocation } from "react-router-dom"; // For React Router (Vite apps)
 
 export default function FAQPage() {
   const location = useLocation(); // From react-router-dom
-  const [open, setOpen] = useState<string>("");
+  const hashItem = location.hash.replace("#", "");
+  const [open, setOpen] = useState<string>(hashItem);
 
-  useEffect(() => {
-    // Listen to changes in the location (hash)
-    if (location.hash) {
-      setOpen(location.hash.replace("#", ""));
-    }
-  }, [location]);
+  // Open the question a link points at, also when the hash changes while the
+  // page is shown; in between, the reader opens and closes questions freely.
+  // https://react.dev/learn/you-might-not-need-an-effect#adjusting-some-state-when-a-prop-changes
+  const [shownHash, setShownHash] = useState(location.hash);
+  if (location.hash !== shownHash) {
+    setShownHash(location.hash);
+    if (hashItem) setOpen(hashItem);
+  }
   // ...
 
   return (

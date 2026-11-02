@@ -10,17 +10,85 @@ import { toast } from "sonner";
 import { AlertTriangle } from "lucide-react";
 import { PageContainer } from "@/components/layout/PageContainer";
 
+const describe = (error: unknown) =>
+  error instanceof Error ? error.message : String(error);
+
+/** The organization's relying parties with their details; failures are toasted. */
+const loadRelyingPartyDetails = async (
+  organizationSlug: string,
+): Promise<RelyingParty[]> => {
+  const details: RelyingParty[] = [];
+  try {
+    const listResponse = await axiosInstance.get(
+      `/v1/yivi/organizations/${organizationSlug}/relying-party/`,
+    );
+    const rpList: RelyingParty[] = listResponse.data.relying_parties;
+    for (const rp of rpList) {
+      try {
+        const detailResponse = await axiosInstance.get(
+          `/v1/yivi/organizations/${organizationSlug}/relying-party/${rp.environment}/${rp.rp_slug}/`,
+        );
+        details.push({ ...detailResponse.data, environment: rp.environment });
+      } catch (error) {
+        toast.error(
+          `Failed to fetch details for ${rp.rp_slug} relying party: ${describe(error)}`,
+        );
+      }
+    }
+  } catch (error) {
+    toast.error(
+      `Failed to load relying parties for this organization: ${describe(error)}`,
+    );
+  }
+  return details;
+};
+
+/** The organization's attestation providers with their details; failures are toasted. */
+const loadAttestationProviderDetails = async (
+  organizationSlug: string,
+): Promise<AttestationProvider[]> => {
+  const details: AttestationProvider[] = [];
+  try {
+    const listResponse = await axiosInstance.get(
+      `/v1/yivi/organizations/${organizationSlug}/attestation-provider/`,
+    );
+    const apList: Pick<AttestationProvider, "ap_slug" | "environment">[] =
+      listResponse.data.attestation_providers;
+    for (const ap of apList) {
+      try {
+        const detailResponse = await axiosInstance.get(
+          `/v1/yivi/organizations/${organizationSlug}/attestation-provider/${ap.environment}/${ap.ap_slug}/`,
+        );
+        details.push({ ...detailResponse.data, environment: ap.environment });
+      } catch (error) {
+        toast.error(
+          `Failed to fetch details for ${ap.ap_slug} attestation provider: ${describe(error)}`,
+        );
+      }
+    }
+  } catch (error) {
+    toast.error(
+      `Failed to load attestation providers for this organization: ${describe(error)}`,
+    );
+  }
+  return details;
+};
+
 export default function OrganizationPage() {
   const params = useParams();
   const organizationSlug = params?.organization;
 
   const [organization, setOrganization] = useState<Organization | null>(null);
-  const [rpDetails, setRpDetails] = useState<RelyingParty[]>([]);
-  const [apDetails, setApDetails] = useState<AttestationProvider[]>([]);
-  const [loadingApDetails, setLoadingApDetails] = useState(false);
-  const [loadingRpDetails, setLoadingRpDetails] = useState(false);
+  // Each tab's details are loaded once, the first time it is shown; null until then.
+  const [loadedRpDetails, setLoadedRpDetails] = useState<RelyingParty[] | null>(
+    null,
+  );
+  const [loadedApDetails, setLoadedApDetails] = useState<
+    AttestationProvider[] | null
+  >(null);
   const [loading, setLoading] = useState(true);
-  const [activeSection, setActiveSection] = useState("");
+  // The tab the reader picked; until then, the organization's first role.
+  const [chosenSection, setChosenSection] = useState("");
 
   useEffect(() => {
     const fetchOrganizationData = async () => {
@@ -47,132 +115,43 @@ export default function OrganizationPage() {
     }
   }, [organizationSlug]);
 
-  const fetchRelyingPartyDetails = async () => {
-    try {
-      setLoadingRpDetails(true);
+  const activeSection =
+    chosenSection ||
+    (organization?.is_AP
+      ? "ap-details"
+      : organization?.is_RP
+        ? "rp-details"
+        : "");
+  const showsAp =
+    activeSection === "ap-details" && organization?.is_AP === true;
+  const showsRp =
+    activeSection === "rp-details" && organization?.is_RP === true;
+  const rpDetails = loadedRpDetails ?? [];
+  const apDetails = loadedApDetails ?? [];
+  const loadingRpDetails = showsRp && loadedRpDetails === null;
+  const loadingApDetails = showsAp && loadedApDetails === null;
 
-      const listResponse = await axiosInstance.get(
-        `/v1/yivi/organizations/${organizationSlug}/relying-party/`,
-      );
-
-      const rpList: RelyingParty[] = listResponse.data.relying_parties;
-
-      const details: RelyingParty[] = [];
-
-      for (const rp of rpList) {
-        try {
-          const detailResponse = await axiosInstance.get(
-            `/v1/yivi/organizations/${organizationSlug}/relying-party/${rp.environment}/${rp.rp_slug}/`,
-          );
-          const rpData = detailResponse.data;
-          rpData.environment = rp.environment;
-
-          details.push(detailResponse.data);
-        } catch (error) {
-          toast.error(
-            `Failed to fetch details for ${rp.rp_slug} relying party: ${
-              error instanceof Error ? error.message : String(error)
-            }`,
-          );
-        }
-      }
-
-      setRpDetails(details);
-    } catch (error) {
-      toast.error(
-        `Failed to load relying parties for this organization: ${
-          error instanceof Error ? error.message : String(error)
-        }`,
-      );
-    } finally {
-      setLoadingRpDetails(false);
-    }
-  };
   useEffect(() => {
-    if (!organization) return;
-    if (!activeSection) {
-      if (organization.is_AP) {
-        setActiveSection("ap-details");
-      } else if (organization.is_RP) {
-        setActiveSection("rp-details");
-      }
-    }
-
-    // Fetch details based on the active section
-    if (organization.is_RP && activeSection === "rp-details") {
-      fetchRelyingPartyDetails();
-    } else if (organization.is_AP && activeSection === "ap-details") {
-      fetchAttestationProviderDetails();
-    }
-  }, [organization, activeSection]);
-
-  const fetchAttestationProviderDetails = async () => {
-    try {
-      setLoadingApDetails(true);
-
-      // Step 1: Get list of AP slugs and environments
-      const listResponse = await axiosInstance.get(
-        `/v1/yivi/organizations/${organizationSlug}/attestation-provider/`,
+    if (!organizationSlug || !(loadingRpDetails || loadingApDetails)) return;
+    // State is only set from the callbacks, and not for a page left behind.
+    let current = true;
+    if (loadingRpDetails) {
+      loadRelyingPartyDetails(organizationSlug).then(
+        (details) => current && setLoadedRpDetails(details),
       );
-
-      const apList: Pick<AttestationProvider, "ap_slug" | "environment">[] =
-        listResponse.data.attestation_providers;
-
-      const details: AttestationProvider[] = [];
-
-      // Step 2: For each, fetch full detail
-      for (const ap of apList) {
-        try {
-          const detailResponse = await axiosInstance.get(
-            `/v1/yivi/organizations/${organizationSlug}/attestation-provider/${ap.environment}/${ap.ap_slug}/`,
-          );
-          const apData = detailResponse.data;
-          apData.environment = ap.environment;
-          details.push(apData);
-        } catch (error) {
-          toast.error(
-            `Failed to fetch details for ${ap.ap_slug} attestation provider: ${
-              error instanceof Error ? error.message : String(error)
-            }`,
-          );
-        }
-      }
-
-      setApDetails(details);
-    } catch (error) {
-      toast.error(
-        `Failed to load attestation providers for this organization: ${
-          error as string
-        }`,
-      );
-    } finally {
-      setLoadingApDetails(false);
     }
-  };
+    if (loadingApDetails) {
+      loadAttestationProviderDetails(organizationSlug).then(
+        (details) => current && setLoadedApDetails(details),
+      );
+    }
+    return () => {
+      current = false;
+    };
+  }, [organizationSlug, loadingRpDetails, loadingApDetails]);
 
-  // Handler for section changes with data fetching
   const handleSectionChange = (section: string) => {
-    setActiveSection(section);
-
-    const shouldFetchRpDetails =
-      section === "rp-details" &&
-      organization?.is_RP &&
-      rpDetails.length === 0 &&
-      !loadingRpDetails;
-
-    const shouldFetchApDetails =
-      section === "ap-details" &&
-      organization?.is_AP &&
-      apDetails.length === 0 &&
-      !loadingApDetails;
-
-    if (shouldFetchRpDetails) {
-      fetchRelyingPartyDetails();
-    }
-
-    if (shouldFetchApDetails) {
-      fetchAttestationProviderDetails();
-    }
+    setChosenSection(section);
   };
 
   if (loading) {
@@ -287,7 +266,7 @@ export default function OrganizationPage() {
         )}
       </div>
 
-      {activeSection === "ap-details" && organization.is_AP === true && (
+      {showsAp && (
         <Card>
           <CardContent>
             <p className="mb-4 text-gray-600">
@@ -391,7 +370,7 @@ export default function OrganizationPage() {
         </Card>
       )}
 
-      {activeSection === "rp-details" && organization.is_RP === true && (
+      {showsRp && (
         <Card>
           <CardContent>
             <p className="mb-4 text-gray-600">

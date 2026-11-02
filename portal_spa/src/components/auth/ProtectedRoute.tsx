@@ -5,11 +5,11 @@ import useStore from "@/store/index";
 const ProtectedRoute: React.FC = () => {
   const { accessToken, initialized } = useStore();
   const location = useLocation();
+  // Starts true and only turns false once, right before redirecting away.
   const [showMessage, setShowMessage] = useState(true);
 
   useEffect(() => {
     if (initialized && !accessToken) {
-      setShowMessage(true);
       const timer = setTimeout(() => {
         setShowMessage(false);
       }, 2000);

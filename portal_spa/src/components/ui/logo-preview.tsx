@@ -1,6 +1,6 @@
 import type { Control, UseFormSetValue } from "react-hook-form";
 import { useWatch } from "react-hook-form";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import type { RegistrationInputs } from "@/actions/manage-organization";
 import { apiEndpoint } from "@/services/axiosInstance";
@@ -15,23 +15,23 @@ export function LogoPreview({
 }) {
   const logo = useWatch({ control, name: "logo" });
 
-  const [logoURL, setLogoURL] = useState<string>("/logo-placeholder.svg");
+  // A picked file needs an object URL, released again when it changes or the
+  // preview unmounts; a stored logo is a path on the API.
+  const fileURL = useMemo(
+    () => (logo instanceof File ? URL.createObjectURL(logo) : null),
+    [logo],
+  );
+  useEffect(
+    () => () => {
+      if (fileURL) URL.revokeObjectURL(fileURL);
+    },
+    [fileURL],
+  );
 
-  useEffect(() => {
-    if (typeof logo === "string") {
-      setLogoURL(apiEndpoint + logo);
-    } else if (logo instanceof File) {
-      const objectUrl = URL.createObjectURL(logo);
-      setLogoURL(objectUrl);
-
-      // Clean up object URL on unmount or when file changes
-      return () => {
-        URL.revokeObjectURL(objectUrl);
-      };
-    } else {
-      setLogoURL("/logo-placeholder.svg");
-    }
-  }, [logo, apiEndpoint]);
+  const logoURL =
+    typeof logo === "string"
+      ? apiEndpoint + logo
+      : (fileURL ?? "/logo-placeholder.svg");
 
   return (
     <div className="relative size-24">

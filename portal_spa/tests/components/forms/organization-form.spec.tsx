@@ -181,3 +181,27 @@ it("does not confirm a save the API rejected", async () => {
   patch.mockRestore();
   success.mockRestore();
 });
+
+it("sends the picked logo along with the registration", async () => {
+  const post = vi
+    .spyOn(axiosInstance, "post")
+    .mockResolvedValue({ data: { success: "created" } });
+
+  const { container } = render(form());
+  const logo = new File(["png"], "logo.png", { type: "image/png" });
+  const input = container.querySelector(
+    'input[type="file"]',
+  ) as HTMLInputElement;
+  await userEvent.upload(input, logo);
+  await userEvent.type(emailInput(), "contact@test-org.example");
+  await userEvent.type(phoneInput(), "612345678");
+  await submit();
+
+  const createCall = () =>
+    post.mock.calls.find(([url]) => url === "/v1/organizations/create/");
+  await waitFor(() => expect(createCall()).toBeDefined());
+  const body = createCall()![1] as FormData;
+  expect((body.get("logo") as File).name).toBe("logo.png");
+
+  post.mockRestore();
+});
