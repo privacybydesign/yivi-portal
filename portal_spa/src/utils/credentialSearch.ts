@@ -24,7 +24,6 @@ export function filterAndRankCredentials({
 }: SearchOptions): Credential[] {
   const environmentWeights = { production: 1, staging: 0.8, demo: 0.5 };
   const query = searchQuery.toLowerCase().trim();
-  console.log("selected envs", { selectedEnv });
   const filtered = credentials
     .filter((cred) => filterByEnvironment(cred, selectedEnv))
     .filter((cred) => !cred.deprecated_since);

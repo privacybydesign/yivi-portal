@@ -3,11 +3,19 @@ import { jwtDecode } from "jwt-decode";
 import { useEffect } from "react";
 import type { AuthToken } from "@/models/auth_token";
 import { axiosInstance } from "../services/axiosInstance";
-import { AxiosError } from "axios";
+import { isAxiosError } from "axios";
 
 let refreshInProgress: Promise<string | null> | null = null;
 
-interface StateStore {
+const decodeToken = (token: string): AuthToken | null => {
+  try {
+    return jwtDecode<AuthToken>(token);
+  } catch {
+    return null;
+  }
+};
+
+export interface StateStore {
   accessToken: string | null;
   email: string | null;
   role?: "admin" | "maintainer" | undefined;
@@ -34,10 +42,8 @@ const useStore = create<StateStore>((set) => ({
         role: decoded.role,
         organizationSlugs: decoded.organizationSlugs || [],
       });
-      localStorage.setItem("accessToken", accessToken);
     } else {
       set({ email: null, role: undefined, organizationSlugs: [] });
-      localStorage.removeItem("accessToken");
     }
 
     set({ accessToken });
@@ -52,7 +58,7 @@ const useStore = create<StateStore>((set) => ({
       try {
         const response = await axiosInstance.post<{ access: string }>(
           "/v1/refreshtoken",
-          data
+          data,
         );
 
         if (response.status !== 200) {
@@ -62,7 +68,11 @@ const useStore = create<StateStore>((set) => ({
         useStore.getState().setAccessToken(response.data.access);
         return response.data.access;
       } catch (error: unknown) {
-        if (error instanceof AxiosError) {
+        if (isAxiosError(error) && error.response?.status === 401) {
+          // The session is gone (expired or never existed). Drop the stale
+          // token so we stop retrying on every request and every page load.
+          useStore.getState().setAccessToken(null);
+        } else if (isAxiosError(error)) {
           console.warn("Error refreshing token:", error.response?.data.detail);
         } else {
           console.warn("Unexpected error", error);
@@ -77,25 +87,13 @@ const useStore = create<StateStore>((set) => ({
   },
 
   initializeAuth: async () => {
-    const savedAccessToken = localStorage.getItem("accessToken");
+    // The access token is kept in memory only, so on (re)load we restore the
+    // session from the httpOnly refresh cookie instead of localStorage. A
+    // successful refresh populates the store via setAccessToken.
+    const accessToken = await useStore.getState().refreshToken();
 
-    if (savedAccessToken) {
-      const decoded = jwtDecode<AuthToken>(savedAccessToken);
-      const currentTime = Math.floor(Date.now() / 1000);
-
-      if (decoded.exp < currentTime + 60) {
-        // Try refreshing token
-        await useStore.getState().refreshToken();
-      } else {
-        set({
-          accessToken: savedAccessToken,
-          email: decoded.email,
-          role: decoded.role,
-          organizationSlugs: decoded.organizationSlugs || [],
-        });
-      }
-    } else {
-      // No valid token - clear
+    if (!accessToken) {
+      // No valid refresh cookie - clear any stale state
       set({
         accessToken: null,
         email: null,
@@ -119,9 +117,9 @@ export function useIdleRefresh() {
         accessToken
       ) {
         const currentTime = Math.floor(Date.now() / 1000);
-        const decoded = jwtDecode<AuthToken>(accessToken);
+        const decoded = decodeToken(accessToken);
 
-        if (decoded.exp < currentTime + 60) {
+        if (decoded && decoded.exp < currentTime + 60) {
           refreshToken();
         }
       }

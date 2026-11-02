@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import { Link, Outlet } from "react-router-dom";
+import { Link, Outlet, useLocation } from "react-router-dom";
 import Header from "@/components/layout/Header";
+import ErrorBoundary from "@/components/layout/ErrorBoundary";
 import { OrganizationContext } from "@/contexts/organization/OrganizationContext";
 import { axiosInstance } from "@/services/axiosInstance";
 import useStore from "@/store";
@@ -13,6 +14,7 @@ export default function Layout() {
     Record<string, string>
   >({});
   const organizationSlugs = useStore((state) => state.organizationSlugs);
+  const location = useLocation();
 
   useEffect(() => {
     const fetchOrganizationNames = async () => {
@@ -45,7 +47,9 @@ export default function Layout() {
 
         <main className="flex-grow p-4">
           <div className="mx-auto w-full">
-            <Outlet />
+            <ErrorBoundary resetKey={location.pathname}>
+              <Outlet />
+            </ErrorBoundary>
           </div>
         </main>
 

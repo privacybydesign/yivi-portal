@@ -1,23 +1,25 @@
-from django.utils import timezone
-from rest_framework.test import APITestCase, APIClient
+from unittest.mock import patch
+
+from django.contrib.auth import get_user_model
+from django.db import IntegrityError
 from django.urls import reverse
+from django.utils import timezone
+from rest_framework.test import APIClient, APITestCase
+from rest_framework_simplejwt.tokens import AccessToken  # type: ignore
+
 from portal_backend.models.models import (
     AttestationProvider,
-    Organization,
-    RelyingParty,
-    RelyingPartyHostname,
     Condiscon,
     CondisconAttribute,
     Credential,
     CredentialAttribute,
+    Organization,
+    RelyingParty,
+    RelyingPartyHostname,
     TrustModel,
     YiviTrustModelEnv,
 )
 from portal_backend.models.models import User as OrgUser
-from django.contrib.auth import get_user_model
-from rest_framework_simplejwt.tokens import AccessToken  # type: ignore
-from unittest.mock import patch
-from django.db import IntegrityError
 
 User = get_user_model()
 
@@ -132,7 +134,7 @@ class RelyingPartyCreateTest(APITestCase):
         token = AccessToken.for_user(self.user)
         token["organizationSlugs"] = [self.organization.slug]
 
-        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {str(token)}")
+        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {token!s}")
 
     def test_create_relying_party_success(self):
         """Test creating a relying party with valid data."""
@@ -325,3 +327,54 @@ class RelyingPartyCreateTest(APITestCase):
         )
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
+
+    def test_hostname_validation_malformed(self):
+        """Test various invalid hostnames"""
+        url = reverse("portal_backend:rp-create", args=[self.organization.slug])
+
+        INVALID_HOSTNAMES = [
+            {"hostname": "-invalid.domain.nl"},
+            {"hostname": "example-.com"},
+            {"hostname": "ex..ample.com"},
+            {"hostname": ".example.test.com"},
+            {"hostname": "exa*mple.t?est.com"},
+        ]
+
+        for case in INVALID_HOSTNAMES:
+            with self.subTest():
+                new_data = self.relying_party_data.copy()
+                new_data["hostnames"] = []
+                new_data["hostnames"].append(case)
+
+                response = self.client.post(url, new_data, format="json")
+
+                self.assertEqual(response.status_code, 400)
+                self.assertIn("Enter a valid domain", str(response.data))
+                self.assertFalse(
+                    RelyingParty.objects.filter(rp_slug="test-relying-party").exists()
+                )
+
+    def test_hostname_validation_correct_format(self):
+        """Test various valid hostnames"""
+        url = reverse("portal_backend:rp-create", args=[self.organization.slug])
+
+        VALID_HOSTNAMES = [
+            {"hostname": "valid.domain.nl"},
+            {"hostname": "me.yivi.app.science.ru.nl"},
+            {"hostname": "valid-123domain.nl"},
+            {"hostname": "valid-domain.nl"},
+            {"hostname": "example.app.test.edu"},
+        ]
+
+        for i, case in enumerate(VALID_HOSTNAMES, start=1):
+            with self.subTest():
+                new_data = self.relying_party_data.copy()
+                new_data["rp_slug"] = f"test-rp{i}"
+                new_data["hostnames"] = []
+                new_data["hostnames"].append(case)
+
+                response = self.client.post(url, new_data, format="json")
+                self.assertEqual(response.status_code, 201)
+                self.assertTrue(
+                    RelyingParty.objects.filter(rp_slug=new_data["rp_slug"]).exists()
+                )

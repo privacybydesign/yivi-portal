@@ -10,6 +10,8 @@ export interface CredentialAttribute {
   full_path?: string;
   description_en?: string;
   credential_id: number;
+  optional: boolean;
+  demo_value?: string;
 }
 
 export interface Credential {

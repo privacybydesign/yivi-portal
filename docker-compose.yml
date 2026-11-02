@@ -1,6 +1,6 @@
 services:
   database:
-    image: postgres:15.12
+    image: postgres:17
     container_name: yivi-portal-db
     restart: unless-stopped
     networks:

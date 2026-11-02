@@ -1,13 +1,19 @@
+import logging
 import os
-from dotenv import load_dotenv
+
 from django.db import transaction
+from django.utils import timezone
+from dotenv import load_dotenv
+
 from portal_backend.models.models import (
     RelyingParty,
     RelyingPartyHostname,
 )
-from django.utils import timezone
-import logging
-import portal_backend.scheme_utils.import_utils as import_utils
+from portal_backend.scheme_utils import import_utils
+
+
+class TrustedRpsImportError(Exception):
+    """Raised when importing trusted relying parties fails."""
 
 
 logger = logging.getLogger(__name__)
@@ -39,12 +45,13 @@ class RPFields:
                 self.repo_path, "assets", f"{self.rp_dict.get('logo')}.png"
             )
         except (KeyError, IndexError) as e:
-            raise Exception(f"Error extracting fields from verifier: {e}")
+            raise TrustedRpsImportError(f"Error extracting fields from verifier: {e}")
 
 
 def create_rp(
     org: import_utils.Organization,
     yivi_tme: import_utils.YiviTrustModelEnv,
+    rpfields: "RPFields",
 ) -> RelyingParty:
     if not org or not yivi_tme:
         raise ValueError("Missing organization or trust model environment")
@@ -56,11 +63,16 @@ def create_rp(
 
     try:
         now = timezone.now()
+        # rp_slug is globally unique and can differ from the organization slug
+        # (e.g. RPs registered through the portal pick their own slug). Look the
+        # RP up by rp_slug only and reassign its organization / environment via
+        # defaults, so an existing RP with this slug under another organization
+        # is updated instead of triggering a UNIQUE-constraint IntegrityError.
         rp, rp_created = RelyingParty.objects.update_or_create(
-            organization=org,
-            rp_slug=org.slug,
-            yivi_tme=yivi_tme,
+            rp_slug=rpfields.slug,
             defaults={
+                "organization": org,
+                "yivi_tme": yivi_tme,
                 "ready": True,
                 "reviewed_accepted": True,
                 "published": True,
@@ -74,8 +86,10 @@ def create_rp(
 
         logger.info(f"{'Created' if rp_created else 'Updated'} Relying Party: {org}")
 
-    except Exception as rp_error:
-        raise Exception(f"Failed to create/update RelyingParty for {org}: {rp_error}")
+    except Exception as rp_error:  # noqa: BLE001
+        raise TrustedRpsImportError(
+            f"Failed to create/update RelyingParty for {org}: {rp_error}"
+        )
 
     return rp
 
@@ -96,9 +110,9 @@ def create_hostnames(
     for hostname in rpfields.hostnames:
         try:
             _, hostname_created = RelyingPartyHostname.objects.update_or_create(
-                relying_party=rp,
                 hostname=hostname,
                 defaults={
+                    "relying_party": rp,
                     "manually_verified": True,
                     "dns_challenge": None,
                     "dns_challenge_created_at": None,
@@ -107,10 +121,47 @@ def create_hostnames(
             logger.info(
                 f"{'Created' if hostname_created else 'Updated'} Hostname: {hostname} for RP {rpfields.slug}"
             )
-        except Exception as hostname_error:
-            raise Exception(
+        except Exception as hostname_error:  # noqa: BLE001
+            raise TrustedRpsImportError(
                 f"Failed to create/update Hostname {hostname} for RP {rpfields.slug}: {hostname_error}"
             )
+
+    delete_stale_hostnames(rp, rpfields.hostnames, rpfields.slug)
+
+
+def delete_stale_hostnames(
+    rp: RelyingParty,
+    scheme_hostnames: list,
+    slug: str,
+) -> None:
+    """
+    Remove RelyingPartyHostname objects belonging to this RP that are no longer
+    present in the latest scheme pull, so local state matches the scheme.
+
+    Without this, hostnames removed from the scheme would linger in the database
+    indefinitely and keep accumulating across cron runs.
+
+    Pruning is restricted to scheme-managed hostnames (``manually_verified=True``,
+    the flag set when a hostname is imported from the scheme). Portal-registered
+    hostnames — added by a maintainer through the UI and pending DNS verification
+    (``manually_verified`` unset, ``dns_challenge_verified=False``) — are not yet
+    reflected in ``requestors.json`` and must survive the sync, otherwise the cron
+    would silently delete them on its next run.
+    """
+
+    stale_hostnames = rp.hostnames.filter(manually_verified=True).exclude(
+        hostname__in=scheme_hostnames
+    )
+    stale_names = list(stale_hostnames.values_list("hostname", flat=True))
+
+    if not stale_names:
+        return
+
+    deleted_count, _ = stale_hostnames.delete()
+    logger.info(
+        f"Deleted {deleted_count} stale hostname(s) for RP {slug} "
+        f"no longer in the scheme: {', '.join(stale_names)}"
+    )
 
 
 def create_org_rp(all_RPs_dict: dict, environment: str, repo_path: str) -> None:
@@ -135,7 +186,7 @@ def create_org_rp(all_RPs_dict: dict, environment: str, repo_path: str) -> None:
                     rpfields.logo_path,
                 )
                 yivi_tme = import_utils.get_trust_model_env(environment)
-                rp = create_rp(org, yivi_tme)
+                rp = create_rp(org, yivi_tme, rpfields)
                 create_hostnames(rpfields, rp)
         except Exception as e:
             logger.error(f"Failed to process Relying Party {rpfields.slug}: {e}")
@@ -157,5 +208,5 @@ def import_rps() -> None:
         all_RPs_dict = import_utils.load_json_to_dict(f"{repo_path}/requestors.json")
         create_org_rp(all_RPs_dict, "production", repo_path)
 
-    except Exception as e:
-        raise Exception(f"Failed to import relying parties: {e}")
+    except Exception as e:  # noqa: BLE001
+        raise TrustedRpsImportError(f"Failed to import relying parties: {e}")

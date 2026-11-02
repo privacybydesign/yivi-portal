@@ -2,8 +2,24 @@ import os
 from datetime import timedelta
 from pathlib import Path
 
+from django.core.exceptions import ImproperlyConfigured
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+
+def require_env(name):
+    """Return the value of a required environment variable.
+
+    Fails loudly at startup when the variable is unset or empty, so that no
+    insecure fallback is ever used in a deployed environment.
+    """
+    value = os.environ.get(name)
+    if not value:
+        raise ImproperlyConfigured(
+            f"The {name} environment variable must be set to a non-empty value."
+        )
+    return value
 
 # Application definition
 
@@ -21,14 +37,14 @@ SIMPLE_JWT = {
     "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
     "ROTATE_REFRESH_TOKENS": True,
     "BLACKLIST_AFTER_ROTATION": True,
-    "SIGNING_KEY": "test",
+    "SIGNING_KEY": require_env("JWT_SIGNING_KEY"),
     "USER_ID_FIELD": "email",
     "USER_ID_CLAIM": "email",
     # Prevent user_id from being used
 }
 
 INSTALLED_APPS = [
-    "django.contrib.admin",
+    "yivi_portal.apps.PortalAdminConfig",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
@@ -40,7 +56,6 @@ INSTALLED_APPS = [
     "rest_framework_simplejwt.token_blacklist",
     "drf_yasg",
     "django_bootstrap5",
-    "django_cron",
     "imagekit",
     "portal_backend.apps.PortalBackendConfig",
     "yivi_portal",
@@ -113,17 +128,35 @@ USE_TZ = True
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-CRON_CLASSES = [
-    "portal_backend.crons.NewDNSVerification",
-    "portal_backend.crons.ExistingDNSVerification",
-    "portal_backend.crons.TrustedAPsImport",
-    "portal_backend.crons.TrustedRPsImport",
-]
-
-DJANGO_CRON_DELETE_LOGS_OLDER_THAN = 7
+# The admin's Yivi widget (templates/admin/yivi_verify.html) is served straight
+# from the @privacybydesign/yivi-frontend package the SPA depends on, so both
+# use the version pinned in portal_spa/package-lock.json. Locally that takes an
+# `npm ci` in portal_spa; Dockerfile.django installs it in a build stage.
+YIVI_FRONTEND_DIST = (
+    BASE_DIR.parent
+    / "portal_spa"
+    / "node_modules"
+    / "@privacybydesign"
+    / "yivi-frontend"
+    / "dist"
+)
+STATICFILES_DIRS = [("admin_yivi", YIVI_FRONTEND_DIST)]
 
 YIVI_SERVER_URL = os.environ.get("YIVI_SERVER_URL")
 YIVI_SERVER_TOKEN = os.environ.get("YIVI_SERVER_TOKEN")
+
+# Demo credentials are issued via a dedicated SD-JWT capable Yivi server.
+# The pair falls back together: the issuance token must never be sent to the
+# general server, nor the general token to the issuance server.
+YIVI_ISSUANCE_SERVER_URL = os.environ.get("YIVI_ISSUANCE_SERVER_URL")
+YIVI_ISSUANCE_SERVER_TOKEN = os.environ.get("YIVI_ISSUANCE_SERVER_TOKEN")
+if not YIVI_ISSUANCE_SERVER_URL:
+    YIVI_ISSUANCE_SERVER_URL = YIVI_SERVER_URL
+    YIVI_ISSUANCE_SERVER_TOKEN = YIVI_SERVER_TOKEN
+
+# Number of SD-JWT VC instances issued per credential; batching preserves
+# unlinkability since SD-JWTs are trackable when reused.
+YIVI_SDJWT_BATCH_SIZE = int(os.environ.get("YIVI_SDJWT_BATCH_SIZE") or "50")
 
 
 LOGGING = {
@@ -152,7 +185,7 @@ LOGGING = {
 
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 EMAIL_HOST = os.environ.get("EMAIL_HOST")
-EMAIL_PORT = int(os.environ.get("EMAIL_PORT", 2587))
+EMAIL_PORT = int(os.environ.get("EMAIL_PORT", "2587"))
 EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER")
 EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD")
 EMAIL_FROM = os.environ.get("EMAIL_FROM")

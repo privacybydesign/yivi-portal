@@ -94,7 +94,6 @@ export default function RelyingPartyForm() {
       <Form {...form}>
         <form
           onSubmit={handleSubmit((formData) => {
-            console.log("Form data submitted:", formData);
             if (isEditMode) {
               const payload = getChangedFormData(defaultValues, formData);
               if (Object.keys(payload).length === 0) {

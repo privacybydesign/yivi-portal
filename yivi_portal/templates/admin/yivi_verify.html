@@ -1,0 +1,39 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block extrastyle %}{{ block.super }}<link rel="stylesheet" href="{% static "admin/css/login.css" %}">{% endblock %}
+
+{% block bodyclass %}{{ block.super }} login{% endblock %}
+
+{% block usertools %}{% endblock %}
+
+{% block nav-global %}{% endblock %}
+
+{% block nav-sidebar %}{% endblock %}
+
+{% block content_title %}{% endblock %}
+
+{% block nav-breadcrumbs %}{% endblock %}
+
+{% block content %}
+<div id="content-main">
+  {% if account_email %}
+    <p>
+      To finish logging in, scan the QR code with your Yivi app and disclose the
+      email address <strong>{{ account_email }}</strong>.
+    </p>
+    <div id="yivi-web-form"></div>
+    <p id="yivi-error" class="errornote" hidden>
+      Yivi could not confirm this account. <a href="">Try again</a>.
+    </p>
+    {{ yivi_config|json_script:"yivi-config" }}
+    <script src="{% static "admin_yivi/yivi.js" %}"></script>
+    <script src="{% static "admin_yivi/admin_yivi.js" %}"></script>
+  {% else %}
+    <p class="errornote">
+      This account has no email address, so it cannot be confirmed with Yivi.
+      Ask another administrator to add one.
+    </p>
+  {% endif %}
+</div>
+{% endblock %}

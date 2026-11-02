@@ -1,15 +1,23 @@
 import os
-from rest_framework.test import APITestCase, APIClient
-from django.urls import reverse
-from portal_backend.models.models import Organization
-from portal_backend.models.models import User as OrgUser
-from django.contrib.auth import get_user_model
-from portal_backend.scheme_utils.import_utils import load_logo_if_exists
-from rest_framework_simplejwt.tokens import AccessToken  # type: ignore
+import uuid
 from unittest.mock import patch
-from django.db import IntegrityError
-from django.core import mail
 
+from django.contrib.auth import get_user_model
+from django.core import mail
+from django.db import IntegrityError
+from django.test import override_settings
+from django.urls import reverse
+from rest_framework.test import APIClient, APITestCase
+from rest_framework_simplejwt.tokens import AccessToken  # type: ignore
+
+from portal_backend.models.models import (
+    Organization,
+    RelyingParty,
+    TrustModel,
+    YiviTrustModelEnv,
+)
+from portal_backend.models.models import User as OrgUser
+from portal_backend.scheme_utils.import_utils import load_logo_if_exists
 
 User = get_user_model()
 
@@ -36,6 +44,8 @@ class OrganizationCreateTest(APITestCase):
             "street": "Test Street",
             "postal_code": "1234AB",
             "city": "Test City",
+            "contact_email": "contact@test-organization.com",
+            "contact_number": "+31612345678",
             "logo": self.logo,
         }
 
@@ -51,6 +61,56 @@ class OrganizationCreateTest(APITestCase):
         self.assertTrue(
             OrgUser.objects.filter(email="test@gmail.com", role="maintainer").exists()
         )
+
+    def test_create_organization_stores_contact_details(self):
+        """Contact email and phone number are persisted on the organization."""
+        url = reverse("portal_backend:organization-create")
+
+        response = self.client.post(url, self.organization_data, format="multipart")
+        self.assertEqual(response.status_code, 201)
+        organization = Organization.objects.get(slug="test-organization")
+        self.assertEqual(organization.contact_email, "contact@test-organization.com")
+        self.assertEqual(str(organization.contact_number), "+31612345678")
+
+    def test_create_organization_missing_contact_email(self):
+        """An organization cannot be registered without an email address."""
+        url = reverse("portal_backend:organization-create")
+        invalid_data = self.organization_data.copy()
+        del invalid_data["contact_email"]
+        response = self.client.post(url, invalid_data, format="multipart")
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("contact_email", response.json())
+        self.assertFalse(Organization.objects.filter(slug="test-organization").exists())
+
+    def test_create_organization_missing_contact_number(self):
+        """An organization cannot be registered without a phone number."""
+        url = reverse("portal_backend:organization-create")
+        invalid_data = self.organization_data.copy()
+        del invalid_data["contact_number"]
+        response = self.client.post(url, invalid_data, format="multipart")
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("contact_number", response.json())
+        self.assertFalse(Organization.objects.filter(slug="test-organization").exists())
+
+    def test_create_organization_blank_contact_details(self):
+        """Blank contact details are rejected the same way as missing ones."""
+        url = reverse("portal_backend:organization-create")
+        invalid_data = self.organization_data.copy()
+        invalid_data["contact_email"] = ""
+        invalid_data["contact_number"] = ""
+        response = self.client.post(url, invalid_data, format="multipart")
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("contact_email", response.json())
+        self.assertIn("contact_number", response.json())
+
+    def test_create_organization_invalid_contact_email(self):
+        """A malformed email address is rejected."""
+        url = reverse("portal_backend:organization-create")
+        invalid_data = self.organization_data.copy()
+        invalid_data["contact_email"] = "not-an-email"
+        response = self.client.post(url, invalid_data, format="multipart")
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("contact_email", response.json())
 
     def test_create_organization_invalid_data(self):
         """Test creating an organization with invalid data."""
@@ -103,6 +163,8 @@ class OrganizationMaintainerActionsTest(APITestCase):
             street="Test Street",
             postal_code="4321CD",
             city="Test City",
+            contact_email="contact@test-name.com",
+            contact_number="+31612345678",
             logo=self.logo,
             is_verified=True,
         )
@@ -110,7 +172,7 @@ class OrganizationMaintainerActionsTest(APITestCase):
         orguser.organizations.add(self.organization)
         token = AccessToken.for_user(self.user)
         token["organizationSlugs"] = [self.organization.slug]
-        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {str(token)}")
+        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {token!s}")
 
     def test_patch_organization_success(self):
         """Test updating an organization with valid data."""
@@ -143,6 +205,113 @@ class OrganizationMaintainerActionsTest(APITestCase):
         )
         self.assertEqual(response.status_code, 400)
 
+    def test_patch_organization_blank_contact_details(self):
+        """Contact details cannot be emptied out on an existing organization."""
+        url = reverse(
+            "portal_backend:organization-update", args=[self.organization.slug]
+        )
+        for field in ("contact_email", "contact_number"):
+            with self.subTest(field=field):
+                response = self.client.patch(url, {field: ""}, format="multipart")
+                self.assertEqual(response.status_code, 400)
+                self.assertIn(field, response.json())
+
+        self.organization.refresh_from_db()
+        self.assertEqual(self.organization.contact_email, "contact@test-name.com")
+        self.assertEqual(str(self.organization.contact_number), "+31612345678")
+
+    def test_detail_hides_contact_details_from_the_public(self):
+        """Contact details are verification data, and the form promises they
+        stay private - the detail view is AllowAny, so they cannot be part of
+        an anonymous response."""
+        url = reverse(
+            "portal_backend:organization-detail", args=[self.organization.slug]
+        )
+        response = APIClient().get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertNotIn("contact_email", response.json())
+        self.assertNotIn("contact_number", response.json())
+
+    def test_list_hides_contact_details_from_the_public(self):
+        """Same for the list view, which is AllowAny as well. The list only
+        shows organizations with a published Relying Party or Attestation
+        Provider, so give this one a Relying Party or the loop asserts nothing."""
+        trust_model = TrustModel.objects.create(
+            name="yivi", description="Trust Model Description"
+        )
+        yivi_tme = YiviTrustModelEnv.objects.create(
+            trust_model=trust_model,
+            environment="production",
+            timestamp_server="https://timestamp.example.com",
+            keyshare_server="https://keyshare.example.com",
+            keyshare_website="https://keyshare-website.example.com",
+            keyshare_attribute="test_keyshare_attribute",
+            contact_website="https://contact.example.com",
+            minimum_android_version="1.0",
+            minimum_ios_version="1.0",
+            description_en="Yivi environment description EN",
+            description_nl="Yivi environment description NL",
+            url="https://yivi.example.com",
+        )
+        RelyingParty.objects.create(
+            rp_slug="test-relying-party",
+            organization=self.organization,
+            yivi_tme=yivi_tme,
+            published=True,
+        )
+        url = reverse("portal_backend:organization-list")
+        response = APIClient().get(url)
+        self.assertEqual(response.status_code, 200)
+        results = response.json()["results"]
+        self.assertIn(self.organization.slug, [o["slug"] for o in results])
+        for organization in results:
+            self.assertNotIn("contact_email", organization)
+            self.assertNotIn("contact_number", organization)
+
+    def test_detail_shows_contact_details_to_its_maintainer(self):
+        """A maintainer needs them: the manage form prefills from this view."""
+        url = reverse(
+            "portal_backend:organization-detail", args=[self.organization.slug]
+        )
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["contact_email"], "contact@test-name.com")
+        self.assertEqual(response.json()["contact_number"], "+31612345678")
+
+    def test_detail_hides_contact_details_from_another_organizations_maintainer(self):
+        """Maintaining one organization does not expose another's details."""
+        other = Organization.objects.create(
+            name_en="Other Organization",
+            name_nl="Other Organization",
+            slug="other-name",
+            contact_email="contact@other-name.com",
+            contact_number="+31612345679",
+            logo=load_logo_if_exists(self.logo_path),
+            is_verified=True,
+        )
+        url = reverse("portal_backend:organization-detail", args=[other.slug])
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertNotIn("contact_email", response.json())
+        self.assertNotIn("contact_number", response.json())
+
+    def test_detail_shows_contact_details_to_an_admin(self):
+        """Admins review registrations, so they see every organization's."""
+        admin = User.objects.create_user(
+            email="admin@gmail.com", username="admin@gmail.com"
+        )
+        OrgUser.objects.create(email="admin@gmail.com", role="admin")
+        admin_client = APIClient()
+        admin_client.credentials(
+            HTTP_AUTHORIZATION=f"Bearer {AccessToken.for_user(admin)!s}"
+        )
+        url = reverse(
+            "portal_backend:organization-detail", args=[self.organization.slug]
+        )
+        response = admin_client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["contact_email"], "contact@test-name.com")
+
     def test_add_maintainer_created(self):
         """Test adding a maintainer to an organization."""
         url = reverse(
@@ -164,6 +333,37 @@ class OrganizationMaintainerActionsTest(APITestCase):
             mail.outbox[0].subject, "Yivi Portal - You have been added as a maintainer"
         )
 
+    def test_maintainers_list_exposes_uuid_not_integer_id(self):
+        """The maintainers list must expose the non-sequential UUID, never the integer pk."""
+        maintainer = OrgUser.objects.create(email="uuid@test.com", role="maintainer")
+        maintainer.organizations.add(self.organization)
+        url = reverse(
+            "portal_backend:organization-maintainers", args=[self.organization.slug]
+        )
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        listed = next(
+            item for item in response.json() if item["email"] == "uuid@test.com"
+        )
+        # id is the public UUID, not the auto-increment pk.
+        self.assertEqual(listed["id"], str(maintainer.public_id))
+        self.assertNotEqual(listed["id"], str(maintainer.pk))
+        self.assertNotIn("public_id", listed)
+
+    def test_delete_maintainer_by_integer_pk_not_found(self):
+        """The integer pk must not resolve a maintainer; only the public UUID works."""
+        maintainer = OrgUser.objects.create(email="bypk@test.com", role="maintainer")
+        maintainer.organizations.add(self.organization)
+        # Routing only accepts UUIDs, so the integer pk can never reach the view;
+        # a different (random) UUID must return 404 rather than delete by guessing.
+        url = reverse(
+            "portal_backend:organization-maintainers",
+            args=[self.organization.slug, uuid.uuid4()],
+        )
+        response = self.client.delete(url)
+        self.assertEqual(response.status_code, 404)
+        self.assertTrue(OrgUser.objects.filter(email="bypk@test.com").exists())
+
     def test_add_maintainer_invalid_email(self):
         """Test should fail when adding a maintainer with an invalid email."""
         url = reverse(
@@ -182,7 +382,7 @@ class OrganizationMaintainerActionsTest(APITestCase):
         maintainer.organizations.add(self.organization)
         url = reverse(
             "portal_backend:organization-maintainers",
-            args=[self.organization.slug, maintainer.id],
+            args=[self.organization.slug, maintainer.public_id],
         )
         response = self.client.delete(url)
         self.assertEqual(response.status_code, 200)
@@ -209,9 +409,25 @@ class OrganizationMaintainerActionsTest(APITestCase):
         maintainer.organizations.add(other_org)
         url = reverse(
             "portal_backend:organization-maintainers",
-            args=[other_org.slug, maintainer.id],
+            args=[other_org.slug, maintainer.public_id],
         )
         response = self.client.delete(url)
+        self.assertEqual(response.status_code, 403)
+
+    def test_patch_organization_missing_org_slugs_claim(self):
+        """Maintainer whose JWT lacks the organizationSlugs claim (e.g. an older
+        token issued before the claim existed) must be denied with 403, not crash
+        with a 500 from a TypeError on the None membership test."""
+        token = AccessToken.for_user(self.user)  # no organizationSlugs claim set
+        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {token!s}")
+        url = reverse(
+            "portal_backend:organization-update", args=[self.organization.slug]
+        )
+        response = self.client.patch(
+            url,
+            {"name_en": "Updated Name"},
+            format="multipart",
+        )
         self.assertEqual(response.status_code, 403)
 
     def test_patch_organization_rollback(self):
@@ -253,3 +469,46 @@ class OrganizationMaintainerActionsTest(APITestCase):
 
         self.assertEqual(response.status_code, 400)
         self.assertTrue(user.organizations.filter(slug=self.organization.slug).exists())
+
+    @override_settings(YIVI_PORTAL_URL="portal.yivi.app")
+    @patch("portal_backend.views.organization.EmailMessage.send")
+    def test_add_maintainer_created_mocked_email(self, mock_send):
+        """Happy path: maintainer is added and the notification email is sent."""
+        url = reverse(
+            "portal_backend:organization-maintainers", args=[self.organization.slug]
+        )
+        response = self.client.post(
+            url,
+            {"email": "mocked@gmail.com"},
+            format="json",
+        )
+        self.assertEqual(response.status_code, 201)
+        mock_send.assert_called_once()
+        self.assertTrue(
+            OrgUser.objects.filter(email="mocked@gmail.com", role="maintainer").exists()
+        )
+
+    @override_settings(YIVI_PORTAL_URL="portal.yivi.app")
+    @patch("portal_backend.views.organization.EmailMessage.send")
+    def test_add_maintainer_email_failure_returns_generic_error(self, mock_send):
+        """When sending the notification email fails, the response must return a
+        generic 500 error without leaking the exception detail, and the newly
+        created maintainer must be rolled back."""
+        secret_detail = "SMTP connection refused: super secret internal detail"
+        mock_send.side_effect = Exception(secret_detail)
+
+        url = reverse(
+            "portal_backend:organization-maintainers", args=[self.organization.slug]
+        )
+        response = self.client.post(
+            url,
+            {"email": "willfail@gmail.com"},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 500)
+        # Generic message only — the underlying exception must not be exposed.
+        self.assertEqual(response.data, {"error": "Failed to send email notification."})
+        self.assertNotIn(secret_detail, str(response.data))
+        # The transaction is rolled back, so the maintainer is not persisted.
+        self.assertFalse(OrgUser.objects.filter(email="willfail@gmail.com").exists())

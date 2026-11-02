@@ -1,7 +1,8 @@
-from .base import *  # noqa: F405, F403
 import os
 
-SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY")
+from .base import *  # noqa: F403
+
+SECRET_KEY = require_env("DJANGO_SECRET_KEY")  # noqa: F405
 
 DEBUG = False
 
@@ -27,9 +28,14 @@ DATABASES = {
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
-STATICFILES_STORAGE = (
-    "django.contrib.staticfiles.storage.ManifestStaticFilesStorage"  # Storage provider
-)
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.ManifestStaticFilesStorage",
+    },
+}
 
 # Static and Media Paths specific to production docker image
 STATIC_URL = os.environ.get("STATIC_URL")

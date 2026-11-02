@@ -42,7 +42,7 @@ export default function Login() {
       });
     });
 
-    return () => web.abort();
+    return () => web?.abort();
   }, [navigate, setAccessToken, location]);
 
   return (
@@ -59,7 +59,11 @@ export default function Login() {
         .
       </p>
 
-      <div id="yivi-web-form" className="mb-8 max-w-md w-full"></div>
+      <div
+        id="yivi-web-form"
+        data-testid="yivi-web-form"
+        className="mb-8 max-w-md w-full"
+      ></div>
       <p className="my-10 text-gray-600 text-start">
         Having trouble? Read our{" "}
         <a

@@ -23,13 +23,22 @@ const isTokenExpiring = (token: string): boolean => {
 
 const getValidAccessToken = async (): Promise<string | null> => {
   const { accessToken, refreshToken } = useStore.getState();
-  let token = accessToken;
 
-  if (!token || isTokenExpiring(token)) {
-    token = await refreshToken();
+  // The access token is kept in memory only - there is no localStorage
+  // fallback. On the very first request of a page load the store may still be
+  // empty; there is nothing to send and a refresh would be a guaranteed 401 for
+  // anonymous visitors, so the request goes out unauthenticated. The session of
+  // a returning user is restored separately by initializeAuth() via the
+  // HttpOnly refresh cookie.
+  if (!accessToken) {
+    return null;
   }
 
-  return token;
+  if (!isTokenExpiring(accessToken)) {
+    return accessToken;
+  }
+
+  return refreshToken();
 };
 
 axiosInstance.interceptors.request.use(

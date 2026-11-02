@@ -1,8 +1,10 @@
-import os
-import requests
 import logging
+import os
+
+import requests
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+
 from portal_backend.models.models import Organization, RelyingParty
 
 SLACK_WEBHOOK_URL = os.environ.get("SLACK_WEBHOOK_URL")
@@ -18,7 +20,7 @@ def notify_slack(text, webhook_url):
 def slack_notify_handler(input: str) -> None | Exception:
     try:
         notify_slack(input, SLACK_WEBHOOK_URL)
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         logger.warning(
             "Couldn't send Slack notification for organization creation due to an error: %s",
             e,
