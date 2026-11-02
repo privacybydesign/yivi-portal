@@ -8,6 +8,7 @@ import type { RelyingParty } from "@/models/relying-party";
 import type { AttestationProvider } from "@/models/attestationprovider";
 import { toast } from "sonner";
 import { AlertTriangle } from "lucide-react";
+import { PageContainer } from "@/components/layout/PageContainer";
 
 export default function OrganizationPage() {
   const params = useParams();
@@ -26,7 +27,7 @@ export default function OrganizationPage() {
       try {
         // Fetch organization details
         const orgResponse = await axiosInstance.get(
-          `/v1/organizations/${organizationSlug}/`
+          `/v1/organizations/${organizationSlug}/`,
         );
         setOrganization(orgResponse.data);
 
@@ -35,7 +36,7 @@ export default function OrganizationPage() {
         toast.error(
           `Failed to load organization details: ${
             error instanceof Error ? error.message : String(error)
-          }`
+          }`,
         );
         setLoading(false);
       }
@@ -51,7 +52,7 @@ export default function OrganizationPage() {
       setLoadingRpDetails(true);
 
       const listResponse = await axiosInstance.get(
-        `/v1/yivi/organizations/${organizationSlug}/relying-party/`
+        `/v1/yivi/organizations/${organizationSlug}/relying-party/`,
       );
 
       const rpList: RelyingParty[] = listResponse.data.relying_parties;
@@ -61,7 +62,7 @@ export default function OrganizationPage() {
       for (const rp of rpList) {
         try {
           const detailResponse = await axiosInstance.get(
-            `/v1/yivi/organizations/${organizationSlug}/relying-party/${rp.environment}/${rp.rp_slug}/`
+            `/v1/yivi/organizations/${organizationSlug}/relying-party/${rp.environment}/${rp.rp_slug}/`,
           );
           const rpData = detailResponse.data;
           rpData.environment = rp.environment;
@@ -71,7 +72,7 @@ export default function OrganizationPage() {
           toast.error(
             `Failed to fetch details for ${rp.rp_slug} relying party: ${
               error instanceof Error ? error.message : String(error)
-            }`
+            }`,
           );
         }
       }
@@ -81,7 +82,7 @@ export default function OrganizationPage() {
       toast.error(
         `Failed to load relying parties for this organization: ${
           error instanceof Error ? error.message : String(error)
-        }`
+        }`,
       );
     } finally {
       setLoadingRpDetails(false);
@@ -111,7 +112,7 @@ export default function OrganizationPage() {
 
       // Step 1: Get list of AP slugs and environments
       const listResponse = await axiosInstance.get(
-        `/v1/yivi/organizations/${organizationSlug}/attestation-provider/`
+        `/v1/yivi/organizations/${organizationSlug}/attestation-provider/`,
       );
 
       const apList: Pick<AttestationProvider, "ap_slug" | "environment">[] =
@@ -123,7 +124,7 @@ export default function OrganizationPage() {
       for (const ap of apList) {
         try {
           const detailResponse = await axiosInstance.get(
-            `/v1/yivi/organizations/${organizationSlug}/attestation-provider/${ap.environment}/${ap.ap_slug}/`
+            `/v1/yivi/organizations/${organizationSlug}/attestation-provider/${ap.environment}/${ap.ap_slug}/`,
           );
           const apData = detailResponse.data;
           apData.environment = ap.environment;
@@ -132,7 +133,7 @@ export default function OrganizationPage() {
           toast.error(
             `Failed to fetch details for ${ap.ap_slug} attestation provider: ${
               error instanceof Error ? error.message : String(error)
-            }`
+            }`,
           );
         }
       }
@@ -142,7 +143,7 @@ export default function OrganizationPage() {
       toast.error(
         `Failed to load attestation providers for this organization: ${
           error as string
-        }`
+        }`,
       );
     } finally {
       setLoadingApDetails(false);
@@ -206,7 +207,7 @@ export default function OrganizationPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <PageContainer className="py-8">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
         <div className="flex items-center gap-4">
           {organization.logo && (
@@ -237,7 +238,7 @@ export default function OrganizationPage() {
                     >
                       {tm.name}
                     </span>
-                  )
+                  ),
               )}
             </div>
           </div>
@@ -431,7 +432,7 @@ export default function OrganizationPage() {
                         </div>
                       </CardContent>
                     </Card>
-                  )
+                  ),
               )
             ) : (
               <div className="text-gray-600">
@@ -441,6 +442,6 @@ export default function OrganizationPage() {
           </CardContent>
         </Card>
       )}
-    </div>
+    </PageContainer>
   );
 }

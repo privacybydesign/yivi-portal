@@ -21,12 +21,13 @@ import {
   TooltipContent,
 } from "@/components/ui/tooltip";
 import { Info } from "lucide-react";
+import { PageContainer } from "@/components/layout/PageContainer";
 
 export default function OrganizationsListPage() {
   const [searchParams, setSearchParams] = useSearchParams();
 
   const [searchQuery, setSearchQuery] = useState(
-    searchParams.get("search") || ""
+    searchParams.get("search") || "",
   );
   const [APSelected, setAPSelected] = useState(false);
   const [RPSelected, setRPSelected] = useState(false);
@@ -123,7 +124,7 @@ export default function OrganizationsListPage() {
   const applyFilters = (
     searchQuery: string,
     selectAPs: boolean,
-    selectRPs: boolean
+    selectRPs: boolean,
   ) => {
     updateQueryParams({
       page: "1",
@@ -197,299 +198,305 @@ export default function OrganizationsListPage() {
   };
 
   return (
-    <div className="container mx-auto p-4 bg-white shadow-md rounded-lg">
-      <div className="flex flex-col gap-2 mb-6">
-        <div className="flex justify-between items-start">
-          <div>
-            <h1 className="text-2xl font-bold">Organizations</h1>
-          </div>
-        </div>
-
-        <div className="mb-4">
-          In the Yivi ecosystem, organizations play one of two roles: they
-          either provide identity attributes or consume them. The list below
-          includes both Attestation Providers and Relying Parties — some
-          organizations may serve as both. You can filter by role or search by
-          name. Learn more about how Yivi works{" "}
-          <a
-            href="https://docs.yivi.app/what-is-yivi"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-blue-600 hover:underline"
-          >
-            here
-          </a>
-          .
-        </div>
-
-        <div className="border rounded-md p-2 mb-4">
-          <h2 className="text-lg font-medium mb-4">Filters</h2>
-
-          <div className="grid grid-cols-1 gap-4 mb-4">
+    <PageContainer>
+      <div className="p-6 bg-white shadow-md rounded-lg">
+        <div className="flex flex-col gap-2 mb-6">
+          <div className="flex justify-between items-start">
             <div>
-              <label
-                htmlFor="search"
-                className="block text-sm font-medium mb-1"
-              >
-                Search
-              </label>
-              <input
-                id="search"
-                type="text"
-                placeholder="Search organizations..."
-                className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                value={searchQuery}
-                onChange={(e) => handleSearch(e.target.value)}
-                onKeyDown={(e) =>
-                  e.key === "Enter" &&
-                  applyFilters(searchQuery, APSelected, RPSelected)
-                }
-              />
+              <h1 className="text-2xl font-bold">Organizations</h1>
             </div>
           </div>
 
-          <div className="flex flex-wrap gap-6 mb-4">
-            <div className="flex items-center space-x-2 p-2 rounded hover:bg-gray-100">
-              <Checkbox
-                id="isAP"
-                checked={APSelected}
-                onCheckedChange={() =>
-                  handleFilterChange(!APSelected, RPSelected)
-                }
-              />
-              <label
-                htmlFor="isAP"
-                className="text-sm font-medium leading-none cursor-pointer"
-                onClick={() => handleFilterChange(!APSelected, RPSelected)}
-              >
-                Attestation Provider
-              </label>
+          <div className="mb-4">
+            In the Yivi ecosystem, organizations play one of two roles: they
+            either provide identity attributes or consume them. The list below
+            includes both Attestation Providers and Relying Parties — some
+            organizations may serve as both. You can filter by role or search by
+            name. Learn more about how Yivi works{" "}
+            <a
+              href="https://docs.yivi.app/what-is-yivi"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-600 hover:underline"
+            >
+              here
+            </a>
+            .
+          </div>
+
+          <div className="border rounded-md p-2 mb-4">
+            <h2 className="text-lg font-medium mb-4">Filters</h2>
+
+            <div className="grid grid-cols-1 gap-4 mb-4">
+              <div>
+                <label
+                  htmlFor="search"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Search
+                </label>
+                <input
+                  id="search"
+                  type="text"
+                  placeholder="Search organizations..."
+                  className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  value={searchQuery}
+                  onChange={(e) => handleSearch(e.target.value)}
+                  onKeyDown={(e) =>
+                    e.key === "Enter" &&
+                    applyFilters(searchQuery, APSelected, RPSelected)
+                  }
+                />
+              </div>
             </div>
 
-            <div className="flex items-center space-x-2 p-2 rounded hover:bg-gray-100">
-              <Checkbox
-                id="isRP"
-                checked={RPSelected}
-                onCheckedChange={() =>
-                  handleFilterChange(APSelected, !RPSelected)
-                }
-              />
-              <label
-                htmlFor="isRP"
-                className="text-sm font-medium leading-none cursor-pointer"
-                onClick={() => handleFilterChange(APSelected, !RPSelected)}
-              >
-                Relying Party
-              </label>
+            <div className="flex flex-wrap gap-6 mb-4">
+              <div className="flex items-center space-x-2 p-2 rounded hover:bg-gray-100">
+                <Checkbox
+                  id="isAP"
+                  checked={APSelected}
+                  onCheckedChange={() =>
+                    handleFilterChange(!APSelected, RPSelected)
+                  }
+                />
+                <label
+                  htmlFor="isAP"
+                  className="text-sm font-medium leading-none cursor-pointer"
+                  onClick={() => handleFilterChange(!APSelected, RPSelected)}
+                >
+                  Attestation Provider
+                </label>
+              </div>
+
+              <div className="flex items-center space-x-2 p-2 rounded hover:bg-gray-100">
+                <Checkbox
+                  id="isRP"
+                  checked={RPSelected}
+                  onCheckedChange={() =>
+                    handleFilterChange(APSelected, !RPSelected)
+                  }
+                />
+                <label
+                  htmlFor="isRP"
+                  className="text-sm font-medium leading-none cursor-pointer"
+                  onClick={() => handleFilterChange(APSelected, !RPSelected)}
+                >
+                  Relying Party
+                </label>
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <Table>
-        <TableCaption>
-          {!loading && (
-            <>
-              Showing {totalCount > 0 ? getVisibleRange().start : 0} to{" "}
-              {getVisibleRange().end} of {totalCount} organizations
-              {totalPages > 1 && ` (Page ${currentPage} of ${totalPages})`}
-            </>
-          )}
-        </TableCaption>
-        <TableHeader>
-          <TableRow>
-            <TableHead className="w-16">Logo</TableHead>
-            <TableHead>Name</TableHead>
-            <TableHead>
-              Trust Model{" "}
-              <Tooltip>
-                {" "}
-                <TooltipTrigger asChild>
-                  <div className="ml-1 inline-flex items-center justify-center w-4 h-4 rounded-full bg-gray-200 text-gray-600 cursor-pointer">
-                    <Info className="w-3 h-3" />
-                  </div>
-                </TooltipTrigger>
-                <TooltipContent side="top">
-                  <p className="text-sm text-justify">
-                    The trust model indicates the scheme under which this
-                    organization holds a valid credential. Currently, only the
-                    privacy-first Yivi trust model is supported. Support for an
-                    EUDI-compliant trust model will be added in the future. Read
-                    more
-                    <a
-                      href="https://docs.yivi.app/blog/2025-eudi-wallet-roadmap"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-600 hover:underline"
-                    >
-                      {" "}
-                      here
-                    </a>
-                  </p>
-                </TooltipContent>
-              </Tooltip>{" "}
-            </TableHead>
-            <TableHead>
-              AP
-              <Tooltip>
-                {" "}
-                <TooltipTrigger asChild>
-                  <div className="ml-1 inline-flex items-center justify-center w-4 h-4 rounded-full bg-gray-200 text-gray-600 cursor-pointer">
-                    <Info className="w-3 h-3" />
-                  </div>
-                </TooltipTrigger>
-                <TooltipContent side="top" className="max-w-xs">
-                  <p className="text-sm">
-                    Also known as attestation provider, or an issuer
-                  </p>
-                </TooltipContent>
-              </Tooltip>{" "}
-            </TableHead>
-            <TableHead>
-              RP{" "}
-              <Tooltip>
-                {" "}
-                <TooltipTrigger asChild>
-                  <div className="ml-1 inline-flex items-center justify-center w-4 h-4 rounded-full bg-gray-200 text-gray-600 cursor-pointer">
-                    <Info className="w-3 h-3" />
-                  </div>
-                </TooltipTrigger>
-                <TooltipContent side="top" className="max-w-xs">
-                  <p className="text-sm">
-                    Also known as a relying party, or a verifier
-                  </p>
-                </TooltipContent>
-              </Tooltip>{" "}
-            </TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {loading ? (
+        <Table>
+          <TableCaption>
+            {!loading && (
+              <>
+                Showing {totalCount > 0 ? getVisibleRange().start : 0} to{" "}
+                {getVisibleRange().end} of {totalCount} organizations
+                {totalPages > 1 && ` (Page ${currentPage} of ${totalPages})`}
+              </>
+            )}
+          </TableCaption>
+          <TableHeader>
             <TableRow>
-              <TableCell colSpan={5} className="text-center py-4 text-gray-500">
-                Loading organizations...
-              </TableCell>
-            </TableRow>
-          ) : (
-            <>
-              {organizations.length > 0 ? (
-                organizations.map((org) => (
-                  <TableRow key={org.id}>
-                    <TableCell>
-                      {org.logo ? (
-                        <div className="relative h-8 w-8 rounded-full overflow-hidden border border-gray-200">
-                          <img
-                            src={`${apiEndpoint}${org.logo}`}
-                            width={32}
-                            height={32}
-                            alt={`${org.name_en} logo`}
-                            className="object-cover w-full h-full"
-                            onError={(e) => {
-                              e.currentTarget.src = "/logo-placeholder.svg";
-                            }}
-                          />
-                        </div>
-                      ) : (
-                        <div className="h-8 w-8 rounded-full bg-gray-100 flex items-center justify-center">
-                          <span className="text-gray-500 text-sm font-medium">
-                            {org.name_en.charAt(0)}
-                          </span>
-                        </div>
-                      )}
-                    </TableCell>
-                    <TableCell className="font-medium">
-                      <Link
-                        to={`/organizations/${org.slug}`}
-                        className="hover:text-blue-600"
+              <TableHead className="w-16">Logo</TableHead>
+              <TableHead>Name</TableHead>
+              <TableHead>
+                Trust Model{" "}
+                <Tooltip>
+                  {" "}
+                  <TooltipTrigger asChild>
+                    <div className="ml-1 inline-flex items-center justify-center w-4 h-4 rounded-full bg-gray-200 text-gray-600 cursor-pointer">
+                      <Info className="w-3 h-3" />
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent side="top">
+                    <p className="text-sm text-justify">
+                      The trust model indicates the scheme under which this
+                      organization holds a valid credential. Currently, only the
+                      privacy-first Yivi trust model is supported. Support for
+                      an EUDI-compliant trust model will be added in the future.
+                      Read more
+                      <a
+                        href="https://docs.yivi.app/blog/2025-eudi-wallet-roadmap"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:underline"
                       >
-                        {org.name_en}
-                      </Link>
-                    </TableCell>
-                    <TableCell>
-                      {org.trust_models?.map((tm) => tm.name).join(", ") || "-"}
-                    </TableCell>
-                    <TableCell>
-                      {org.is_AP === true ? (
-                        <Badge variant={"default"}>Yes</Badge>
-                      ) : (
-                        <Badge variant="outline">No</Badge>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      {org.is_RP === true ? (
-                        <Badge variant="default">Yes</Badge>
-                      ) : (
-                        <Badge variant="outline">No</Badge>
-                      )}
+                        {" "}
+                        here
+                      </a>
+                    </p>
+                  </TooltipContent>
+                </Tooltip>{" "}
+              </TableHead>
+              <TableHead>
+                AP
+                <Tooltip>
+                  {" "}
+                  <TooltipTrigger asChild>
+                    <div className="ml-1 inline-flex items-center justify-center w-4 h-4 rounded-full bg-gray-200 text-gray-600 cursor-pointer">
+                      <Info className="w-3 h-3" />
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent side="top" className="max-w-xs">
+                    <p className="text-sm">
+                      Also known as attestation provider, or an issuer
+                    </p>
+                  </TooltipContent>
+                </Tooltip>{" "}
+              </TableHead>
+              <TableHead>
+                RP{" "}
+                <Tooltip>
+                  {" "}
+                  <TooltipTrigger asChild>
+                    <div className="ml-1 inline-flex items-center justify-center w-4 h-4 rounded-full bg-gray-200 text-gray-600 cursor-pointer">
+                      <Info className="w-3 h-3" />
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent side="top" className="max-w-xs">
+                    <p className="text-sm">
+                      Also known as a relying party, or a verifier
+                    </p>
+                  </TooltipContent>
+                </Tooltip>{" "}
+              </TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {loading ? (
+              <TableRow>
+                <TableCell
+                  colSpan={5}
+                  className="text-center py-4 text-gray-500"
+                >
+                  Loading organizations...
+                </TableCell>
+              </TableRow>
+            ) : (
+              <>
+                {organizations.length > 0 ? (
+                  organizations.map((org) => (
+                    <TableRow key={org.id}>
+                      <TableCell>
+                        {org.logo ? (
+                          <div className="relative h-8 w-8 rounded-full overflow-hidden border border-gray-200">
+                            <img
+                              src={`${apiEndpoint}${org.logo}`}
+                              width={32}
+                              height={32}
+                              alt={`${org.name_en} logo`}
+                              className="object-cover w-full h-full"
+                              onError={(e) => {
+                                e.currentTarget.src = "/logo-placeholder.svg";
+                              }}
+                            />
+                          </div>
+                        ) : (
+                          <div className="h-8 w-8 rounded-full bg-gray-100 flex items-center justify-center">
+                            <span className="text-gray-500 text-sm font-medium">
+                              {org.name_en.charAt(0)}
+                            </span>
+                          </div>
+                        )}
+                      </TableCell>
+                      <TableCell className="font-medium">
+                        <Link
+                          to={`/organizations/${org.slug}`}
+                          className="hover:text-blue-600"
+                        >
+                          {org.name_en}
+                        </Link>
+                      </TableCell>
+                      <TableCell>
+                        {org.trust_models?.map((tm) => tm.name).join(", ") ||
+                          "-"}
+                      </TableCell>
+                      <TableCell>
+                        {org.is_AP === true ? (
+                          <Badge variant={"default"}>Yes</Badge>
+                        ) : (
+                          <Badge variant="outline">No</Badge>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {org.is_RP === true ? (
+                          <Badge variant="default">Yes</Badge>
+                        ) : (
+                          <Badge variant="outline">No</Badge>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell
+                      colSpan={5}
+                      className="text-center py-4 text-gray-500"
+                    >
+                      No organizations found matching your criteria
                     </TableCell>
                   </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell
-                    colSpan={5}
-                    className="text-center py-4 text-gray-500"
-                  >
-                    No organizations found matching your criteria
-                  </TableCell>
-                </TableRow>
-              )}
-            </>
-          )}
-        </TableBody>
-      </Table>
+                )}
+              </>
+            )}
+          </TableBody>
+        </Table>
 
-      {/* Pagination controls */}
-      {totalPages > 1 && (
-        <div className="flex justify-between items-center mt-6">
-          <div className="text-sm text-gray-500">
-            Showing {totalCount > 0 ? getVisibleRange().start : 0} to{" "}
-            {getVisibleRange().end} of {totalCount} organizations
-          </div>
+        {/* Pagination controls */}
+        {totalPages > 1 && (
+          <div className="flex justify-between items-center mt-6">
+            <div className="text-sm text-gray-500">
+              Showing {totalCount > 0 ? getVisibleRange().start : 0} to{" "}
+              {getVisibleRange().end} of {totalCount} organizations
+            </div>
 
-          <div className="flex-1 flex justify-center">
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handlePageChange(currentPage - 1)}
-                disabled={currentPage === 1 || loading}
-              >
-                Previous
-              </Button>
-
-              {getPageNumbers().map((page, index) => (
+            <div className="flex-1 flex justify-center">
+              <div className="flex gap-2">
                 <Button
-                  key={index}
-                  variant={page === currentPage ? "default" : "outline"}
+                  variant="outline"
                   size="sm"
-                  onClick={() =>
-                    typeof page === "number" && handlePageChange(page)
-                  }
-                  disabled={typeof page !== "number" || loading}
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 1 || loading}
                 >
-                  {page}
+                  Previous
                 </Button>
-              ))}
 
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handlePageChange(currentPage + 1)}
-                disabled={currentPage === totalPages || loading}
-              >
-                Next
-              </Button>
+                {getPageNumbers().map((page, index) => (
+                  <Button
+                    key={index}
+                    variant={page === currentPage ? "default" : "outline"}
+                    size="sm"
+                    onClick={() =>
+                      typeof page === "number" && handlePageChange(page)
+                    }
+                    disabled={typeof page !== "number" || loading}
+                  >
+                    {page}
+                  </Button>
+                ))}
+
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage === totalPages || loading}
+                >
+                  Next
+                </Button>
+              </div>
+            </div>
+
+            <div className="invisible text-sm text-gray-500">
+              {/* This invisible element helps maintain the layout balance */}
+              Showing {totalCount > 0 ? getVisibleRange().start : 0} to{" "}
+              {getVisibleRange().end} of {totalCount} organizations
             </div>
           </div>
-
-          <div className="invisible text-sm text-gray-500">
-            {/* This invisible element helps maintain the layout balance */}
-            Showing {totalCount > 0 ? getVisibleRange().start : 0} to{" "}
-            {getVisibleRange().end} of {totalCount} organizations
-          </div>
-        </div>
-      )}
-    </div>
+        )}
+      </div>
+    </PageContainer>
   );
 }
