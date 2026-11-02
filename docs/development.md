@@ -77,8 +77,12 @@ callers are in `.github/workflows/`.
 ## Admin login
 
 - The Django admin asks for a Yivi disclosure of the account's email after the
-  password (`yivi_portal/admin_site.py`). The widget it uses,
-  `portal_backend/static/admin_yivi/yivi.js`, is the checked-in browser bundle of
-  `@privacybydesign/yivi-frontend` 1.0.4, so the admin runs no third-party
-  script. After bumping that package in `portal_spa`, copy its
-  `dist/yivi.js` over it.
+  password (`yivi_portal/admin_site.py`). The widget it uses, `admin_yivi/yivi.js`,
+  is not checked in: `YIVI_FRONTEND_DIST` in `settings/base.py` serves it from
+  `portal_spa/node_modules/@privacybydesign/yivi-frontend/dist`, so the admin and
+  the SPA always run the version `portal_spa/package-lock.json` pins, and the
+  admin still loads no script from a third-party origin. Running the backend
+  outside Docker therefore needs an `npm ci` in `portal_spa` first, or the admin
+  page loads without its widget (Django warns `staticfiles.W004` at startup).
+  `Dockerfile.django` installs the package in a `node` build stage, which is why
+  `.dockerignore` lets `portal_spa/package.json` and `package-lock.json` through.

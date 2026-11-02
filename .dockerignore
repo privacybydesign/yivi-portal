@@ -4,6 +4,8 @@
 .ropeproject/
 .vscode/
 portal_spa/
+!portal_spa/package.json
+!portal_spa/package-lock.json
 assets/
 
 .DS_Store
