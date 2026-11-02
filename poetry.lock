@@ -606,18 +606,18 @@ Django = ">=3.2"
 
 [[package]]
 name = "django-phonenumber-field"
-version = "8.5.0"
+version = "9.0.0"
 description = "An international phone number field for django models."
 optional = false
-python-versions = ">=3.10"
+python-versions = ">=3.11"
 groups = ["main"]
 files = [
-    {file = "django_phonenumber_field-8.5.0-py3-none-any.whl", hash = "sha256:a6dd71250f7fd0724aad995df01bdb4ac457a65622f120d0d623792fe8283798"},
-    {file = "django_phonenumber_field-8.5.0.tar.gz", hash = "sha256:19c606fda7bb25630c4913f7ac83c1824186ea17e2e4c6dc9aa9373e8f5843c5"},
+    {file = "django_phonenumber_field-9.0.0-py3-none-any.whl", hash = "sha256:53731bf139ba82004aff6087ccdd55f8ba5c4e11c623557cc1873eeed46eba2a"},
+    {file = "django_phonenumber_field-9.0.0.tar.gz", hash = "sha256:b4a641fc8ae3fdec7aeaf28e3af92bb8d36aefad085b955420807de7e8d37abe"},
 ]
 
 [package.dependencies]
-Django = ">=4.2"
+Django = ">=5.2"
 phonenumberslite = {version = ">=7.0.2", optional = true, markers = "extra == \"phonenumberslite\""}
 
 [package.extras]
@@ -1705,4 +1705,4 @@ test = ["pytest", "pytest-cov"]
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.12"
-content-hash = "057449e53b3ca09bf7466295b2f0c0544be495aac965c47f7928276d46b0c120"
+content-hash = "be6c47228771ee7ff84da210b2c830a0359028cbbc8f1337503998806badab79"
