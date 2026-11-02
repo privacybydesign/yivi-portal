@@ -16,6 +16,7 @@ import { useForm } from "react-hook-form";
 import { updateOrganization } from "@/actions/manage-organization";
 import type { Organization } from "@/models/organization";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 import OrganizationNameFields from "./child-components/OrganizationNameFields";
 import LogoUpload from "./child-components/LogoUpload";
 import ContactField from "./child-components/ContactField";
@@ -71,6 +72,23 @@ export default function OrganizationForm({
       navigate(formState.redirectTo);
     }
   }, [formState?.success, formState?.redirectTo, navigate]);
+
+  // Every submit yields a new form state, so compare by identity to confirm
+  // each save exactly once, also when the same details are saved twice. A new
+  // registration needs no toast: it moves on to the organization's own page.
+  const confirmedState = useRef<RegistrationFormState | null>(null);
+  useEffect(() => {
+    if (
+      organization &&
+      formState?.success &&
+      formState !== confirmedState.current
+    ) {
+      confirmedState.current = formState;
+      toast.success("Saved", {
+        description: "Your organization's details have been saved.",
+      });
+    }
+  }, [formState, organization]);
 
   const form = useForm<RegistrationInputs>({
     defaultValues: defaultFormInput,

@@ -104,8 +104,12 @@ export default function Header() {
           {email ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="relative h-8 w-8 rounded">
-                  <Avatar className="h-9 w-9">
+                <Button
+                  variant="ghost"
+                  aria-label="Account menu"
+                  className="relative size-9 cursor-pointer rounded-full p-0 transition-shadow hover:ring-2 hover:ring-ring/50 data-[state=open]:ring-2 data-[state=open]:ring-ring"
+                >
+                  <Avatar className="size-9">
                     <AvatarImage
                       src={`data:image/svg+xml;utf8,${encodeURIComponent(svg)}`}
                       alt="User Avatar"

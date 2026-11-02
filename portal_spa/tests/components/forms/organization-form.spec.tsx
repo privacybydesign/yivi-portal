@@ -4,6 +4,8 @@ import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import OrganizationForm from "@/components/forms/organization/OrganizationForm";
 import { axiosInstance } from "@/services/axiosInstance";
+import type { Organization } from "@/models/organization";
+import { toast } from "sonner";
 
 const form = () => (
   <MemoryRouter>
@@ -108,4 +110,74 @@ it("submits the form data once the contact details are filled in", async () => {
   expect(formData.get("contact_number")).toContain("6 12345678");
 
   post.mockRestore();
+});
+
+const existingOrganization: Organization = {
+  id: "1",
+  name_en: "Test Org",
+  name_nl: "Test Org",
+  slug: "test-org",
+  street: "Main Street",
+  house_number: "1",
+  postal_code: "1234AB",
+  country: "NL",
+  city: "Nijmegen",
+  is_verified: true,
+  logo: "/assets/logo.png",
+  created_at: "2026-01-01T00:00:00Z",
+  last_updated_at: "2026-01-01T00:00:00Z",
+  is_RP: true,
+  is_AP: false,
+  verification_status: "verified",
+  contact_email: "contact@test-org.example",
+  contact_number: "+31612345678",
+};
+
+const manageForm = () => (
+  <MemoryRouter>
+    <OrganizationForm
+      organization={existingOrganization}
+      pendingButtonLabel="Saving..."
+      submitButtonLabel="Save"
+    />
+  </MemoryRouter>
+);
+
+it("confirms each save of an existing organization", async () => {
+  const success = vi.spyOn(toast, "success");
+  const patch = vi.spyOn(axiosInstance, "patch").mockResolvedValue({});
+
+  render(manageForm());
+  const save = () =>
+    userEvent.click(screen.getByRole("button", { name: "Save" }));
+
+  await save();
+  await waitFor(() => expect(success).toHaveBeenCalledTimes(1));
+  expect(patch).toHaveBeenCalledWith(
+    "/v1/organizations/test-org/update/",
+    expect.any(FormData),
+  );
+
+  // A second save is confirmed again, not only the first.
+  await save();
+  await waitFor(() => expect(success).toHaveBeenCalledTimes(2));
+
+  patch.mockRestore();
+  success.mockRestore();
+});
+
+it("does not confirm a save the API rejected", async () => {
+  const success = vi.spyOn(toast, "success");
+  const patch = vi
+    .spyOn(axiosInstance, "patch")
+    .mockRejectedValue(new Error("network down"));
+
+  render(manageForm());
+  await userEvent.click(screen.getByRole("button", { name: "Save" }));
+
+  expect(await screen.findByText("Something went wrong.")).toBeInTheDocument();
+  expect(success).not.toHaveBeenCalled();
+
+  patch.mockRestore();
+  success.mockRestore();
 });
