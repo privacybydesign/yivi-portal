@@ -1,6 +1,6 @@
 import { render } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import "@testing-library/jest-dom";
+import "@testing-library/jest-dom/vitest";
 import { BrowserRouter } from "react-router-dom";
 import type React from "react";
 import crypto from "node:crypto";
