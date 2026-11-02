@@ -1,5 +1,6 @@
 import { afterEach, expect, it, vi } from "vitest";
 import { render, screen, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import UsageManagePage from "@/pages/UsageManagePage";
 import { OrganizationContext } from "@/contexts/organization/OrganizationContext";
@@ -113,4 +114,45 @@ it("offers no key registration before the organization is verified", async () =>
   ).toBeInTheDocument();
   expect(screen.queryByRole("button", { name: "Register key" })).toBeNull();
   expect(get).not.toHaveBeenCalledWith("/v1/organizations/webshop/usage-keys/");
+});
+
+it("does not call a verified organization unverified when it fails to load", async () => {
+  vi.spyOn(axiosInstance, "get").mockRejectedValue(new Error("network down"));
+  vi.spyOn(console, "error").mockImplementation(() => {});
+
+  renderPage();
+
+  expect(
+    await screen.findByText(/organization could not be loaded/),
+  ).toBeInTheDocument();
+  expect(
+    screen.queryByText(/becomes available once your organization is verified/),
+  ).toBeNull();
+});
+
+it("clears a period's load error once another period loads", async () => {
+  vi.useFakeTimers({ toFake: ["Date"] });
+  vi.setSystemTime(new Date(2026, 10, 2, 12));
+  const get = mockApi(true);
+  const failOnce = get.getMockImplementation()!;
+  get.mockImplementation(async (url: string, config?: unknown) => {
+    const params = (config as { params?: { from: string } } | undefined)
+      ?.params;
+    if (
+      url === "/v1/organizations/webshop/usage/" &&
+      params?.from === "2026-11-01"
+    ) {
+      throw new Error("500");
+    }
+    return failOnce(url, config as never);
+  });
+
+  renderPage();
+
+  expect(
+    await screen.findByText(/Usage could not be loaded/),
+  ).toBeInTheDocument();
+  await userEvent.click(screen.getByRole("button", { name: "Previous month" }));
+  expect(await screen.findByText("Total in October 2026")).toBeInTheDocument();
+  expect(screen.queryByText(/Usage could not be loaded/)).toBeNull();
 });

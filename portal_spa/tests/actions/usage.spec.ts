@@ -103,4 +103,9 @@ describe("niceAxis", () => {
     expect(niceAxis(3)).toEqual([0, 1, 2, 3, 4]);
     expect(niceAxis(0)).toEqual([0, 1, 2, 3, 4]);
   });
+
+  it("keeps whole-number steps for whole-number counts", () => {
+    expect(niceAxis(10)).toEqual([0, 3, 6, 9, 12]);
+    expect(niceAxis(9)).toEqual([0, 3, 6, 9, 12]);
+  });
 });

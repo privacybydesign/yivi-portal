@@ -95,20 +95,32 @@ export default function UsageManagePage() {
     currentPeriod("month"),
   );
   const [summary, setSummary] = useState<UsageSummary | null>(null);
-  const [loadError, setLoadError] = useState(false);
+  // Separate flags, so a period that loads clears only its own error.
+  const [organizationError, setOrganizationError] = useState(false);
+  const [keysError, setKeysError] = useState(false);
+  const [usageError, setUsageError] = useState(false);
 
   useEffect(() => {
     if (!slug) return;
-    fetchOrganization(slug).then((response) =>
-      setVerified(response?.data?.is_verified === true),
-    );
+    // fetchOrganization answers undefined on any error; that says nothing
+    // about verification, so only a real response sets `verified`.
+    fetchOrganization(slug).then((response) => {
+      if (response?.data) {
+        setVerified(response.data.is_verified === true);
+      } else {
+        setOrganizationError(true);
+      }
+    });
   }, [slug]);
 
   const loadKeys = useCallback(() => {
     if (!slug) return;
     fetchUsageKeys(slug)
-      .then(setKeys)
-      .catch(() => setLoadError(true));
+      .then((data) => {
+        setKeys(data);
+        setKeysError(false);
+      })
+      .catch(() => setKeysError(true));
   }, [slug]);
 
   useEffect(() => {
@@ -119,9 +131,10 @@ export default function UsageManagePage() {
     if (!slug || !verified) return;
     let current = true;
     setSummary(null);
+    setUsageError(false);
     fetchUsageSummary(slug, period)
       .then((data) => current && setSummary(data))
-      .catch(() => current && setLoadError(true));
+      .catch(() => current && setUsageError(true));
     return () => {
       current = false;
     };
@@ -142,7 +155,13 @@ export default function UsageManagePage() {
         </div>
         <Separator />
 
-        {verified === null && <p>Loading...</p>}
+        {organizationError && (
+          <p className="text-sm font-medium text-red-600">
+            The organization could not be loaded. Please try again later.
+          </p>
+        )}
+
+        {verified === null && !organizationError && <p>Loading...</p>}
 
         {verified === false && (
           <p className="rounded-lg border border-yellow-200 bg-yellow-50 p-4 text-sm text-yellow-900">
@@ -153,12 +172,6 @@ export default function UsageManagePage() {
 
         {verified && slug && (
           <>
-            {loadError && (
-              <p className="text-sm font-medium text-red-600">
-                Usage could not be loaded. Please try again later.
-              </p>
-            )}
-
             <section
               className="space-y-4"
               aria-labelledby="verifications-heading"
@@ -182,6 +195,12 @@ export default function UsageManagePage() {
                 </p>
               </div>
 
+              {usageError && (
+                <p className="text-sm font-medium text-red-600">
+                  Usage could not be loaded. Please try again later.
+                </p>
+              )}
+
               {summary ? (
                 <VerificationsChart
                   buckets={buckets}
@@ -190,7 +209,9 @@ export default function UsageManagePage() {
                   } in ${periodLabel(period)}`}
                 />
               ) : (
-                <div className="h-56 animate-pulse rounded-lg bg-muted" />
+                !usageError && (
+                  <div className="h-56 animate-pulse rounded-lg bg-muted" />
+                )
               )}
 
               {incomplete && (
@@ -203,6 +224,11 @@ export default function UsageManagePage() {
 
             <Separator />
 
+            {keysError && (
+              <p className="text-sm font-medium text-red-600">
+                The usage keys could not be loaded. Please try again later.
+              </p>
+            )}
             <UsageKeys slug={slug} keys={keys} onChange={loadKeys} />
           </>
         )}
