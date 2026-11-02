@@ -1,6 +1,8 @@
 from typing import ClassVar
 
+from django import forms
 from django.contrib import admin
+from django.core.exceptions import ValidationError
 
 from portal_backend.models.models import (
     AttestationProvider,
@@ -156,8 +158,32 @@ class UserAdmin(admin.ModelAdmin):
         return ", ".join([org.slug for org in obj.organizations.all()])
 
 
+class UsageServerKeyForm(forms.ModelForm):
+    """Checks the key before save, so a bad or duplicate key is a form error, not a 500.
+
+    The thumbprint is read-only in the admin, so its uniqueness is checked here.
+    """
+
+    class Meta:
+        model = UsageServerKey
+        fields = ("organization", "label", "public_key_pem", "deactivated_at")
+
+    def clean_public_key_pem(self):
+        try:
+            key = usage.public_key_from_pem(self.cleaned_data["public_key_pem"])
+        except ValueError as e:
+            raise ValidationError(str(e)) from e
+        duplicates = UsageServerKey.objects.filter(thumbprint=usage.thumbprint(key))
+        if not self.instance._state.adding:
+            duplicates = duplicates.exclude(pk=self.instance.pk)
+        if duplicates.exists():
+            raise ValidationError("This key is already registered.")
+        return usage.pem_from_public_key(key)
+
+
 @admin.register(UsageServerKey)
 class UsageServerKeyAdmin(admin.ModelAdmin):
+    form = UsageServerKeyForm
     list_display = (
         "organization",
         "label",

@@ -98,12 +98,11 @@ def jwk_from_public_key(key: ec.EllipticCurvePublicKey) -> dict:
     }
 
 
-def public_key_from_jwk(jwk: dict) -> ec.EllipticCurvePublicKey:
-    if (
-        not isinstance(jwk, dict)
-        or jwk.get("kty") != "EC"
-        or jwk.get("crv") != "P-256"
-    ):
+def public_key_from_jwk(jwk) -> ec.EllipticCurvePublicKey:
+    # The jwk comes straight from a request's protected header, so it can be any JSON value.
+    if not isinstance(jwk, dict):
+        raise UsageProblem(400, PROBLEM_MALFORMED, "Invalid JWK")
+    if jwk.get("kty") != "EC" or jwk.get("crv") != "P-256":
         raise UsageProblem(
             400, PROBLEM_BAD_SIGNATURE, "Only EC P-256 keys are supported"
         )
@@ -124,12 +123,17 @@ def thumbprint(key: ec.EllipticCurvePublicKey) -> str:
     return b64encode(hashlib.sha256(canonical.encode()).digest())
 
 
+def pem_from_public_key(key: ec.EllipticCurvePublicKey) -> str:
+    """The key's canonical PEM, without whatever else was pasted around it."""
+    return key.public_bytes(
+        serialization.Encoding.PEM, serialization.PublicFormat.SubjectPublicKeyInfo
+    ).decode()
+
+
 def register_key(organization, public_key_pem: str, label: str = "") -> UsageServerKey:
     """Registers a server's public key for an organization. Raises ValueError for a bad key."""
     key = public_key_from_pem(public_key_pem)
-    pem = key.public_bytes(
-        serialization.Encoding.PEM, serialization.PublicFormat.SubjectPublicKeyInfo
-    ).decode()
+    pem = pem_from_public_key(key)
     # A savepoint, so a duplicate key (IntegrityError) leaves the request's transaction usable.
     with transaction.atomic():
         return UsageServerKey.objects.create(
@@ -342,6 +346,29 @@ def store_report(server_key: UsageServerKey, payload: dict) -> tuple[UsageReport
     return report, True
 
 
+# A run's missing sequence numbers are listed up to this many; missing_count has the total.
+MAX_LISTED_MISSING = 100
+
+
+def _missing_sequences(sequences: list[int]) -> tuple[list[int], int]:
+    """The first MAX_LISTED_MISSING missing numbers in 1..max(sequences), and how many are missing.
+
+    A server picks its own sequence numbers, so the cost follows the number of reports,
+    never the size of the highest number.
+    """
+    listed: list[int] = []
+    count = 0
+    previous = 0
+    for sequence in sorted(set(sequences)):
+        gap_start, gap_end = previous + 1, sequence
+        count += gap_end - gap_start
+        room = MAX_LISTED_MISSING - len(listed)
+        if room > 0:
+            listed.extend(range(gap_start, min(gap_end, gap_start + room)))
+        previous = sequence
+    return listed, count
+
+
 def find_gaps(reports) -> list[dict]:
     """Lists runs whose reports may be incomplete: a missing sequence number, or no final report.
 
@@ -353,16 +380,16 @@ def find_gaps(reports) -> list[dict]:
         runs.setdefault((report.server_key_id, report.run_id), []).append(report)
     gaps = []
     for (_, run_id), run in runs.items():
-        sequences = sorted(r.sequence for r in run)
-        missing = sorted(set(range(1, sequences[-1] + 1)) - set(sequences))
+        missing, missing_count = _missing_sequences([r.sequence for r in run])
         final = any(r.final for r in run)
-        if missing or not final:
+        if missing_count or not final:
             last = max(run, key=lambda r: r.sequence)
             gaps.append(
                 {
                     "server_instance": last.server_instance,
                     "run_id": run_id,
                     "missing_sequences": missing,
+                    "missing_count": missing_count,
                     "final": final,
                     "last_report_at": last.period_to,
                 }

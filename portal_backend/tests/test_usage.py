@@ -12,6 +12,7 @@ from django.urls import reverse
 from rest_framework.test import APIClient
 from rest_framework_simplejwt.tokens import AccessToken  # type: ignore
 
+from portal_backend.admin import UsageServerKeyForm
 from portal_backend.models.models import Organization, UsageReport, UsageServerKey
 from portal_backend.models.models import User as OrgUser
 from portal_backend.services import usage
@@ -87,11 +88,15 @@ class UsageServer:
         self.test.assertEqual(response.status_code, 200)
         return response["Replay-Nonce"]
 
-    def jws(self, url: str, payload: dict, nonce=None, kid=None, key=None) -> str:
+    def jws(
+        self, url: str, payload: dict, nonce=None, kid=None, key=None, jwk=None
+    ) -> str:
         key = key or self.key
         protected = {"alg": "ES256", "nonce": nonce or self.nonce(), "url": url}
         if kid:
             protected["kid"] = kid
+        elif jwk is not None:
+            protected["jwk"] = jwk
         else:
             protected["jwk"] = usage.jwk_from_public_key(key.public_key())
         signing_input = (
@@ -223,6 +228,17 @@ class UsageApiTest(TestCase):
         self.assertEqual(response.json()["type"], PROBLEM + "malformed")
         self.assertFalse(UsageReport.objects.exists())
 
+    def test_jwk_that_is_not_an_object_is_malformed(self):
+        path = reverse("portal_backend:usage-new-account")
+        for jwk in ("abc", [1], 5, True):
+            with self.subTest(jwk=jwk):
+                body = self.server.jws(
+                    f"http://testserver{path}", {"onlyReturnExisting": True}, jwk=jwk
+                )
+                response = self.server.post(path, body)
+                self.assertEqual(response.status_code, 400)
+                self.assertEqual(response.json()["type"], PROBLEM + "malformed")
+
     def test_thumbprint_matches_rfc7638(self):
         # RFC 7638 section 3.1 example key, which is RSA; the EC computation follows the same
         # rule: the required members, lexicographic order, no whitespace.
@@ -331,6 +347,52 @@ class UsageMaintainerApiTest(TestCase):
             reverse("portal_backend:usage-summary", args=["webshop"])
         )
         self.assertEqual(response.data["gaps"], [])
+
+    def test_huge_sequence_lists_a_bounded_number_of_gaps(self):
+        # store_report accepts any sequence >= 1, so a server can claim a huge one.
+        # Listing the gaps must cost in proportion to the reports, not to that number.
+        usage.register_key(self.organization, public_pem(self.server.key))
+        self.server.lookup_account()
+        self.server.send_report(make_report("r1", 1))
+        self.server.send_report(make_report("r2", 10**15))
+
+        response = self.api.get(
+            reverse("portal_backend:usage-summary", args=["webshop"])
+        )
+        gap = response.data["gaps"][0]
+        self.assertEqual(gap["missing_count"], 10**15 - 2)
+        self.assertEqual(len(gap["missing_sequences"]), usage.MAX_LISTED_MISSING)
+        self.assertEqual(gap["missing_sequences"][:2], [2, 3])
+
+
+class UsageServerKeyAdminFormTest(TestCase):
+    """The admin is where keys are registered for now; a bad key is a form error, not a 500."""
+
+    def setUp(self):
+        self.organization = Organization.objects.create(
+            name_en="Webshop", name_nl="Webwinkel", slug="webshop"
+        )
+
+    def form(self, pem):
+        return UsageServerKeyForm(
+            data={"organization": self.organization.pk, "public_key_pem": pem}
+        )
+
+    def test_unparseable_pem_is_a_form_error(self):
+        form = self.form("not a key")
+        self.assertFalse(form.is_valid())
+        self.assertIn("public_key_pem", form.errors)
+
+    def test_already_registered_key_is_a_form_error(self):
+        key = ec.generate_private_key(ec.SECP256R1())
+        usage.register_key(self.organization, public_pem(key))
+        form = self.form(public_pem(key))
+        self.assertFalse(form.is_valid())
+        self.assertIn("public_key_pem", form.errors)
+
+    def test_new_key_is_valid(self):
+        form = self.form(public_pem(ec.generate_private_key(ec.SECP256R1())))
+        self.assertTrue(form.is_valid(), form.errors)
 
 
 class RegisterUsageKeyCommandTest(TestCase):
