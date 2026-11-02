@@ -9,6 +9,7 @@ from django.contrib.auth import get_user_model
 from django.core.management import call_command
 from django.test import TestCase
 from django.urls import reverse
+from django.utils import timezone
 from rest_framework.test import APIClient
 from rest_framework_simplejwt.tokens import AccessToken  # type: ignore
 
@@ -421,3 +422,62 @@ class RegisterUsageKeyCommandTest(TestCase):
         self.assertEqual(
             UsageServerKey.objects.get().thumbprint, usage.thumbprint(key.public_key())
         )
+
+
+class UsageAdminChartTest(TestCase):
+    """The usage key's admin page shows its successful verifications and runs."""
+
+    def setUp(self):
+        from yivi_portal.admin_site import VERIFIED_SESSION_KEY
+
+        organization = Organization.objects.create(
+            name_en="Webshop", name_nl="Webwinkel", slug="webshop", is_verified=True
+        )
+        self.key = usage.register_key(
+            organization, public_pem(ec.generate_private_key(ec.SECP256R1()))
+        )
+        usage.store_report(self.key, make_report("r1", 1))
+        usage.store_report(self.key, make_report("r3", 3, final=True))
+        admin_user = get_user_model().objects.create_superuser(
+            username="admin@yivi.app", email="admin@yivi.app", password="x"
+        )
+        self.client.force_login(admin_user)
+        session = self.client.session
+        session[VERIFIED_SESSION_KEY] = str(admin_user.pk)
+        session.save()
+        self.url = reverse(
+            "admin:portal_backend_usageserverkey_change", args=[self.key.pk]
+        )
+
+    def test_counts_only_completed_disclosures_per_day(self):
+        days = usage.daily_verifications(self.key.reports.all(), 2026, 10)
+        self.assertEqual(len(days), 31)
+        # make_report has 12 done disclosure sessions on the 29th; two reports.
+        self.assertEqual(days[28]["count"], 24)
+        self.assertEqual(sum(d["count"] for d in days), 24)
+
+    def test_change_page_shows_the_month_and_the_runs(self):
+        response = self.client.get(self.url, {"month": "2026-10"})
+        self.assertEqual(response.status_code, 200)
+        chart = response.context["usage"]
+        self.assertEqual(chart["total"], 24)
+        self.assertEqual(chart["previous_month"], "2026-09")
+        self.assertEqual([t["value"] for t in chart["ticks"]], [0, 10, 20, 30, 40])
+        self.assertContains(response, "Successful verifications")
+        self.assertContains(response, "29 October 2026: 24")
+        self.assertContains(response, "<strong>24</strong>", html=False)
+
+        [run] = chart["runs"]
+        self.assertEqual(run["reports"], 2)
+        self.assertEqual(run["missing_count"], 1)
+        self.assertTrue(run["final"])
+
+    def test_month_defaults_to_the_current_one(self):
+        today = timezone.localdate()
+        for month in ("", "nonsense", "2026-13", "9999-01", "99999999999-01"):
+            with self.subTest(month=month):
+                response = self.client.get(self.url, {"month": month})
+                self.assertEqual(response.status_code, 200)
+                shown = response.context["usage"]["month"]
+                self.assertEqual((shown.year, shown.month), (today.year, today.month))
+                self.assertIsNone(response.context["usage"]["next_month"])
