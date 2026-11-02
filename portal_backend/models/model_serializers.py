@@ -1,6 +1,8 @@
 from typing import ClassVar
 
+from django.utils.functional import cached_property
 from django_countries.serializers import CountryFieldMixin  # type: ignore
+from phonenumber_field.serializerfields import PhoneNumberField  # type: ignore
 from rest_framework import serializers
 
 from .models import (
@@ -42,6 +44,8 @@ class OrganizationSerializer(CountryFieldMixin, serializers.ModelSerializer):
     postal_code = serializers.CharField(required=True, allow_blank=False)
     city = serializers.CharField(required=True, allow_blank=False)
     country = serializers.CharField(required=True)
+    contact_number = PhoneNumberField(required=True, allow_blank=False)
+    contact_email = serializers.EmailField(required=True, allow_blank=False)
 
     class Meta:
         model = Organization
@@ -58,6 +62,7 @@ class OrganizationSerializer(CountryFieldMixin, serializers.ModelSerializer):
             "is_AP",
             "trust_models",
             "contact_number",
+            "contact_email",
             "country",
             "house_number",
             "street",
@@ -65,6 +70,44 @@ class OrganizationSerializer(CountryFieldMixin, serializers.ModelSerializer):
             "city",
         ]
         read_only_fields: ClassVar[list] = ["is_verified"]
+
+    # Contact details are collected for verification and are promised not to be
+    # public, while the list and detail views are AllowAny. Serialize them only
+    # for a maintainer of this organization, or for an admin.
+    CONTACT_FIELDS: ClassVar[list] = ["contact_number", "contact_email"]
+
+    def to_representation(self, instance: Organization) -> dict:
+        data = super().to_representation(instance)
+
+        if not self._may_see_contact_details(instance):
+            for field in self.CONTACT_FIELDS:
+                data.pop(field, None)
+
+        return data
+
+    def _may_see_contact_details(self, instance: Organization) -> bool:
+        if self._requesting_user is None:
+            return False
+        if self._requesting_user.role == "admin":
+            return True
+        return instance.pk in self._maintained_organization_ids
+
+    @cached_property
+    def _requesting_user(self) -> User | None:
+        """The portal user behind the request, if the request is authenticated."""
+        user = getattr(self.context.get("request"), "user", None)
+        if user is None or not user.is_authenticated:
+            return None
+        return User.objects.filter(email=user.email).first()
+
+    @cached_property
+    def _maintained_organization_ids(self) -> frozenset:
+        """Cached on the serializer, so a paginated list stays one query."""
+        if self._requesting_user is None:
+            return frozenset()
+        return frozenset(
+            self._requesting_user.organizations.values_list("pk", flat=True)
+        )
 
 
 class RelyingPartyHostnameSerializer(serializers.ModelSerializer):

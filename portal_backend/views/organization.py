@@ -77,7 +77,9 @@ class OrganizationListView(APIView):
         paginator = LimitOffsetPagination()
         paginator.default_limit = 20
         result_page = paginator.paginate_queryset(orgs, request)
-        serializer = OrganizationSerializer(result_page, many=True)
+        serializer = OrganizationSerializer(
+            result_page, many=True, context={"request": request}
+        )
         return paginator.get_paginated_response(serializer.data)
 
 
@@ -105,7 +107,7 @@ class OrganizationDetailView(APIView):
                 status=status.HTTP_404_NOT_FOUND,
             )
 
-        serializer = OrganizationSerializer(org)
+        serializer = OrganizationSerializer(org, context={"request": request})
         return Response(serializer.data)
 
 
