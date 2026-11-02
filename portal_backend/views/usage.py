@@ -185,6 +185,12 @@ class UsageServerKeysView(APIView):
     def post(self, request: Request, org_slug: str) -> Response:
         """Registers the public key a Yivi server prints with `irma server usage-key`."""
         organization = get_object_or_404(Organization, slug=org_slug)
+        if not organization.is_verified:
+            # Usage is only collected for organizations Yivi has verified.
+            return Response(
+                {"error": "The organization must be verified to register usage keys"},
+                status=status.HTTP_403_FORBIDDEN,
+            )
         public_key_pem = request.data.get("public_key_pem", "")
         label = request.data.get("label", "")
         if not isinstance(public_key_pem, str) or not isinstance(label, str):

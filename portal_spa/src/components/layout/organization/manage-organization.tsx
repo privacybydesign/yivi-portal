@@ -19,6 +19,7 @@ const menuItems = [
     href: "/organizations/:organization/manage/attestation-providers",
     title: "Attestation providers",
   },
+  { href: "/organizations/:organization/manage/usage", title: "Usage" },
 ];
 
 interface ManageOrganizationLayoutProps {
