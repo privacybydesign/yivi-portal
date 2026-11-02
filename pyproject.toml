@@ -7,7 +7,7 @@ authors = ["Job Doesburg <job.doesburg@gmail.com>"]
 [tool.poetry.dependencies]
 python = "^3.12"
 django = "^6.0"
-django-phonenumber-field= {extras = ["phonenumberslite"], version = "^8.1.0"}
+django-phonenumber-field= {extras = ["phonenumberslite"], version = ">=8.1,<10.0"}
 dnspython = "^2.8.0"
 httpx = "^0.28.0"
 cryptography = ">=49,<51"
