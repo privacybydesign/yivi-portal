@@ -15,36 +15,44 @@ import { X } from "lucide-react";
 import { useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 
+/** The organization's maintainers, or none after telling the user it failed. */
+const loadMaintainers = async (
+  organisationSlug: string,
+): Promise<Maintainer[]> => {
+  try {
+    const response = await fetchMaintainersForOrganization(organisationSlug);
+    return response?.data ?? [];
+  } catch (e: unknown) {
+    toast.error("Something went wrong", {
+      description:
+        e instanceof AxiosError
+          ? e.message
+          : "Please try again at a later time.",
+    });
+    console.error(e);
+    return [];
+  }
+};
+
 export default function MaintainerManagePage() {
   const slug = useParams()?.organization;
   const [maintainers, setMaintainers] = useState<Maintainer[]>([]);
   const [organization, setOrganization] = useState<Organization>();
 
-  const refreshMaintersForOrganization = async (organisationSlug: string) => {
-    try {
-      const response = await fetchMaintainersForOrganization(organisationSlug);
-      setMaintainers(response?.data ?? []);
-    } catch (e: unknown) {
-      setMaintainers([]);
-
-      toast.error("Something went wrong", {
-        description:
-          e instanceof AxiosError
-            ? e.message
-            : "Please try again at a later time.",
-      });
-
-      console.error(e);
-    }
-  };
+  const refreshMaintersForOrganization = (organisationSlug: string) =>
+    loadMaintainers(organisationSlug).then(setMaintainers);
 
   useEffect(() => {
-    if (slug) {
-      fetchOrganization(slug as string).then((response) =>
-        setOrganization(response?.data),
-      );
-      refreshMaintersForOrganization(slug as string);
-    }
+    if (!slug) return;
+    // State is only set from the callbacks, and not for a slug left behind.
+    let current = true;
+    fetchOrganization(slug).then(
+      (response) => current && setOrganization(response?.data),
+    );
+    loadMaintainers(slug).then((list) => current && setMaintainers(list));
+    return () => {
+      current = false;
+    };
   }, [slug]);
 
   const deleteMaintainer = async (maintainer: Maintainer) => {

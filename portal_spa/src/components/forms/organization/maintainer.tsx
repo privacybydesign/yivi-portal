@@ -41,17 +41,33 @@ export default function AddOrganizationMaintainerInformationForm({
   } as MaintainerRegistrationInputs);
   const [modalIsOpen, setModalIsOpen] = useState(false);
 
-  const [formState, formSubmit, pending] = useActionState<
-    RegistrationFormState,
-    FormData
-  >(addMaintainerForOrganization, {
-    values: defaultFormInput,
-    errors: {},
-  });
-
   const form = useForm<MaintainerRegistrationInputs>({
     defaultValues: defaultFormInput,
   });
+
+  const [formState, formSubmit, pending] = useActionState<
+    RegistrationFormState,
+    FormData
+  >(
+    // Success is handled when the action completes, so nothing has to react
+    // to a success flag left in the state when the dialog opens again.
+    async (previous, formData) => {
+      const next = await addMaintainerForOrganization(previous, formData);
+      if (next.success) {
+        setModalIsOpen(false);
+        onCreate(organization.slug);
+        toast.success("Success", {
+          description: "The user was created and added to this organization.",
+        });
+        form.reset();
+      }
+      return next;
+    },
+    {
+      values: defaultFormInput,
+      errors: {},
+    },
+  );
 
   useEffect(() => {
     form.clearErrors();
@@ -67,21 +83,6 @@ export default function AddOrganizationMaintainerInformationForm({
       });
     }
   }, [formState?.errors, form]);
-
-  useEffect(() => {
-    if (formState.success) {
-      setModalIsOpen(false);
-      onCreate(organization.slug);
-
-      toast.success("Success", {
-        description: "The user was created and added to this organization.",
-      });
-
-      // Will prevent the dialog from closing directly when opened again.
-      formState.success = false;
-      form.reset();
-    }
-  }, [form, formState, organization, onCreate]);
 
   return (
     <Dialog open={modalIsOpen} onOpenChange={setModalIsOpen}>

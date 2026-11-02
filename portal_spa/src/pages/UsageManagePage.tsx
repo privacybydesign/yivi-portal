@@ -87,6 +87,9 @@ function PeriodControls({
   );
 }
 
+const usageKey = (slug: string, period: UsagePeriod) =>
+  `${slug}|${period.kind}|${period.year}|${period.month}`;
+
 export default function UsageManagePage() {
   const { organization: slug } = useParams<{ organization: string }>();
   const [verified, setVerified] = useState<boolean | null>(null);
@@ -94,11 +97,15 @@ export default function UsageManagePage() {
   const [period, setPeriod] = useState<UsagePeriod>(() =>
     currentPeriod("month"),
   );
-  const [summary, setSummary] = useState<UsageSummary | null>(null);
-  // Separate flags, so a period that loads clears only its own error.
+  // The last answer for a period, with the period it belongs to: a period
+  // without one is still loading, and a new period drops an old error.
+  const [usageResult, setUsageResult] = useState<{
+    key: string;
+    summary: UsageSummary | null;
+  } | null>(null);
+  // The usage error lives with its result below; these two are page-wide.
   const [organizationError, setOrganizationError] = useState(false);
   const [keysError, setKeysError] = useState(false);
-  const [usageError, setUsageError] = useState(false);
 
   useEffect(() => {
     if (!slug) return;
@@ -130,15 +137,19 @@ export default function UsageManagePage() {
   useEffect(() => {
     if (!slug || !verified) return;
     let current = true;
-    setSummary(null);
-    setUsageError(false);
+    const key = usageKey(slug, period);
     fetchUsageSummary(slug, period)
-      .then((data) => current && setSummary(data))
-      .catch(() => current && setUsageError(true));
+      .then((data) => current && setUsageResult({ key, summary: data }))
+      .catch(() => current && setUsageResult({ key, summary: null }));
     return () => {
       current = false;
     };
   }, [slug, verified, period]);
+
+  const result =
+    slug && usageResult?.key === usageKey(slug, period) ? usageResult : null;
+  const summary = result?.summary ?? null;
+  const usageError = result !== null && result.summary === null;
 
   const buckets = summary ? verificationBuckets(summary.sessions, period) : [];
   const total = buckets.reduce((sum, b) => sum + b.count, 0);

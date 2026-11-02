@@ -22,6 +22,28 @@ type FetchRelyingPartiesResponse = {
   relying_parties: RelyingParty[];
 };
 
+type LoadedRelyingParties =
+  { relyingParties: RelyingParty[] } | { error: string };
+
+/** The organization's relying parties, production before demo. */
+const loadRelyingParties = async (
+  organizationSlug: string,
+): Promise<LoadedRelyingParties> => {
+  const result = await fetchAllRelyingParties(organizationSlug);
+  if (!result.success) {
+    return { error: result.globalError || "Could not load relying parties." };
+  }
+  const { relying_parties } = result.data as FetchRelyingPartiesResponse;
+  const order = { production: 0, demo: 1 };
+  return {
+    relyingParties: [...(relying_parties || [])].sort(
+      (a, b) =>
+        order[a.environment as keyof typeof order] -
+        order[b.environment as keyof typeof order],
+    ),
+  };
+};
+
 export default function RelyingPartyListEdit() {
   const params = useParams();
   const organizationSlug = params?.organization as string;
@@ -36,29 +58,22 @@ export default function RelyingPartyListEdit() {
   const [deleting, setDeleting] = useState<string | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState<string | null>(null);
 
+  const applyLoaded = useCallback((loaded: LoadedRelyingParties) => {
+    if ("error" in loaded) {
+      setGlobalError(loaded.error);
+    } else {
+      setRelyingParties(loaded.relyingParties);
+    }
+  }, []);
+
+  // A refresh after a change: an event, so it may show the loading state first.
   const fetchData = useCallback(async () => {
     if (!organizationSlug) return;
-
     setLoading(true);
-    const result = await fetchAllRelyingParties(organizationSlug);
+    const loaded = await loadRelyingParties(organizationSlug);
     setLoading(false);
-
-    if (!result.success) {
-      setGlobalError(result.globalError || "Could not load relying parties.");
-      return;
-    }
-
-    const { relying_parties } = result.data as FetchRelyingPartiesResponse;
-
-    const order = { production: 0, demo: 1 };
-    const sorted = [...(relying_parties || [])].sort(
-      (a, b) =>
-        order[a.environment as keyof typeof order] -
-        order[b.environment as keyof typeof order],
-    );
-
-    setRelyingParties(sorted);
-  }, [organizationSlug]);
+    applyLoaded(loaded);
+  }, [organizationSlug, applyLoaded]);
 
   useEffect(() => {
     if (globalError) {
@@ -69,8 +84,19 @@ export default function RelyingPartyListEdit() {
   }, [globalError]);
 
   useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+    if (!organizationSlug) return;
+    // State is only set from the callback, and not for a slug left behind.
+    let current = true;
+    loadRelyingParties(organizationSlug).then((loaded) => {
+      if (current) {
+        setLoading(false);
+        applyLoaded(loaded);
+      }
+    });
+    return () => {
+      current = false;
+    };
+  }, [organizationSlug, applyLoaded]);
 
   const handleEdit = async (slug: string) => {
     const rp = relyingParties.find((r) => r.rp_slug === slug);

@@ -26,67 +26,72 @@ import { PageContainer } from "@/components/layout/PageContainer";
 export default function OrganizationsListPage() {
   const [searchParams, setSearchParams] = useSearchParams();
 
-  const [searchQuery, setSearchQuery] = useState(
-    searchParams.get("search") || "",
-  );
-  const [APSelected, setAPSelected] = useState(false);
-  const [RPSelected, setRPSelected] = useState(false);
-  const [currentPage, setCurrentPage] = useState(() => {
-    const page = searchParams.get("page");
-    return page ? parseInt(page) : 1;
-  });
-
-  const [organizations, setOrganizations] = useState<Organization[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  // Pagination state
-  const [totalCount, setTotalCount] = useState(0);
-  const [totalPages, setTotalPages] = useState(1);
   const pageSize = 20; // Fixed page size
 
-  // Function to fetch organizations with pagination
-  const fetchOrganizations = ({
-    page,
-    searchQuery,
-    ap,
-    rp,
-  }: {
-    page: number;
-    searchQuery: string;
-    trustModel: string;
-    ap: boolean;
-    rp: boolean;
-  }) => {
-    setLoading(true);
-    const offset = (page - 1) * pageSize;
+  // The URL is the single source of the filters and the page.
+  const currentPage = parseInt(searchParams.get("page") || "1");
+  const search = searchParams.get("search") || "";
+  const APSelected = searchParams.get("ap") === "true";
+  const RPSelected = searchParams.get("rp") === "true";
 
-    // Base URL with pagination
+  // The search box keeps what is typed, and follows the URL when it changes
+  // from elsewhere (back and forward, a link).
+  // https://react.dev/learn/you-might-not-need-an-effect#adjusting-some-state-when-a-prop-changes
+  const [searchQuery, setSearchQuery] = useState(search);
+  const [shownSearch, setShownSearch] = useState(search);
+  if (search !== shownSearch) {
+    setShownSearch(search);
+    setSearchQuery(search);
+  }
+
+  // The last response, with the query it answers: the page is loading while
+  // that is not the current query, and keeps showing the previous results.
+  const query = `${currentPage}|${search.trim()}|${APSelected}|${RPSelected}`;
+  const [loaded, setLoaded] = useState<{
+    query: string;
+    organizations: Organization[];
+    count: number;
+  } | null>(null);
+  const loading = loaded?.query !== query;
+  const organizations = loaded?.organizations ?? [];
+  const totalCount = loaded?.count ?? 0;
+  const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
+
+  useEffect(() => {
+    const offset = (currentPage - 1) * pageSize;
     let url = `${apiEndpoint}/v1/organizations/?limit=${pageSize}&offset=${offset}`;
-
-    // Add search if present
-    if (searchQuery && searchQuery.trim() !== "") {
-      url += `&search=${encodeURIComponent(searchQuery.trim())}`;
+    if (search.trim() !== "") {
+      url += `&search=${encodeURIComponent(search.trim())}`;
     }
+    url += `&rp=${RPSelected}&ap=${APSelected}`;
 
-    url += `&rp=${rp}`;
-    url += `&ap=${ap}`;
-
+    let current = true;
     axiosInstance
       .get<PaginationResponse<Organization>>(url)
       .then((response) => {
-        const data = response.data;
-
-        setTotalCount(data.count);
-        setTotalPages(Math.ceil(data.count / pageSize));
-        setOrganizations(data.results);
-
-        setLoading(false);
+        if (current) {
+          setLoaded({
+            query,
+            organizations: response.data.results,
+            count: response.data.count,
+          });
+        }
       })
       .catch((error) => {
         console.error("Error fetching organizations:", error);
-        setLoading(false);
+        // Stop loading, and keep showing what was there.
+        if (current) {
+          setLoaded((previous) => ({
+            query,
+            organizations: previous?.organizations ?? [],
+            count: previous?.count ?? 0,
+          }));
+        }
       });
-  };
+    return () => {
+      current = false;
+    };
+  }, [query, currentPage, search, APSelected, RPSelected]);
 
   const updateQueryParams = (params: Record<string, string | undefined>) => {
     const newParams = new URLSearchParams(searchParams.toString());
@@ -99,26 +104,6 @@ export default function OrganizationsListPage() {
     });
     setSearchParams(newParams);
   };
-
-  useEffect(() => {
-    const page = parseInt(searchParams.get("page") || "1");
-    const search = searchParams.get("search") || "";
-    const trustModel = searchParams.get("trust_model") || "all";
-    const selectAPs = searchParams.get("ap") === "true";
-    const selectRPs = searchParams.get("rp") === "true";
-    setSearchQuery(search);
-    setAPSelected(selectAPs);
-    setRPSelected(selectRPs);
-    setCurrentPage(page);
-
-    fetchOrganizations({
-      page,
-      searchQuery: search,
-      trustModel,
-      ap: selectAPs,
-      rp: selectRPs,
-    });
-  }, [searchParams]);
 
   // Function to apply filters
   const applyFilters = (
@@ -138,7 +123,6 @@ export default function OrganizationsListPage() {
     applyFilters(searchQuery, ap, rp);
   };
 
-  // Handle search input change with debounce to stop rapid call to API
   const handleSearch = (value: string) => {
     setSearchQuery(value);
     applyFilters(value, APSelected, RPSelected);
@@ -147,7 +131,6 @@ export default function OrganizationsListPage() {
   // Handle page change
   const handlePageChange = (newPage: number) => {
     if (newPage > 0 && newPage <= totalPages) {
-      setCurrentPage(newPage);
       updateQueryParams({ page: newPage.toString() });
     }
   };

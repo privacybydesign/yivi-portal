@@ -25,7 +25,6 @@ export type RegistrationFormState = {
   globalError?: string;
   success?: boolean;
   redirectTo?: string | undefined;
-  cachedLogo?: File | null;
 };
 
 const updateClaims = async () => {
@@ -40,7 +39,11 @@ const updateClaims = async () => {
   return accessToken;
 };
 
-const addCachedLogoToFormData = (
+/**
+ * Adds the logo picked earlier when the file input is empty: the input loses
+ * its file when the form re-renders, so the form keeps the picked one aside.
+ */
+export const addCachedLogoToFormData = (
   formData: FormData,
   cachedLogo: File | undefined | null
 ): void => {
@@ -71,7 +74,6 @@ export const updateOrganization = async (
     formData.delete("logo");
   }
 
-  addCachedLogoToFormData(formData, formState.cachedLogo ?? undefined);
 
   try {
     await axiosInstance.patch(
@@ -122,7 +124,6 @@ export const registerOrganization = async (
   formData: FormData
 ): Promise<RegistrationFormState> => {
   try {
-    addCachedLogoToFormData(formData, formState.cachedLogo ?? undefined);
 
     await axiosInstance.post("/v1/organizations/create/", formData);
     const slug = formData.get("slug") as string;

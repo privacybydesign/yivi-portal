@@ -7,7 +7,10 @@ import {
 } from "react";
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
-import { registerOrganization } from "@/actions/manage-organization";
+import {
+  addCachedLogoToFormData,
+  registerOrganization,
+} from "@/actions/manage-organization";
 import type {
   RegistrationFormState,
   RegistrationInputs,
@@ -56,14 +59,7 @@ export default function OrganizationForm({
   >(organization ? updateOrganization : registerOrganization, {
     values: defaultFormInput,
     errors: {},
-    cachedLogo,
   });
-
-  useEffect(() => {
-    if (formState && formState.cachedLogo !== cachedLogo) {
-      formState.cachedLogo = cachedLogo;
-    }
-  }, [cachedLogo, formState]);
 
   // Navigating from the render body re-runs the render it was called from, so
   // the redirect after a successful submit belongs in an effect.
@@ -94,17 +90,17 @@ export default function OrganizationForm({
     defaultValues: defaultFormInput,
   });
 
-  const formRef = useRef<HTMLFormElement>(null);
-
   // The action is dispatched by hand instead of through the form's `action`
   // attribute: react-hook-form validates asynchronously, so a React action
   // would already be on its way before the required contact details are
   // checked. handleSubmit blocks the submit event itself and only calls back
   // once every field passes, and the API still receives the multipart
   // FormData of the form element (the logo is a file).
-  const handleSubmit = form.handleSubmit(() => {
-    if (formRef.current) {
-      const formData = new FormData(formRef.current);
+  const handleSubmit = form.handleSubmit((_, event) => {
+    const formElement = event?.target;
+    if (formElement instanceof HTMLFormElement) {
+      const formData = new FormData(formElement);
+      addCachedLogoToFormData(formData, cachedLogo);
       // Dispatching outside a transition leaves `pending` stuck on false.
       startTransition(() => formSubmit(formData));
     }
@@ -132,7 +128,6 @@ export default function OrganizationForm({
   return (
     <Form {...form}>
       <form
-        ref={formRef}
         onSubmit={handleSubmit}
         // Field errors are rendered inline, so keep the browser from stepping
         // in front of them with its own bubbles for type="email" and friends.
