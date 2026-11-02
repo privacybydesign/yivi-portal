@@ -1,6 +1,6 @@
 # The admin's Yivi widget comes from the SPA's npm dependency, at the version
 # its lockfile pins; see YIVI_FRONTEND_DIST in yivi_portal/settings/base.py.
-FROM node:22-alpine AS yivi-frontend
+FROM node:25-alpine AS yivi-frontend
 WORKDIR /spa
 COPY portal_spa/package.json portal_spa/package-lock.json ./
 RUN npm ci --omit=dev --ignore-scripts --no-audit --no-fund
