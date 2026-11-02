@@ -43,3 +43,21 @@ class ProductionSettingsTest(SimpleTestCase):
             "silk.middleware.SilkyMiddleware",
             production.MIDDLEWARE,
         )
+
+
+class AdminYiviStaticTest(SimpleTestCase):
+    """The admin's second login step loads the Yivi widget as a static file.
+
+    yivi.js is not checked in: it is served from the
+    @privacybydesign/yivi-frontend package in portal_spa/node_modules, which
+    Dockerfile.django installs in a build stage. If that wiring breaks, the
+    admin page loads without its widget and nobody can log in, so pin that
+    both scripts the template references resolve.
+    """
+
+    def test_admin_yivi_scripts_resolve(self):
+        from django.contrib.staticfiles import finders
+
+        for path in ("admin_yivi/yivi.js", "admin_yivi/admin_yivi.js"):
+            with self.subTest(path=path):
+                self.assertIsNotNone(finders.find(path))

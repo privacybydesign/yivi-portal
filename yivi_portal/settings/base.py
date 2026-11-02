@@ -128,6 +128,20 @@ USE_TZ = True
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
+# The admin's Yivi widget (templates/admin/yivi_verify.html) is served straight
+# from the @privacybydesign/yivi-frontend package the SPA depends on, so both
+# use the version pinned in portal_spa/package-lock.json. Locally that takes an
+# `npm ci` in portal_spa; Dockerfile.django installs it in a build stage.
+YIVI_FRONTEND_DIST = (
+    BASE_DIR.parent
+    / "portal_spa"
+    / "node_modules"
+    / "@privacybydesign"
+    / "yivi-frontend"
+    / "dist"
+)
+STATICFILES_DIRS = [("admin_yivi", YIVI_FRONTEND_DIST)]
+
 YIVI_SERVER_URL = os.environ.get("YIVI_SERVER_URL")
 YIVI_SERVER_TOKEN = os.environ.get("YIVI_SERVER_TOKEN")
 

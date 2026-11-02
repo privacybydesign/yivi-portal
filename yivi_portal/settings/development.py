@@ -53,7 +53,10 @@ SWAGGER_SETTINGS = {
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
-STATICFILES_DIRS = [BASE_DIR.parent / "portal_backend" / "static"]  # noqa: F405
+STATICFILES_DIRS = [
+    *STATICFILES_DIRS,  # noqa: F405
+    BASE_DIR.parent / "portal_backend" / "static",  # noqa: F405
+]
 
 STATIC_ROOT = BASE_DIR / "static"  # noqa: F405
 MEDIA_ROOT = BASE_DIR / "assets"  # noqa: F405
