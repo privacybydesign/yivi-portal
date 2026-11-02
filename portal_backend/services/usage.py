@@ -7,6 +7,7 @@ by its RFC 7638 JWK thumbprint.
 """
 
 import base64
+import calendar
 import hashlib
 import json
 import secrets
@@ -18,6 +19,7 @@ from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.hazmat.primitives.asymmetric.utils import encode_dss_signature
 from django.db import IntegrityError, transaction
+from django.db.models import Sum
 from django.utils import timezone
 
 from ..models.models import (
@@ -395,3 +397,58 @@ def find_gaps(reports) -> list[dict]:
                 }
             )
     return gaps
+
+
+# Overviews
+
+
+def daily_verifications(reports, year: int, month: int) -> list[dict]:
+    """Successful verifications (completed disclosure sessions) per day of a month.
+
+    Every day of the month gets an entry, so days without verifications show as 0.
+    """
+    first = date(year, month, 1)
+    last = date(year, month, calendar.monthrange(year, month)[1])
+    totals = dict(
+        UsageSessionCount.objects.filter(
+            report__in=reports,
+            action="disclosing",
+            outcome="done",
+            day__range=(first, last),
+        )
+        .values_list("day")
+        .annotate(total=Sum("count"))
+    )
+    return [
+        {
+            "day": first + timedelta(days=i),
+            "count": totals.get(first + timedelta(days=i), 0),
+        }
+        for i in range((last - first).days + 1)
+    ]
+
+
+def run_overview(reports, limit: int = 20) -> list[dict]:
+    """The most recently reporting runs, newest first, with how complete each one is."""
+    runs: dict[tuple, list] = {}
+    for report in reports.only(
+        "server_key_id", "run_id", "sequence", "final", "server_instance", "period_to"
+    ):
+        runs.setdefault((report.server_key_id, report.run_id), []).append(report)
+    overview = []
+    for (_, run_id), run in runs.items():
+        last = max(run, key=lambda r: r.sequence)
+        _, missing_count = _missing_sequences([r.sequence for r in run])
+        overview.append(
+            {
+                "run_id": run_id,
+                "server_instance": last.server_instance,
+                "reports": len(run),
+                "last_sequence": last.sequence,
+                "missing_count": missing_count,
+                "final": any(r.final for r in run),
+                "last_report_at": max(r.period_to for r in run),
+            }
+        )
+    overview.sort(key=lambda r: r["last_report_at"], reverse=True)
+    return overview[:limit]
