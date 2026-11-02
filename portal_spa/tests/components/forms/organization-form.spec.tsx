@@ -70,6 +70,18 @@ it("rejects a phone input holding nothing but its dial code", async () => {
   post.mockRestore();
 });
 
+it("announces the phone number error to assistive technology", async () => {
+  render(form());
+  expect(phoneInput()).toHaveAttribute("aria-invalid", "false");
+  await submit();
+
+  const message = await screen.findByText("A phone number is required.");
+  expect(phoneInput()).toHaveAttribute("aria-invalid", "true");
+  expect(phoneInput().getAttribute("aria-describedby")?.split(" ")).toContain(
+    message.id,
+  );
+});
+
 it("submits the form data once the contact details are filled in", async () => {
   // The action is dispatched by hand rather than through the form's `action`
   // attribute, so cover that the API is still called with the form's own

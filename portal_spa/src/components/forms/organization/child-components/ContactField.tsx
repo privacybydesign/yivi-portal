@@ -76,7 +76,7 @@ export default function ContactField({
               {/* PhoneInput takes no id of its own, so FormControl cannot
                   hand it the generated one - label its inner input directly. */}
               <Label htmlFor={PHONE_INPUT_ID}>Contact Number</Label>
-              <FormDescription>
+              <FormDescription id={`${PHONE_INPUT_ID}-description`}>
                 Phone number of a contact person of this organization. Used only
                 for verification purposes and will not be public.
               </FormDescription>
@@ -84,7 +84,13 @@ export default function ContactField({
             <div>
               <div className="border rounded-md shadow-xs">
                 <PhoneInput
-                  inputProps={{ id: PHONE_INPUT_ID }}
+                  inputProps={{
+                    id: PHONE_INPUT_ID,
+                    "aria-invalid": !!fieldState.error,
+                    "aria-describedby": fieldState.error
+                      ? `${PHONE_INPUT_ID}-description ${PHONE_INPUT_ID}-message`
+                      : `${PHONE_INPUT_ID}-description`,
+                  }}
                   defaultCountry="nl"
                   value={value || ""}
                   onChange={onChange}
@@ -103,7 +109,10 @@ export default function ContactField({
                 `}</style>
               </div>
               {fieldState.error && (
-                <FormMessage className="text-sm text-red-600 mt-1">
+                <FormMessage
+                  id={`${PHONE_INPUT_ID}-message`}
+                  className="text-sm text-red-600 mt-1"
+                >
                   {fieldState.error.message}
                 </FormMessage>
               )}
