@@ -1,16 +1,19 @@
+from typing import ClassVar
+
 from django.contrib import admin
+
 from portal_backend.models.models import (
-    Organization,
-    TrustModel,
-    YiviTrustModelEnv,
-    RelyingPartyHostname,
-    Condiscon,
     AttestationProvider,
+    Condiscon,
+    CondisconAttribute,
     Credential,
     CredentialAttribute,
-    CondisconAttribute,
+    Organization,
     RelyingParty,
+    RelyingPartyHostname,
+    TrustModel,
     User,
+    YiviTrustModelEnv,
 )
 
 
@@ -38,7 +41,7 @@ class OrganizationAdmin(admin.ModelAdmin):
     list_display = ("name_en", "created_at", "last_updated_at")
     search_fields = ("name_en", "name_nl")
     list_filter = ("created_at", "last_updated_at")
-    prepopulated_fields = {"slug": ("name_en",)}
+    prepopulated_fields: ClassVar[dict] = {"slug": ("name_en",)}
     readonly_fields = ("created_at", "last_updated_at")
 
 
@@ -92,7 +95,7 @@ class CredentialAdmin(admin.ModelAdmin):
         "attestation_provider",
         "get_full_path",
     )
-    search_fields = ["name_en"]
+    search_fields: ClassVar[list] = ["name_en"]
 
     def get_full_path(self, obj):
         return obj.full_path
@@ -103,7 +106,7 @@ class CredentialAdmin(admin.ModelAdmin):
 class CondisconAttributeInline(admin.TabularInline):
     model = CondisconAttribute
     extra = 1
-    autocomplete_fields = ["credential_attribute"]
+    autocomplete_fields: ClassVar[list] = ["credential_attribute"]
 
 
 @admin.register(CondisconAttribute)

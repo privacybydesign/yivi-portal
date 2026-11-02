@@ -1,18 +1,20 @@
+from typing import ClassVar
+
 from django.shortcuts import get_object_or_404
-from rest_framework.request import Request
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
 from drf_yasg.utils import swagger_auto_schema  # type: ignore
-from portal_backend.models.models import AttestationProvider, Organization
+from rest_framework import permissions, status
+from rest_framework.request import Request
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
 from portal_backend.models.model_serializers import (
     AttestationProviderSerializer,
 )
-from rest_framework import permissions
+from portal_backend.models.models import AttestationProvider, Organization
 
 
 class AttestationProviderListView(APIView):
-    permission_classes = [permissions.AllowAny]
+    permission_classes: ClassVar[list] = [permissions.AllowAny]
 
     def get(self, request: Request, org_slug: str) -> Response:
         organization = get_object_or_404(Organization, slug=org_slug)
@@ -34,7 +36,7 @@ class AttestationProviderListView(APIView):
 
 
 class AttestationProviderRetrieveView(APIView):
-    permission_classes = [permissions.AllowAny]
+    permission_classes: ClassVar[list] = [permissions.AllowAny]
 
     @swagger_auto_schema(responses={200: "Success", 404: "Not Found"})
     def get(

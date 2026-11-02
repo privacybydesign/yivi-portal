@@ -1,12 +1,19 @@
-from datetime import datetime
-import logging
 import json
+import logging
 import os
-from io import BytesIO
 import zipfile
-from django.core.files.images import ImageFile
+from datetime import datetime, timezone
+from io import BytesIO
 from urllib.request import urlopen
-from portal_backend.models.models import Organization, YiviTrustModelEnv, TrustModel
+
+from django.core.files.images import ImageFile
+
+from portal_backend.models.models import Organization, TrustModel, YiviTrustModelEnv
+
+
+class SchemeImportError(Exception):
+    """Raised when importing scheme data fails."""
+
 
 logger = logging.getLogger(__name__)
 
@@ -39,7 +46,7 @@ def load_logo_if_exists(logo_path: str) -> ImageFile | None:
             filename = os.path.basename(logo_path)
             logo_image_file = ImageFile(BytesIO(logo_content), name=filename)
 
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         logger.error(f"Exception while loading logo from {logo_path}: {e}")
         return None
 
@@ -90,7 +97,7 @@ def normalize_deprecated_since(value: str | None) -> str | None:
 
     try:
         ts = int(value)
-        return datetime.utcfromtimestamp(ts).strftime("%Y-%m-%d")
+        return datetime.fromtimestamp(ts, tz=timezone.utc).strftime("%Y-%m-%d")
     except (ValueError, TypeError) as e:
         raise ValueError(f"Invalid UNIX timestamp for DeprecatedSince: {e}")
 
@@ -99,7 +106,7 @@ def get_trust_model_env(environment: str) -> YiviTrustModelEnv:
     try:
         yivi_tme = YiviTrustModelEnv.objects.get(environment=environment)
     except YiviTrustModelEnv.DoesNotExist:
-        raise Exception(
+        raise SchemeImportError(
             f"YiviTrustModelEnv for environment '{environment}' does not exist"
         )
     return yivi_tme
@@ -116,8 +123,8 @@ def download_extract_repo(repo_url: str, repo_name: str, repo_path: str) -> None
         logger.info(
             f"Successfully extracted zip file to {repo_path}/{repo_name}-master"
         )
-    except Exception as e:
-        raise Exception(f"Error extracting the zip file: {e}")
+    except Exception as e:  # noqa: BLE001
+        raise SchemeImportError(f"Error extracting the zip file: {e}")
 
 
 def load_json_to_dict(json_path: str) -> dict:
@@ -129,8 +136,8 @@ def load_json_to_dict(json_path: str) -> dict:
     try:
         with open(json_path, "r", encoding="utf-8") as f:
             dict = json.load(f)
-    except Exception as e:
-        raise Exception(f"Failed to load JSON file: {e}")
+    except Exception as e:  # noqa: BLE001
+        raise SchemeImportError(f"Failed to load JSON file: {e}")
 
     logger.info(f"Loaded {len(dict)} items from {json_path}")
     return dict

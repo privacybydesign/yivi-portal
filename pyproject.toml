@@ -5,35 +5,48 @@ description = ""
 authors = ["Job Doesburg <job.doesburg@gmail.com>"]
 
 [tool.poetry.dependencies]
-python = "^3.11"
-django = "5.0.13" # TODO: add support for newer versions
+python = "^3.12"
+django = "^6.0"
 django-phonenumber-field= {extras = ["phonenumberslite"], version = "^8.1.0"}
-dnspython = "^2.4.2"
-httpx = "^0.27.0"
-cryptography = "^42.0.5"
-idna = "^3.4"
-aioquic = "^0.9.21"
-pillow = "^10.1.0"
-django-bootstrap5 = "^23.3"
-requests = "^2.31.0"
-djangorestframework = "^3.14.0"
+dnspython = "^2.8.0"
+httpx = "^0.28.0"
+cryptography = ">=49,<51"
+idna = "^3.10"
+aioquic = "^1.3.0"
+pillow = ">=10.1,<14.0"
+django-bootstrap5 = ">=26.2"
+requests = "^2.34.0"
+djangorestframework = "^3.17.0"
 fqdn = "^1.5.1"
-django-cron = "^0.6.0"
-django-imagekit = "^5.0.0"
+django-imagekit = "^6.1.0"
 drf-yasg = "^1.21.8"
-django-cors-headers = "^4.7.0"
-djangorestframework-simplejwt = "^5.4.0"
-xmltodict= "0.14.2"
-python-dotenv = "1.0.1"
-django_countries = "7.6.1"
+django-cors-headers = "^4.9.0"
+djangorestframework-simplejwt = "^5.5.0"
+pyjwt = "^2.13.0"
+pyopenssl = "^26.3.0"
+xmltodict= "^1.0.4"
+python-dotenv = "^1.2.2"
+django_countries = "^9.0.0"
 django-model-utils = "^5.0.0"
 
 [tool.poetry.group.dev.dependencies]
-black = "^23.12.1"
+black = ">=23.12.1,<27.0.0"
+django-silk = "^5.5.0"
 
 [tool.poetry.group.prod.dependencies]
 uwsgi = "^2.0.23"
 psycopg2-binary = "^2.9.1"
+
+[tool.ruff]
+# Django writes the migration files; linting generated code adds noise and the
+# fixes recur every time a migration is regenerated.
+extend-exclude = ["**/migrations/**"]
+
+[tool.ruff.lint]
+# The rule set ruff-linter.yml has been checking all along: ruff's own default up to
+# 0.15.x. Pinned here because the workflow installs ruff unpinned, and 0.16 widened the
+# default selection, which turns the job red on 242 pre-existing findings.
+select = ["E4", "E7", "E9", "F"]
 
 [build-system]
 requires = ["poetry-core"]

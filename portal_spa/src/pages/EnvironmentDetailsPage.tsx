@@ -13,10 +13,9 @@ export default function EnvironmentDetailsPage() {
   );
   const [loading, setLoading] = useState(true);
 
-  useEffect(
-    () => window.scrollTo({ top: 0, behavior: "smooth" }),
-    [currentEnv],
-  );
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [currentEnv]);
 
   useEffect(() => {
     const fetchEnvironments = async () => {

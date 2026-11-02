@@ -17,7 +17,7 @@ export default function RegisterOrganization() {
         information will only be used for verification purposes.
         <br />
         <br />
-        If you are already part of Yivi's echosystem as listed{" "}
+        If you are already part of Yivi's ecosystem as listed{" "}
         <Link to={`/organizations/`} className="text-blue-600">
           here
         </Link>

@@ -1,7 +1,14 @@
 import logging
+
 from django.utils import timezone
-from .import_utils import load_config, download_extract_repo, load_json_to_dict
+
 from ..models.models import RelyingParty
+from .import_utils import download_extract_repo, load_config, load_json_to_dict
+
+
+class PublishCheckError(Exception):
+    """Raised when checking published relying parties fails."""
+
 
 logger = logging.getLogger(__name__)
 
@@ -40,5 +47,5 @@ def check_published_cron() -> None:
         # check if if all rps in the db are in the json and update their status
         check_published_rps(rps_dict)
 
-    except Exception as e:
-        raise Exception(f"Failed to check published Relying Parties: {e}")
+    except Exception as e:  # noqa: BLE001
+        raise PublishCheckError(f"Failed to check published Relying Parties: {e}")

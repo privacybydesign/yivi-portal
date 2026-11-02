@@ -32,6 +32,8 @@ The project consists of two main components:
 
 ## Development Setup
 
+Build and test details that are not obvious from the code are in
+[`docs/development.md`](docs/development.md).
 
 ### Running the Project
 
@@ -57,6 +59,25 @@ The easiest way to view the database is with Django admin. You will need a super
 docker compose exec django python manage.py createsuperuser
 ```
 Then access with your credentials at `http://{host}:8000/admin/`
+
+### Query Profiling
+
+The development settings load [django-silk](https://github.com/jazzband/django-silk), which
+records every request together with the SQL it ran. Browse to `http://{host}:8000/silk/`. The
+request list gives you a query count and a total query time per request, and each request
+links through to the individual queries and the code that issued them. That is how you find
+N+1 queries.
+
+Recordings go into the project database and pile up as you browse, so clear them when they
+get in the way:
+
+```bash
+docker compose exec django python manage.py silk_clear_request_log
+```
+
+The production settings do not load silk, and should not: it keeps request and response
+bodies, including `Authorization` headers, and its dashboard has no access control of its
+own.
 
 ### Cronjobs
 

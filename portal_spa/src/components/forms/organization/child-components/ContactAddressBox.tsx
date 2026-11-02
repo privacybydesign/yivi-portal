@@ -126,7 +126,7 @@ export default function ContactAddressBox({
             </div>
             <div>
               <FormControl>
-                <>
+                <div>
                   <Input type="hidden" {...field} />
 
                   <CountryDropdown
@@ -137,7 +137,7 @@ export default function ContactAddressBox({
                       form.setValue("country", country.alpha2);
                     }}
                   />
-                </>
+                </div>
               </FormControl>
 
               {formState.errors.country && (
