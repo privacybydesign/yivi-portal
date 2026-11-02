@@ -99,7 +99,11 @@ def jwk_from_public_key(key: ec.EllipticCurvePublicKey) -> dict:
 
 
 def public_key_from_jwk(jwk: dict) -> ec.EllipticCurvePublicKey:
-    if jwk.get("kty") != "EC" or jwk.get("crv") != "P-256":
+    if (
+        not isinstance(jwk, dict)
+        or jwk.get("kty") != "EC"
+        or jwk.get("crv") != "P-256"
+    ):
         raise UsageProblem(
             400, PROBLEM_BAD_SIGNATURE, "Only EC P-256 keys are supported"
         )
