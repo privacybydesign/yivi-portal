@@ -32,11 +32,25 @@ class YiviTrustModelEnvSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
+class MediaPathImageField(serializers.ImageField):
+    """An ImageField that answers the file's MEDIA_URL path, also when the request is known.
+
+    DRF's ImageField builds an absolute URL as soon as the serializer has a request in
+    its context. The SPA prefixes logos with its API endpoint itself, so it needs the
+    path; an absolute URL ends up as http://hosthttp://host/assets/...
+    """
+
+    def to_representation(self, value):
+        if not value:
+            return None
+        return value.url
+
+
 class OrganizationSerializer(CountryFieldMixin, serializers.ModelSerializer):
     trust_models = TrustModelSerializer(many=True, read_only=True)
     is_RP = serializers.BooleanField(source="is_rp", read_only=True)
     is_AP = serializers.BooleanField(source="is_ap", read_only=True)
-    logo = serializers.ImageField(required=True)
+    logo = MediaPathImageField(required=True)
 
     # Force required fields when the serializer is used in api calls
     street = serializers.CharField(required=True, allow_blank=False)
@@ -126,9 +140,7 @@ class AttestationProviderSerializer(serializers.ModelSerializer):
     yivi_tme = serializers.CharField(source="yivi_tme.environment", read_only=True)
     organization = serializers.CharField(source="organization.name_en", read_only=True)
     status = serializers.BooleanField(source="status.reviewed_accepted", read_only=True)
-    organization_logo = serializers.ImageField(
-        source="organization.logo", read_only=True
-    )
+    organization_logo = MediaPathImageField(source="organization.logo", read_only=True)
 
     class Meta:
         model = AttestationProvider
