@@ -79,7 +79,6 @@ export const updateOrganization = async (
       formData
     );
 
-    let redirectTo;
     if (formData.get("slug") !== formState.values.slug) {
       await updateClaims();
       // Can't use React router because middleware will be called before redirecting to the new page.
@@ -90,7 +89,6 @@ export const updateOrganization = async (
       values: { ...formState.values },
       errors: {},
       success: true,
-      redirectTo,
     };
   } catch (e: unknown) {
     if (e instanceof AxiosError && e.response?.status === 400) {
