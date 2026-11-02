@@ -278,6 +278,20 @@ class OrganizationMaintainerActionsTest(APITestCase):
         self.assertEqual(response.json()["contact_email"], "contact@test-name.com")
         self.assertEqual(response.json()["contact_number"], "+31612345678")
 
+    def test_logo_is_a_url_relative_to_the_api(self):
+        """The SPA prefixes the logo with its API endpoint, so it must stay a path.
+
+        The views pass the request to the serializer (for the contact details),
+        and DRF's ImageField then answers absolute URLs, which the SPA turned
+        into http://hosthttp://host/assets/... and showed placeholders.
+        """
+        detail = self.client.get(
+            reverse("portal_backend:organization-detail", args=[self.organization.slug])
+        )
+        self.assertEqual(detail.status_code, 200)
+        self.assertEqual(detail.json()["logo"], self.organization.logo.url)
+        self.assertTrue(detail.json()["logo"].startswith("/"))
+
     def test_detail_hides_contact_details_from_another_organizations_maintainer(self):
         """Maintaining one organization does not expose another's details."""
         other = Organization.objects.create(
