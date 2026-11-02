@@ -150,7 +150,7 @@ export const niceAxis = (max: number): number[] => {
   const step =
     [1, 2, 2.5, 5, 10].map((m) => m * magnitude).find((s) => s >= rawStep) ??
     10 * magnitude;
-  const niceStep = Math.max(1, step);
+  const niceStep = Math.max(1, Math.ceil(step));
   return [0, 1, 2, 3, 4].map((i) => i * niceStep);
 };
 
