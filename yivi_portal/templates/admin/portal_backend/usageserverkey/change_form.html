@@ -1,0 +1,125 @@
+{% extends "admin/change_form.html" %}
+{% comment %}
+  A usage key's change page, plus the verifications its server reported and its runs.
+  Drawn as plain HTML and CSS: the admin loads no third-party scripts.
+{% endcomment %}
+
+{% block extrastyle %}
+  {{ block.super }}
+  <style>
+    .usage { --usage-bar: #2563eb; --usage-bar-hover: #3b82f6; margin: 2rem 0; }
+    @media (prefers-color-scheme: dark) {
+      html:not([data-theme="light"]) .usage { --usage-bar: #4f8ff7; --usage-bar-hover: #6ba1f8; }
+    }
+    html[data-theme="dark"] .usage { --usage-bar: #4f8ff7; --usage-bar-hover: #6ba1f8; }
+    .usage-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 1rem; }
+    .usage-nav { display: flex; align-items: baseline; gap: 0.75rem; }
+    .usage-nav .disabled { color: var(--body-quiet-color); }
+    .usage-total { margin: 0.75rem 0 1rem; }
+    .usage-total strong { display: block; font-size: 1.75rem; line-height: 1.2; color: var(--body-fg); font-variant-numeric: tabular-nums; }
+    .usage-chart { display: flex; gap: 0.5rem; }
+    .usage-y { position: relative; width: 3rem; flex: none; height: 12rem; color: var(--body-quiet-color); font-size: 0.75rem; text-align: right; }
+    .usage-y span { position: absolute; right: 0; transform: translateY(50%); line-height: 1; font-variant-numeric: tabular-nums; }
+    .usage-plot { position: relative; flex: 1; min-width: 0; }
+    .usage-area { position: relative; height: 12rem; }
+    .usage-grid { position: absolute; left: 0; right: 0; border-top: 1px solid var(--hairline-color); }
+    .usage-grid.base { border-top-color: var(--border-color); }
+    .usage-bars { position: absolute; inset: 0; display: flex; align-items: flex-end; gap: 2px; }
+    .usage-bars > div { flex: 1; min-width: 0; height: 100%; display: flex; align-items: flex-end; }
+    .usage-bars span { display: block; width: 100%; border-radius: 4px 4px 0 0; background: var(--usage-bar); }
+    .usage-bars > div:hover span { background: var(--usage-bar-hover); }
+    .usage-x { display: flex; gap: 2px; margin-top: 0.25rem; color: var(--body-quiet-color); font-size: 0.75rem; }
+    .usage-x span { flex: 1; min-width: 0; text-align: center; }
+    .usage details { margin-top: 0.75rem; }
+    .usage .usage-runs { margin-top: 1.5rem; }
+  </style>
+{% endblock %}
+
+{% block after_related_objects %}
+  {{ block.super }}
+  {% if usage %}
+    <section class="usage module" aria-labelledby="usage-heading">
+      <div class="usage-head">
+        <h2 id="usage-heading">Successful verifications</h2>
+        <div class="usage-nav">
+          <a href="?month={{ usage.previous_month }}" aria-label="Previous month">&lsaquo;</a>
+          <strong>{{ usage.month|date:"F Y" }}</strong>
+          {% if usage.next_month %}
+            <a href="?month={{ usage.next_month }}" aria-label="Next month">&rsaquo;</a>
+          {% else %}
+            <span class="disabled" aria-hidden="true">&rsaquo;</span>
+          {% endif %}
+        </div>
+      </div>
+
+      <p class="usage-total">
+        Total in {{ usage.month|date:"F Y" }}
+        <strong>{{ usage.total|floatformat:"g" }}</strong>
+      </p>
+
+      <div class="usage-chart" aria-hidden="true">
+        <div class="usage-y">
+          {% for tick in usage.ticks %}<span style="bottom: {{ tick.bottom }}%">{{ tick.value|floatformat:"g" }}</span>{% endfor %}
+        </div>
+        <div class="usage-plot">
+          <div class="usage-area">
+            {% for tick in usage.ticks %}<div class="usage-grid{% if forloop.first %} base{% endif %}" style="bottom: {{ tick.bottom }}%"></div>{% endfor %}
+            <div class="usage-bars">
+              {% for day in usage.days %}
+                <div title="{{ day.day|date:'j F Y' }}: {{ day.count|floatformat:'g' }}"><span style="height: {{ day.height }}%"></span></div>
+              {% endfor %}
+            </div>
+          </div>
+          <div class="usage-x">
+            {% for day in usage.days %}<span>{% if forloop.first or day.label|divisibleby:5 %}{{ day.label }}{% endif %}</span>{% endfor %}
+          </div>
+        </div>
+      </div>
+
+      <details>
+        <summary>Show as table</summary>
+        <table>
+          <caption class="visually-hidden">Successful verifications per day in {{ usage.month|date:"F Y" }}</caption>
+          <thead><tr><th scope="col">Day</th><th scope="col">Successful verifications</th></tr></thead>
+          <tbody>
+            {% for day in usage.days %}
+              <tr><th scope="row">{{ day.day|date:"j F Y" }}</th><td>{{ day.count|floatformat:"g" }}</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </details>
+
+      <div class="usage-runs">
+        <h2>Runs</h2>
+        {% if usage.runs %}
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">Server instance</th>
+                <th scope="col">Run</th>
+                <th scope="col">Reports</th>
+                <th scope="col">Missing</th>
+                <th scope="col">Final report</th>
+                <th scope="col">Last report</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for run in usage.runs %}
+                <tr>
+                  <td>{{ run.server_instance }}</td>
+                  <td><code>{{ run.run_id }}</code></td>
+                  <td>{{ run.reports }} (up to #{{ run.last_sequence }})</td>
+                  <td>{% if run.missing_count %}{{ run.missing_count }}{% else %}&ndash;{% endif %}</td>
+                  <td>{% if run.final %}Yes{% else %}No &mdash; still running, or stopped uncleanly{% endif %}</td>
+                  <td>{{ run.last_report_at }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        {% else %}
+          <p>This key has not sent any reports yet.</p>
+        {% endif %}
+      </div>
+    </section>
+  {% endif %}
+{% endblock %}

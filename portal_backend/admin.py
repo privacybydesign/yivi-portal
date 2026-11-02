@@ -1,8 +1,12 @@
+import math
+from datetime import date
 from typing import ClassVar
 
 from django import forms
 from django.contrib import admin
+from django.contrib.admin.utils import unquote
 from django.core.exceptions import ValidationError
+from django.utils import timezone
 
 from portal_backend.models.models import (
     AttestationProvider,
@@ -158,6 +162,58 @@ class UserAdmin(admin.ModelAdmin):
         return ", ".join([org.slug for org in obj.organizations.all()])
 
 
+def _axis(max_count: int) -> list[int]:
+    """A round axis maximum in four whole-number steps, e.g. 37 -> 0, 10, 20, 30, 40."""
+    if max_count <= 0:
+        return [0, 1, 2, 3, 4]
+    raw_step = max_count / 4
+    magnitude = 10 ** math.floor(math.log10(raw_step))
+    step = next(
+        (m * magnitude for m in (1, 2, 2.5, 5, 10) if m * magnitude >= raw_step),
+        10 * magnitude,
+    )
+    step = max(1, math.ceil(step))
+    return [i * step for i in range(5)]
+
+
+def _shift_month(year: int, month: int, step: int) -> tuple[int, int]:
+    index = year * 12 + (month - 1) + step
+    return index // 12, index % 12 + 1
+
+
+def usage_chart_context(request, reports) -> dict:
+    """The admin's usage chart: successful verifications per day of one calendar
+    month (``?month=YYYY-MM``, the current month by default), and the runs."""
+    today = timezone.localdate()
+    try:
+        year, month = (int(part) for part in request.GET.get("month", "").split("-"))
+        date(year, month, 1)
+    except ValueError:
+        year, month = today.year, today.month
+    if (year, month) > (today.year, today.month):
+        year, month = today.year, today.month
+
+    days = usage.daily_verifications(reports, year, month)
+    ticks = _axis(max(d["count"] for d in days))
+    top = ticks[-1]
+    previous = _shift_month(year, month, -1)
+    following = _shift_month(year, month, 1)
+    return {
+        "month": date(year, month, 1),
+        "total": sum(d["count"] for d in days),
+        "days": [
+            {**d, "height": round(d["count"] / top * 100, 2), "label": d["day"].day}
+            for d in days
+        ],
+        "ticks": [{"value": t, "bottom": round(t / top * 100, 2)} for t in ticks],
+        "previous_month": "%04d-%02d" % previous,
+        "next_month": (
+            "%04d-%02d" % following if following <= (today.year, today.month) else None
+        ),
+        "runs": usage.run_overview(reports),
+    }
+
+
 class UsageServerKeyForm(forms.ModelForm):
     """Checks the key before save, so a bad or duplicate key is a form error, not a 500.
 
@@ -193,6 +249,16 @@ class UsageServerKeyAdmin(admin.ModelAdmin):
     )
     search_fields = ("organization__slug", "label", "thumbprint")
     readonly_fields = ("thumbprint",)
+    change_form_template = "admin/portal_backend/usageserverkey/change_form.html"
+
+    def change_view(self, request, object_id, form_url="", extra_context=None):
+        server_key = self.get_object(request, unquote(object_id))
+        if server_key is not None:
+            extra_context = {
+                **(extra_context or {}),
+                "usage": usage_chart_context(request, server_key.reports.all()),
+            }
+        return super().change_view(request, object_id, form_url, extra_context)
 
     def save_model(self, request, obj, form, change):
         # The thumbprint is how a server finds its account, so it always follows the key.
