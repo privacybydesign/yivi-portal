@@ -10,7 +10,12 @@ from django.urls import reverse
 from rest_framework.test import APIClient, APITestCase
 from rest_framework_simplejwt.tokens import AccessToken  # type: ignore
 
-from portal_backend.models.models import Organization
+from portal_backend.models.models import (
+    Organization,
+    RelyingParty,
+    TrustModel,
+    YiviTrustModelEnv,
+)
 from portal_backend.models.models import User as OrgUser
 from portal_backend.scheme_utils.import_utils import load_logo_if_exists
 
@@ -228,11 +233,38 @@ class OrganizationMaintainerActionsTest(APITestCase):
         self.assertNotIn("contact_number", response.json())
 
     def test_list_hides_contact_details_from_the_public(self):
-        """Same for the list view, which is AllowAny as well."""
+        """Same for the list view, which is AllowAny as well. The list only
+        shows organizations with a published Relying Party or Attestation
+        Provider, so give this one a Relying Party or the loop asserts nothing."""
+        trust_model = TrustModel.objects.create(
+            name="yivi", description="Trust Model Description"
+        )
+        yivi_tme = YiviTrustModelEnv.objects.create(
+            trust_model=trust_model,
+            environment="production",
+            timestamp_server="https://timestamp.example.com",
+            keyshare_server="https://keyshare.example.com",
+            keyshare_website="https://keyshare-website.example.com",
+            keyshare_attribute="test_keyshare_attribute",
+            contact_website="https://contact.example.com",
+            minimum_android_version="1.0",
+            minimum_ios_version="1.0",
+            description_en="Yivi environment description EN",
+            description_nl="Yivi environment description NL",
+            url="https://yivi.example.com",
+        )
+        RelyingParty.objects.create(
+            rp_slug="test-relying-party",
+            organization=self.organization,
+            yivi_tme=yivi_tme,
+            published=True,
+        )
         url = reverse("portal_backend:organization-list")
         response = APIClient().get(url)
         self.assertEqual(response.status_code, 200)
-        for organization in response.json()["results"]:
+        results = response.json()["results"]
+        self.assertIn(self.organization.slug, [o["slug"] for o in results])
+        for organization in results:
             self.assertNotIn("contact_email", organization)
             self.assertNotIn("contact_number", organization)
 
