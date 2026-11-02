@@ -256,7 +256,7 @@ class UsageApiTest(TestCase):
 class UsageMaintainerApiTest(TestCase):
     def setUp(self):
         self.organization = Organization.objects.create(
-            name_en="Webshop", name_nl="Webwinkel", slug="webshop"
+            name_en="Webshop", name_nl="Webwinkel", slug="webshop", is_verified=True
         )
         self.other_organization = Organization.objects.create(
             name_en="Other", name_nl="Ander", slug="other"
@@ -297,6 +297,18 @@ class UsageMaintainerApiTest(TestCase):
         )
         self.assertEqual(response.status_code, 204)
         self.assertIsNotNone(UsageServerKey.objects.get().deactivated_at)
+
+    def test_unverified_organization_cannot_register_a_key(self):
+        """Usage is only collected for organizations Yivi has verified."""
+        self.organization.is_verified = False
+        self.organization.save(update_fields=["is_verified"])
+        response = self.api.post(
+            reverse("portal_backend:usage-keys", args=["webshop"]),
+            {"public_key_pem": public_pem(self.server.key)},
+            format="json",
+        )
+        self.assertEqual(response.status_code, 403)
+        self.assertFalse(UsageServerKey.objects.exists())
 
     def test_rejects_non_p256_key(self):
         rsa_like = ec.generate_private_key(ec.SECP384R1())

@@ -6,6 +6,7 @@ import MaintainerManagePage from "@/pages/MaintainerManagePage";
 import OrganizationDetailsPage from "@/pages/OrganizationDetailsPage";
 import RelyingPartiesManagePage from "@/pages/RelyingPartiesManagePage";
 import AttestationProvidersManagePage from "@/pages/AttestationProvidersManagePage";
+import UsageManagePage from "@/pages/UsageManagePage";
 import LoginPage from "@/pages/LoginPage";
 import OrganizationRegisterPage from "@/pages/OrganizationRegisterPage";
 import Layout from "@/components/layout/Layout";
@@ -64,6 +65,10 @@ export default function AppRoutes() {
                 {
                   path: "/organizations/:organization/manage/attestation-providers",
                   element: <AttestationProvidersManagePage />,
+                },
+                {
+                  path: "/organizations/:organization/manage/usage",
+                  element: <UsageManagePage />,
                 },
               ],
             },
