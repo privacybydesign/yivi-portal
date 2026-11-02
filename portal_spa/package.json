@@ -30,7 +30,7 @@
     "@radix-ui/react-tooltip": "^1.2.10",
     "@shadcn/ui": "^0.0.4",
     "@tailwindcss/vite": "^4.3.1",
-    "axios": "^1.18.0",
+    "axios": "^1.21.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
@@ -46,11 +46,11 @@
     "react-hook-form": "^7.79.0",
     "react-hot-toast": "^2.6.0",
     "react-international-phone": "^4.8.0",
-    "react-router-dom": "^7.18.0",
+    "react-router-dom": "^7.18.5",
     "sonner": "^2.0.7",
     "tailwind-merge": "^3.6.0",
     "tailwindcss": "^4.3.1",
-    "zod": "^4.4.3",
+    "zod": "^4.6.6",
     "zustand": "^5.0.14"
   },
   "devDependencies": {
@@ -73,12 +73,12 @@
     "tw-animate-css": "^1.2.9",
     "typescript": "~5.8.3",
     "typescript-eslint": "^8.30.1",
-    "vite": "^6.4.3",
-    "vitest": "^3.2.6"
+    "vite": "^6.4.5",
+    "vitest": "^5.0.5"
   },
   "overrides": {
     "form-data": ">=4.0.6",
-    "js-yaml": ">=4.3.1 <5",
+    "js-yaml": ">=4.3.2 <5",
     "sharp": ">=0.35.0 <0.36",
     "tar": ">=7.5.16",
     "tmp": ">=0.2.6",
