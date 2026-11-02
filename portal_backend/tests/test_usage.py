@@ -462,7 +462,7 @@ class UsageAdminChartTest(TestCase):
 
     def test_month_defaults_to_the_current_one(self):
         today = timezone.localdate()
-        for month in ("", "nonsense", "2026-13", "9999-01"):
+        for month in ("", "nonsense", "2026-13", "9999-01", "99999999999-01"):
             with self.subTest(month=month):
                 response = self.client.get(self.url, {"month": month})
                 self.assertEqual(response.status_code, 200)

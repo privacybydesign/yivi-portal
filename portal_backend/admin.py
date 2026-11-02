@@ -188,7 +188,8 @@ def usage_chart_context(request, reports) -> dict:
     try:
         year, month = (int(part) for part in request.GET.get("month", "").split("-"))
         date(year, month, 1)
-    except ValueError:
+    except (ValueError, OverflowError):
+        # date() raises OverflowError for a year that does not fit a C int.
         year, month = today.year, today.month
     if (year, month) > (today.year, today.month):
         year, month = today.year, today.month
