@@ -36,11 +36,11 @@ SUPPORTED_SCHEMAS = {1}
 OUTCOMES = {value for value, _ in USAGE_OUTCOME_CHOICES}
 ACTIONS = {"disclosing", "signing", "issuing"}
 
-PROBLEM_MALFORMED = "urn:ietf:params:acme:error:malformed"
-PROBLEM_BAD_NONCE = "urn:ietf:params:acme:error:badNonce"
-PROBLEM_BAD_SIGNATURE = "urn:ietf:params:acme:error:badSignatureAlgorithm"
-PROBLEM_UNAUTHORIZED = "urn:ietf:params:acme:error:unauthorized"
-PROBLEM_ACCOUNT_DOES_NOT_EXIST = "urn:ietf:params:acme:error:accountDoesNotExist"
+PROBLEM_MALFORMED = "urn:yivi:usage:error:malformed"
+PROBLEM_BAD_NONCE = "urn:yivi:usage:error:badNonce"
+PROBLEM_BAD_SIGNATURE = "urn:yivi:usage:error:badSignatureAlgorithm"
+PROBLEM_UNAUTHORIZED = "urn:yivi:usage:error:unauthorized"
+PROBLEM_KEY_NOT_REGISTERED = "urn:yivi:usage:error:keyNotRegistered"
 
 
 class UsageProblem(Exception):
