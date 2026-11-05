@@ -93,7 +93,7 @@ def usage_new_account(request: HttpRequest) -> HttpResponse:
         if server_key is None:
             raise usage.UsageProblem(
                 400,
-                usage.PROBLEM_ACCOUNT_DOES_NOT_EXIST,
+                usage.PROBLEM_KEY_NOT_REGISTERED,
                 "This key is not registered in the Yivi Portal, or was deactivated",
             )
     except usage.UsageProblem as problem:
@@ -122,7 +122,7 @@ def usage_reports(request: HttpRequest, key_id) -> HttpResponse:
         server_key = UsageServerKey.objects.filter(id=key_id).first()
         if server_key is None:
             raise usage.UsageProblem(
-                403, usage.PROBLEM_ACCOUNT_DOES_NOT_EXIST, "Unknown account"
+                403, usage.PROBLEM_KEY_NOT_REGISTERED, "Unknown account"
             )
         verified = usage.verify_with_kid(
             request.body, request.path, server_key, _account_url(request, server_key)

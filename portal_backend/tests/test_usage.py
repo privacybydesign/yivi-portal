@@ -18,7 +18,7 @@ from portal_backend.models.models import Organization, UsageReport, UsageServerK
 from portal_backend.models.models import User as OrgUser
 from portal_backend.services import usage
 
-PROBLEM = "urn:ietf:params:acme:error:"
+PROBLEM = "urn:yivi:usage:error:"
 
 
 def b64(data: bytes) -> str:
@@ -160,7 +160,7 @@ class UsageApiTest(TestCase):
     def test_unregistered_key_has_no_account(self):
         response = self.server.lookup_account()
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.json()["type"], PROBLEM + "accountDoesNotExist")
+        self.assertEqual(response.json()["type"], PROBLEM + "keyNotRegistered")
         self.assertIn("Replay-Nonce", response)
 
     def test_report_is_stored_once(self):
