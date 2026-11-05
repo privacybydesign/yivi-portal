@@ -24,11 +24,14 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedIndexedAccess": true,
 
-    /* Path Aliases */
-    "baseUrl": "./",
+    /* TypeScript 6 no longer includes every @types package by itself; the
+       tests use Node's crypto. */
+    "types": ["node"],
+
+    /* Path Aliases (relative to this file: baseUrl is gone in TypeScript 7) */
     "paths": {
-      "@/*": ["src/*"],
-      "tests/*": ["tests/*"]
+      "@/*": ["./src/*"],
+      "tests/*": ["./tests/*"]
     }
   },
   "include": ["src", "tests"],
