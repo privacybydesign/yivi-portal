@@ -4,6 +4,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import ManageOrganizationLayout from "@/components/layout/organization/manage-organization";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { MonthlyBreakdown } from "@/components/usage/MonthlyBreakdown";
 import { UsageKeys } from "@/components/usage/UsageKeys";
 import { VerificationsChart } from "@/components/usage/VerificationsChart";
 import { fetchOrganization } from "@/actions/manage-organization";
@@ -232,6 +233,10 @@ export default function UsageManagePage() {
                 </p>
               )}
             </section>
+
+            <Separator />
+
+            <MonthlyBreakdown slug={slug} />
 
             <Separator />
 

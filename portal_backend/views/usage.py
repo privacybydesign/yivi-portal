@@ -1,4 +1,6 @@
+import csv
 import logging
+import re
 from datetime import date
 from typing import ClassVar
 
@@ -16,6 +18,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from ..models.models import (
+    USAGE_OUTCOME_CHOICES,
     Organization,
     UsageDisclosureCount,
     UsageReport,
@@ -297,3 +300,145 @@ class UsageSummaryView(APIView):
                 ),
             }
         )
+
+
+MONTH_PATTERN = re.compile(r"[0-9]{4}-[0-9]{2}")
+MONTH_QUERY_ERROR = {
+    "error": "month must be YYYY-MM; action must be disclosing, signing or issuing; "
+    "outcome must be done, cancelled, failed or timeout"
+}
+
+
+def _month_query(request: Request) -> tuple[int, int, list[str], list[str]]:
+    """The month (YYYY-MM) and the actions and outcomes to count, from the query string.
+
+    Without actions or outcomes, counts what is billed: completed disclosures and signatures.
+    Raises ValueError for anything else.
+    """
+    value = request.query_params.get("month", "")
+    if not MONTH_PATTERN.fullmatch(value):
+        raise ValueError("month must be YYYY-MM")
+    year, month = int(value[:4]), int(value[5:])
+    # Usage reporting began in 2026; the upper bound keeps the end of the month a valid date.
+    if not 1 <= month <= 12 or not 2000 <= year <= 9998:
+        raise ValueError("month must be YYYY-MM")
+    actions = request.query_params.getlist("action") or list(usage.BILLED_ACTIONS)
+    outcomes = request.query_params.getlist("outcome") or list(usage.BILLED_OUTCOMES)
+    if not set(actions) <= usage.ACTIONS or not set(outcomes) <= usage.OUTCOMES:
+        raise ValueError("unknown action or outcome")
+    # A fixed order, so the same selection always gives the same answer and file.
+    actions = sorted(set(actions))
+    outcomes = [o for o, _ in USAGE_OUTCOME_CHOICES if o in outcomes]
+    return year, month, actions, outcomes
+
+
+class UsageMonthlyView(APIView):
+    permission_classes: ClassVar[list] = [IsOrganizationMaintainerOrAdmin]
+
+    def get(self, request: Request, org_slug: str) -> Response:
+        """Usage of one month per requestor and credential type, for invoicing, with the gaps
+        in the reports. Query: `month` (YYYY-MM), and optionally `action` and `outcome`, each
+        repeatable; they default to completed (`done`) `disclosing` and `signing` sessions."""
+        organization = get_object_or_404(Organization, slug=org_slug)
+        try:
+            year, month, actions, outcomes = _month_query(request)
+        except ValueError:
+            return Response(MONTH_QUERY_ERROR, status=status.HTTP_400_BAD_REQUEST)
+        return Response(
+            usage.monthly_usage(organization, year, month, actions, outcomes)
+        )
+
+
+# Spreadsheet programs run a cell that starts with one of these as a formula. Requestor names
+# and credential types come from the organization's servers, so they are neutralised.
+CSV_FORMULA_PREFIXES = ("=", "+", "-", "@", "\t", "\r")
+
+
+def _csv_cell(value) -> str:
+    text = "" if value is None else str(value)
+    return "'" + text if text.startswith(CSV_FORMULA_PREFIXES) else text
+
+
+class UsageMonthlyCsvView(APIView):
+    permission_classes: ClassVar[list] = [IsOrganizationMaintainerOrAdmin]
+
+    def get(self, request: Request, org_slug: str) -> HttpResponse:
+        """The monthly usage as CSV, one row per count. A `sessions` row counts sessions; a
+        `credentials` row counts the sessions that disclosed one credential type. `complete` is
+        false when the month's reports have gaps; the gaps follow as `gap` rows."""
+        organization = get_object_or_404(Organization, slug=org_slug)
+        try:
+            year, month, actions, outcomes = _month_query(request)
+        except ValueError:
+            return Response(MONTH_QUERY_ERROR, status=status.HTTP_400_BAD_REQUEST)
+        data = usage.monthly_usage(organization, year, month, actions, outcomes)
+        complete = "true" if data["completeness"]["complete"] else "false"
+
+        response = HttpResponse(content_type="text/csv; charset=utf-8")
+        response["Content-Disposition"] = (
+            f'attachment; filename="yivi-usage-{organization.slug}-{data["month"]}.csv"'
+        )
+        writer = csv.writer(response)
+        writer.writerow(
+            [
+                "month",
+                "organization",
+                "complete",
+                "metric",
+                "requestor",
+                "action",
+                "outcome",
+                "credential_type",
+                "count",
+                "gap_from",
+                "gap_to",
+                "server_instance",
+            ]
+        )
+        common = [data["month"], organization.slug, complete]
+        for row in data["sessions"]:
+            writer.writerow(
+                [
+                    *common,
+                    "sessions",
+                    _csv_cell(row["requestor"]),
+                    row["action"],
+                    row["outcome"],
+                    "",
+                    row["count"],
+                    "",
+                    "",
+                    "",
+                ]
+            )
+        for row in data["credentials"]:
+            writer.writerow(
+                [
+                    *common,
+                    "credentials",
+                    _csv_cell(row["requestor"]),
+                    row["action"],
+                    row["outcome"],
+                    _csv_cell(row["credential_type"]),
+                    row["count"],
+                    "",
+                    "",
+                    "",
+                ]
+            )
+        for gap in data["completeness"]["gaps"]:
+            writer.writerow(
+                [
+                    *common,
+                    f"gap:{gap['kind']}",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    gap["from"].isoformat(),
+                    gap["to"].isoformat(),
+                    _csv_cell(gap["server_instance"]),
+                ]
+            )
+        return response
