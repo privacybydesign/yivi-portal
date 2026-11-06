@@ -11,6 +11,44 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
+const monthlyUsage = {
+  month: "2026-11",
+  actions: ["disclosing", "signing"],
+  outcomes: ["done"],
+  sessions: [
+    { requestor: "webshop", action: "disclosing", outcome: "done", count: 7 },
+  ],
+  credentials: [
+    {
+      requestor: "webshop",
+      action: "disclosing",
+      outcome: "done",
+      credential_type: "pbdf.pbdf.idin",
+      count: 5,
+    },
+    {
+      requestor: "webshop",
+      action: "disclosing",
+      outcome: "done",
+      credential_type: "pbdf.sidn-pbdf.email",
+      count: 4,
+    },
+  ],
+  completeness: {
+    complete: false,
+    reported_until: "2026-11-02T10:00:00Z",
+    gaps: [
+      {
+        kind: "missing_reports",
+        from: "2026-11-01T04:00:00Z",
+        to: "2026-11-01T06:00:00Z",
+        server_instance: "irma-prod-1",
+        missing_count: 2,
+      },
+    ],
+  },
+};
+
 const mockApi = (verified: boolean) =>
   vi.spyOn(axiosInstance, "get").mockImplementation(async (url: string) => {
     if (url === "/v1/organizations/webshop/") {
@@ -59,6 +97,9 @@ const mockApi = (verified: boolean) =>
           gaps: [],
         },
       };
+    }
+    if (url === "/v1/organizations/webshop/usage/monthly/") {
+      return { data: monthlyUsage };
     }
     throw new Error(`unexpected GET ${url}`);
   });
@@ -155,4 +196,82 @@ it("clears a period's load error once another period loads", async () => {
   await userEvent.click(screen.getByRole("button", { name: "Previous month" }));
   expect(await screen.findByText("Total in October 2026")).toBeInTheDocument();
   expect(screen.queryByText(/Usage could not be loaded/)).toBeNull();
+});
+
+it("breaks the month down per requestor and credential type, with its gaps", async () => {
+  vi.useFakeTimers({ toFake: ["Date"] });
+  vi.setSystemTime(new Date(2026, 10, 2, 12));
+  const get = mockApi(true);
+
+  renderPage();
+
+  const section = await screen.findByRole("region", {
+    name: "Usage per credential type",
+  });
+  // Seven sessions, nine credentials: sessions are never summed from credentials.
+  expect(await within(section).findByText("9")).toBeInTheDocument();
+  expect(within(section).getAllByText("7").length).toBeGreaterThan(0);
+  expect(
+    within(section).getByRole("table", {
+      name: "Sessions and credentials per requestor in November 2026",
+    }),
+  ).toBeInTheDocument();
+  expect(within(section).getAllByText("pbdf.pbdf.idin")).toHaveLength(2);
+  expect(within(section).getByRole("alert")).toHaveTextContent(
+    "1 Nov, 04:00 – 1 Nov, 06:00 UTC: irma-prod-1: 2 reports did not arrive.",
+  );
+  expect(get).toHaveBeenCalledWith("/v1/organizations/webshop/usage/monthly/", {
+    params: {
+      month: "2026-11",
+      action: ["disclosing", "signing"],
+      outcome: ["done"],
+    },
+    paramsSerializer: { indexes: null },
+  });
+
+  // Other outcomes on request, and back to what is invoiced.
+  await userEvent.click(within(section).getByRole("button", { name: "Timed out" }));
+  expect(get).toHaveBeenCalledWith(
+    "/v1/organizations/webshop/usage/monthly/",
+    expect.objectContaining({
+      params: expect.objectContaining({ outcome: ["done", "timeout"] }),
+    }),
+  );
+  await userEvent.click(
+    within(section).getByRole("button", { name: "Show what is invoiced" }),
+  );
+  expect(
+    within(section).getByRole("button", { name: "Timed out" }),
+  ).toHaveAttribute("aria-pressed", "false");
+  // The last selected outcome cannot be switched off.
+  expect(within(section).getByRole("button", { name: "Done" })).toBeDisabled();
+});
+
+it("downloads the month as CSV", async () => {
+  vi.useFakeTimers({ toFake: ["Date"] });
+  vi.setSystemTime(new Date(2026, 10, 2, 12));
+  const get = mockApi(true);
+  const answer = get.getMockImplementation()!;
+  get.mockImplementation(async (url: string, config?: unknown) =>
+    url === "/v1/organizations/webshop/usage/monthly/csv/"
+      ? { data: new Blob(["month"], { type: "text/csv" }) }
+      : answer(url, config as never),
+  );
+  URL.createObjectURL = vi.fn(() => "blob:usage");
+  URL.revokeObjectURL = vi.fn();
+  const click = vi
+    .spyOn(HTMLAnchorElement.prototype, "click")
+    .mockImplementation(() => {});
+
+  renderPage();
+
+  await userEvent.click(
+    await screen.findByRole("button", { name: "Download CSV" }),
+  );
+  expect(get).toHaveBeenCalledWith(
+    "/v1/organizations/webshop/usage/monthly/csv/",
+    expect.objectContaining({ responseType: "blob" }),
+  );
+  expect(click).toHaveBeenCalled();
+  expect(URL.revokeObjectURL).toHaveBeenCalledWith("blob:usage");
 });

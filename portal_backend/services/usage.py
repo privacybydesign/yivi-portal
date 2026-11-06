@@ -12,14 +12,14 @@ import hashlib
 import json
 import secrets
 from dataclasses import dataclass
-from datetime import date, datetime, timedelta
+from datetime import UTC, date, datetime, time, timedelta
 
 from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.hazmat.primitives.asymmetric.utils import encode_dss_signature
 from django.db import IntegrityError, transaction
-from django.db.models import Sum
+from django.db.models import Q, Sum
 from django.utils import timezone
 
 from ..models.models import (
@@ -267,6 +267,23 @@ def _parse_time(value) -> datetime:
     return parsed
 
 
+# A heartbeat beyond a week says nothing useful about completeness; irmago caps it at 6 hours.
+MAX_HEARTBEAT_SECONDS = 7 * 24 * 3600
+
+
+def _heartbeat(value) -> int | None:
+    """The optional heartbeat_seconds of a report. Servers before irmago 1.6 leave it out."""
+    if value is None:
+        return None
+    if (
+        not isinstance(value, int)
+        or isinstance(value, bool)
+        or not 0 < value <= MAX_HEARTBEAT_SECONDS
+    ):
+        raise ValueError("invalid heartbeat_seconds")
+    return value
+
+
 def _row(row, with_credential_type: bool) -> dict:
     if not isinstance(row, dict):
         raise ValueError("expected an object")
@@ -318,6 +335,7 @@ def store_report(server_key: UsageServerKey, payload: dict) -> tuple[UsageReport
             "irmago_version": str(payload.get("irmago_version", ""))[:50],
             "period_from": _parse_time(payload["period"]["from"]),
             "period_to": _parse_time(payload["period"]["to"]),
+            "heartbeat_seconds": _heartbeat(payload.get("heartbeat_seconds")),
         }
         disclosures = [_row(r, True) for r in payload.get("disclosures") or []]
         sessions = [_row(r, False) for r in payload.get("sessions") or []]
@@ -452,3 +470,269 @@ def run_overview(reports, limit: int = 20) -> list[dict]:
         )
     overview.sort(key=lambda r: r["last_report_at"], reverse=True)
     return overview[:limit]
+
+
+# Monthly usage, for invoicing
+
+# What Trusted Verifiers are billed for: completed disclosure and signature sessions.
+BILLED_ACTIONS = ("disclosing", "signing")
+BILLED_OUTCOMES = ("done",)
+
+# How long a server may stay silent beyond its heartbeat before that counts as a gap: a report is
+# sealed up to a tick late, and a failed send is retried with backoff.
+HEARTBEAT_GRACE = timedelta(minutes=15)
+
+# Kinds of gaps in a month's reports. Each makes the month's numbers possibly incomplete.
+GAP_NO_KEY = "no_key"  # no usage key was active, and no report covers the period
+GAP_NO_REPORTS = "no_reports"  # a key was active, but no server reported at all
+GAP_MISSING_REPORTS = "missing_reports"  # a run's sequence numbers skip reports
+GAP_INTERRUPTED = "interrupted"  # a run stopped reporting without a final report
+# The server skips quiet intervals, so a period without its reports may be quiet or an outage.
+GAP_NO_HEARTBEAT = "no_heartbeat"
+
+Interval = tuple[datetime, datetime]
+
+
+def month_days(year: int, month: int) -> tuple[date, date]:
+    return date(year, month, 1), date(year, month, calendar.monthrange(year, month)[1])
+
+
+def monthly_usage(
+    organization,
+    year: int,
+    month: int,
+    actions=BILLED_ACTIONS,
+    outcomes=BILLED_OUTCOMES,
+) -> dict:
+    """Usage of one month per requestor and credential type, with the gaps in its reports.
+
+    `sessions` counts every session once. `credentials` counts, per credential type, the
+    sessions that disclosed it (outcome done) or asked for it (other outcomes), so a session
+    that disclosed three credential types is in three of its rows: sum `sessions` to count
+    sessions, never `credentials`.
+    """
+    first, last = month_days(year, month)
+    reports = UsageReport.objects.filter(server_key__organization=organization)
+    filters = {
+        "report__in": reports,
+        "day__range": (first, last),
+        "action__in": list(actions),
+        "outcome__in": list(outcomes),
+    }
+    sessions = (
+        UsageSessionCount.objects.filter(**filters)
+        .values("requestor", "action", "outcome")
+        .annotate(count=Sum("count"))
+        .order_by("requestor", "action", "outcome")
+    )
+    credentials = (
+        UsageDisclosureCount.objects.filter(**filters)
+        .values("requestor", "action", "outcome", "credential_type")
+        .annotate(count=Sum("count"))
+        .order_by("requestor", "action", "outcome", "credential_type")
+    )
+    return {
+        "month": f"{year:04d}-{month:02d}",
+        "actions": list(actions),
+        "outcomes": list(outcomes),
+        "sessions": list(sessions),
+        "credentials": list(credentials),
+        "completeness": month_completeness(organization, year, month),
+    }
+
+
+def _merge(intervals: list[Interval]) -> list[Interval]:
+    merged: list[Interval] = []
+    for start, end in sorted(intervals):
+        if merged and start <= merged[-1][1]:
+            merged[-1] = (merged[-1][0], max(merged[-1][1], end))
+        else:
+            merged.append((start, end))
+    return merged
+
+
+def _subtract(intervals: list[Interval], covered: list[Interval]) -> list[Interval]:
+    """The parts of the intervals that the covered intervals leave open."""
+    result = []
+    for start, end in intervals:
+        pieces = [(start, end)]
+        for c_start, c_end in covered:
+            remaining = []
+            for p_start, p_end in pieces:
+                if c_end <= p_start or c_start >= p_end:
+                    remaining.append((p_start, p_end))
+                    continue
+                if p_start < c_start:
+                    remaining.append((p_start, c_start))
+                if c_end < p_end:
+                    remaining.append((c_end, p_end))
+            pieces = remaining
+        result.extend(pieces)
+    return result
+
+
+RUN_FIELDS = (
+    "server_key_id",
+    "run_id",
+    "sequence",
+    "final",
+    "server_instance",
+    "irmago_version",
+    "heartbeat_seconds",
+    "period_from",
+    "period_to",
+)
+
+
+def _runs_around(reports, start: datetime, end: datetime) -> dict[tuple, list]:
+    """The runs with a report in [start, end], and per server instance the last run before
+    start, so a run that went silent before the month is judged too. Reports are sorted by
+    sequence."""
+    run_keys = set(
+        reports.filter(period_to__gte=start, period_from__lte=end)
+        .values_list("server_key_id", "run_id")
+        .distinct()
+    )
+    instances = (
+        reports.filter(period_to__lt=start)
+        .values_list("server_key_id", "server_instance")
+        .distinct()
+    )
+    for server_key_id, server_instance in instances:
+        before = (
+            reports.filter(
+                server_key_id=server_key_id,
+                server_instance=server_instance,
+                period_to__lt=start,
+            )
+            .order_by("-period_to")
+            .values_list("server_key_id", "run_id")
+            .first()
+        )
+        if before:
+            run_keys.add(before)
+    if not run_keys:
+        return {}
+    query = Q()
+    for server_key_id, run_id in run_keys:
+        query |= Q(server_key_id=server_key_id, run_id=run_id)
+    runs: dict[tuple, list] = {}
+    for report in reports.filter(query).only(*RUN_FIELDS):
+        runs.setdefault((report.server_key_id, report.run_id), []).append(report)
+    for run in runs.values():
+        run.sort(key=lambda r: r.sequence)
+    return runs
+
+
+def month_completeness(organization, year: int, month: int, now=None) -> dict:
+    """Lists the periods of a month whose usage may not have been reported.
+
+    A period counts as reported when a report covers it, or when the server had ended its run
+    cleanly (a stopped server has no sessions). Gaps are clipped to the month, and to now for
+    the current month. A server without a heartbeat skips quiet intervals, so a period without
+    its reports cannot be judged; such a server is listed once, as no_heartbeat.
+    """
+    now = now or timezone.now()
+    first, last = month_days(year, month)
+    start = datetime.combine(first, time.min, tzinfo=UTC)
+    end = min(datetime.combine(last + timedelta(days=1), time.min, tzinfo=UTC), now)
+    if end <= start:
+        return {"complete": True, "reported_until": None, "gaps": []}
+
+    reports = UsageReport.objects.filter(server_key__organization=organization)
+    runs = _runs_around(reports, start, end)
+    covered = _merge(
+        [(r.period_from, r.period_to) for run in runs.values() for r in run]
+    )
+    gaps: list[dict] = []
+
+    def add(kind, gap_from, gap_to, server_instance="", **extra):
+        gap_from, gap_to = max(gap_from, start), min(gap_to, end)
+        if gap_from < gap_to:
+            gaps.append(
+                {
+                    "kind": kind,
+                    "from": gap_from,
+                    "to": gap_to,
+                    "server_instance": server_instance,
+                    **extra,
+                }
+            )
+
+    # Periods without an active key, unless reports cover them anyway: a server keeps its
+    # counts until its key is registered, and sends them afterwards.
+    active = _merge(
+        [
+            (key.created_at, key.deactivated_at or end)
+            for key in organization.usage_keys.all()
+            if key.created_at < (key.deactivated_at or end)
+        ]
+    )
+    for gap_from, gap_to in _subtract(_subtract([(start, end)], active), covered):
+        add(GAP_NO_KEY, gap_from, gap_to)
+
+    if not runs:
+        for gap_from, gap_to in active:
+            add(GAP_NO_REPORTS, gap_from, gap_to)
+
+    by_instance: dict[tuple, list] = {}
+    for (server_key_id, _), run in runs.items():
+        by_instance.setdefault((server_key_id, run[-1].server_instance), []).append(run)
+    for (_, instance), instance_runs in by_instance.items():
+        instance_runs.sort(key=lambda run: run[0].period_from)
+        for i, run in enumerate(instance_runs):
+            if run[0].sequence > 1:
+                # The first reports of the run never arrived; when they started is unknown.
+                add(
+                    GAP_MISSING_REPORTS,
+                    instance_runs[i - 1][-1].period_to if i else start,
+                    run[0].period_from,
+                    instance,
+                    missing_count=run[0].sequence - 1,
+                )
+            for previous, report in zip(run, run[1:], strict=False):
+                if report.sequence > previous.sequence + 1:
+                    add(
+                        GAP_MISSING_REPORTS,
+                        previous.period_to,
+                        report.period_from,
+                        instance,
+                        missing_count=report.sequence - previous.sequence - 1,
+                    )
+            last_report = run[-1]
+            if last_report.final:
+                continue
+            if i + 1 < len(instance_runs):
+                # A later run started without this one ending cleanly: the server stopped
+                # unexpectedly, and what it counted after its last report is lost.
+                add(
+                    GAP_INTERRUPTED,
+                    last_report.period_to,
+                    instance_runs[i + 1][0].period_from,
+                    instance,
+                )
+            elif last_report.heartbeat_seconds is not None:
+                heartbeat = timedelta(seconds=last_report.heartbeat_seconds)
+                if last_report.period_to + heartbeat + HEARTBEAT_GRACE < end:
+                    add(GAP_INTERRUPTED, last_report.period_to, end, instance)
+
+        without_heartbeat = [
+            r for run in instance_runs for r in run if r.heartbeat_seconds is None
+        ]
+        if without_heartbeat:
+            add(
+                GAP_NO_HEARTBEAT,
+                without_heartbeat[0].period_from,
+                end,
+                instance,
+                irmago_version=without_heartbeat[-1].irmago_version,
+            )
+
+    gaps.sort(key=lambda gap: (gap["from"], gap["kind"], gap["server_instance"]))
+    return {
+        "complete": not gaps,
+        "reported_until": max(
+            (r.period_to for run in runs.values() for r in run), default=None
+        ),
+        "gaps": gaps,
+    }
