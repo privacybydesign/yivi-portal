@@ -716,16 +716,16 @@ def month_completeness(organization, year: int, month: int, now=None) -> dict:
                 if last_report.period_to + heartbeat + HEARTBEAT_GRACE < end:
                     add(GAP_INTERRUPTED, last_report.period_to, end, instance)
 
-        without_heartbeat = [
-            r for run in instance_runs for r in run if r.heartbeat_seconds is None
-        ]
-        if without_heartbeat:
+        old_runs = [run for run in instance_runs if run[-1].heartbeat_seconds is None]
+        if old_runs:
+            last_old = old_runs[-1]
+            running = last_old is instance_runs[-1] and not last_old[-1].final
             add(
                 GAP_NO_HEARTBEAT,
-                without_heartbeat[0].period_from,
-                end,
+                old_runs[0][0].period_from,
+                end if running else last_old[-1].period_to,
                 instance,
-                irmago_version=without_heartbeat[-1].irmago_version,
+                irmago_version=last_old[-1].irmago_version,
             )
 
     gaps.sort(key=lambda gap: (gap["from"], gap["kind"], gap["server_instance"]))
