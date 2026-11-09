@@ -6,7 +6,9 @@ from datetime import UTC, datetime, timedelta
 
 from cryptography.hazmat.primitives.asymmetric import ec
 from django.contrib.auth import get_user_model
+from django.db import connection
 from django.test import TestCase
+from django.test.utils import CaptureQueriesContext
 from django.urls import reverse
 from rest_framework.test import APIClient
 from rest_framework_simplejwt.tokens import AccessToken  # type: ignore
@@ -300,7 +302,9 @@ class MonthlyUsageApiTest(MonthlyUsageTestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response["Content-Type"], "text/csv; charset=utf-8")
         self.assertIn("yivi-usage-webshop-2026-10.csv", response["Content-Disposition"])
-        rows = list(csv.DictReader(io.StringIO(response.content.decode())))
+        # A byte order mark makes spreadsheet programs read the file as UTF-8.
+        self.assertTrue(response.content.startswith("\ufeff".encode()))
+        rows = list(csv.DictReader(io.StringIO(response.content.decode("utf-8-sig"))))
         sessions = [r for r in rows if r["metric"] == "sessions"]
         credentials = [r for r in rows if r["metric"] == "credentials"]
         gaps = [r for r in rows if r["metric"].startswith("gap:")]
@@ -413,6 +417,148 @@ class MonthCompletenessTest(MonthlyUsageTestCase):
         self.store(*hourly_run(OCT_1 - HOUR, NOV_1 + HOUR))
         self.assertEqual(self.gaps(), [])
 
-    def test_future_month_has_no_gaps(self):
+    def test_future_month_is_not_complete(self):
         result = self.completeness(now=OCT_1 - HOUR)
-        self.assertEqual(result, {"complete": True, "reported_until": None, "gaps": []})
+        self.assertEqual(
+            result, {"complete": False, "reported_until": None, "gaps": []}
+        )
+
+
+class MonthCompletenessAcrossRunsTest(MonthlyUsageTestCase):
+    """Gaps follow runs by run_id across keys and server instances, and close again."""
+
+    def november(self, now=NOV_1 + timedelta(days=2)):
+        result = usage.month_completeness(self.organization, 2026, 11, now=now)
+        return [(gap["kind"], gap["from"], gap["to"]) for gap in result["gaps"]]
+
+    def new_key(self, created_at):
+        key = usage.register_key(
+            self.organization, public_pem(ec.generate_private_key(ec.SECP256R1()))
+        )
+        UsageServerKey.objects.filter(pk=key.pk).update(created_at=created_at)
+        key.refresh_from_db()
+        return key
+
+    def test_redeploy_under_a_new_instance_name(self):
+        # The pod crashes; its replacement has another hostname, so another server_instance.
+        crash, takeover = at(30, 23), at(30, 23) + timedelta(minutes=5)
+        self.store(*hourly_run(at(29), crash))
+        self.store(
+            *hourly_run(
+                takeover, NOV_1 + timedelta(days=2), "run-2", server_instance="pod-b"
+            )
+        )
+        self.assertEqual(self.gaps(), [("interrupted", crash, takeover)])
+        self.assertEqual(self.november(), [])
+
+    def test_upgrade_from_a_server_without_heartbeat(self):
+        # A 1.5.0 container is killed during the upgrade and comes back under a new name.
+        self.store(
+            report(1, at(29), at(29, 1), heartbeat=None),
+            report(2, at(30), at(30, 1), heartbeat=None),
+        )
+        self.store(
+            *hourly_run(
+                at(30, 12), NOV_1 + timedelta(days=2), "run-2", server_instance="pod-b"
+            )
+        )
+        self.assertEqual(self.gaps(), [("no_heartbeat", at(29), at(30, 12))])
+        self.assertEqual(self.november(), [])
+
+    def test_key_rotation_keeps_the_run(self):
+        # The old key is deactivated mid-run; the server sends the rest of its run with a new
+        # key, starting with the report the old key could no longer deliver.
+        UsageServerKey.objects.filter(pk=self.key.pk).update(deactivated_at=at(15))
+        new_key = self.new_key(at(15))
+        reports = hourly_run(OCT_1 - HOUR, NOV_1 + HOUR)
+        for payload in reports:
+            moment = datetime.fromisoformat(payload["period"]["to"])
+            usage.store_report(self.key if moment <= at(15) else new_key, payload)
+        self.assertEqual(self.gaps(), [])
+
+    def test_report_resent_under_a_new_key_counts_once(self):
+        new_key = self.new_key(at(15))
+        payload = report(
+            1,
+            at(14),
+            at(14, 1),
+            sessions=[("2026-10-14", "shop", "disclosing", "done", 5)],
+        )
+        _, created = usage.store_report(self.key, payload)
+        self.assertTrue(created)
+        _, created = usage.store_report(new_key, payload)
+        self.assertFalse(created)
+        usage_data = usage.monthly_usage(self.organization, 2026, 10)
+        self.assertEqual(sum(row["count"] for row in usage_data["sessions"]), 5)
+
+    def test_replica_that_dies_is_one_gap(self):
+        # Two replicas; one dies on the 5th while the other keeps reporting.
+        self.store(*hourly_run(OCT_1 - HOUR, at(5), "run-a", server_instance="pod-a"))
+        self.store(
+            *hourly_run(
+                OCT_1 - HOUR,
+                NOV_1 + timedelta(days=2),
+                "run-b",
+                server_instance="pod-b",
+            )
+        )
+        # Running, it would have reported by 01:15; the other replica reported until 02:00.
+        self.assertEqual(self.gaps(), [("interrupted", at(5), at(5, 2))])
+        self.assertEqual(self.november(), [])
+
+    def test_month_without_any_report_while_a_key_is_active(self):
+        # Stopped cleanly in September, and nothing in October: a misconfigured restart looks
+        # like this, so it must not pass as a complete month.
+        self.store(
+            *hourly_run(
+                OCT_1 - timedelta(days=12), OCT_1 - timedelta(days=11), final=True
+            )
+        )
+        self.assertEqual(self.gaps(), [("no_reports", OCT_1, NOV_1)])
+
+    def test_server_without_heartbeat_registered_mid_month(self):
+        # A 1.5.0 server only reports when it had sessions; its key is registered on the 15th.
+        UsageServerKey.objects.filter(pk=self.key.pk).update(created_at=at(15))
+        self.store(
+            *(
+                report(day - 2, at(day), at(day, 1), heartbeat=None)
+                for day in range(3, 31)
+            )
+        )
+        self.assertEqual(
+            self.gaps(), [("no_key", OCT_1, at(3)), ("no_heartbeat", at(3), NOV_1)]
+        )
+
+    def test_crash_followed_by_lost_first_reports_is_one_gap(self):
+        self.store(*hourly_run(OCT_1, at(10)))
+        self.store(*hourly_run(at(10, 3), NOV_1 + HOUR, run_id="run-2", skip={1}))
+        [gap] = self.completeness()["gaps"]
+        self.assertEqual(
+            (gap["kind"], gap["from"], gap["to"], gap["missing_count"]),
+            ("missing_reports", at(10), at(10, 4), 1),
+        )
+
+    def test_number_of_queries_does_not_grow_with_runs(self):
+        for day in range(2, 30):
+            self.store(
+                report(
+                    1,
+                    at(day),
+                    at(day, 1),
+                    run_id=f"run-{day}",
+                    server_instance=f"pod-{day}",
+                ),
+                report(
+                    2,
+                    at(day, 1),
+                    at(day, 2),
+                    run_id=f"run-{day}",
+                    server_instance=f"pod-{day}",
+                    final=True,
+                ),
+            )
+        with CaptureQueriesContext(connection) as captured:
+            self.completeness()
+        # The development settings' query profiler can add an EXPLAIN per query.
+        queries = [q for q in captured if not q["sql"].startswith("EXPLAIN")]
+        self.assertEqual(len(queries), 2)

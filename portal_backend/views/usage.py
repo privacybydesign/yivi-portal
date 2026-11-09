@@ -378,6 +378,8 @@ class UsageMonthlyCsvView(APIView):
         response["Content-Disposition"] = (
             f'attachment; filename="yivi-usage-{organization.slug}-{data["month"]}.csv"'
         )
+        # A byte order mark, so spreadsheet programs read the file as UTF-8.
+        response.write("\ufeff")
         writer = csv.writer(response)
         writer.writerow(
             [
@@ -393,6 +395,8 @@ class UsageMonthlyCsvView(APIView):
                 "gap_from",
                 "gap_to",
                 "server_instance",
+                "missing_count",
+                "irmago_version",
             ]
         )
         common = [data["month"], organization.slug, complete]
@@ -406,6 +410,8 @@ class UsageMonthlyCsvView(APIView):
                     row["outcome"],
                     "",
                     row["count"],
+                    "",
+                    "",
                     "",
                     "",
                     "",
@@ -424,6 +430,8 @@ class UsageMonthlyCsvView(APIView):
                     "",
                     "",
                     "",
+                    "",
+                    "",
                 ]
             )
         for gap in data["completeness"]["gaps"]:
@@ -439,6 +447,8 @@ class UsageMonthlyCsvView(APIView):
                     gap["from"].isoformat(),
                     gap["to"].isoformat(),
                     _csv_cell(gap["server_instance"]),
+                    gap.get("missing_count", ""),
+                    _csv_cell(gap.get("irmago_version", "")),
                 ]
             )
         return response

@@ -63,13 +63,14 @@ const pad = (n: number) => String(n).padStart(2, "0");
 const daysInMonth = (year: number, month: number) =>
   new Date(year, month, 0).getDate();
 
+/** The period that holds `today`. Usage is counted per UTC day, so the period is taken in UTC. */
 export const currentPeriod = (
   kind: UsagePeriod["kind"],
   today = new Date(),
 ): UsagePeriod => ({
   kind,
-  year: today.getFullYear(),
-  month: today.getMonth() + 1,
+  year: today.getUTCFullYear(),
+  month: today.getUTCMonth() + 1,
 });
 
 /** Moves a period one calendar month or year back (-1) or forward (+1). */

@@ -18,11 +18,18 @@ const row = (
 
 describe("calendar periods", () => {
   it("defaults to the current calendar month", () => {
-    expect(currentPeriod("month", new Date(2026, 10, 2))).toEqual({
+    expect(currentPeriod("month", new Date(Date.UTC(2026, 10, 2)))).toEqual({
       kind: "month",
       year: 2026,
       month: 11,
     });
+  });
+
+  it("takes the month in UTC, as usage is counted per UTC day", () => {
+    // 00:30 on 1 November in Amsterdam is still 31 October in UTC.
+    expect(
+      currentPeriod("month", new Date(Date.UTC(2026, 9, 31, 23, 30))),
+    ).toEqual({ kind: "month", year: 2026, month: 10 });
   });
 
   it("bounds a month by its first and last day, leap years included", () => {
@@ -50,7 +57,7 @@ describe("calendar periods", () => {
   });
 
   it("knows which periods lie in the future", () => {
-    const today = new Date(2026, 10, 2);
+    const today = new Date(Date.UTC(2026, 10, 2));
     expect(
       isFuturePeriod({ kind: "month", year: 2026, month: 11 }, today),
     ).toBe(false);
