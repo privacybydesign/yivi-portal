@@ -560,6 +560,8 @@ class UsageDisclosureCount(models.Model):
     )
     day = models.DateField()
     requestor = models.CharField(max_length=255, blank=True)
+    # The hostname the Yivi app connected to; empty from servers that do not report it.
+    host = models.CharField(max_length=255, blank=True, default="")
     action = models.CharField(max_length=20)
     credential_type = models.CharField(max_length=255)
     outcome = models.CharField(max_length=20, choices=USAGE_OUTCOME_CHOICES)
@@ -574,6 +576,20 @@ class UsageSessionCount(models.Model):
     )
     day = models.DateField()
     requestor = models.CharField(max_length=255, blank=True)
+    # The hostname the Yivi app connected to; empty from servers that do not report it.
+    host = models.CharField(max_length=255, blank=True, default="")
     action = models.CharField(max_length=20)
     outcome = models.CharField(max_length=20, choices=USAGE_OUTCOME_CHOICES)
     count = models.PositiveBigIntegerField()
+
+    class Meta:
+        indexes: ClassVar[list] = [models.Index(fields=["host"])]
+
+
+class TrustedVerifierUsage(RelyingPartyHostname):
+    """A hostname of a Trusted Verifier, for checking in the admin that its usage is reported."""
+
+    class Meta:
+        proxy = True
+        verbose_name = "Trusted Verifier usage"
+        verbose_name_plural = "Trusted Verifier usage"

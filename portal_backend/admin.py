@@ -5,7 +5,8 @@ from typing import ClassVar
 from django import forms
 from django.contrib import admin
 from django.contrib.admin.utils import unquote
-from django.core.exceptions import ValidationError
+from django.core.exceptions import PermissionDenied, ValidationError
+from django.template.response import TemplateResponse
 from django.utils import timezone
 
 from portal_backend.models.models import (
@@ -17,6 +18,7 @@ from portal_backend.models.models import (
     Organization,
     RelyingParty,
     RelyingPartyHostname,
+    TrustedVerifierUsage,
     TrustModel,
     UsageReport,
     UsageServerKey,
@@ -280,3 +282,50 @@ class UsageReportAdmin(admin.ModelAdmin):
     )
     list_filter = ("final",)
     search_fields = ("server_key__organization__slug", "server_instance", "run_id")
+
+
+TRUSTED_VERIFIER_STATUS_LABELS = {
+    "no_key": "No usage key",
+    "no_reports": "No reports yet",
+    "host_not_reported": "Hostname not reported",
+    "silent": "Silent",
+    "reporting": "Reporting",
+}
+
+
+@admin.register(TrustedVerifierUsage)
+class TrustedVerifierUsageAdmin(admin.ModelAdmin):
+    """Per hostname of a Trusted Verifier, whether its usage reports arrive.
+
+    Read-only: the page shows usage.trusted_verifier_usage() instead of a list of model rows.
+    """
+
+    change_list_template = "admin/portal_backend/trustedverifierusage/change_list.html"
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    def changelist_view(self, request, extra_context=None):
+        if not self.has_view_permission(request):
+            raise PermissionDenied
+        rows = usage.trusted_verifier_usage()
+        for row in rows:
+            row["status_label"] = TRUSTED_VERIFIER_STATUS_LABELS[row["status"]]
+        silence_hours = int(usage.TRUSTED_VERIFIER_SILENCE.total_seconds() // 3600)
+        context = {
+            **self.admin_site.each_context(request),
+            "opts": self.model._meta,
+            "title": "Trusted Verifier usage",
+            "rows": rows,
+            "attention": sum(1 for r in rows if r["status"] != "reporting"),
+            "silence_hours": silence_hours,
+            "status_labels": TRUSTED_VERIFIER_STATUS_LABELS,
+            **(extra_context or {}),
+        }
+        return TemplateResponse(request, self.change_list_template, context)
