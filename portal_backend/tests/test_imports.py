@@ -227,3 +227,17 @@ class ImportSlugMismatchTests(TestCase):
         self.assertEqual(
             RelyingParty.objects.filter(rp_slug="acme-verifier").count(), 1
         )
+
+    def test_import_keeps_usage_reporting_required(self):
+        """Yivi marks this in the admin; the scheme does not know it."""
+        rps_dict = [self._requestor("pbdf.acme-verifier", "acme-verifier.example.com")]
+        trusted_rps_import.create_org_rp(rps_dict, "production", self.REPO_PATH)
+        RelyingParty.objects.filter(rp_slug="acme-verifier").update(
+            usage_reporting_required=True
+        )
+
+        trusted_rps_import.create_org_rp(rps_dict, "production", self.REPO_PATH)
+
+        self.assertTrue(
+            RelyingParty.objects.get(rp_slug="acme-verifier").usage_reporting_required
+        )

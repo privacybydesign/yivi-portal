@@ -228,6 +228,7 @@ class RelyingPartySerializer(serializers.ModelSerializer):
     class Meta:
         model = RelyingParty
         fields = "__all__"
+        read_only_fields = ("usage_reporting_required",)
 
 
 class MaintainerSerializer(serializers.ModelSerializer):

@@ -19,11 +19,12 @@ from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.hazmat.primitives.asymmetric.utils import encode_dss_signature
 from django.db import IntegrityError, transaction
-from django.db.models import Sum
+from django.db.models import Count, Max, Sum
 from django.utils import timezone
 
 from ..models.models import (
     USAGE_OUTCOME_CHOICES,
+    RelyingPartyHostname,
     UsageDisclosureCount,
     UsageNonce,
     UsageReport,
@@ -280,9 +281,14 @@ def _row(row, with_credential_type: bool) -> dict:
     requestor = row.get("requestor", "")
     if not isinstance(requestor, str) or len(requestor) > 255:
         raise ValueError("invalid requestor")
+    # Optional: servers that do not report the host leave it out.
+    host = row.get("host", "")
+    if not isinstance(host, str) or len(host) > 255:
+        raise ValueError("invalid host")
     parsed = {
         "day": date.fromisoformat(row["day"]),
         "requestor": requestor,
+        "host": host.lower(),
         "action": row["action"],
         "outcome": row["outcome"],
         "count": count,
@@ -452,3 +458,106 @@ def run_overview(reports, limit: int = 20) -> list[dict]:
         )
     overview.sort(key=lambda r: r["last_report_at"], reverse=True)
     return overview[:limit]
+
+
+# Trusted Verifiers
+
+# A Trusted Verifier hostname without a report for this long is flagged as silent. A server that
+# sends heartbeats reports at least every hour; one that does not only reports when it had
+# sessions, so a quiet night must not count as silence.
+TRUSTED_VERIFIER_SILENCE = timedelta(hours=24)
+
+# Statuses of a Trusted Verifier hostname, the ones that need attention first.
+TRUSTED_VERIFIER_STATUSES = (
+    "no_key",
+    "no_reports",
+    "host_not_reported",
+    "silent",
+    "reporting",
+)
+
+
+def trusted_verifier_usage(now: datetime | None = None) -> list[dict]:
+    """Whether the usage of every hostname of a Trusted Verifier that must report it is reported.
+
+    These are the published Relying Parties of the production trust model environment
+    (pbdf-requestors) whose contract requires usage reporting, marked by Yivi with
+    usage_reporting_required. The Yivi app recognises them by the hostname of the server it
+    connects to, and Yivi servers report that hostname per row, so a report counts for a
+    hostname whichever organization's key signed it: a hosting party may run the server. The
+    status of a hostname is one of:
+
+    - no_key: it was never reported, and its organization has no active usage key;
+    - no_reports: never reported, and no report arrived under the organization's keys either;
+    - host_not_reported: the organization's servers report, but never for this hostname. Either
+      the server of this hostname does not report, or it runs an irmago that leaves out the host;
+    - silent: reported before, but not within TRUSTED_VERIFIER_SILENCE;
+    - reporting: reported within TRUSTED_VERIFIER_SILENCE.
+
+    The list is ordered by status, in the order of TRUSTED_VERIFIER_STATUSES.
+    """
+    now = now or timezone.now()
+    hostnames = list(
+        RelyingPartyHostname.objects.filter(
+            relying_party__published=True,
+            relying_party__yivi_tme__environment="production",
+            relying_party__usage_reporting_required=True,
+        ).select_related("relying_party__organization")
+    )
+    organizations = {h.relying_party.organization_id for h in hostnames}
+    # order_by() drops any default ordering, which would otherwise split the groups.
+    active_keys = dict(
+        UsageServerKey.objects.filter(
+            organization__in=organizations, deactivated_at__isnull=True
+        )
+        .order_by()
+        .values_list("organization")
+        .annotate(count=Count("id"))
+    )
+    last_organization_report = dict(
+        UsageReport.objects.filter(server_key__organization__in=organizations)
+        .order_by()
+        .values_list("server_key__organization")
+        .annotate(last=Max("received_at"))
+    )
+    last_host_report = dict(
+        UsageSessionCount.objects.filter(host__in=[h.hostname for h in hostnames])
+        .order_by()
+        .values_list("host")
+        .annotate(last=Max("report__received_at"))
+    )
+
+    overview = []
+    for hostname in hostnames:
+        organization = hostname.relying_party.organization
+        host_last = last_host_report.get(hostname.hostname)
+        if host_last is not None:
+            silent = now - host_last > TRUSTED_VERIFIER_SILENCE
+            status = "silent" if silent else "reporting"
+        elif not active_keys.get(organization.id):
+            status = "no_key"
+        elif organization.id not in last_organization_report:
+            status = "no_reports"
+        else:
+            status = "host_not_reported"
+        overview.append(
+            {
+                "hostname": hostname.hostname,
+                "relying_party": hostname.relying_party,
+                "organization": organization,
+                "status": status,
+                "active_keys": active_keys.get(organization.id, 0),
+                "host_last_report_at": host_last,
+                "organization_last_report_at": last_organization_report.get(
+                    organization.id
+                ),
+            }
+        )
+    overview.sort(
+        key=lambda r: (
+            TRUSTED_VERIFIER_STATUSES.index(r["status"]),
+            r["organization"].name_en.lower(),
+            r["hostname"],
+        )
+    )
+    return overview
