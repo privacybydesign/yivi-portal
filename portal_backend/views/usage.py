@@ -186,7 +186,7 @@ class UsageServerKeysView(APIView):
         return Response(UsageServerKeySerializer(keys, many=True).data)
 
     def post(self, request: Request, org_slug: str) -> Response:
-        """Registers the public key a Yivi server prints with `irma server usage-key`."""
+        """Registers the public key a Yivi server prints with `yivi irma server usage keygen`."""
         organization = get_object_or_404(Organization, slug=org_slug)
         if not organization.is_verified:
             # Usage is only collected for organizations Yivi has verified.

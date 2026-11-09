@@ -1,0 +1,97 @@
+{% extends "admin/base_site.html" %}
+{% comment %}
+  Per hostname of a Trusted Verifier that must report its usage, whether the reports arrive.
+  Hostnames that need attention come first.
+{% endcomment %}
+
+{% block extrastyle %}
+  {{ block.super }}
+  <style>
+    .tv-usage { max-width: 72rem; }
+    .tv-usage table { width: 100%; margin: 1rem 0 1.5rem; }
+    .tv-usage td { vertical-align: top; }
+    .tv-usage .quiet { color: var(--body-quiet-color); }
+    .tv-usage .num { font-variant-numeric: tabular-nums; }
+    .tv-status { display: inline-block; padding: 0.1rem 0.5rem; border-radius: 999px; white-space: nowrap; font-weight: 600; }
+    .tv-status.no_key, .tv-status.no_reports, .tv-status.host_not_reported { background: var(--message-error-bg); }
+    .tv-status.silent { background: var(--message-warning-bg); }
+    .tv-status.reporting { background: var(--message-success-bg); }
+    .tv-usage dl { display: grid; grid-template-columns: max-content 1fr; gap: 0.5rem 1rem; }
+    .tv-usage dd { margin: 0; }
+  </style>
+{% endblock %}
+
+{% block breadcrumbs %}
+  <div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">Home</a>
+    &rsaquo; <a href="{% url 'admin:app_list' app_label=opts.app_label %}">{{ opts.app_config.verbose_name }}</a>
+    &rsaquo; {{ opts.verbose_name_plural|capfirst }}
+  </div>
+{% endblock %}
+
+{% block content %}
+  <div id="content-main" class="tv-usage">
+    <p>
+      Every hostname of a published Relying Party in a production trust model environment whose contract requires usage reporting.
+      Mark a Relying Party with <a href="{% url 'admin:portal_backend_relyingparty_changelist' %}">Usage reporting required</a> to check it here.
+      {% if rows %}
+        {{ attention }} of {{ rows|length }} hostname{{ rows|length|pluralize }} need{{ attention|pluralize:"s," }} attention.
+      {% endif %}
+    </p>
+
+    <table>
+      <thead>
+        <tr>
+          <th scope="col">Status</th>
+          <th scope="col">Hostname</th>
+          <th scope="col">Organization</th>
+          <th scope="col">Relying party</th>
+          <th scope="col">Active keys</th>
+          <th scope="col">Last report for this hostname</th>
+          <th scope="col">Last report from the organization</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in rows %}
+          <tr>
+            <td><span class="tv-status {{ row.status }}">{{ row.status_label }}</span></td>
+            <td>{{ row.hostname }}</td>
+            <td>
+              <a href="{% url 'admin:portal_backend_usageserverkey_changelist' %}?q={{ row.organization.slug|urlencode }}">{{ row.organization.name_en }}</a>
+            </td>
+            <td>
+              <a href="{% url 'admin:portal_backend_relyingparty_change' row.relying_party.pk %}">{{ row.relying_party.rp_slug|default:row.relying_party.pk }}</a>
+            </td>
+            <td class="num">{{ row.active_keys }}</td>
+            <td class="num">
+              {% if row.host_last_report_at %}
+                <span title="{{ row.host_last_report_at|date:'Y-m-d H:i e' }}">{{ row.host_last_report_at|timesince }} ago</span>
+              {% else %}<span class="quiet">Never</span>{% endif %}
+            </td>
+            <td class="num">
+              {% if row.organization_last_report_at %}
+                <span title="{{ row.organization_last_report_at|date:'Y-m-d H:i e' }}">{{ row.organization_last_report_at|timesince }} ago</span>
+              {% else %}<span class="quiet">Never</span>{% endif %}
+            </td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="7" class="quiet">No published Trusted Verifier is required to report its usage.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <h2>What the statuses mean</h2>
+    <dl>
+      <dt><span class="tv-status no_key">{{ status_labels.no_key }}</span></dt>
+      <dd>The organization has no active usage key, and no report ever named this hostname.</dd>
+      <dt><span class="tv-status no_reports">{{ status_labels.no_reports }}</span></dt>
+      <dd>The organization has a key, but no report arrived under any of its keys.</dd>
+      <dt><span class="tv-status host_not_reported">{{ status_labels.host_not_reported }}</span></dt>
+      <dd>The organization's servers report, but never for this hostname. The server of this hostname does not report, or runs an irmago that leaves out the host.</dd>
+      <dt><span class="tv-status silent">{{ status_labels.silent }}</span></dt>
+      <dd>Reports for this hostname arrived before, but none in the last {{ silence_hours }} hours.</dd>
+      <dt><span class="tv-status reporting">{{ status_labels.reporting }}</span></dt>
+      <dd>A report for this hostname arrived in the last {{ silence_hours }} hours. It may come from another organization's key, such as a hosting party's.</dd>
+    </dl>
+  </div>
+{% endblock %}

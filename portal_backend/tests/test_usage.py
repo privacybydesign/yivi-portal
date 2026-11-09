@@ -275,7 +275,7 @@ class UsageMaintainerApiTest(TestCase):
 
     def test_register_list_and_deactivate_key(self):
         url = reverse("portal_backend:usage-keys", args=["webshop"])
-        # The whole output of `irma server usage-key` may be pasted.
+        # The whole output of `yivi irma server usage keygen` may be pasted.
         pasted = public_pem(self.server.key) + "JWK thumbprint: abc\n"
         response = self.api.post(
             url, {"public_key_pem": pasted, "label": "prod"}, format="json"

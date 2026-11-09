@@ -296,6 +296,12 @@ class RelyingParty(models.Model):
     reviewed_at = models.DateTimeField(null=True, blank=True)
     published = models.BooleanField(default=False)
     published_at = models.DateTimeField(null=True, blank=True)
+    # Set by Yivi in the admin, not by the scheme import or the organization itself.
+    usage_reporting_required = models.BooleanField(
+        default=False,
+        help_text="Its contract requires the Yivi servers of its hostnames to report "
+        "their usage. Only these are checked on the Trusted Verifier usage page.",
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     last_updated_at = models.DateTimeField(auto_now=True)
     tracker = FieldTracker()
@@ -563,6 +569,8 @@ class UsageDisclosureCount(models.Model):
     )
     day = models.DateField()
     requestor = models.CharField(max_length=255, blank=True)
+    # The hostname the Yivi app connected to; empty from servers that do not report it.
+    host = models.CharField(max_length=255, blank=True, default="")
     action = models.CharField(max_length=20)
     credential_type = models.CharField(max_length=255)
     outcome = models.CharField(max_length=20, choices=USAGE_OUTCOME_CHOICES)
@@ -577,6 +585,21 @@ class UsageSessionCount(models.Model):
     )
     day = models.DateField()
     requestor = models.CharField(max_length=255, blank=True)
+    # The hostname the Yivi app connected to; empty from servers that do not report it.
+    host = models.CharField(max_length=255, blank=True, default="")
     action = models.CharField(max_length=20)
     outcome = models.CharField(max_length=20, choices=USAGE_OUTCOME_CHOICES)
     count = models.PositiveBigIntegerField()
+
+    class Meta:
+        indexes: ClassVar[list] = [models.Index(fields=["host"])]
+
+
+class TrustedVerifierUsage(RelyingPartyHostname):
+    """A hostname of a Trusted Verifier that must report its usage, for checking in the admin
+    that it does."""
+
+    class Meta:
+        proxy = True
+        verbose_name = "Trusted Verifier usage"
+        verbose_name_plural = "Trusted Verifier usage"

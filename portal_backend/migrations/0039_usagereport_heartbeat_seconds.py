@@ -3,7 +3,7 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("portal_backend", "0037_remove_organization_approved_logo"),
+        ("portal_backend", "0038_usage_host_reporting_required"),
     ]
 
     operations = [
