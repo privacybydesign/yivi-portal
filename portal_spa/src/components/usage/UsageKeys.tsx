@@ -69,7 +69,7 @@ function RegisterKeyDialog({
           <DialogHeader>
             <DialogTitle>Register a usage key</DialogTitle>
             <DialogDescription>
-              Run <code>irma server usage-key</code> on your Yivi server and
+              Run <code>yivi irma server usage keygen</code> on your Yivi server and
               paste its full output.
             </DialogDescription>
           </DialogHeader>

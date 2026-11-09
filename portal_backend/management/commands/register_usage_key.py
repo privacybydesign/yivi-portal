@@ -8,7 +8,7 @@ from portal_backend.services import usage
 class Command(BaseCommand):
     help = (
         "Register the usage reporting public key of a Yivi server for an organization. "
-        "The server prints the key with `irma server usage-key`."
+        "The server prints the key with `yivi irma server usage keygen`."
     )
 
     def add_arguments(self, parser):

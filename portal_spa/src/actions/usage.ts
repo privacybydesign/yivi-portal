@@ -193,7 +193,7 @@ export const registerUsageKey = async (
     if (e instanceof AxiosError && e.response?.status === 400) {
       return {
         error:
-          "That is not an EC P-256 public key. Paste the full output of `irma server usage-key`.",
+          "That is not an EC P-256 public key. Paste the full output of `yivi irma server usage keygen`.",
       };
     }
     return { error: apiError(e, "The key could not be registered.") };

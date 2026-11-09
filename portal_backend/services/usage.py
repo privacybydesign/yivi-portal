@@ -71,7 +71,7 @@ MAX_PEM_INPUT = 4096
 
 
 def public_key_from_pem(pem: str) -> ec.EllipticCurvePublicKey:
-    # Accept the whole output of `yivi irma server usage-key`, which also prints the
+    # Accept the whole output of `yivi irma server usage keygen`, which also prints the
     # thumbprint. Plain string search, so the cost stays linear in the input.
     start = pem.find(PEM_BEGIN) if len(pem) <= MAX_PEM_INPUT else -1
     end = pem.find(PEM_END, start) if start >= 0 else -1
