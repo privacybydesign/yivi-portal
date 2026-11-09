@@ -60,13 +60,14 @@ class TrustedVerifierUsageTest(TestCase):
         )
 
     def add_relying_party(
-        self, organization, slug, hostnames, published=True, env=None
+        self, organization, slug, hostnames, published=True, env=None, required=True
     ):
         relying_party = RelyingParty.objects.create(
             rp_slug=slug,
             organization=organization,
             yivi_tme=env or self.production,
             published=published,
+            usage_reporting_required=required,
         )
         for hostname in hostnames:
             RelyingPartyHostname.objects.create(
@@ -135,13 +136,17 @@ class TrustedVerifierUsageTest(TestCase):
         )
         self.assertEqual(self.statuses()["irma.gemeente.nl"], "reporting")
 
-    def test_only_published_production_relying_parties(self):
+    def test_only_published_production_relying_parties_that_must_report(self):
         other = Organization.objects.create(
             name_en="Other", name_nl="Ander", slug="other"
         )
         self.add_relying_party(other, "draft", ["draft.example.com"], published=False)
         self.add_relying_party(
             other, "staging", ["staging.example.com"], env=trust_model_env("staging")
+        )
+        # The contract of this Trusted Verifier does not require usage reporting.
+        self.add_relying_party(
+            other, "no-contract", ["irma.other.example.com"], required=False
         )
         self.assertEqual(
             set(self.statuses()), {"irma.gemeente.nl", "irma-acc.gemeente.nl"}
@@ -201,6 +206,7 @@ class TrustedVerifierUsageAdminTest(TestCase):
             organization=organization,
             yivi_tme=trust_model_env("production"),
             published=True,
+            usage_reporting_required=True,
         )
         RelyingPartyHostname.objects.create(
             hostname="irma.gemeente.nl", relying_party=relying_party

@@ -1,7 +1,7 @@
 {% extends "admin/base_site.html" %}
 {% comment %}
-  Per hostname of a Trusted Verifier, whether its usage reports arrive. Hostnames that need
-  attention come first.
+  Per hostname of a Trusted Verifier that must report its usage, whether the reports arrive.
+  Hostnames that need attention come first.
 {% endcomment %}
 
 {% block extrastyle %}
@@ -32,7 +32,8 @@
 {% block content %}
   <div id="content-main" class="tv-usage">
     <p>
-      Every hostname of a published Relying Party in a production trust model environment: the Trusted Verifiers.
+      Every hostname of a published Relying Party in a production trust model environment whose contract requires usage reporting.
+      Mark a Relying Party with <a href="{% url 'admin:portal_backend_relyingparty_changelist' %}">Usage reporting required</a> to check it here.
       {% if rows %}
         {{ attention }} of {{ rows|length }} hostname{{ rows|length|pluralize }} need{{ attention|pluralize:"s," }} attention.
       {% endif %}
@@ -74,7 +75,7 @@
             </td>
           </tr>
         {% empty %}
-          <tr><td colspan="7" class="quiet">No published Trusted Verifiers.</td></tr>
+          <tr><td colspan="7" class="quiet">No published Trusted Verifier is required to report its usage.</td></tr>
         {% endfor %}
       </tbody>
     </table>

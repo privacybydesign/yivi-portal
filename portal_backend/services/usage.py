@@ -478,12 +478,14 @@ TRUSTED_VERIFIER_STATUSES = (
 
 
 def trusted_verifier_usage(now: datetime | None = None) -> list[dict]:
-    """Whether the usage of every hostname of a published production Relying Party is reported.
+    """Whether the usage of every hostname of a Trusted Verifier that must report it is reported.
 
-    These are the Trusted Verifiers of the production trust model environment (pbdf-requestors),
-    which the Yivi app recognises by the hostname of the server it connects to. Yivi servers report that hostname
-    per row, so a report counts for a hostname whichever organization's key signed it: a hosting
-    party may run the server. The status of a hostname is one of:
+    These are the published Relying Parties of the production trust model environment
+    (pbdf-requestors) whose contract requires usage reporting, marked by Yivi with
+    usage_reporting_required. The Yivi app recognises them by the hostname of the server it
+    connects to, and Yivi servers report that hostname per row, so a report counts for a
+    hostname whichever organization's key signed it: a hosting party may run the server. The
+    status of a hostname is one of:
 
     - no_key: it was never reported, and its organization has no active usage key;
     - no_reports: never reported, and no report arrived under the organization's keys either;
@@ -499,6 +501,7 @@ def trusted_verifier_usage(now: datetime | None = None) -> list[dict]:
         RelyingPartyHostname.objects.filter(
             relying_party__published=True,
             relying_party__yivi_tme__environment="production",
+            relying_party__usage_reporting_required=True,
         ).select_related("relying_party__organization")
     )
     organizations = {h.relying_party.organization_id for h in hostnames}

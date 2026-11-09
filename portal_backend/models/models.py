@@ -296,6 +296,12 @@ class RelyingParty(models.Model):
     reviewed_at = models.DateTimeField(null=True, blank=True)
     published = models.BooleanField(default=False)
     published_at = models.DateTimeField(null=True, blank=True)
+    # Set by Yivi in the admin, not by the scheme import or the organization itself.
+    usage_reporting_required = models.BooleanField(
+        default=False,
+        help_text="Its contract requires the Yivi servers of its hostnames to report "
+        "their usage. Only these are checked on the Trusted Verifier usage page.",
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     last_updated_at = models.DateTimeField(auto_now=True)
     tracker = FieldTracker()
@@ -587,7 +593,8 @@ class UsageSessionCount(models.Model):
 
 
 class TrustedVerifierUsage(RelyingPartyHostname):
-    """A hostname of a Trusted Verifier, for checking in the admin that its usage is reported."""
+    """A hostname of a Trusted Verifier that must report its usage, for checking in the admin
+    that it does."""
 
     class Meta:
         proxy = True

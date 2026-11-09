@@ -136,6 +136,7 @@ class RelyingPartyAdmin(admin.ModelAdmin):
         "ready",
         "reviewed_accepted",
         "published_at",
+        "usage_reporting_required",
         "created_at",
         "last_updated_at",
         "get_hostnames",
@@ -146,7 +147,13 @@ class RelyingPartyAdmin(admin.ModelAdmin):
         "rp_slug",
         "hostnames__hostname",
     )
-    list_filter = ("yivi_tme", "ready", "reviewed_accepted", "published_at")
+    list_filter = (
+        "yivi_tme",
+        "ready",
+        "reviewed_accepted",
+        "published_at",
+        "usage_reporting_required",
+    )
     readonly_fields = ("created_at", "last_updated_at")
 
     def get_hostnames(self, obj):
@@ -295,7 +302,7 @@ TRUSTED_VERIFIER_STATUS_LABELS = {
 
 @admin.register(TrustedVerifierUsage)
 class TrustedVerifierUsageAdmin(admin.ModelAdmin):
-    """Per hostname of a Trusted Verifier, whether its usage reports arrive.
+    """Per hostname of a Trusted Verifier that must report its usage, whether the reports arrive.
 
     Read-only: the page shows usage.trusted_verifier_usage() instead of a list of model rows.
     """
