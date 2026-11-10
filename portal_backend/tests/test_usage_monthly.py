@@ -396,6 +396,17 @@ class MonthCompletenessTest(MonthlyUsageTestCase):
         )
         self.assertEqual(gap["irmago_version"], "1.5.0")
 
+    def test_server_without_heartbeat_whose_first_reports_are_long_ago(self):
+        # Reports 1 and 2 fall before the window the month looks at; none is missing.
+        first, second = OCT_1 - timedelta(days=20), OCT_1 - timedelta(days=10)
+        self.store(
+            report(1, first, first + HOUR, heartbeat=None),
+            report(2, second, second + HOUR, heartbeat=None),
+            report(3, at(3), at(3, 1), heartbeat=None),
+            report(4, at(9), at(9, 1), heartbeat=None),
+        )
+        self.assertEqual(self.gaps(), [("no_heartbeat", at(3), NOV_1)])
+
     def test_run_that_went_silent_before_the_month_is_a_gap(self):
         self.store(*hourly_run(OCT_1 - timedelta(days=3), OCT_1 - timedelta(days=2)))
         self.assertEqual(self.gaps(), [("interrupted", OCT_1, NOV_1)])

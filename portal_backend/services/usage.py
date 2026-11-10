@@ -677,9 +677,14 @@ def month_completeness(organization, year: int, month: int, now=None) -> dict:
     no_heartbeat: list[dict] = []
     for run in runs:
         instance = run[-1].server_instance
-        if run[0].sequence > 1 and run[0].period_from > since:
+        if (
+            run[0].sequence > 1
+            and run[0].period_from > since
+            and run[0].heartbeat_seconds is not None
+        ):
             # The first reports of the run never arrived. It started at the earliest when the
-            # run it replaced reported last.
+            # run it replaced reported last. A run without a heartbeat skips quiet intervals, so
+            # its first reports may lie before the window; no_heartbeat lists it instead.
             earlier = [
                 other[-1].period_to
                 for other in runs
