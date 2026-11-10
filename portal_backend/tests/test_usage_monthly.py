@@ -380,6 +380,11 @@ class MonthCompletenessTest(MonthlyUsageTestCase):
         self.assertEqual(self.gaps(now=at(10, 1)), [])
         self.assertEqual(self.gaps(now=at(12)), [("interrupted", at(10), at(12))])
 
+    def test_server_that_went_silent_just_before_month_end_is_a_gap(self):
+        # Its heartbeat runs past the month end, but by now it has been silent for days.
+        self.store(*hourly_run(OCT_1, at(31, 23)))
+        self.assertEqual(self.gaps(), [("interrupted", at(31, 23), NOV_1)])
+
     def test_server_without_heartbeat_cannot_be_judged(self):
         self.store(
             report(1, at(3), at(3, 1), heartbeat=None),

@@ -726,7 +726,7 @@ def month_completeness(organization, year: int, month: int, now=None) -> dict:
             + timedelta(seconds=last_report.heartbeat_seconds)
             + HEARTBEAT_GRACE
         )
-        if deadline >= end and replaced_at is None:
+        if deadline >= now and replaced_at is None:
             continue  # Still within its heartbeat: not silent yet.
         gap_to = end
         if replaced_at is not None:
