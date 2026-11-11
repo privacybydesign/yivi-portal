@@ -183,3 +183,19 @@ class AdminYiviLoginTest(TestCase):
         session.save()
 
         self.assertEqual(self.client.get(self.index).status_code, 302)
+
+    def test_logout_ends_the_admin_session(self):
+        self._password_login()
+        self._complete_yivi(result())
+        self.assertEqual(self.client.get(self.index).status_code, 200)
+
+        response = self.client.post(reverse("admin:logout"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertNotIn("_auth_user_id", self.client.session)
+        self.assertNotIn(VERIFIED_SESSION_KEY, self.client.session)
+        self.assertRedirects(
+            self.client.get(self.index),
+            f"{reverse('admin:login')}?next={self.index}",
+            fetch_redirect_response=False,
+        )
