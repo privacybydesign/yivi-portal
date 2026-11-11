@@ -35,6 +35,8 @@ from portal_backend.views.trust_model import (
     YiviTrustModelEnvListView,
 )
 from portal_backend.views.usage import (
+    UsageMonthlyCsvView,
+    UsageMonthlyView,
     UsageServerKeysView,
     UsageServerKeyView,
     UsageSummaryView,
@@ -186,6 +188,16 @@ urlpatterns = [
         "v1/organizations/<str:org_slug>/usage/",
         UsageSummaryView.as_view(),
         name="usage-summary",
+    ),
+    path(
+        "v1/organizations/<str:org_slug>/usage/monthly/",
+        UsageMonthlyView.as_view(),
+        name="usage-monthly",
+    ),
+    path(
+        "v1/organizations/<str:org_slug>/usage/monthly/csv/",
+        UsageMonthlyCsvView.as_view(),
+        name="usage-monthly-csv",
     ),
     path(
         "v1/profile",

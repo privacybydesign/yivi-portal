@@ -532,6 +532,9 @@ class UsageReport(models.Model):
     sequence = models.PositiveBigIntegerField()
     final = models.BooleanField(default=False)
     irmago_version = models.CharField(max_length=50)
+    # The longest time between two reports of the run, also without sessions. Servers that skip
+    # intervals without sessions leave it out, so a quiet period cannot be told from an outage.
+    heartbeat_seconds = models.PositiveIntegerField(null=True, blank=True)
     period_from = models.DateTimeField()
     period_to = models.DateTimeField()
     received_at = models.DateTimeField(auto_now_add=True)

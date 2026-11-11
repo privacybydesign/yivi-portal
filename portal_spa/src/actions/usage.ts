@@ -63,13 +63,14 @@ const pad = (n: number) => String(n).padStart(2, "0");
 const daysInMonth = (year: number, month: number) =>
   new Date(year, month, 0).getDate();
 
+/** The period that holds `today`. Usage is counted per UTC day, so the period is taken in UTC. */
 export const currentPeriod = (
   kind: UsagePeriod["kind"],
   today = new Date(),
 ): UsagePeriod => ({
   kind,
-  year: today.getFullYear(),
-  month: today.getMonth() + 1,
+  year: today.getUTCFullYear(),
+  month: today.getUTCMonth() + 1,
 });
 
 /** Moves a period one calendar month or year back (-1) or forward (+1). */
@@ -212,4 +213,198 @@ export const deactivateUsageKey = async (
   } catch (e) {
     return { error: apiError(e, "The key could not be deactivated.") };
   }
+};
+
+// Monthly breakdown, for invoicing
+
+export const USAGE_ACTIONS = ["disclosing", "signing", "issuing"] as const;
+export const USAGE_OUTCOMES = ["done", "cancelled", "failed", "timeout"] as const;
+
+/** What Trusted Verifiers are billed for: completed disclosures and signatures. */
+export const BILLED_FILTER: UsageFilter = {
+  actions: ["disclosing", "signing"],
+  outcomes: ["done"],
+};
+
+export interface UsageFilter {
+  actions: string[];
+  outcomes: string[];
+}
+
+export interface MonthlySessionRow {
+  requestor: string;
+  action: string;
+  outcome: string;
+  count: number;
+}
+
+export interface MonthlyCredentialRow extends MonthlySessionRow {
+  credential_type: string;
+}
+
+export type UsageGapKind =
+  | "no_key"
+  | "no_reports"
+  | "missing_reports"
+  | "interrupted"
+  | "no_heartbeat";
+
+export interface UsageMonthGap {
+  kind: UsageGapKind;
+  from: string;
+  to: string;
+  server_instance: string;
+  missing_count?: number;
+  irmago_version?: string;
+}
+
+export interface MonthlyUsage {
+  month: string; // YYYY-MM
+  actions: string[];
+  outcomes: string[];
+  sessions: MonthlySessionRow[];
+  credentials: MonthlyCredentialRow[];
+  completeness: {
+    complete: boolean;
+    reported_until: string | null;
+    gaps: UsageMonthGap[];
+  };
+}
+
+export interface CredentialTypeCount {
+  credentialType: string;
+  count: number;
+}
+
+export interface RequestorUsage {
+  requestor: string;
+  sessions: number;
+  credentials: CredentialTypeCount[];
+}
+
+export const monthParam = (period: UsagePeriod) =>
+  `${period.year}-${pad(period.month)}`;
+
+export const isBilledFilter = (filter: UsageFilter) =>
+  filter.actions.join() === BILLED_FILTER.actions.join() &&
+  filter.outcomes.join() === BILLED_FILTER.outcomes.join();
+
+const byCountThenName = (a: CredentialTypeCount, b: CredentialTypeCount) =>
+  b.count - a.count || a.credentialType.localeCompare(b.credentialType);
+
+const sumByCredentialType = (rows: MonthlyCredentialRow[]) => {
+  const totals = new Map<string, number>();
+  for (const row of rows) {
+    totals.set(
+      row.credential_type,
+      (totals.get(row.credential_type) ?? 0) + row.count,
+    );
+  }
+  return [...totals]
+    .map(([credentialType, count]) => ({ credentialType, count }))
+    .sort(byCountThenName);
+};
+
+/** Credentials per credential type over all requestors, most used first. */
+export const credentialTypeTotals = (usage: MonthlyUsage) =>
+  sumByCredentialType(usage.credentials);
+
+/**
+ * Sessions and credentials per requestor, most sessions first. Sessions come
+ * from the session counts, never from the credentials: a session that
+ * disclosed three credential types is one session.
+ */
+export const requestorBreakdown = (usage: MonthlyUsage): RequestorUsage[] => {
+  const requestors = new Map<string, number>();
+  for (const row of usage.sessions) {
+    requestors.set(row.requestor, (requestors.get(row.requestor) ?? 0) + row.count);
+  }
+  for (const row of usage.credentials) {
+    if (!requestors.has(row.requestor)) requestors.set(row.requestor, 0);
+  }
+  return [...requestors]
+    .map(([requestor, sessions]) => ({
+      requestor,
+      sessions,
+      credentials: sumByCredentialType(
+        usage.credentials.filter((row) => row.requestor === requestor),
+      ),
+    }))
+    .sort(
+      (a, b) => b.sessions - a.sessions || a.requestor.localeCompare(b.requestor),
+    );
+};
+
+const utcFormat = new Intl.DateTimeFormat("en-GB", {
+  day: "numeric",
+  month: "short",
+  hour: "2-digit",
+  minute: "2-digit",
+  timeZone: "UTC",
+});
+
+export const gapPeriod = (gap: UsageMonthGap) =>
+  `${utcFormat.format(new Date(gap.from))} – ${utcFormat.format(new Date(gap.to))} UTC`;
+
+export const gapDescription = (gap: UsageMonthGap) => {
+  const server = gap.server_instance || "A server";
+  switch (gap.kind) {
+    case "no_key":
+      return "No usage key was active, so no server could report.";
+    case "no_reports":
+      return "No reports arrived from any of your servers.";
+    case "missing_reports": {
+      const n = gap.missing_count ?? 0;
+      return `${server}: ${n} ${n === 1 ? "report" : "reports"} did not arrive.`;
+    }
+    case "interrupted":
+      return `${server} stopped reporting without a final report; sessions after its last report are missing.`;
+    case "no_heartbeat":
+      return `${server} runs irmago ${gap.irmago_version || "of an older version"}, which sends no reports while it is quiet, so gaps cannot be detected. Upgrade the server to make this period verifiable.`;
+  }
+};
+
+const monthlyParams = (period: UsagePeriod, filter: UsageFilter) => ({
+  month: monthParam(period),
+  action: filter.actions,
+  outcome: filter.outcomes,
+});
+
+// Repeats array parameters (action=a&action=b), as Django's getlist expects.
+const repeatParams = { indexes: null };
+
+export const fetchMonthlyUsage = async (
+  slug: string,
+  period: UsagePeriod,
+  filter: UsageFilter,
+): Promise<MonthlyUsage> => {
+  const response = await axiosInstance.get(
+    `/v1/organizations/${slug}/usage/monthly/`,
+    { params: monthlyParams(period, filter), paramsSerializer: repeatParams },
+  );
+  return response.data;
+};
+
+/** Downloads the month as CSV. The API needs the bearer token, so not a plain link. */
+export const downloadMonthlyUsageCsv = async (
+  slug: string,
+  period: UsagePeriod,
+  filter: UsageFilter,
+): Promise<void> => {
+  const response = await axiosInstance.get(
+    `/v1/organizations/${slug}/usage/monthly/csv/`,
+    {
+      params: monthlyParams(period, filter),
+      paramsSerializer: repeatParams,
+      responseType: "blob",
+    },
+  );
+  const url = URL.createObjectURL(response.data as Blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `yivi-usage-${slug}-${monthParam(period)}.csv`;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
 };
