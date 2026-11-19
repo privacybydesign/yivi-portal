@@ -49,8 +49,14 @@ class CredentialAttributeAdmin(admin.ModelAdmin):
 
 @admin.register(Organization)
 class OrganizationAdmin(admin.ModelAdmin):
-    list_display = ("name_en", "created_at", "last_updated_at")
-    search_fields = ("name_en", "name_nl")
+    list_display = (
+        "name_en",
+        "support_email",
+        "support_url",
+        "created_at",
+        "last_updated_at",
+    )
+    search_fields = ("name_en", "name_nl", "support_email", "support_url")
     list_filter = ("created_at", "last_updated_at")
     prepopulated_fields: ClassVar[dict] = {"slug": ("name_en",)}
     readonly_fields = ("created_at", "last_updated_at")
@@ -140,6 +146,8 @@ class RelyingPartyAdmin(admin.ModelAdmin):
         "created_at",
         "last_updated_at",
         "get_hostnames",
+        "get_support_email",
+        "get_support_url",
     )
     search_fields = (
         "organization__name_en",
@@ -160,6 +168,16 @@ class RelyingPartyAdmin(admin.ModelAdmin):
         return ", ".join(obj.hostnames.values_list("hostname", flat=True))
 
     get_hostnames.short_description = "Hostnames"
+
+    # What its organization entered, for whoever copies it into the scheme: a
+    # requestor in the scheme is a Relying Party here, not an organization.
+    @admin.display(description="Support email")
+    def get_support_email(self, obj):
+        return obj.organization.support_email
+
+    @admin.display(description="Support URL")
+    def get_support_url(self, obj):
+        return obj.organization.support_url
 
 
 @admin.register(User)

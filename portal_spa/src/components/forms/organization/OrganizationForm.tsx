@@ -23,6 +23,7 @@ import { toast } from "sonner";
 import OrganizationNameFields from "./child-components/OrganizationNameFields";
 import LogoUpload from "./child-components/LogoUpload";
 import ContactField from "./child-components/ContactField";
+import SupportField from "./child-components/SupportField";
 import SlugField from "./child-components/SlugField";
 import ContactAddressBox from "./child-components/ContactAddressBox";
 
@@ -46,6 +47,8 @@ export default function OrganizationForm({
     country: "NL",
     contact_number: "",
     contact_email: "",
+    support_email: "",
+    support_url: "",
     ...(organization || {}),
   } as RegistrationInputs);
 
@@ -146,6 +149,8 @@ export default function OrganizationForm({
         <SlugField form={form} formState={formState} />
 
         <ContactField form={form} />
+
+        <SupportField form={form} />
 
         <ContactAddressBox form={form} formState={formState} />
 

@@ -241,3 +241,104 @@ class ImportSlugMismatchTests(TestCase):
         self.assertTrue(
             RelyingParty.objects.get(rp_slug="acme-verifier").usage_reporting_required
         )
+
+
+class ImportSupportContactTests(TestCase):
+    """The scheme states where users of the Yivi app reach a Relying Party's
+    support (``support_email`` and ``support_url``). The import takes that over,
+    without undoing what an organization entered in the portal."""
+
+    REPO_PATH = "downloads/relying-party-repo"
+
+    def setUp(self):
+        trust_model = TrustModel.objects.create(
+            name="Yivi", description="Yivi Trust Model", eudi_compliant=False
+        )
+        YiviTrustModelEnv.objects.create(
+            trust_model=trust_model, environment="production"
+        )
+
+    def _import(self, **support_contact):
+        requestor = {
+            "id": "pbdf-requestors.acme",
+            "name": {"en": "Acme", "nl": "Acme"},
+            "hostnames": ["yivi.acme.example"],
+            "logo": "nonexistent",
+            **support_contact,
+        }
+        trusted_rps_import.create_org_rp([requestor], "production", self.REPO_PATH)
+        return Organization.objects.get(slug="acme")
+
+    def test_import_reads_support_contact(self):
+        organization = self._import(
+            support_email="support@acme.example",
+            support_url="https://acme.example/support",
+        )
+
+        self.assertEqual(organization.support_email, "support@acme.example")
+        self.assertEqual(organization.support_url, "https://acme.example/support")
+
+    def test_import_of_requestor_without_support_contact(self):
+        """Most Relying Parties in the scheme have neither field."""
+        organization = self._import()
+
+        self.assertIsNone(organization.support_email)
+        self.assertIsNone(organization.support_url)
+        self.assertTrue(RelyingParty.objects.filter(rp_slug="acme").exists())
+
+    def test_import_fills_in_an_organization_that_exists_already(self):
+        """The scheme gets the address after the organization was imported."""
+        self._import()
+
+        organization = self._import(support_email="support@acme.example")
+
+        self.assertEqual(organization.support_email, "support@acme.example")
+        self.assertIsNone(organization.support_url)
+
+    def test_import_keeps_what_the_organization_entered(self):
+        """A value entered in the portal is newer than the scheme until it is
+        published there. The cron must not reset it to the published one."""
+        self._import(
+            support_email="support@acme.example",
+            support_url="https://acme.example/support",
+        )
+        Organization.objects.filter(slug="acme").update(
+            support_email="help@acme.example"
+        )
+
+        organization = self._import(
+            support_email="support@acme.example",
+            support_url="https://acme.example/support",
+        )
+
+        self.assertEqual(organization.support_email, "help@acme.example")
+        self.assertEqual(organization.support_url, "https://acme.example/support")
+
+    def test_import_skips_a_value_the_portal_would_not_accept(self):
+        """A mistake in one address must not stop the import: the Relying Party
+        and its hostnames still come in."""
+        for support_contact in (
+            {"support_email": "not-an-email"},
+            {"support_url": "http://acme.example/support"},
+            {"support_email": 42, "support_url": ["https://acme.example"]},
+            {"support_email": "a" * 250 + "@acme.example"},
+            {"support_email": "   ", "support_url": ""},
+        ):
+            with self.subTest(support_contact=support_contact):
+                organization = self._import(**support_contact)
+
+                self.assertIsNone(organization.support_email)
+                self.assertIsNone(organization.support_url)
+                rp = RelyingParty.objects.get(rp_slug="acme")
+                self.assertEqual(
+                    list(rp.hostnames.values_list("hostname", flat=True)),
+                    ["yivi.acme.example"],
+                )
+
+    def test_import_takes_the_valid_field_next_to_an_invalid_one(self):
+        organization = self._import(
+            support_email="support@acme.example", support_url="acme.example/support"
+        )
+
+        self.assertEqual(organization.support_email, "support@acme.example")
+        self.assertIsNone(organization.support_url)

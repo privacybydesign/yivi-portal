@@ -13,7 +13,7 @@ import type { UseFormReturn } from "react-hook-form";
 import { PhoneInput } from "react-international-phone";
 import "react-international-phone/style.css";
 
-const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+export const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const PHONE_INPUT_ID = "organization-contact-number";
 

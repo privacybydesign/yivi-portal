@@ -112,6 +112,92 @@ it("submits the form data once the contact details are filled in", async () => {
   post.mockRestore();
 });
 
+const supportEmailInput = () => screen.getByLabelText("Support Email");
+
+const supportPageInput = () => screen.getByLabelText("Support Page");
+
+const createBody = (post: { mock: { calls: unknown[][] } }) =>
+  post.mock.calls.find(([url]) => url === "/v1/organizations/create/")?.[1] as
+    | FormData
+    | undefined;
+
+it("says that the support address becomes visible in the Yivi app", () => {
+  render(form());
+
+  expect(supportEmailInput()).toHaveAccessibleDescription(
+    /public: it becomes visible in the Yivi app/,
+  );
+  expect(supportPageInput()).toHaveAccessibleDescription(
+    /becomes visible in the Yivi app/,
+  );
+  // The contact email next to it promises the opposite.
+  expect(emailInput()).toHaveAccessibleDescription(/will not be public/);
+});
+
+it("registers an organization without a support address", async () => {
+  const post = vi
+    .spyOn(axiosInstance, "post")
+    .mockResolvedValue({ data: { success: "created" } });
+
+  render(form());
+  await userEvent.type(emailInput(), "contact@test-org.example");
+  await userEvent.type(phoneInput(), "612345678");
+  await submit();
+
+  await waitFor(() => expect(createBody(post)).toBeDefined());
+  expect(createBody(post)!.get("support_email")).toBe("");
+  expect(createBody(post)!.get("support_url")).toBe("");
+
+  post.mockRestore();
+});
+
+it("submits the support address apart from the contact email", async () => {
+  const post = vi
+    .spyOn(axiosInstance, "post")
+    .mockResolvedValue({ data: { success: "created" } });
+
+  render(form());
+  await userEvent.type(emailInput(), "contact@test-org.example");
+  await userEvent.type(phoneInput(), "612345678");
+  await userEvent.type(supportEmailInput(), "support@test-org.example");
+  await userEvent.type(supportPageInput(), "https://test-org.example/support");
+  await submit();
+
+  await waitFor(() => expect(createBody(post)).toBeDefined());
+  expect(createBody(post)!.get("contact_email")).toBe(
+    "contact@test-org.example",
+  );
+  expect(createBody(post)!.get("support_email")).toBe(
+    "support@test-org.example",
+  );
+  expect(createBody(post)!.get("support_url")).toBe(
+    "https://test-org.example/support",
+  );
+
+  post.mockRestore();
+});
+
+it("rejects a malformed support address before calling the API", async () => {
+  const post = vi.spyOn(axiosInstance, "post");
+
+  render(form());
+  await userEvent.type(emailInput(), "contact@test-org.example");
+  await userEvent.type(phoneInput(), "612345678");
+  await userEvent.type(supportEmailInput(), "not-an-email");
+  await userEvent.type(supportPageInput(), "http://test-org.example/support");
+  await submit();
+
+  expect(
+    await screen.findByText("Enter a valid email address."),
+  ).toBeInTheDocument();
+  expect(
+    screen.getByText("Enter a link that starts with https://."),
+  ).toBeInTheDocument();
+  expect(post).not.toHaveBeenCalled();
+
+  post.mockRestore();
+});
+
 const existingOrganization: Organization = {
   id: "1",
   name_en: "Test Org",
@@ -164,6 +250,38 @@ it("confirms each save of an existing organization", async () => {
 
   patch.mockRestore();
   success.mockRestore();
+});
+
+it("shows and saves the support address of an existing organization", async () => {
+  const patch = vi.spyOn(axiosInstance, "patch").mockResolvedValue({});
+
+  render(
+    <MemoryRouter>
+      <OrganizationForm
+        organization={{
+          ...existingOrganization,
+          support_email: "support@test-org.example",
+          support_url: null,
+        }}
+        pendingButtonLabel="Saving..."
+        submitButtonLabel="Save"
+      />
+    </MemoryRouter>,
+  );
+  expect(supportEmailInput()).toHaveValue("support@test-org.example");
+  expect(supportPageInput()).toHaveValue("");
+
+  // Emptying the field is how an organization takes its address back.
+  await userEvent.clear(supportEmailInput());
+  await userEvent.type(supportPageInput(), "https://test-org.example/help");
+  await userEvent.click(screen.getByRole("button", { name: "Save" }));
+
+  await waitFor(() => expect(patch).toHaveBeenCalledTimes(1));
+  const body = patch.mock.calls[0]![1] as FormData;
+  expect(body.get("support_email")).toBe("");
+  expect(body.get("support_url")).toBe("https://test-org.example/help");
+
+  patch.mockRestore();
 });
 
 it("does not confirm a save the API rejected", async () => {

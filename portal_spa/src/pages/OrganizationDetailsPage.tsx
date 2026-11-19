@@ -185,6 +185,11 @@ export default function OrganizationPage() {
     );
   }
 
+  // The API only stores https links; never render anything else as a link.
+  const supportPage = organization.support_url?.startsWith("https://")
+    ? organization.support_url
+    : null;
+
   return (
     <PageContainer className="py-8">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
@@ -237,6 +242,31 @@ export default function OrganizationPage() {
           )}
         </div>
       </div>
+
+      {(organization.support_email || supportPage) && (
+        <p className="mb-6 text-sm text-gray-700">
+          <span className="font-medium">Support for users of the Yivi app:</span>{" "}
+          {organization.support_email && (
+            <a
+              className="text-blue-600 hover:underline"
+              href={`mailto:${organization.support_email}`}
+            >
+              {organization.support_email}
+            </a>
+          )}
+          {organization.support_email && supportPage && " · "}
+          {supportPage && (
+            <a
+              className="text-blue-600 hover:underline"
+              href={supportPage}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {supportPage}
+            </a>
+          )}
+        </p>
+      )}
 
       <div className="flex mb-6 border-b">
         {organization.is_AP === true && (

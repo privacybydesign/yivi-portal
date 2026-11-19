@@ -59,6 +59,12 @@ class OrganizationQuerySet(models.QuerySet):
         )
 
 
+# The support page is a link in the Yivi app, so it has to be an https one.
+support_url_validator = URLValidator(
+    schemes=["https"], message="Enter a valid URL that starts with https://."
+)
+
+
 class ConvertToRGB:
     def process(self, image):
         if image.mode in ("RGBA", "LA"):
@@ -78,6 +84,25 @@ class Organization(models.Model):
     house_number = models.CharField(max_length=35, null=True, blank=True)
     contact_number = PhoneNumberField(blank=True, null=True)
     contact_email = models.EmailField(max_length=255, null=True, blank=True)
+    # Where users of the Yivi app reach this organization's own support. Unlike
+    # the contact details above, which are how Yivi reaches the organization,
+    # these are public: Yivi publishes them in the scheme and the Yivi app shows
+    # them under "Need help?".
+    support_email = models.EmailField(
+        max_length=255,
+        null=True,
+        blank=True,
+        help_text="Where users of the Yivi app can ask this organization for help. "
+        "Public: the Yivi app shows it once it is published in the scheme.",
+    )
+    support_url = models.URLField(
+        max_length=255,
+        null=True,
+        blank=True,
+        validators=[support_url_validator],
+        help_text="The organization's support page for users of the Yivi app. "
+        "Public: the Yivi app shows it once it is published in the scheme.",
+    )
     postal_code = models.CharField(max_length=35, null=True, blank=True)
     city = models.CharField(max_length=35, null=True, blank=True)
     country = CountryField(null=True, blank=True)

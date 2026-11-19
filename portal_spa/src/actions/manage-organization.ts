@@ -17,6 +17,9 @@ export type RegistrationInputs = {
   logo: File | string | undefined;
   contact_number: string;
   contact_email: string;
+  // Optional, and null on an organization that has none.
+  support_email: string | null;
+  support_url: string | null;
 };
 
 export type RegistrationFormState = {
