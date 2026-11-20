@@ -34,3 +34,9 @@ updates:
       npm-development: { dependency-type: development, update-types: [minor, patch] }
       npm-security: { applies-to: security-updates, patterns: ["*"] }
     cooldown: { default-days: 7 }
+    ignore:
+      # typescript-eslint does not support TypeScript 7 yet (its peer range
+      # stops below 6.1). Drop this once a release accepts TypeScript 7; the
+      # tsconfigs already type-check under 7.
+      - dependency-name: typescript
+        versions: [">=7"]

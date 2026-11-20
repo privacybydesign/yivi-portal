@@ -1,4 +1,5 @@
-import type { UUID } from "crypto";
+// The shape crypto.randomUUID() returns; browser code, so not Node's type.
+type UUID = `${string}-${string}-${string}-${string}-${string}`;
 
 export interface Maintainer {
   id: string;
