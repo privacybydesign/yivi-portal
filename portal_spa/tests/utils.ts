@@ -69,5 +69,7 @@ export const generateOrganization = (props: Partial<Organization> = {}) => ({
   verification_status: null,
   contact_number: "0612345678",
   contact_email: "contact@test-org.example",
+  support_email: null,
+  support_url: null,
   ...props,
 });

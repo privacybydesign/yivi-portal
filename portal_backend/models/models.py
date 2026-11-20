@@ -59,6 +59,15 @@ class OrganizationQuerySet(models.QuerySet):
         )
 
 
+# The support page is a link in the Yivi app, so it has to be an https one.
+support_url_validator = URLValidator(
+    schemes=["https"], message="Enter a valid URL that starts with https://."
+)
+
+# The fields of Organization that make up its support contact.
+SUPPORT_CONTACT_FIELDS = ("support_email", "support_url")
+
+
 class ConvertToRGB:
     def process(self, image):
         if image.mode in ("RGBA", "LA"):
@@ -78,6 +87,34 @@ class Organization(models.Model):
     house_number = models.CharField(max_length=35, null=True, blank=True)
     contact_number = PhoneNumberField(blank=True, null=True)
     contact_email = models.EmailField(max_length=255, null=True, blank=True)
+    # Where users of the Yivi app reach this organization's own support. Unlike
+    # the contact details above, which are how Yivi reaches the organization,
+    # these are public: Yivi publishes them in the scheme and the Yivi app shows
+    # them under "Need help?".
+    support_email = models.EmailField(
+        max_length=255,
+        null=True,
+        blank=True,
+        help_text="Where users of the Yivi app can ask this organization for help. "
+        "Public: the Yivi app shows it once it is published in the scheme.",
+    )
+    support_url = models.URLField(
+        max_length=255,
+        null=True,
+        blank=True,
+        validators=[support_url_validator],
+        help_text="The organization's support page for users of the Yivi app. "
+        "Public: the Yivi app shows it once it is published in the scheme.",
+    )
+    # Until the organization changes its support contact in the portal, the
+    # scheme import keeps it equal to the scheme. After that the portal has the
+    # newer one, including an emptied one, and the import leaves it alone.
+    support_contact_edited_in_portal = models.BooleanField(
+        default=False,
+        help_text="Set once the support email or support page is changed in the "
+        "portal. From then on the scheme import leaves both alone. Clear it to "
+        "take them over from the scheme again.",
+    )
     postal_code = models.CharField(max_length=35, null=True, blank=True)
     city = models.CharField(max_length=35, null=True, blank=True)
     country = CountryField(null=True, blank=True)

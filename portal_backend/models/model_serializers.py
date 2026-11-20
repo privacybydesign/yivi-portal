@@ -6,6 +6,7 @@ from phonenumber_field.serializerfields import PhoneNumberField  # type: ignore
 from rest_framework import serializers
 
 from .models import (
+    SUPPORT_CONTACT_FIELDS,
     AttestationProvider,
     Condiscon,
     CondisconAttribute,
@@ -17,6 +18,7 @@ from .models import (
     TrustModel,
     User,
     YiviTrustModelEnv,
+    support_url_validator,
 )
 
 
@@ -61,6 +63,19 @@ class OrganizationSerializer(CountryFieldMixin, serializers.ModelSerializer):
     contact_number = PhoneNumberField(required=True, allow_blank=False)
     contact_email = serializers.EmailField(required=True, allow_blank=False)
 
+    # Where users of the Yivi app reach the organization's support. Optional,
+    # and not among CONTACT_FIELDS below: it is meant to be public.
+    support_email = serializers.EmailField(
+        required=False, allow_blank=True, allow_null=True, max_length=255
+    )
+    support_url = serializers.URLField(
+        required=False,
+        allow_blank=True,
+        allow_null=True,
+        max_length=255,
+        validators=[support_url_validator],
+    )
+
     class Meta:
         model = Organization
         fields: ClassVar[list] = [
@@ -77,6 +92,8 @@ class OrganizationSerializer(CountryFieldMixin, serializers.ModelSerializer):
             "trust_models",
             "contact_number",
             "contact_email",
+            "support_email",
+            "support_url",
             "country",
             "house_number",
             "street",
@@ -89,6 +106,31 @@ class OrganizationSerializer(CountryFieldMixin, serializers.ModelSerializer):
     # public, while the list and detail views are AllowAny. Serialize them only
     # for a maintainer of this organization, or for an admin.
     CONTACT_FIELDS: ClassVar[list] = ["contact_number", "contact_email"]
+
+    # The form posts an emptied field as "", which is how an organization takes
+    # its support address back. Store that as "none", like an unset one.
+    def validate_support_email(self, value: str | None) -> str | None:
+        return value or None
+
+    def validate_support_url(self, value: str | None) -> str | None:
+        return value or None
+
+    # A support contact set or changed here is newer than the scheme, and so is
+    # one emptied here: mark it, so the scheme import leaves it alone. The form
+    # posts every field, so an unchanged support contact must not count.
+    def create(self, validated_data: dict) -> Organization:
+        if any(validated_data.get(field) for field in SUPPORT_CONTACT_FIELDS):
+            validated_data["support_contact_edited_in_portal"] = True
+        return super().create(validated_data)
+
+    def update(self, instance: Organization, validated_data: dict) -> Organization:
+        if any(
+            field in validated_data
+            and validated_data[field] != getattr(instance, field)
+            for field in SUPPORT_CONTACT_FIELDS
+        ):
+            validated_data["support_contact_edited_in_portal"] = True
+        return super().update(instance, validated_data)
 
     def to_representation(self, instance: Organization) -> dict:
         data = super().to_representation(instance)

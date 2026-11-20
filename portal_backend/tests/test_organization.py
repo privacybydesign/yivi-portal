@@ -1,15 +1,18 @@
 import os
 import uuid
+from types import SimpleNamespace
 from unittest.mock import patch
 
+from django.contrib import admin
 from django.contrib.auth import get_user_model
 from django.core import mail
 from django.db import IntegrityError
-from django.test import override_settings
+from django.test import TestCase, override_settings
 from django.urls import reverse
 from rest_framework.test import APIClient, APITestCase
 from rest_framework_simplejwt.tokens import AccessToken  # type: ignore
 
+from portal_backend.admin import OrganizationAdmin
 from portal_backend.models.models import (
     Organization,
     RelyingParty,
@@ -111,6 +114,55 @@ class OrganizationCreateTest(APITestCase):
         response = self.client.post(url, invalid_data, format="multipart")
         self.assertEqual(response.status_code, 400)
         self.assertIn("contact_email", response.json())
+
+    def test_create_organization_without_support_contact(self):
+        """The support address for users of the Yivi app is optional."""
+        url = reverse("portal_backend:organization-create")
+
+        response = self.client.post(url, self.organization_data, format="multipart")
+        self.assertEqual(response.status_code, 201)
+        organization = Organization.objects.get(slug="test-organization")
+        self.assertIsNone(organization.support_email)
+        self.assertIsNone(organization.support_url)
+        self.assertFalse(organization.support_contact_edited_in_portal)
+
+    def test_create_organization_stores_support_contact(self):
+        """The support address is kept apart from the contact email."""
+        url = reverse("portal_backend:organization-create")
+        data = self.organization_data.copy()
+        data["support_email"] = "support@test-organization.com"
+        data["support_url"] = "https://test-organization.com/support"
+
+        response = self.client.post(url, data, format="multipart")
+        self.assertEqual(response.status_code, 201)
+        organization = Organization.objects.get(slug="test-organization")
+        self.assertEqual(organization.support_email, "support@test-organization.com")
+        self.assertEqual(
+            organization.support_url, "https://test-organization.com/support"
+        )
+        self.assertEqual(organization.contact_email, "contact@test-organization.com")
+        self.assertTrue(organization.support_contact_edited_in_portal)
+
+    def test_create_organization_invalid_support_contact(self):
+        """A malformed support address is rejected, and so is a support page
+        that is not an https link: the Yivi app opens it for its users."""
+        url = reverse("portal_backend:organization-create")
+        for field, value in (
+            ("support_email", "not-an-email"),
+            ("support_url", "not-a-url"),
+            ("support_url", "http://test-organization.com/support"),
+            ("support_url", "javascript:alert(1)"),
+        ):
+            with self.subTest(field=field, value=value):
+                invalid_data = self.organization_data.copy()
+                invalid_data["logo"] = load_logo_if_exists(self.logo_path)
+                invalid_data[field] = value
+                response = self.client.post(url, invalid_data, format="multipart")
+                self.assertEqual(response.status_code, 400)
+                self.assertIn(field, response.json())
+                self.assertFalse(
+                    Organization.objects.filter(slug="test-organization").exists()
+                )
 
     def test_create_organization_invalid_data(self):
         """Test creating an organization with invalid data."""
@@ -219,6 +271,126 @@ class OrganizationMaintainerActionsTest(APITestCase):
         self.organization.refresh_from_db()
         self.assertEqual(self.organization.contact_email, "contact@test-name.com")
         self.assertEqual(str(self.organization.contact_number), "+31612345678")
+
+    def test_patch_organization_support_contact(self):
+        """A maintainer sets and changes the support address. That does not put
+        the organization back to unverified: the address is reviewed when Yivi
+        publishes it in the scheme."""
+        url = reverse(
+            "portal_backend:organization-update", args=[self.organization.slug]
+        )
+        response = self.client.patch(
+            url,
+            {
+                "support_email": "support@test-name.com",
+                "support_url": "https://test-name.com/support",
+            },
+            format="multipart",
+        )
+        self.assertEqual(response.status_code, 200)
+        self.organization.refresh_from_db()
+        self.assertEqual(self.organization.support_email, "support@test-name.com")
+        self.assertEqual(self.organization.support_url, "https://test-name.com/support")
+        self.assertEqual(self.organization.contact_email, "contact@test-name.com")
+        self.assertTrue(self.organization.is_verified)
+        self.assertTrue(self.organization.support_contact_edited_in_portal)
+
+        response = self.client.patch(
+            url, {"support_email": "help@test-name.com"}, format="multipart"
+        )
+        self.assertEqual(response.status_code, 200)
+        self.organization.refresh_from_db()
+        self.assertEqual(self.organization.support_email, "help@test-name.com")
+        self.assertEqual(self.organization.support_url, "https://test-name.com/support")
+
+    def test_patch_organization_clears_support_contact(self):
+        """Unlike the contact details, the support address can be taken back:
+        the form posts an emptied field as an empty string."""
+        Organization.objects.filter(pk=self.organization.pk).update(
+            support_email="support@test-name.com",
+            support_url="https://test-name.com/support",
+        )
+        url = reverse(
+            "portal_backend:organization-update", args=[self.organization.slug]
+        )
+        response = self.client.patch(
+            url, {"support_email": "", "support_url": ""}, format="multipart"
+        )
+        self.assertEqual(response.status_code, 200)
+        self.organization.refresh_from_db()
+        self.assertIsNone(self.organization.support_email)
+        self.assertIsNone(self.organization.support_url)
+        self.assertTrue(self.organization.support_contact_edited_in_portal)
+
+    def test_patch_organization_keeps_unchanged_support_contact_with_the_scheme(
+        self,
+    ):
+        """The form posts every field. Posting the support contact as it was
+        leaves it to the scheme import, both when it was set and when not."""
+        url = reverse(
+            "portal_backend:organization-update", args=[self.organization.slug]
+        )
+        response = self.client.patch(
+            url, {"support_email": "", "support_url": ""}, format="multipart"
+        )
+        self.assertEqual(response.status_code, 200)
+        Organization.objects.filter(pk=self.organization.pk).update(
+            support_email="support@test-name.com",
+            support_url="https://test-name.com/support",
+        )
+        response = self.client.patch(
+            url,
+            {
+                "support_email": "support@test-name.com",
+                "support_url": "https://test-name.com/support",
+            },
+            format="multipart",
+        )
+        self.assertEqual(response.status_code, 200)
+
+        self.organization.refresh_from_db()
+        self.assertFalse(self.organization.support_contact_edited_in_portal)
+
+    def test_patch_organization_invalid_support_contact(self):
+        """A rejected support address leaves the stored one as it was."""
+        Organization.objects.filter(pk=self.organization.pk).update(
+            support_email="support@test-name.com",
+            support_url="https://test-name.com/support",
+        )
+        url = reverse(
+            "portal_backend:organization-update", args=[self.organization.slug]
+        )
+        for field, value in (
+            ("support_email", "not-an-email"),
+            ("support_url", "http://test-name.com/support"),
+        ):
+            with self.subTest(field=field):
+                response = self.client.patch(url, {field: value}, format="multipart")
+                self.assertEqual(response.status_code, 400)
+                self.assertIn(field, response.json())
+
+        self.organization.refresh_from_db()
+        self.assertEqual(self.organization.support_email, "support@test-name.com")
+        self.assertEqual(self.organization.support_url, "https://test-name.com/support")
+        self.assertFalse(self.organization.support_contact_edited_in_portal)
+
+    def test_detail_shows_support_contact_to_the_public(self):
+        """The support address ends up in the Yivi app, so it is public here
+        too, while the contact details next to it stay private."""
+        Organization.objects.filter(pk=self.organization.pk).update(
+            support_email="support@test-name.com",
+            support_url="https://test-name.com/support",
+        )
+        url = reverse(
+            "portal_backend:organization-detail", args=[self.organization.slug]
+        )
+        response = APIClient().get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["support_email"], "support@test-name.com")
+        self.assertEqual(
+            response.json()["support_url"], "https://test-name.com/support"
+        )
+        self.assertNotIn("contact_email", response.json())
 
     def test_detail_hides_contact_details_from_the_public(self):
         """Contact details are verification data, and the form promises they
@@ -526,3 +698,39 @@ class OrganizationMaintainerActionsTest(APITestCase):
         self.assertNotIn(secret_detail, str(response.data))
         # The transaction is rolled back, so the maintainer is not persisted.
         self.assertFalse(OrgUser.objects.filter(email="willfail@gmail.com").exists())
+
+
+class OrganizationAdminSupportContactTest(TestCase):
+    """Yivi staff can change the support contact in the Django admin too. That
+    is a change in the portal, which the scheme import must not undo."""
+
+    def setUp(self):
+        self.organization = Organization.objects.create(
+            name_en="Acme", name_nl="Acme", slug="acme"
+        )
+        self.model_admin = OrganizationAdmin(Organization, admin.site)
+
+    def _save(self, *changed_data):
+        form = SimpleNamespace(changed_data=list(changed_data))
+        self.model_admin.save_model(None, self.organization, form, change=True)
+        self.organization.refresh_from_db()
+        return self.organization.support_contact_edited_in_portal
+
+    def test_changing_the_support_contact_marks_it(self):
+        self.organization.support_email = "support@acme.example"
+        self.assertTrue(self._save("support_email"))
+
+    def test_changing_something_else_leaves_it_to_the_scheme(self):
+        self.organization.name_en = "Acme Inc."
+        self.assertFalse(self._save("name_en"))
+
+    def test_clearing_the_checkbox_hands_it_back_to_the_scheme(self):
+        Organization.objects.filter(pk=self.organization.pk).update(
+            support_contact_edited_in_portal=True
+        )
+        self.organization.refresh_from_db()
+        self.organization.support_email = "support@acme.example"
+        self.organization.support_contact_edited_in_portal = False
+        self.assertFalse(
+            self._save("support_email", "support_contact_edited_in_portal")
+        )

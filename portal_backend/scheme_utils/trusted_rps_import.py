@@ -1,11 +1,14 @@
 import logging
 import os
 
+from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.utils import timezone
 from dotenv import load_dotenv
 
 from portal_backend.models.models import (
+    SUPPORT_CONTACT_FIELDS,
+    Organization,
     RelyingParty,
     RelyingPartyHostname,
 )
@@ -44,6 +47,8 @@ class RPFields:
             self.logo_path = os.path.join(
                 self.repo_path, "assets", f"{self.rp_dict.get('logo')}.png"
             )
+            self.support_email = self.rp_dict.get("support_email")
+            self.support_url = self.rp_dict.get("support_url")
         except (KeyError, IndexError) as e:
             raise TrustedRpsImportError(f"Error extracting fields from verifier: {e}")
 
@@ -92,6 +97,52 @@ def create_rp(
         )
 
     return rp
+
+
+def import_support_contact(org: Organization, rpfields: RPFields) -> None:
+    """
+    Keep the organization's support contact equal to what the scheme states for
+    this Relying Party, until the organization changes it in the portal.
+
+    An organization maintains its support contact in the portal, and it is
+    published by copying it into the scheme. Once it was changed in the portal,
+    the portal has the newer one until someone publishes it, and that has to
+    survive this cron. That includes an emptied field: an address the
+    organization took back must not come back from the scheme.
+
+    A value the model would not accept is skipped and the stored one kept: a
+    mistake in one address must not stop the import of every Relying Party.
+    """
+
+    if org.support_contact_edited_in_portal:
+        return
+
+    changed = []
+    for field in SUPPORT_CONTACT_FIELDS:
+        value = getattr(rpfields, field)
+        if isinstance(value, str):
+            value = value.strip()
+        if not value:
+            value = None
+        else:
+            try:
+                if not isinstance(value, str):
+                    raise ValidationError("not a string")
+                value = Organization._meta.get_field(field).clean(value, org)
+            except ValidationError as e:
+                logger.warning(
+                    f"Skipped {field} of RP {rpfields.slug} from the scheme: "
+                    f"{e.messages}"
+                )
+                continue
+        if value == getattr(org, field):
+            continue
+        setattr(org, field, value)
+        changed.append(field)
+
+    if changed:
+        org.save(update_fields=[*changed, "last_updated_at"])
+        logger.info(f"Imported {', '.join(changed)} for Organization {org.slug}")
 
 
 def create_hostnames(
@@ -185,6 +236,7 @@ def create_org_rp(all_RPs_dict: dict, environment: str, repo_path: str) -> None:
                     rpfields.name_nl,
                     rpfields.logo_path,
                 )
+                import_support_contact(org, rpfields)
                 yivi_tme = import_utils.get_trust_model_env(environment)
                 rp = create_rp(org, yivi_tme, rpfields)
                 create_hostnames(rpfields, rp)

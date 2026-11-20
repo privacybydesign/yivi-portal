@@ -19,6 +19,9 @@ export interface Organization {
   // Only serialized for a maintainer of this organization, or for an admin.
   contact_number?: string;
   contact_email?: string;
+  // Where users of the Yivi app reach the organization's support. Public.
+  support_email?: string | null;
+  support_url?: string | null;
 }
 export type trust_model = {
   name: string;
