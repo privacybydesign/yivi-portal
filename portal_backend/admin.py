@@ -10,6 +10,7 @@ from django.template.response import TemplateResponse
 from django.utils import timezone
 
 from portal_backend.models.models import (
+    SUPPORT_CONTACT_FIELDS,
     AttestationProvider,
     Condiscon,
     CondisconAttribute,
@@ -60,6 +61,16 @@ class OrganizationAdmin(admin.ModelAdmin):
     list_filter = ("created_at", "last_updated_at")
     prepopulated_fields: ClassVar[dict] = {"slug": ("name_en",)}
     readonly_fields = ("created_at", "last_updated_at")
+
+    def save_model(self, request, obj, form, change):
+        # A support contact changed here is newer than the scheme, as one
+        # changed in the portal form is. Unless the checkbox was changed too:
+        # clearing it is how the support contact is handed back to the scheme.
+        if "support_contact_edited_in_portal" not in form.changed_data and any(
+            field in form.changed_data for field in SUPPORT_CONTACT_FIELDS
+        ):
+            obj.support_contact_edited_in_portal = True
+        super().save_model(request, obj, form, change)
 
 
 @admin.register(TrustModel)

@@ -6,6 +6,7 @@ from phonenumber_field.serializerfields import PhoneNumberField  # type: ignore
 from rest_framework import serializers
 
 from .models import (
+    SUPPORT_CONTACT_FIELDS,
     AttestationProvider,
     Condiscon,
     CondisconAttribute,
@@ -113,6 +114,23 @@ class OrganizationSerializer(CountryFieldMixin, serializers.ModelSerializer):
 
     def validate_support_url(self, value: str | None) -> str | None:
         return value or None
+
+    # A support contact set or changed here is newer than the scheme, and so is
+    # one emptied here: mark it, so the scheme import leaves it alone. The form
+    # posts every field, so an unchanged support contact must not count.
+    def create(self, validated_data: dict) -> Organization:
+        if any(validated_data.get(field) for field in SUPPORT_CONTACT_FIELDS):
+            validated_data["support_contact_edited_in_portal"] = True
+        return super().create(validated_data)
+
+    def update(self, instance: Organization, validated_data: dict) -> Organization:
+        if any(
+            field in validated_data
+            and validated_data[field] != getattr(instance, field)
+            for field in SUPPORT_CONTACT_FIELDS
+        ):
+            validated_data["support_contact_edited_in_portal"] = True
+        return super().update(instance, validated_data)
 
     def to_representation(self, instance: Organization) -> dict:
         data = super().to_representation(instance)

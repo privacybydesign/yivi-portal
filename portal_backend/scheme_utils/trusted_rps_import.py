@@ -7,6 +7,7 @@ from django.utils import timezone
 from dotenv import load_dotenv
 
 from portal_backend.models.models import (
+    SUPPORT_CONTACT_FIELDS,
     Organization,
     RelyingParty,
     RelyingPartyHostname,
@@ -100,33 +101,41 @@ def create_rp(
 
 def import_support_contact(org: Organization, rpfields: RPFields) -> None:
     """
-    Take over the support address the scheme states for this Relying Party, where
-    the organization has none yet.
+    Keep the organization's support contact equal to what the scheme states for
+    this Relying Party, until the organization changes it in the portal.
 
-    An organization maintains its support address in the portal, and it is
-    published by copying it into the scheme. A value the organization entered is
-    therefore newer than the scheme until someone publishes it, and has to survive
-    this cron instead of being reset to the published one.
+    An organization maintains its support contact in the portal, and it is
+    published by copying it into the scheme. Once it was changed in the portal,
+    the portal has the newer one until someone publishes it, and that has to
+    survive this cron. That includes an emptied field: an address the
+    organization took back must not come back from the scheme.
 
-    A value the model would not accept is skipped: a mistake in one address must
-    not stop the import of every Relying Party.
+    A value the model would not accept is skipped and the stored one kept: a
+    mistake in one address must not stop the import of every Relying Party.
     """
 
+    if org.support_contact_edited_in_portal:
+        return
+
     changed = []
-    for field in ("support_email", "support_url"):
+    for field in SUPPORT_CONTACT_FIELDS:
         value = getattr(rpfields, field)
         if isinstance(value, str):
             value = value.strip()
-        if not value or getattr(org, field):
-            continue
-        try:
-            if not isinstance(value, str):
-                raise ValidationError("not a string")
-            value = Organization._meta.get_field(field).clean(value, org)
-        except ValidationError as e:
-            logger.warning(
-                f"Skipped {field} of RP {rpfields.slug} from the scheme: {e.messages}"
-            )
+        if not value:
+            value = None
+        else:
+            try:
+                if not isinstance(value, str):
+                    raise ValidationError("not a string")
+                value = Organization._meta.get_field(field).clean(value, org)
+            except ValidationError as e:
+                logger.warning(
+                    f"Skipped {field} of RP {rpfields.slug} from the scheme: "
+                    f"{e.messages}"
+                )
+                continue
+        if value == getattr(org, field):
             continue
         setattr(org, field, value)
         changed.append(field)

@@ -64,6 +64,9 @@ support_url_validator = URLValidator(
     schemes=["https"], message="Enter a valid URL that starts with https://."
 )
 
+# The fields of Organization that make up its support contact.
+SUPPORT_CONTACT_FIELDS = ("support_email", "support_url")
+
 
 class ConvertToRGB:
     def process(self, image):
@@ -102,6 +105,15 @@ class Organization(models.Model):
         validators=[support_url_validator],
         help_text="The organization's support page for users of the Yivi app. "
         "Public: the Yivi app shows it once it is published in the scheme.",
+    )
+    # Until the organization changes its support contact in the portal, the
+    # scheme import keeps it equal to the scheme. After that the portal has the
+    # newer one, including an emptied one, and the import leaves it alone.
+    support_contact_edited_in_portal = models.BooleanField(
+        default=False,
+        help_text="Set once the support email or support page is changed in the "
+        "portal. From then on the scheme import leaves both alone. Clear it to "
+        "take them over from the scheme again.",
     )
     postal_code = models.CharField(max_length=35, null=True, blank=True)
     city = models.CharField(max_length=35, null=True, blank=True)

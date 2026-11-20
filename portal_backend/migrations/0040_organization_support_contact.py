@@ -39,4 +39,14 @@ class Migration(migrations.Migration):
                 ],
             ),
         ),
+        # Tells an emptied support contact from one that was never set, so the
+        # scheme import does not fill in again what an organization took back.
+        migrations.AddField(
+            model_name="organization",
+            name="support_contact_edited_in_portal",
+            field=models.BooleanField(
+                default=False,
+                help_text="Set once the support email or support page is changed in the portal. From then on the scheme import leaves both alone. Clear it to take them over from the scheme again.",
+            ),
+        ),
     ]
