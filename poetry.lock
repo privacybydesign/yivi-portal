@@ -2,30 +2,30 @@
 
 [[package]]
 name = "aioquic"
-version = "1.7.0"
+version = "1.8.0"
 description = "An implementation of QUIC and HTTP/3"
 optional = false
 python-versions = ">=3.11"
 groups = ["main"]
 files = [
-    {file = "aioquic-1.7.0-cp311-abi3-macosx_10_9_x86_64.whl", hash = "sha256:33b95ca1eb414d4c1931d313a3ccb8bf4efaaebe9f30852da7d68bc1ebacc2c3"},
-    {file = "aioquic-1.7.0-cp311-abi3-macosx_11_0_arm64.whl", hash = "sha256:7a1c328ca75950dee03bef2c931440e779455eb95e8d0b76950b57f12bd738b8"},
-    {file = "aioquic-1.7.0-cp311-abi3-manylinux1_i686.manylinux_2_28_i686.manylinux_2_5_i686.whl", hash = "sha256:a00fbb5f0d608b02cf0b8d3de702afa2096a87907de004b949235c09dabd539a"},
-    {file = "aioquic-1.7.0-cp311-abi3-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:d1aa6945b9e7ef8a3cdac06bddf116632fc9eaa3b1e6b3aff51119600d426cd3"},
-    {file = "aioquic-1.7.0-cp311-abi3-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:db492168e068d05483ada650d4dbecd9ad33b3a34bbaad22cfd5b292bbb212f5"},
-    {file = "aioquic-1.7.0-cp311-abi3-musllinux_1_2_aarch64.whl", hash = "sha256:29837f88fcc5aaec85f0d011a6ede057fb0b4fd3b06969759b0960ebfd672d7d"},
-    {file = "aioquic-1.7.0-cp311-abi3-musllinux_1_2_i686.whl", hash = "sha256:6541e161058e6bd6ee45c67411c041fbd3c916ccdc0773e0fcdbee783709f4d0"},
-    {file = "aioquic-1.7.0-cp311-abi3-musllinux_1_2_x86_64.whl", hash = "sha256:625d225c257fdf55cb1c26da6d4c1f99f6b568d1096558487c8e3b09fcaf4f65"},
-    {file = "aioquic-1.7.0-cp311-abi3-win32.whl", hash = "sha256:23d85ad4019fdf6c707c23d480c8c4d3165111177bab8683e92294d80e601084"},
-    {file = "aioquic-1.7.0-cp311-abi3-win_amd64.whl", hash = "sha256:c54021fedb6e9210cf55d8fd970440617768c50809cc40f327c2f8532c050387"},
-    {file = "aioquic-1.7.0-cp311-abi3-win_arm64.whl", hash = "sha256:9ef0d5d7b0bb9d1cd473304c5942cd14266c65592a5661387976530379fd69a1"},
-    {file = "aioquic-1.7.0.tar.gz", hash = "sha256:3b134ae8b2d8257d1b91f74affe6d9194b95a500286ed6eca1c054ffdb05ad08"},
+    {file = "aioquic-1.8.0-cp311-abi3-macosx_10_9_x86_64.whl", hash = "sha256:90d1a379ff0057a84863ba7d886af7f49eedfd1a14def5ba5a3ba719ab99c37f"},
+    {file = "aioquic-1.8.0-cp311-abi3-macosx_11_0_arm64.whl", hash = "sha256:3da2c9609cd7299ee2965ff4b0df7a5d50ebe4eacd0cf50f8243686612c2d801"},
+    {file = "aioquic-1.8.0-cp311-abi3-manylinux1_i686.manylinux_2_28_i686.manylinux_2_5_i686.whl", hash = "sha256:d9de93041c7749f1a93dbc0367408572ed76d710566fd7d74241ce7f69388350"},
+    {file = "aioquic-1.8.0-cp311-abi3-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:a4b57b3235014074fd7316dae5f4ee08cf46fa9b9c7bdf8718c3f310aaff9155"},
+    {file = "aioquic-1.8.0-cp311-abi3-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:ac365806f09cba9127fe716f570219bf1fb7d733e847eef7535ade5c08aed721"},
+    {file = "aioquic-1.8.0-cp311-abi3-musllinux_1_2_aarch64.whl", hash = "sha256:eb44d2276ad670e8608bc2f2a926afc8e06f62de87275afb56d7ed8aa8a4f298"},
+    {file = "aioquic-1.8.0-cp311-abi3-musllinux_1_2_i686.whl", hash = "sha256:78616046a99831c55ca3aac3405b6353e79a923c67a6e5b1dd134585cfcc8e66"},
+    {file = "aioquic-1.8.0-cp311-abi3-musllinux_1_2_x86_64.whl", hash = "sha256:b2acf9f4b7214502792d3430a341907f872cedd25042430f2c4138f9b7092d87"},
+    {file = "aioquic-1.8.0-cp311-abi3-win32.whl", hash = "sha256:14c8f0e4d7a74ee6ba3ade9434601f21ab8d6f9948f602efddbfc082d2bbb385"},
+    {file = "aioquic-1.8.0-cp311-abi3-win_amd64.whl", hash = "sha256:6fd3cd612aa739be38ab15005e596087cfc0ecbbe935a0343dc82f8b60532669"},
+    {file = "aioquic-1.8.0-cp311-abi3-win_arm64.whl", hash = "sha256:12333f99f7493af4bc6b9af24f5ac45ae993a2780b9c469c38bdf4461189d5db"},
+    {file = "aioquic-1.8.0.tar.gz", hash = "sha256:a17bf2347cb9f92c5ccb93fd88be65550e47db2a76e086602b226259f814b111"},
 ]
 
 [package.dependencies]
 certifi = "*"
 cryptography = ">=43.0.0"
-pylsqpack = ">=1.0.0,<2.0.0"
+pylsqpack = ">=1.1.1,<2.0.0"
 pyopenssl = ">=24"
 service-identity = ">=24.1.0"
 
@@ -480,14 +480,14 @@ ssh = ["bcrypt (>=3.1.5)"]
 
 [[package]]
 name = "django"
-version = "6.1.2"
+version = "6.1.3"
 description = "A high-level Python web framework that encourages rapid development and clean, pragmatic design."
 optional = false
 python-versions = ">=3.12"
 groups = ["main", "dev"]
 files = [
-    {file = "django-6.1.2-py3-none-any.whl", hash = "sha256:141efee6ec64d1db6db90683bf734c550102450f444fb099063b0be1bd27d991"},
-    {file = "django-6.1.2.tar.gz", hash = "sha256:a1e92451ccb8b514e91bbb3b6d186d20b4030558f116b5d9de6535455ff210b7"},
+    {file = "django-6.1.3-py3-none-any.whl", hash = "sha256:a0530e3fdac55d34ccc5893c36f6c57d7a7083064f3d414537e51473648b3290"},
+    {file = "django-6.1.3.tar.gz", hash = "sha256:b5d2d9e35295065d13b1927b3f19a59bd119f737aa6299def14ccca1ae3c8c0d"},
 ]
 
 [package.dependencies]
@@ -687,14 +687,14 @@ test = ["cryptography", "freezegun", "pytest", "pytest-cov", "pytest-django", "p
 
 [[package]]
 name = "dnspython"
-version = "2.9.1"
+version = "2.9.2"
 description = "DNS toolkit"
 optional = false
 python-versions = ">=3.11"
 groups = ["main"]
 files = [
-    {file = "dnspython-2.9.1-py3-none-any.whl", hash = "sha256:7c81caf8de1ed57b8cfc7e0ad4f528a0b8ceace473c7eb946df195dc9def751f"},
-    {file = "dnspython-2.9.1.tar.gz", hash = "sha256:9a6d30e55f8dc63e6052597666112bff0586b95a2474a9deda03afbbf820d37a"},
+    {file = "dnspython-2.9.2-py3-none-any.whl", hash = "sha256:af15f7d385a6ae2fb35a796fde2138004c8c42c7389090e2addc83e3b3340fd8"},
+    {file = "dnspython-2.9.2.tar.gz", hash = "sha256:8d4d39a513e649d634004ce4d39ade2352efcea472a0247535a5c2d18a9d7ba9"},
 ]
 
 [package.extras]
@@ -1186,24 +1186,24 @@ crypto = ["cryptography (>=3.4.0)"]
 
 [[package]]
 name = "pylsqpack"
-version = "1.0.0"
+version = "1.1.2"
 description = "Python wrapper for the ls-qpack QPACK library"
 optional = false
-python-versions = ">=3.11"
+python-versions = ">=3.10"
 groups = ["main"]
 files = [
-    {file = "pylsqpack-1.0.0-cp311-abi3-macosx_10_9_x86_64.whl", hash = "sha256:bd70a2445416e0129372e5b4a05fd1ca5290902f1c2840eab82cd5202c4eeaa1"},
-    {file = "pylsqpack-1.0.0-cp311-abi3-macosx_11_0_arm64.whl", hash = "sha256:fd077a1291e0be9928a7e7ab430f299795a2429ef037a3ec5da003ca17bfec18"},
-    {file = "pylsqpack-1.0.0-cp311-abi3-manylinux1_i686.manylinux_2_28_i686.manylinux_2_5_i686.whl", hash = "sha256:a717c5ccc890293806d5a3689b4edaca12bbfa9e7d55b774a7c5354421201698"},
-    {file = "pylsqpack-1.0.0-cp311-abi3-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:b9ea6afdaff36f739b1d8355ead4b083bbc9fe24c902463f14dc99fc726fcb0a"},
-    {file = "pylsqpack-1.0.0-cp311-abi3-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:fdf021e7f188775033abe8e51bc3be1e7e30713de7a288afacf6354a5822afde"},
-    {file = "pylsqpack-1.0.0-cp311-abi3-musllinux_1_2_aarch64.whl", hash = "sha256:c87adf21edd9fa4dbe05c6f66320c212d5b6389f6e65d9f1bef287d42334c285"},
-    {file = "pylsqpack-1.0.0-cp311-abi3-musllinux_1_2_i686.whl", hash = "sha256:7c1ae46dc9071c5c5637eaf9fd8a05aa13f33dd6b2dee83f6de6b0b7a9f5ac97"},
-    {file = "pylsqpack-1.0.0-cp311-abi3-musllinux_1_2_x86_64.whl", hash = "sha256:a6389f11b08ae99838dcf05cb593e9fba80583cf34d6da3c3f84e87da2b06bba"},
-    {file = "pylsqpack-1.0.0-cp311-abi3-win32.whl", hash = "sha256:8794daf172d3ce4ffef12a1c644279c889fc285dc790765424677e31dd00bfa6"},
-    {file = "pylsqpack-1.0.0-cp311-abi3-win_amd64.whl", hash = "sha256:4daf2d436688a13532787aab42bc4ab1d0f02ff0cd56771ad74778893cbdddcc"},
-    {file = "pylsqpack-1.0.0-cp311-abi3-win_arm64.whl", hash = "sha256:974c18e5c3e5e9b0fa897444254b6b7b7c386dff85a4c2d5d159c6fe7187912a"},
-    {file = "pylsqpack-1.0.0.tar.gz", hash = "sha256:4674adc2c833c1c70a36454f5774e9def94fc3109e4a8464d804af2a2030957a"},
+    {file = "pylsqpack-1.1.2-cp310-abi3-macosx_10_9_x86_64.whl", hash = "sha256:f7bd3b1acafda98061a0dd80209cfa47098d1d7e5a85418ae177eb380f9657d6"},
+    {file = "pylsqpack-1.1.2-cp310-abi3-macosx_11_0_arm64.whl", hash = "sha256:3980e9649af4f6f08cb7a74ca7f12c1fda875b2d9bc8a48288a405da72eb390f"},
+    {file = "pylsqpack-1.1.2-cp310-abi3-manylinux1_i686.manylinux_2_28_i686.manylinux_2_5_i686.whl", hash = "sha256:646a54104d0bdbe7c4f8f279f9d64294b5fefdfe6768614bef2610223c906497"},
+    {file = "pylsqpack-1.1.2-cp310-abi3-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:9fd3ddbb6530c048401e38ccc6d12c8d515df0960a2271d7fb52d0f18c98b369"},
+    {file = "pylsqpack-1.1.2-cp310-abi3-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:b9420e4dc65d123f0e887c095c03d5fb139871923c0240d107a3b750937d15fc"},
+    {file = "pylsqpack-1.1.2-cp310-abi3-musllinux_1_2_aarch64.whl", hash = "sha256:9716962dab63a9ba7ed955aa4f742717ece66f657e6bb8057003e420e8d809ed"},
+    {file = "pylsqpack-1.1.2-cp310-abi3-musllinux_1_2_i686.whl", hash = "sha256:ecff5f814148e414e3db8fb0be0f7fe1561e44811b5ee8deb670457e7da43611"},
+    {file = "pylsqpack-1.1.2-cp310-abi3-musllinux_1_2_x86_64.whl", hash = "sha256:338acf15e963d4b6b3666d8875b45288c89a25f65f13c14830a3ea5c5bfaeae8"},
+    {file = "pylsqpack-1.1.2-cp310-abi3-win32.whl", hash = "sha256:a0b722669fd9f688aeed2c71a5356b5973be2af3d0433c034810db888aaaca92"},
+    {file = "pylsqpack-1.1.2-cp310-abi3-win_amd64.whl", hash = "sha256:7a819c83a3417cad45d4b20a693f4202613fe2c8de26454f4eb432d164ebccb1"},
+    {file = "pylsqpack-1.1.2-cp310-abi3-win_arm64.whl", hash = "sha256:00d6e3b692c8238acafede943695adfd16101d4e95fdbf472420dbd0fd84640b"},
+    {file = "pylsqpack-1.1.2.tar.gz", hash = "sha256:8642270b955f5390dbcb9ee19317351d33ca23e9917e15ab9d177be4a03f370e"},
 ]
 
 [[package]]
